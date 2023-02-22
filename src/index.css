@@ -1,0 +1,168 @@
+body {
+  margin: 0;
+  background-color: #4d4d4d; /*#292929;*/
+  color: #fff;
+  font-family: 'Roboto';
+  height: 100%;
+}
+
+html,
+#root {
+  height: 100%;
+  display: flex;
+  flex-flow: column;
+  overflow-x: hidden;
+}
+
+.countgg-logo {
+  transition: all .2s ease-in-out;
+}
+
+.countgg-logo:hover {
+  transform: scale(1.1);
+}
+
+
+
+.hidden {
+  display: none!important;
+}
+
+.countDesktop:hover {
+  border-right: 1px solid grey;
+  box-shadow: inset 0em 0em 0em 100em rgb(207 213 255 / 15%);
+}
+
+.count:hover .countActionsDesktop {
+  display: flex;
+}
+
+.highlighted {
+  border: 1px solid gold!important;
+  background: #ff96131c;
+}
+
+.card_pic {
+  background-position: center;
+  background-repeat: no-repeat;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+}
+
+.card_wavypurple {
+  background: linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b) fixed;
+  color: white;
+}
+
+.card_default {
+  background: #FAF9F6;
+}
+
+.counter_card {
+  border-radius : 10px;
+  color: white;
+  text-shadow: 2px 2px 5px black;
+}
+
+.card_glow:before, .card_glow:after {
+	content: '';
+	position: absolute;
+	left: -2px;
+	top: -2px;
+  background: linear-gradient(to right, #00F260, #0575E6, #00F260);
+	background-size: 400%;
+	width: calc(100% + 4px);
+	height: calc(100% + 4px);
+	z-index: -1;
+  border-radius : 10px;
+  border-radius: inherit;
+	animation: steam 20s infinite alternate;
+}
+
+
+@keyframes steam {
+	0% {
+		background-position: 0 0; 
+	}
+	50% {
+		background-position: 400% 0;
+	}
+	100% {
+		background-position: 0 0;
+	}
+}
+
+.card_glow:after {
+	filter: blur(5px);
+}
+
+.no_border_square {
+  border-radius: 10px;
+}
+
+.no_border_circle {
+  border-radius: 50%;
+}
+
+.border_square_blue {
+  border-radius: 10px;
+  border: solid #2196f3;
+}
+
+.border_circle_blue {
+  border: solid #2196f3;
+  border-radius: 50%;
+}
+
+.card_pic_container {
+  display: flex;
+}
+
+.title_yay {
+  text-shadow: 0px 0px 7px currentColor;
+}
+
+.title_yay_magenta {
+  text-shadow: 0px 0px 7px currentColor;
+  color: magenta;
+}
+
+.award_container {
+  padding: 10rem;
+  width: fit-content;
+  margin: 10rem;
+  display: inline-block;
+}
+
+.counter_award {
+  position: relative;
+  margin: auto;
+}
+
+.slide-right {
+  animation: 3s slide-right;
+}
+@keyframes slide-right {
+  from {
+    margin-left: -100%;
+  }
+  to {
+    margin-left: 0%;
+  }
+}
+
+.slide-left {
+  animation: 3s slide-left;
+}
+@keyframes slide-left {
+  from {
+    margin-left: 100%;
+  }
+  to {
+    margin-left: 0%;
+  }
+}
