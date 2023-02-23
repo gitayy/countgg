@@ -18,7 +18,7 @@ import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { ThreadsPage } from './pages/ThreadsPage';
 import ReactGA from 'react-ga4';
-import { createTheme, CssBaseline, darkScrollbar, PaletteMode, responsiveFontSizes, ThemeProvider } from '@mui/material';
+import { createTheme, CssBaseline, darkScrollbar, PaletteMode, responsiveFontSizes, ThemeProvider, useMediaQuery } from '@mui/material';
 import { blue, grey } from '@mui/material/colors';
 import { ColorModeContext } from './utils/contexts/ColorModeContext';
 import { StatsPage } from './pages/StatsPage';
@@ -39,7 +39,12 @@ const GA_TR_ID = process.env.REACT_APP_GA_TR_ID || "G-0000000000"
 function App() {
   const { user, userLoading } = useFetchUser();
   const { counter, loading } = useCounterConfig();
-  const [mode, setMode] = useState<PaletteMode>('light');
+  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+  const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light');
+
+  useEffect(() => {
+    setMode(prefersDarkMode ? 'dark' : 'light');
+  }, [prefersDarkMode])
 
   const [snack, setSnack] = useState({
     message: '',

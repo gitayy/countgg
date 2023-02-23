@@ -28,7 +28,7 @@ export function useFetchRecentChats(thread_name: string, context: string | (stri
               addCounterToCache(counter)
           }
         }
-        if(data.isOldestChats !== undefined) {
+        if(data.isOldest !== undefined) {
           setLoadedOldestChats(data.isOldest);
           setLoadedNewestChats(data.isNewest);
         }

@@ -43,7 +43,7 @@ interface Props {
         {
             title: "No impersonation.",
             description: [
-                `We do not condone knowingly impersonating other users. Doing so may lead to a loss of priviledges or a ban.`,
+                `We do not condone knowingly impersonating other users. Doing so may lead to a loss of privileges or a ban.`,
             ],
         },
         {

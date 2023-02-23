@@ -127,11 +127,17 @@ export const IndividualCountPage = memo(() => {
                 </Stack>
                 </>
               ) : (
-                <Box sx={{ maxWidth: '100%', margin: 'auto' }}>
-                  {specificCount.map(count => (
-                    <CountMobile key={count.uuid} socket={socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
-                  ))}
-                </Box>
+                <>
+                <Stack direction="column" alignItems="center" sx={{width: '100%'}}>
+                    <Typography sx={{mb: 2}} variant="h5" color={"text.primary"}><Link color={"text.primary"} underline='hover' href={`.`}>{thread.title}</Link></Typography>
+                    <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}>This is one update from the thread. Click the thread name above to see the latest counts, or see the context of this post <Link underline='always' color={"text.secondary"} href={`.?context=${specificCount[0].uuid}`}>here.</Link></Typography>
+                    <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
+                    {specificCount.map(count => (
+                        <CountMobile key={count.uuid} socket={socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
+                    ))}
+                    </Box>
+                </Stack>
+                </>
               )}
             </Box>
           );

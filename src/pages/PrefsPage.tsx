@@ -145,14 +145,14 @@ import { Loading } from '../components/Loading';
                   inputProps={{ 'aria-label': 'pref-online' }}
                 />} label={
                   <Tooltip title="When enabled, other users can see when you are online.">
-                    <Typography variant="body1">Show my online status</Typography>
+                    <Typography variant="body1">Show my online status (not yet implemented)</Typography>
                   </Tooltip>
                 } />
                 <FormControlLabel control={<Switch
                 checked={prefDiscordPings}
                 onChange={() => {setPrefDiscordPings(!prefDiscordPings)}}
                 inputProps={{ 'aria-label': 'pref-discord-pings' }}
-              />} label="Ping me on Discord when I'm up" />
+              />} label="Ping me on Discord on mentions (not yet implemented)" />
               <FormControlLabel control={<Switch
                   checked={prefLoadFromBottom}
                   onChange={() => {setPrefLoadFromBottom(!prefLoadFromBottom)}}

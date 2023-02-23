@@ -9,6 +9,8 @@ import { SentimentVerySatisfied } from '@mui/icons-material';
 import { useLocation } from "react-router-dom";
 import Picker from '@emoji-mart/react'; // works in @latest
 import { custom_emojis } from "../utils/custom_emojis";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm'
 
 
 
@@ -36,11 +38,13 @@ const Count = memo((props: any) => {
   const minutesSinceLastCount = Math.floor(props.post.timeSinceLastCount / 60000) % 60;
   const secondsSinceLastCount = Math.floor(props.post.timeSinceLastCount / 1000) % 60;
   const msSinceLastCount = Math.round(props.post.timeSinceLastCount) % 1000;
+  const paddedMsSinceLastCount = msSinceLastCount.toString().padStart(3, '0');
 
   const hoursSinceLastPost = Math.floor(props.post.timeSinceLastPost / 3600000);
   const minutesSinceLastPost = Math.floor(props.post.timeSinceLastPost / 60000) % 60;
   const secondsSinceLastPost = Math.floor(props.post.timeSinceLastPost / 1000) % 60;
   const msSinceLastPost = Math.round(props.post.timeSinceLastPost) % 1000;
+  const paddedMsSinceLastPost = msSinceLastPost.toString().padStart(3, '0');
 
   const [action, setAction] = useState<string|null>(null);
   const [open, setOpen] = useState(false);
@@ -82,6 +86,12 @@ const Count = memo((props: any) => {
   
   const anchorRef = useRef(null);
 
+  const renderers = {
+    paragraph: ({ children, ...props }) => (
+      <span {...props}>{children}</span>
+    )
+  };
+
   console.log("Desktop Count Render");
 
     return (
@@ -111,14 +121,14 @@ const Count = memo((props: any) => {
                             {hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{hoursSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">h</Typography></Typography>) : null}
                             {minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{minutesSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">m</Typography></Typography>) : null}
                             {secondsSinceLastCount > 0 || minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{secondsSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">s</Typography></Typography>) : null}
-                            <Typography component="span" fontSize={12}>{msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography>
+                            <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastCount : msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography>
                               {/* &nbsp;| */}&nbsp;</>}
                               </Box>
                               <Box sx={{ textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
                               {hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{hoursSinceLastPost}<Typography component="span" variant="subtitle2">h</Typography></Typography>) : null}
                               {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{minutesSinceLastPost}<Typography component="span" variant="subtitle2">m</Typography></Typography>) : null}
                               {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{secondsSinceLastPost}<Typography component="span" variant="subtitle2">s</Typography></Typography>) : null}
-                              <Typography component="span" variant="h5">{msSinceLastPost}<Typography component="span" variant="subtitle2">ms</Typography></Typography>
+                              <Typography component="span" variant="h5">{props.post.timeSinceLastPost > 999 ? paddedMsSinceLastPost : msSinceLastPost}<Typography component="span" variant="subtitle2">ms</Typography></Typography>
                               </Box>
                             </Grid>
                             <Grid item xs={12} sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -131,21 +141,21 @@ const Count = memo((props: any) => {
                     </Grid>
             <Grid item xs={6}>
               <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                <CardContent sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, pb: 0, overflowWrap: 'anywhere' }}>
-                        <Typography component="div" variant="h6" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{props.post.countContent}</span>{maybeSpace}{props.post.comment}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }
+                <CardContent sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, pb: 0, overflowWrap: 'anywhere', '&:last-child': {pb: '2px'} }}>
+                        <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{props.post.countContent}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment} components={{p: 'span'}} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }
                         </Typography>
                     <Typography variant="subtitle1" component="div">
-                        <Link underline="hover" color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}&nbsp;</Link>
+                        <Link underline="hover" color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
                       </Typography>
-                      <Box sx={{display: 'inline-flex'}}>
+                      <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}>
                       {props.post.reactions && Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {
                         if(props.myCounter && reaction[1] && (reaction[1] as string[]).includes(props.myCounter.uuid)) {
                           return (
-                            <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#6ab3ff82', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 16, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
+                            <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#6ab3ff82', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
                           )
                         } else {
                           return (
-                            <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#afafaf21', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 16, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
+                            <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#afafaf21', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
                           )
                         }
                         })}
@@ -164,20 +174,20 @@ const Count = memo((props: any) => {
                 >
                   <SentimentVerySatisfied />
                 </IconButton>
-              {props.post.isCount && ((props.myCounter && props.myCounter.uuid == props.post.authorUUID) || (props.myCounter && props.myCounter.roles.includes("admin"))) && <IconButton
+              {props.post.isCount && props.thread && props.thread.autoValidated === false && ((props.myCounter && props.myCounter.uuid == props.post.authorUUID) || (props.myCounter && props.myCounter.roles.includes("admin"))) && <IconButton
                 aria-label="Strike"
                 onClick={() => {setAction('strike'); setOpen(true)}}
               >
                 <StrikethroughSIcon />
               </IconButton>}
-              <IconButton
+              {props.post.hasComment && ((props.myCounter && props.myCounter.uuid == props.post.authorUUID) || (props.myCounter && props.myCounter.roles.includes("admin"))) && <IconButton
                 aria-label="Delete"
                 onClick={() => {setAction('delete'); setOpen(true)}}
               >
                 <DeleteIcon />
-              </IconButton>
+              </IconButton>}
 
-              {pickerOpen && <Popover open={pickerOpen} anchorEl={anchorRef.current} onClose={() => setPickerOpen(false)}><Picker set={'twitter'} custom={custom_emojis} onEmojiSelect={handleEmojiSelect} /></Popover>}
+              {pickerOpen && <Popover open={pickerOpen} anchorEl={anchorRef.current} anchorOrigin={{ vertical: 'top', horizontal: -250, }} onClose={() => setPickerOpen(false)}><Picker set={'twitter'} custom={custom_emojis} onEmojiSelect={handleEmojiSelect} /></Popover>}
               {/* {pickerOpen && <Popover open={pickerOpen} anchorEl={anchorRef.current} onClose={() => setPickerOpen(false)}><NimblePicker set="twitter" data={data} onSelect={handleEmojiSelect} /></Popover>} */}
 
               <Dialog open={open} onClose={() => setOpen(false)}>

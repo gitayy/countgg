@@ -16,6 +16,8 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import { useFetchRecentChats } from '../utils/hooks/useFetchRecentChats';
+import remarkGfm from 'remark-gfm';
+import ReactMarkdown from 'react-markdown';
 
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const location = useLocation();
@@ -96,15 +98,15 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       
     }, [latencyStateTest]);
 
-    const [loadedOldCount, setLoadedOldCount] = useState(0);
-    const [loadedNewCount, setLoadedNewCount] = useState(0);
+    const [loadedOldCount, setLoadedOldCount] = useState(2);
+    const [loadedNewCount, setLoadedNewCount] = useState(2);
     // const [postsLoaded, setPostsLoaded] = useState(0);
     const isScrolledToNewest = useRef(false);
     const isScrolledToTheTop = useRef(false);
     const isScrolledToTheBottom = useRef(false);
 
-    const [loadedOldChat, setLoadedOldChat] = useState(0);
-    const [loadedNewChat, setLoadedNewChat] = useState(0);
+    const [loadedOldChat, setLoadedOldChat] = useState(2);
+    const [loadedNewChat, setLoadedNewChat] = useState(2);
     const chatsIsScrolledToTheBottom = useRef(false);
     const chatsIsScrolledToTheTop = useRef(false);
     const chatsIsScrolledToNewest = useRef(false);
@@ -179,12 +181,10 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     //Handle Socket data
     useEffect(() => {
           if(isMounted.current && userLoadingAsRef.current == false) {
-            console.log('Starting socket functions. User should be done by now.');
             socket.on("connect", () => {
               console.log("Connected to socket!");
               setSocketStatus("LIVE");
             });
-            socket.emit('watch', thread_name)
             console.log("Connected to socket (1)");              
             setSocketStatus("LIVE");
             
@@ -192,6 +192,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             socket.on("disconnect", () => {
               console.log("Disconnected from socket"); 
               setSocketStatus("DISCONNECTED");
+              return;
             });
 
             socket.on("reconnect", () => {
@@ -202,6 +203,15 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               console.log(`connect_error due to ${err.message}`);
               setSocketStatus("DISCONNECTED");
             });
+          }
+          },[userLoadingAsRef.current]);
+
+          useEffect(() => {
+
+          if(isMounted.current && userLoadingAsRef.current == false && socketStatus == 'LIVE') {
+            console.log('Starting socket functions. User should be done by now.');
+            socket.emit('watch', thread_name)
+
             socket.on(`watcher_count`, function(data) {
               setSocketViewers(data);
             });
@@ -317,7 +327,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                     });
                   }
                   if(data.recentCounts && data.recentCounts[0]) {
-                    setLoadedOldCount(data.recentCounts[0].id)
+                    setLoadedOldCount(Date.now())
                   }
                   for (const counter of data.counters) {
                       addCounterToCache(counter);
@@ -344,7 +354,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                   });
                 }
                 if(data.recentCounts && data.recentCounts[0]) {
-                  setLoadedNewCount(data.recentCounts[0].id)
+                  setLoadedNewCount(Date.now())
                 }
                 for (const counter of data.counters) {
                     addCounterToCache(counter);
@@ -359,56 +369,62 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             });
 
             socket.on(`loadOldChats`, function(data) {
+              console.log("Loading old chats...");
+              for (const counter of data.counters) {
+                addCounterToCache(counter);
+            }
+            if(data.isNewest) {
+              setLoadedNewestChats(true);
+            }
+            if(data.isOldest) {
+              setLoadedOldestChats(true);
+            }
               if(userAsRef.current && userAsRef.current.pref_load_from_bottom) {
+                console.log("...from bottom");
                   setRecentChats(prevChats => {
                     const newChats = [...data.recentCounts.reverse(), ...prevChats];
                       return newChats;
                   });
                 } else {
-                  setRecentCounts(prevChats => {
+                  console.log("...from top");
+                  setRecentChats(prevChats => {
                     const newChats = [...prevChats, ...data.recentCounts];
                       return newChats;
                   });
                 }
                 if(data.recentCounts && data.recentCounts[0]) {
-                  setLoadedOldChat(data.recentCounts[0].id)
+                  setLoadedOldChat(Date.now()) // lol
                   setNewChatsLoadedState(data.recentCounts[0].uuid);
-                }
-                for (const counter of data.counters) {
-                    addCounterToCache(counter);
-                }
-                if(data.isNewest) {
-                  setLoadedNewestChats(true);
-                }
-                if(data.isOldest) {
-                  setLoadedOldestChats(true);
                 }
             });
 
             socket.on(`loadNewChats`, function(data) {
+              console.log("Loading new chats...");
+              for (const counter of data.counters) {
+                addCounterToCache(counter);
+            }
+            if(data.isNewest) {
+              setLoadedNewestChats(true);
+            }
+            if(data.isOldest) {
+              setLoadedOldestChats(true);
+            }
               if(userAsRef.current && userAsRef.current.pref_load_from_bottom) {
+                console.log("...from bottom");
                 setRecentChats(prevChats => {
                   const newChats = [...prevChats, ...data.recentCounts,];
                   return newChats;
                 });
               } else {
+                console.log("...from top");
                 setRecentChats(prevChats => {
                   const newChats = [...data.recentCounts.reverse(), ...prevChats];
                   return newChats;
                 });
               }
               if(data.recentCounts && data.recentCounts[0]) {
-                setLoadedNewChat(data.recentCounts[0].id)
+                setLoadedNewChat(Date.now()) // lol
                 setNewChatsLoadedState(data.recentCounts[0].uuid);
-              }
-              for (const counter of data.counters) {
-                  addCounterToCache(counter);
-              }
-              if(data.isNewest) {
-                setLoadedNewestChats(true);
-              }
-              if(data.isOldest) {
-                setLoadedOldestChats(true);
               }
           });
 
@@ -443,15 +459,16 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           });
 
             return () => {
-              console.log("Disabling socket functions. Something happened.");
+              console.log("Disabling socket functions. Something happened. You *probably* disconnected, but maybe not.");
                 socket.off('connection_error');
                 socket.off('post');
                 socket.off('lastCount');
                 socket.off('watcher_count');
                 socket.off('deleteComment');
+                setSocketStatus("DISCONNECTED");
             }
         }
-    },[userLoadingAsRef.current]);
+    },[socketStatus]);
 
     const deleteComment = useCallback((data) => {
       console.log("Looking for a comment to delete...");
@@ -549,7 +566,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <Box sx={{ display: 'flex', flexGrow: 0, p: 0.5, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
             <Typography sx={{p: 0.5}} variant="h6" color="text.primary">{thread.title}</Typography>
             {socketMemo}
-            {lastCount && <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Last count: {lastCount.lastCount.rawCount} by {lastCount.lastCounter.name}</Typography>}
           </Box>)
         } 
         else {
@@ -564,14 +580,14 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       const countListMemo = useMemo(() => {
         console.log("Countlist Memo Render");
         return (          
-        <CountList recentCountsLoading={recentCountsLoading} throttle={throttle} setThrottle={setThrottle} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} setRecentChats={setRecentChats} newRecentPostLoaded={newRecentPostLoaded} userLoading={userLoading} user={user} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} setRecentCounts={setRecentCounts} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} socket={socket} counter={counter} loading={loading} recentCounts={recentCounts} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
+        <CountList thread={thread} recentCountsLoading={recentCountsLoading} throttle={throttle} setThrottle={setThrottle} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} setRecentChats={setRecentChats} newRecentPostLoaded={newRecentPostLoaded} userLoading={userLoading} user={user} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} setRecentCounts={setRecentCounts} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} socket={socket} counter={counter} loading={loading} recentCounts={recentCounts} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
         )
       }, [cachedCounts, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, userLoading, loading])
 
       const chatsMemo = useMemo(() => {
         console.log("Chats Memo Render");
         return (      
-        <CountList isDesktop={isDesktop} throttle={throttle} setThrottle={setThrottle} chatsOnly={true} newRecentPostLoaded={undefined} userLoading={userLoading} user={user} loadedOldest={loadedOldestChats} loadedNewest={loadedNewestChats} loadedOldCount={loadedOldChat} loadedNewCount={loadedNewChat} setRecentCounts={setRecentChats} isScrolledToTheBottom={chatsIsScrolledToTheBottom} isScrolledToTheTop={chatsIsScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={chatsIsScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} socket={socket} counter={counter} loading={loading} recentCounts={recentChats} handleLatencyCheckChange={undefined} handleLatencyChange={undefined} handleSubmit={undefined}></CountList>
+        <CountList thread={thread} isDesktop={isDesktop} throttle={throttle} setThrottle={setThrottle} chatsOnly={true} newRecentPostLoaded={undefined} userLoading={userLoading} user={user} loadedOldest={loadedOldestChats} loadedNewest={loadedNewestChats} loadedOldCount={loadedOldChat} loadedNewCount={loadedNewChat} setRecentCounts={setRecentChats} isScrolledToTheBottom={chatsIsScrolledToTheBottom} isScrolledToTheTop={chatsIsScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={chatsIsScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} socket={socket} counter={counter} loading={loading} recentCounts={recentChats} handleLatencyCheckChange={undefined} handleLatencyChange={undefined} handleSubmit={undefined}></CountList>
         )
       }, [recentChatsLoading, newChatsLoadedState, loadedNewChat, loadedOldChat, deleteComments, loadedOldestChats, loadedNewestChats, chatsIsScrolledToNewest, userLoading, loading])
 
@@ -590,9 +606,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         <Box sx={{flexGrow: 1, p: 2, bgcolor: 'background.paper', color: 'text.primary'}}>
         <TabPanel value="tab_1" sx={{}}>
           <Typography variant="h5" sx={{mb: 1}}>About</Typography>
-          <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}>{thread && thread.description || "Loading..."}</Typography>
+          <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.description : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           <Typography variant="h5" sx={{mt: 2, mb: 1}}>Rules</Typography>
-          <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}>{thread && thread.rules || "Loading..."}</Typography>
+          <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.rules : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
         </TabPanel>
         <TabPanel value="tab_2" sx={{}}>
           <Typography variant='h4'>Chats</Typography>
@@ -601,6 +617,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           </Box>
         </TabPanel>
         <TabPanel value="tab_3" sx={{}}>
+        {lastCount && <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Last count: {lastCount.lastCount.rawCount} by {lastCount.lastCounter.name}</Typography>}
           Splits will go here.
         </TabPanel>
         <TabPanel value="tab_4" sx={{}}>
@@ -609,7 +626,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         </Box>
         </TabContext>
         )
-      }, [tabValue, thread, newChatsLoadedState])
+      }, [tabValue, thread, newChatsLoadedState, lastCount])
       
 
       if(!loading && !threadLoading && thread) {

@@ -11,7 +11,7 @@ export const ThreadCard = ({title, description, href, color1, color2}) => {
       };
 
       return (
-        <Link href={href} onClick={(e) => {
+        <Link href={href} sx={{maxWidth: '100%'}} onClick={(e) => {
           e.preventDefault();
           navigate(href);
         }}>

@@ -7,6 +7,7 @@ import { Send as SendIcon, Keyboard as KeyboardIcon } from '@mui/icons-material'
 import LoginIcon from '@mui/icons-material/Login';
 import CountMobile from "./CountMobile";
 import AcUnitIcon from '@mui/icons-material/AcUnit';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 
 const CountList = memo((props: any) => {
     
@@ -130,14 +131,18 @@ const CountList = memo((props: any) => {
         }
         props.loadedNewestRef.current = true;
         props.setLoadedNewest(true);
-      } else if(props.cachedCounts && props.cachedCounts.length == 0 && props.loadedNewestRef.current !== undefined && props.loadedNewestRef.current == true) {
+      } else if(props.cachedCounts && props.cachedCounts.length == 0 && props.loadedNewestRef.current !== undefined && props.loadedNewestRef.current === true) {
         props.loadedNewestRef.current = false; 
-        setForceRerenderSubmit('abc');
-      } else if(props.cachedCounts && props.cachedCounts.length == 0 && props.loadedNewestRef.current !== undefined && props.loadedNewestRef.current == false) {
+        setForceRerenderSubmit(Date.now().toString());
+      } else if(props.cachedCounts && props.cachedCounts.length == 0 && props.loadedNewestRef.current !== undefined && props.loadedNewestRef.current === false) {
         props.loadedNewestRef.current = true; 
-        setForceRerenderSubmit('def');
+        setForceRerenderSubmit(Date.now().toString());
       }
     }
+
+    useEffect(() => {
+      setForceRerenderSubmit(Date.now().toString());
+    }, [props.recentCountsLoading])
     
     const scrollToBottom = () => {
         if (messagesEndRef.current) {
@@ -215,25 +220,28 @@ const CountList = memo((props: any) => {
     }
 
     useEffect(() => {
-        if (!isScrolledToBottom) {
+        if (((!isScrolledToBottom && props.user && props.user.pref_load_from_bottom) || (!isScrolledToTop)) && !firstLoad) {
           setIsNewRecentCountAdded(true);
         }
-      }, [props.newRecentPostLoaded, isScrolledToBottom]);
+      }, [props.newRecentPostLoaded]);
 
       useEffect(() => {
-        if (!isScrolledToBottom && !firstLoad) {
+        if (((isScrolledToBottom && props.user && props.user.pref_load_from_bottom) || (isScrolledToTop)) && !firstLoad) {
           setIsNewRecentCountAdded(false);
         }
-      }, [isScrolledToBottom]);
+      }, [isScrolledToBottom, isScrolledToTop, props.newRecentPostLoaded]);
 
       useEffect(() => {
-        if (messagesEndRef.current && props.recentCounts && props.isMounted && submitRef.current) {
+        if (messagesEndRef.current && props.recentCounts && props.isMounted && (submitRef.current || props.chatsOnly)) {
           if (firstLoad) {
+            console.log("Scrolling to the newest message based off of the first load.");
             messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
             setFirstLoad(false);
           } else if (isScrolledToBottom) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
-            submitRef.current.scrollIntoView({ behavior: 'auto', block: 'end', });
+            if(!props.chatsOnly) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+              if(submitRef.current) {submitRef.current.scrollIntoView({ behavior: 'auto', block: 'end', });}
+            }
             
             if (contextRef.current && !hasScrolledToContext) {
               console.log("Scrolling to context");
@@ -243,7 +251,7 @@ const CountList = memo((props: any) => {
             } 
           }
         }
-      }, [props.recentCounts, firstLoad, isScrolledToBottom]);
+      }, [props.recentCounts, firstLoad, isScrolledToBottom, ]);
 
       const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
         const element = event.currentTarget;
@@ -335,8 +343,8 @@ const CountList = memo((props: any) => {
         }
       };
       useEffect(() => {
-        if(distanceFromBottom.current) {
         if(props.user && props.user.pref_load_from_bottom) {
+        if(distanceFromBottom.current) {
           console.log("Scrolling to the bottom after loading old counts: ", distanceFromBottom.current);
           scrollToDistanceFromBottom(distanceFromBottom.current);
           setTimeout(function() {
@@ -357,8 +365,8 @@ const CountList = memo((props: any) => {
 
 
       useEffect(() => {
-        if(distanceFromTop.current) {
         if(props.user && props.user.pref_load_from_bottom) {
+          if(distanceFromTop.current) {
           console.log("Scrolling to the bottom after loading new counts: ", distanceFromTop.current);
           scrollToDistanceFromTop(distanceFromTop.current);
           setTimeout(function() {
@@ -382,13 +390,13 @@ const CountList = memo((props: any) => {
 
       const scrollDownMemo = useMemo(() => {
         console.log("scrollDown Render (For Fab)");
-        return (<>{isNewRecentCountAdded && !firstLoad && !isScrolledToBottom && (<>
+        return (<>{isNewRecentCountAdded && !firstLoad && ((props.user && props.user.pref_load_from_bottom && !isScrolledToBottom) || !props.user || (props.user && props.user.pref_load_from_bottom === false && !isScrolledToTop) ) && (<>
           {isDesktop ? (
               <Box sx={{ position: 'fixed', bottom: '130px', right: '10%' }}>
-            <Zoom in={!isScrolledToBottom}>
+            <Zoom in={(props.user && props.user.pref_load_from_bottom) ? !isScrolledToBottom : !isScrolledToTop}>
               <Box sx={{ display: 'flex', alignItems: 'center', borderRadius: '100px', bgcolor: 'primary.main' }}>
                 <Fab color="primary" variant="extended" size="medium" onClick={scrollToBottom}>
-                  <ArrowDownwardIcon />
+                  {props.user && props.user.pref_load_from_bottom ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
                   New Posts
                 </Fab>
               </Box>
@@ -396,15 +404,15 @@ const CountList = memo((props: any) => {
             </Box>
           ) : (
               <Box sx={{ position: 'fixed', bottom: '130px', right: '5%' }}>
-            <Zoom in={!isScrolledToBottom}>
+            <Zoom in={(props.user && props.user.pref_load_from_bottom) ? !isScrolledToBottom : !isScrolledToTop}>
               <Fab color="primary" size="medium" onClick={scrollToBottom}>
-                <ArrowDownwardIcon />
+                {props.user && props.user.pref_load_from_bottom ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
               </Fab>
             </Zoom>
             </Box>
           )}</>
         )}</>);
-      }, [isScrolledToBottom, isNewRecentCountAdded, firstLoad, props.recentCounts])
+      }, [isNewRecentCountAdded, firstLoad, isScrolledToTop, isScrolledToBottom, props.recentCounts, props.user])
 
       const submitButtonMemo = useMemo(() => {
         console.log(`Submit Area Render (isDesktop: ${isDesktop})`);
@@ -413,7 +421,7 @@ const CountList = memo((props: any) => {
           <Box ref={submitRef} sx={{maxWidth: '100%', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, padding: '0.5', background: alpha(theme.palette.background.paper, 0.9)}}>
           <Tooltip title={`${props.cachedCounts && props.cachedCounts.length} new`} placement="top" open={(props.cachedCounts && props.cachedCounts.length > 0) ? true : false} arrow >
           <IconButton onClick={() => handleUnfreeze()}>
-            <AcUnitIcon color={(props.loadedNewestRef !== undefined && props.loadedNewestRef.current == false && props.recentCountsLoading == false) ?  'primary' : 'disabled'} />
+            <AcUnitIcon color={(props.loadedNewestRef !== undefined && props.loadedNewestRef.current === false && props.recentCountsLoading === false) ?  'primary' : 'disabled'} />
           </IconButton>
             </Tooltip>
           <TextField
@@ -437,7 +445,7 @@ const CountList = memo((props: any) => {
           return (<>
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, padding: '0.5', bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
                 <IconButton onClick={() => handleUnfreeze()}>
-                  <AcUnitIcon color={(props.loadedNewestRef !== undefined && props.loadedNewestRef.current == false && props.recentCountsLoading == false) ?  'primary' : 'disabled'} />
+                  <AcUnitIcon color={(props.loadedNewestRef !== undefined && props.loadedNewestRef.current === false && props.recentCountsLoading === false) ?  'primary' : 'disabled'} />
                 </IconButton>
                 <TextField
                     variant="outlined"
@@ -491,7 +499,7 @@ const CountList = memo((props: any) => {
                 const contextMatch = props.context && props.context === count.uuid;
                 const ref = contextMatch ? contextRef : null;
                 return (
-                  <Count myCounter={props.counter} key={count.uuid} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+                  <Count myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
                 );
               })}
               {/* <Box sx={{position: 'fixed'}}>{Date.now() - props.latency}</Box> */}
@@ -503,7 +511,7 @@ const CountList = memo((props: any) => {
           const contextMatch = props.context && props.context === count.uuid;
           const ref = contextMatch ? contextRef : null;
           return (
-            <CountMobile myCounter={props.counter} key={count.uuid} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+            <CountMobile myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
           );
         })}</Box>); 
       }
