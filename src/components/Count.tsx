@@ -1,5 +1,5 @@
-import {  Box, CardMedia, CardContent, Typography, Grid,  IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link, Popover, useTheme } from "@mui/material";
-import {  memo, useRef, useState } from "react";
+import { Box, CardMedia, CardContent, Typography, Grid,  IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link, Popover, useTheme } from "@mui/material";
+import { memo, useRef, useState } from "react";
 import CountggLogo from '../assets/countgg-128.png'
 import { defaultCounter, EmojiTest, formatDate, getReplyColorName } from "../utils/helpers";
 import { Counter } from "../utils/types";
@@ -11,6 +11,7 @@ import Picker from '@emoji-mart/react'; // works in @latest
 import { custom_emojis } from "../utils/custom_emojis";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'
+import data from '@emoji-mart/data/sets/14/twitter.json'
 
 
 
@@ -85,14 +86,11 @@ const Count = memo((props: any) => {
   }
   
   const anchorRef = useRef(null);
-
-  const renderers = {
-    paragraph: ({ children, ...props }) => (
-      <span {...props}>{children}</span>
-    )
-  };
-
-  console.log("Desktop Count Render");
+  
+  const components = {
+    p: ('span' as any),
+    code: ({ children }) => { return (Object.keys(data.emojis).includes((children[0] as string).toLowerCase()) ? EmojiTest({id: (children[0] as string).toLowerCase(), size: 24, set: 'twitter'}) : <code>{children}</code>)}
+  }
 
     return (
           <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word' }}>
@@ -142,7 +140,7 @@ const Count = memo((props: any) => {
             <Grid item xs={6}>
               <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                 <CardContent sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, pb: 0, overflowWrap: 'anywhere', '&:last-child': {pb: '2px'} }}>
-                        <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{props.post.countContent}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment} components={{p: 'span'}} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }
+                        <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{props.post.countContent}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }
                         </Typography>
                     <Typography variant="subtitle1" component="div">
                         <Link underline="hover" color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;

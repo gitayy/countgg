@@ -11,6 +11,7 @@ import Picker from '@emoji-mart/react';
 import CountggLogo from '../assets/countgg-128.png'
 import remarkGfm from "remark-gfm";
 import ReactMarkdown from "react-markdown";
+import data from '@emoji-mart/data/sets/14/twitter.json'
 
 const CountMobile = memo((props: any) => {
 
@@ -80,6 +81,11 @@ const CountMobile = memo((props: any) => {
   }
   
   const anchorRef = useRef(null);
+
+  const components = {
+    p: ('span' as any),
+    code: ({ children }) => { return (Object.keys(data.emojis).includes((children[0] as string).toLowerCase()) ? EmojiTest({id: (children[0] as string).toLowerCase(), size: 24, set: 'twitter'}) : <code>{children}</code>)}
+  }
 
     console.log("Mobile Count Render");
 
@@ -158,7 +164,7 @@ return (
           <Grid item xs={10} lg={7}>
             <Box sx={{ display: 'flex', flexDirection: 'row' }}>
               <Box sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, overflowWrap: 'anywhere' }}>
-                <Typography component="div" variant="body2" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{props.post.countContent}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment} components={{p: 'span'}} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }</Typography>
+                <Typography component="div" variant="body2" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{props.post.countContent}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }</Typography>
               </Box>
             </Box>
             </Grid>

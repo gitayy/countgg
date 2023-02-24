@@ -30,7 +30,11 @@ const CountList = memo((props: any) => {
     const endOfSubmitRef = useRef<HTMLDivElement>(null);
     const [forceRerenderSubmit, setForceRerenderSubmit] = useState('');
     const [submitColor, setSubmitColor] = useState<"primary" | "default" | "inherit" | "error" | "secondary" | "info" | "success" | "warning" | undefined>("primary")
-    
+    const scrollDiagnostics = useRef(false);
+    if (window.location.href.indexOf("scrollDiagnostics") > -1) {
+      scrollDiagnostics.current = true;
+    }
+
     const gaEventTracker = useAnalyticsEventTracker('Login');
     const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
@@ -255,6 +259,9 @@ const CountList = memo((props: any) => {
 
       const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
         const element = event.currentTarget;
+        if (scrollDiagnostics.current) {
+          console.log(`Scrolling. scrollHeight: ${element.scrollHeight}, scrollTop: ${element.scrollTop}, clientHeight: ${element.clientHeight}, scrollThrottle: ${scrollThrottle}, isScrolledToTop: ${isScrolledToTop}, isScrolledToBottom: ${isScrolledToBottom}, chats: ${props.chatsOnly}`);
+        }
         if (element.scrollHeight - element.scrollTop === element.clientHeight) {
           changeScrolledToBottom(true);
         } else {
