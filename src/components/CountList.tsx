@@ -262,12 +262,12 @@ const CountList = memo((props: any) => {
         if (scrollDiagnostics.current) {
           console.log(`Scrolling. scrollHeight: ${element.scrollHeight}, scrollTop: ${element.scrollTop}, clientHeight: ${element.clientHeight}, scrollThrottle: ${scrollThrottle}, isScrolledToTop: ${isScrolledToTop}, isScrolledToBottom: ${isScrolledToBottom}, chats: ${props.chatsOnly}`);
         }
-        if (element.scrollHeight - element.scrollTop === element.clientHeight) {
+        if (element.scrollHeight - element.scrollTop >= element.clientHeight) {
           changeScrolledToBottom(true);
         } else {
           changeScrolledToBottom(false);
         }
-        if ((element.scrollHeight - element.scrollTop === element.clientHeight) && !scrollThrottle) {
+        if ((element.scrollHeight - element.scrollTop >= element.clientHeight) && !scrollThrottle) {
           console.log("Manually scrolled to bottom?");
           console.log("loadedOldest: ", props.loadedOldest);
           console.log("loadedNewest: ", props.loadedNewest);
