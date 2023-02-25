@@ -2,6 +2,7 @@ import ReactGA from "react-ga4";
 import { Counter } from './types';
 import { format } from 'date-fns';
 import { createElement } from 'react';
+import { validate as uuid_validate } from 'uuid';
 
 
 const useAnalyticsEventTracker = (category="Blog category") => {
@@ -182,4 +183,13 @@ export function getReplyColorName(time: number, per: number = 100) {
     return replyColorNames[replyColorNames.length - 1];
   }
   return replyColorNames[intervalIndex];
+}
+
+export const convertToTimestamp = (uuid) => {
+  // should return epoch time as a number or null if invalid input
+if(uuid_validate(uuid)) {
+    return Number(uuidParseNano(uuid)) / 1000;
+} else {
+    return null;
+}
 }

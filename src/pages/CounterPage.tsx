@@ -4,7 +4,7 @@ import { CounterContext } from '../utils/contexts/CounterContext';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useFetchLoadCounter } from '../utils/hooks/useFetchLoadCounter';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
-import { Box, Tab } from '@mui/material';
+import { Box, Button, Tab, Typography } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -12,6 +12,8 @@ import { useFetchAchievements } from '../utils/hooks/useFetchAchievements';
 import { Achievements } from '../components/Achievements';
 import { Loading } from '../components/Loading';
 import { CounterCard } from '../components/CounterCard';
+import { convertToTimestamp, formatDateExact } from '../utils/helpers';
+import { adminToggleBan, adminToggleMute } from '../utils/api';
 
   export const CounterPage = () => {
     const params = useParams();
@@ -29,6 +31,32 @@ import { CounterCard } from '../components/CounterCard';
       setTabValue(newValue);
     };
 
+    const toggleBan = async () => {
+      if(loadedCounter) {
+        try {
+        const res = await adminToggleBan(loadedCounter.uuid);
+        }
+        catch(err) {
+          console.log("Did not work");
+        }
+      } else {
+        console.log("Counter not loaded yet.");
+      }
+    };
+
+    const toggleMute = async () => {
+      if(loadedCounter) {
+        try {
+        const res = await adminToggleMute(loadedCounter.uuid);
+        }
+        catch(err) {
+          console.log("Did not work");
+        }
+      } else {
+        console.log("Counter not loaded yet.");
+      }
+    };
+
     
     if(loadedCounter && !loadedCounterLoading && !achievementsloading && isMounted.current) {
 
@@ -38,16 +66,22 @@ import { CounterCard } from '../components/CounterCard';
             <TabContext value={tabValue}>
               <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <TabList onChange={handleTabChange} sx={{bgcolor: "background.paper"}} aria-label="Counter Tabs">
-                  <Tab label="Stats" value="1" />
-                  <Tab label="Info" value="2" />
+                  <Tab label="Info" value="1" />
+                  <Tab label="Stats" value="2" />
                   <Tab label="Achievements" value="3" />
                 </TabList>
               </Box>
               <TabPanel value="1">
-                No stats found :( (Coming soon)
+                {counter && counter.roles.includes('admin') && <Button variant='contained' color='error' onClick={toggleBan}>{loadedCounter.roles.includes('banned') ? 'Unban User' : 'Ban User'}</Button>}
+                {counter && counter.roles.includes('admin') && <Button variant='contained' color='error' onClick={toggleMute}>{loadedCounter.roles.includes('muted') ? 'Unmute User' : 'Mute User'}</Button>}
+                <Typography variant='h5'>Info for {loadedCounter.name}</Typography>
+                <Typography>{convertToTimestamp(loadedCounter.uuid) !== null ? `Joined: ${formatDateExact(convertToTimestamp(loadedCounter.uuid) as number)}` : `Error calculating join date.`}</Typography>
+                <Typography>UUID: {loadedCounter.uuid}</Typography>
+                <Typography>Numeric ID: {loadedCounter.id}</Typography>
+                <Typography>Color: {loadedCounter.color}</Typography>
               </TabPanel>
               <TabPanel value="2">
-                Coming soon
+                No stats found :( (Coming soon)
               </TabPanel>
               <TabPanel value="3">
                 <Achievements achievements={achievements}></Achievements>

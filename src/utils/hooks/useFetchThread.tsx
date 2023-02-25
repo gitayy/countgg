@@ -20,5 +20,5 @@ export function useFetchThread(name: string) {
         })
     }, []);
     
-      return { thread, threadLoading };
+      return { thread, threadLoading, setThread };
     }

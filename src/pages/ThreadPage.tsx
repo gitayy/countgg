@@ -2,7 +2,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { CounterContext } from '../utils/contexts/CounterContext';
-import { Alert, AlertColor, alpha, Box, Grid, Snackbar, Tab, Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Alert, AlertColor, alpha, Box, Button, Grid, Snackbar, Tab, Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
 import { addCounterToCache, cachedCounters } from '../utils/helpers';
 import { useFetchRecentCounts } from '../utils/hooks/useFetchRecentCounts';
@@ -18,6 +18,7 @@ import TabPanel from '@mui/lab/TabPanel';
 import { useFetchRecentChats } from '../utils/hooks/useFetchRecentChats';
 import remarkGfm from 'remark-gfm';
 import ReactMarkdown from 'react-markdown';
+import { adminToggleThreadLock } from '../utils/api';
 
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const location = useLocation();
@@ -43,7 +44,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
     const { user, userLoading } = useContext(UserContext);
     const { counter, loading } = useContext(CounterContext);
-    const { thread, threadLoading } = useFetchThread(thread_name);
+    const { thread, threadLoading, setThread } = useFetchThread(thread_name);
     const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest } = useFetchRecentCounts(thread_name, context);
     const { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats } = useFetchRecentChats(thread_name, context);
     const loadedNewestRef = useRef(false);
@@ -54,6 +55,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [lastCount, setLastCount] = useState<{lastCount: PostType, lastCounter: Counter}>();
     const [newRecentPostLoaded, setNewRecentPostLoaded] = useState('');
+    const [splits, setSplits] = useState<any>([]);
     const isMounted = useIsMounted();
 
     const userAsRef = useRef<User>();
@@ -458,6 +460,22 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             // setNewChatsLoadedState(`${data.post_uuid}-reax-${Date.now()}`);
           });
 
+          socket.on(`thread_update`, function(data) {
+            setThread(data.threadInfo);
+          });
+
+          socket.on('split', function(data) {
+            const { number, split } = data;
+            setSplits(prevSplits => {
+              const newSplits = [{ number, split }, ...prevSplits];
+                if (newSplits.length > 55) {
+                  return newSplits.slice(0, 55);
+                } else {
+                  return newSplits;
+                }
+            });
+          });
+
             return () => {
               console.log("Disabling socket functions. Something happened. You *probably* disconnected, but maybe not.");
                 socket.off('connection_error');
@@ -465,6 +483,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 socket.off('lastCount');
                 socket.off('watcher_count');
                 socket.off('deleteComment');
+                socket.off('thread_update');
+                socket.off('split');
                 setSocketStatus("DISCONNECTED");
             }
         }
@@ -501,34 +521,35 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     }, [deleteComment]);
 
 
-    // renderLatency attempt 1, old.
-    // useEffect(() => {
-    //   console.log("Latency 1");
-    //   if(userAsRef.current && userAsRef.current.pref_load_from_bottom) {
-    //     if (renderLatencyCheck && recentCounts.slice(-1)[0].rawText == latencyCheck.current && counter && recentCounts.slice(-1)[0].authorUUID == counter.uuid) {
-    //       setRecentCounts(prevCounts => [
-    //         ...prevCounts.slice(0, -1),
-    //         { ...prevCounts.slice(-1)[0], 'renderLatency': (Date.now() - latency.current) }
-    //       ]);
-    //       setRenderLatencyCheck(false);
-    //     }
-    //   } else {
-    //     if (renderLatencyCheck && recentCounts[0].rawText == latencyCheck.current && counter && recentCounts[0].authorUUID == counter.uuid) {
-    //       setRecentCounts(prevCounts => [
-    //         { ...prevCounts[0], 'renderLatency': (Date.now() - latency.current) }, 
-    //         ...prevCounts.slice(1),
-    //       ]);
-    //       setRenderLatencyCheck(false);
-    //     }
-    //   }
-        
-    //   }, [recentCounts, renderLatencyCheck, latency, latencyCheck]);
+    const tableHeader = '| Number | Split |\n| ------ | ----- |';
+    const tableRows = splits.map((split) => {console.log(split); return(`| ${split.number} | ${split.split}ms |`)}).join('\n');
+    const table = `${tableHeader}\n${tableRows}`;
 
     const handleSubmit = (text: string) => {
         const submitText = text;
         console.log("Submitting text: ", submitText);
         if(thread_name && counter) {
             socket.emit('post', {thread_name: thread_name, text: submitText});
+        }
+      };
+
+      const lockThread = async () => {
+        if(thread) {
+          try {
+          const res = await adminToggleThreadLock(thread.uuid);
+            if(res.status == 201) {
+              setSnackbarSeverity('success');
+              setSnackbarOpen(true)
+              setSnackbarMessage('Thread lock toggled')
+            }
+          }
+          catch(err) {
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true)
+            setSnackbarMessage('Error: Submission rejected. If this comes as a surprise, please reach out to discord mods via DM!')
+          }
+        } else {
+          console.log("Thread not loaded yet.");
         }
       };
 
@@ -582,7 +603,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         return (          
         <CountList thread={thread} recentCountsLoading={recentCountsLoading} throttle={throttle} setThrottle={setThrottle} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} setRecentChats={setRecentChats} newRecentPostLoaded={newRecentPostLoaded} userLoading={userLoading} user={user} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} setRecentCounts={setRecentCounts} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} socket={socket} counter={counter} loading={loading} recentCounts={recentCounts} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
         )
-      }, [cachedCounts, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, userLoading, loading])
+      }, [cachedCounts, thread, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, userLoading, loading])
 
       const chatsMemo = useMemo(() => {
         console.log("Chats Memo Render");
@@ -609,6 +630,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.description : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           <Typography variant="h5" sx={{mt: 2, mb: 1}}>Rules</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.rules : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
+          {counter && thread && counter.roles.includes('admin') && <Button variant='contained' onClick={lockThread}>Lock Thread (locked: currently {thread.locked.toString()})</Button>}
         </TabPanel>
         <TabPanel value="tab_2" sx={{}}>
           <Typography variant='h4'>Chats</Typography>
@@ -619,6 +641,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         <TabPanel value="tab_3" sx={{}}>
         {lastCount && <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Last count: {lastCount.lastCount.rawCount} by {lastCount.lastCounter.name}</Typography>}
           Splits will go here.
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{table}</ReactMarkdown>
         </TabPanel>
         <TabPanel value="tab_4" sx={{}}>
           Stats will go here (daily hoc, etc.)
@@ -626,7 +649,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         </Box>
         </TabContext>
         )
-      }, [tabValue, thread, newChatsLoadedState, lastCount])
+      }, [tabValue, thread, newChatsLoadedState, lastCount, splits])
       
 
       if(!loading && !threadLoading && thread) {

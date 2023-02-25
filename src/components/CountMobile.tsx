@@ -115,7 +115,7 @@ return (
                           </Grid>
                           <Grid item xs={12} sx={{}}>
                           <Typography fontSize={12} variant="subtitle1" color={renderedCounter.color} sx={{textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowX: 'hidden'}} component="div">
-                          <Link underline="hover" color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
+                          <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
                     </Typography>
                           </Grid>
                           </Grid>

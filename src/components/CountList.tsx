@@ -38,6 +38,7 @@ const CountList = memo((props: any) => {
     const gaEventTracker = useAnalyticsEventTracker('Login');
     const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
+
     //Add Ctrl+Enter submit shortcut
     useEffect(() => {
         console.log("Adding Ctrl+Enter listener");
@@ -262,12 +263,12 @@ const CountList = memo((props: any) => {
         if (scrollDiagnostics.current) {
           console.log(`Scrolling. scrollHeight: ${element.scrollHeight}, scrollTop: ${element.scrollTop}, clientHeight: ${element.clientHeight}, scrollThrottle: ${scrollThrottle}, isScrolledToTop: ${isScrolledToTop}, isScrolledToBottom: ${isScrolledToBottom}, chats: ${props.chatsOnly}`);
         }
-        if (element.scrollHeight - element.scrollTop <= element.clientHeight) {
+        if (element.scrollHeight - element.scrollTop - 2 <= element.clientHeight) {
           changeScrolledToBottom(true);
         } else {
           changeScrolledToBottom(false);
         }
-        if ((element.scrollHeight - element.scrollTop <= element.clientHeight) && !scrollThrottle) {
+        if ((element.scrollHeight - element.scrollTop - 2 <= element.clientHeight) && !scrollThrottle) {
           console.log("Manually scrolled to bottom?");
           console.log("loadedOldest: ", props.loadedOldest);
           console.log("loadedNewest: ", props.loadedNewest);
@@ -423,7 +424,12 @@ const CountList = memo((props: any) => {
 
       const submitButtonMemo = useMemo(() => {
         console.log(`Submit Area Render (isDesktop: ${isDesktop})`);
-        if(isDesktop && props.counter && props.counter.roles.includes("counter")) {
+        if(props.counter && props.counter.roles.includes('banned')) {
+          return (
+            <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
+                <Typography color="text.primary" variant="body1">You are banned. You can't post until you've been unbanned.</Typography>
+            </Box>)
+        } else if(isDesktop && props.counter && props.counter.roles.includes("counter") && props.thread && props.thread.locked === false) {
         return (
           <Box ref={submitRef} sx={{maxWidth: '100%', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, padding: '0.5', background: alpha(theme.palette.background.paper, 0.9)}}>
           <Tooltip title={`${props.cachedCounts && props.cachedCounts.length} new`} placement="top" open={(props.cachedCounts && props.cachedCounts.length > 0) ? true : false} arrow >
@@ -447,7 +453,7 @@ const CountList = memo((props: any) => {
           </IconButton>
           </Tooltip>
       </Box>)
-        } else if(props.counter && props.counter.roles.includes("counter")) {
+        } else if(props.counter && props.counter.roles.includes("counter") && props.thread && props.thread.locked === false) {
         // } else {
           return (<>
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, padding: '0.5', bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
@@ -474,8 +480,12 @@ const CountList = memo((props: any) => {
                 </Tooltip>
             </Box>
             <Box ref={endOfSubmitRef}></Box></>)
-        } 
-        else if(props.counter && !props.counter.color) {
+        } else if(props.thread && props.thread.locked) {
+          return (
+            <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
+                <Typography color="text.primary" variant="body1">This thread has been locked. This may be temporary, check the "About" page.</Typography>
+            </Box>)
+        } else if(props.counter && !props.counter.color) {
           return (
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
                 <Typography color="text.primary" variant="body1">Your registration is not yet complete. Click the "Complete Registration" button at the top to join in!</Typography>
@@ -494,7 +504,7 @@ const CountList = memo((props: any) => {
               </Button>
             </Box>)
         }
-      }, [inputRef, submitColor, keyboardType, theme, isDesktop, props.counter, props.cachedCounts, props.loadedNewestRef, props.loadedNewest, forceRerenderSubmit, props.recentCountsLoading])
+      }, [inputRef, props.thread, submitColor, keyboardType, theme, isDesktop, props.counter, props.cachedCounts, props.loadedNewestRef, props.loadedNewest, forceRerenderSubmit, props.recentCountsLoading])
 
       const countsMemo = useMemo(() => {
         console.log("All Counts Render");

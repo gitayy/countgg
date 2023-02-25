@@ -79,8 +79,6 @@ const Count = memo((props: any) => {
   const [pickerOpen, setPickerOpen] = useState(false);
   function handleEmojiSelect(emoji) {
     console.log(emoji);
-    console.log(props.post.uuid);
-    console.log(props.socket);
     props.socket.emit(`updateReactions`, {id: emoji.id, post_uuid: props.post.uuid})
     setPickerOpen(false);
   }
@@ -91,6 +89,8 @@ const Count = memo((props: any) => {
     p: ('span' as any),
     code: ({ children }) => { return (Object.keys(data.emojis).includes((children[0] as string).toLowerCase()) ? EmojiTest({id: (children[0] as string).toLowerCase(), size: 24, set: 'twitter'}) : <code>{children}</code>)}
   }
+
+  console.log("Desktop Count Render");
 
     return (
           <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word' }}>
@@ -143,7 +143,7 @@ const Count = memo((props: any) => {
                         <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{props.post.countContent}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }
                         </Typography>
                     <Typography variant="subtitle1" component="div">
-                        <Link underline="hover" color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
+                        <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
                       </Typography>
                       <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}>
                       {props.post.reactions && Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {

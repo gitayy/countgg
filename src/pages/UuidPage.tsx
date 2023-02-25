@@ -1,20 +1,10 @@
 import { useState } from 'react';
 import { Box, TextField, Typography } from '@mui/material';
-import { formatDateExact, formatTimeDiff, uuidParseNano } from '../utils/helpers';
-import { validate as uuid_validate } from 'uuid';
+import { convertToTimestamp, formatDateExact, formatTimeDiff} from '../utils/helpers';
 
 export const UuidPage = () => {
     const [uuid1, setUuid1] = useState('');
     const [uuid2, setUuid2] = useState('');
-  
-    const convertToTimestamp = (uuid) => {
-      // should return epoch time as a number or null if invalid input
-    if(uuid_validate(uuid)) {
-        return Number(uuidParseNano(uuid)) / 1000;
-    } else {
-        return null;
-    }
-    }
   
     const timestamp1 = convertToTimestamp(uuid1);
     const timestamp2 = convertToTimestamp(uuid2);

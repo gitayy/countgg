@@ -140,3 +140,17 @@ axios.post(
   {thread_uuid: thread_uuid},
   CONFIG
 );
+
+export const adminToggleBan = (uuid: string) =>
+axios.post(
+  `${API_URL}/counter/adminToggleBan`,
+  {uuid: uuid},
+  CONFIG
+);
+
+export const adminToggleMute = (uuid: string) =>
+axios.post(
+  `${API_URL}/counter/adminToggleMute`,
+  {uuid: uuid},
+  CONFIG
+);
