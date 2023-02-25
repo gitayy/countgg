@@ -43,7 +43,7 @@ const CountList = memo((props: any) => {
     useEffect(() => {
         console.log("Adding Ctrl+Enter listener");
         function handleKeyDown(event) {
-          if (event.ctrlKey && event.key === 'Enter') {
+          if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
             handlePosting();
           }
         }
