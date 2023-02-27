@@ -47,6 +47,7 @@ export const defaultCounter = (uuid: string) => ({
   title: '...',
   cardStyle: '',
   cardBorderStyle: '',
+  xp: 100
 });
 
 export function EmojiTest(props) {  
@@ -187,9 +188,25 @@ export function getReplyColorName(time: number, per: number = 100) {
 
 export const convertToTimestamp = (uuid) => {
   // should return epoch time as a number or null if invalid input
-if(uuid_validate(uuid)) {
-    return Number(uuidParseNano(uuid)) / 1000;
-} else {
+  try {
+    if(uuid_validate(uuid)) {
+        return Number(uuidParseNano(uuid)) / 1000;
+    } else {
+        return null;
+    }
+  }
+  catch(err) {
+    console.log(err);
     return null;
+  }
 }
+
+export const isValidHexColor = (color: string): boolean => {
+  const hexColorRegex = /^[0-9A-Fa-f]{6}$/;
+  return hexColorRegex.test(color);
 }
+
+export const standardizeFormatOptions = ['Disabled', 'No Separator', 'Commas', 'Periods', 'Spaces']
+export const nightModeOptions = ['System', 'On', 'Off'];
+export const submitShortcutOptions = ['CtrlEnter', 'Enter', 'Off'];
+export const customStrickenOptions = ['Disabled', 'Enabled', 'Inverse'];

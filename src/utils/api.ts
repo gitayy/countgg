@@ -84,8 +84,24 @@ axios.post(
   CONFIG
 );
 
+export const findPostByThreadAndNumber = (thread: string, number: string) =>
+axios.post(
+  `${API_URL}/thread/findPostByThreadAndNumber`,
+  {thread: thread,
+  number: number},
+  CONFIG
+);
+
+export const findPostByThreadAndRawCount = (thread: string, rawCount: string) =>
+axios.post(
+  `${API_URL}/thread/findPostByThreadAndRawCount`,
+  {thread: thread,
+  rawCount: rawCount},
+  CONFIG
+);
+
 export const getAchievements = (uuid: string) =>
-axios.get<object>(`${API_URL}/counter/achievements/${uuid}`, CONFIG);
+axios.get<any>(`${API_URL}/counter/achievements/${uuid}`, CONFIG);
 
   //Admin API
 export const getUnapproved = () =>

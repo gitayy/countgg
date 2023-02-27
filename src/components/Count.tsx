@@ -1,4 +1,4 @@
-import { Box, CardMedia, CardContent, Typography, Grid,  IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link, Popover, useTheme } from "@mui/material";
+import { Box, CardMedia, CardContent, Typography, Grid,  IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link, Popover, useTheme, Table, Modal } from "@mui/material";
 import { memo, useRef, useState } from "react";
 import CountggLogo from '../assets/countgg-128.png'
 import { defaultCounter, EmojiTest, formatDate, getReplyColorName } from "../utils/helpers";
@@ -12,12 +12,35 @@ import { custom_emojis } from "../utils/custom_emojis";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'
 import data from '@emoji-mart/data/sets/14/twitter.json'
-
+import { HelpOutline } from '@mui/icons-material';
 
 
 
 const Count = memo((props: any) => {
 
+  if(props.user && props.user.pref_standardize_format != 'Disabled' && props.post.countContent && props.post.rawCount) {
+    const format = props.user.pref_standardize_format;
+    switch (format) {
+      case 'No Separator':
+        props.post.countContent = props.post.rawCount;
+        break;
+      case 'Commas':
+        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        break;
+      case 'Periods':
+        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        break;
+      case 'Spaces':
+        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        break;
+      default:
+        break;
+    }
+  }
+
+  if(props.user && props.user.pref_time_since_last_count === false) {
+    props.post.timeSinceLastCount = props.post.timeSinceLastPost;
+  }
 
   // const isLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
   const theme = useTheme();
@@ -61,6 +84,16 @@ const Count = memo((props: any) => {
     }
   };
 
+  // const [openReax, setOpenReax] = useState(false);
+  
+  // const handleOpenReax = () => {
+  //   setOpenReax(true);
+  // };
+
+  // const handleCloseReax = () => {
+  //   setOpenReax(false);
+  // };
+
   const replyTimeColor = getReplyColorName(props.post.timeSinceLastPost);
 
   let maybeSpace;
@@ -87,13 +120,15 @@ const Count = memo((props: any) => {
   
   const components = {
     p: ('span' as any),
+    li: ({ children }) => <li style={{whiteSpace: 'initial'}}>{children}</li>,
+    // table: ({ children }) => <Table>{children}</Table>,
     code: ({ children }) => { return (Object.keys(data.emojis).includes((children[0] as string).toLowerCase()) ? EmojiTest({id: (children[0] as string).toLowerCase(), size: 24, set: 'twitter'}) : <code>{children}</code>)}
   }
 
   console.log("Desktop Count Render");
 
     return (
-          <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word' }}>
+          <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
             <Box>
                 <Grid container>
                     <Grid item xs={4}>
@@ -140,8 +175,7 @@ const Count = memo((props: any) => {
             <Grid item xs={6}>
               <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                 <CardContent sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, pb: 0, overflowWrap: 'anywhere', '&:last-child': {pb: '2px'} }}>
-                        <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{props.post.countContent}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }
-                        </Typography>
+                        <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{props.post.countContent}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment.startsWith('\n') ? `\u00A0${props.post.comment}` : props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
                     <Typography variant="subtitle1" component="div">
                         <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
                       </Typography>
@@ -157,6 +191,7 @@ const Count = memo((props: any) => {
                           )
                         }
                         })}
+                        {/* {props.post.reactions && Object.keys(props.post.reactions).length > 0 && <IconButton sx={{height: '20px', width: '20px'}} onClick={handleOpenReax}><HelpOutline /></IconButton>} */}
                       </Box>
                 </CardContent>
               </Box>
@@ -200,6 +235,13 @@ const Count = memo((props: any) => {
                   <Button sx={{fontWeight: "bold"}} autoFocus onClick={handleConfirm}>Confirm</Button>
                 </DialogActions>
               </Dialog>
+              {/* <Dialog open={openReax} onClose={handleCloseReax}>
+              <DialogContent>
+                <Typography variant="h5">Reactions</Typography>
+                <Typography variant="body1">
+                  This is where you can put your help text.
+                </Typography></DialogContent>
+              </Dialog> */}
               </Box>
               }
               </Grid>

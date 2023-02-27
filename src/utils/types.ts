@@ -9,7 +9,13 @@ export type User = {
   pref_online: boolean;
   pref_discord_pings: boolean;
   pref_load_from_bottom: boolean;
-  xp: number;
+  pref_strike_color: string;
+  pref_submit_shortcut: string;
+  pref_noClear: boolean;
+  pref_nightMode: string;
+  pref_standardize_format: string;
+  pref_time_since_last_count: boolean;
+  pref_custom_stricken: string;
   titles: number[];
   card_borders: number[];
   card_backgrounds: number[];
@@ -28,6 +34,7 @@ export type Counter = {
   cardBorderStyle: string,
   pronouns: [string, string, string, string],
   title: string,
+  xp: number,
 };
 
 export type PostType = {
@@ -69,5 +76,14 @@ export type ThreadType = {
   moderators: string[];
   verifiers: string[];
 };
+
+export type AchievementType = {
+  id: number;
+  name: string; 
+  icon?: string; 
+  isPublic: boolean;
+  description: string;
+  countersEarned: number;
+}
 
 export const unverified_roles = ['unverified', 'manual_verification_needed', 'discord_verified', 'denied']

@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { CounterContext } from '../utils/contexts/CounterContext';
-import { Alert, AlertColor, Box, Button, Grid, Modal, Paper, Snackbar, Typography } from '@mui/material';
+import { Alert, AlertColor, Box, Button, CardMedia, Grid, Link, Modal, Paper, Snackbar, Typography } from '@mui/material';
 import { Loading } from '../components/Loading';
 import SwingBg from '../assets/swing2.png';
 import useAnalyticsEventTracker, { modalStyle } from '../utils/helpers';
@@ -25,6 +25,28 @@ export const DefaultPage = () => {
   const gaEventTracker = useAnalyticsEventTracker('Login');
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    var testTimeout;
+    const updateCount = () => {
+      testTimeout = setTimeout(function() {
+
+      if(count < 41) {
+        setCount(prevCount => {
+          return (prevCount + 1)
+        });
+      }
+
+    }, 50);
+    };
+
+    updateCount();
+    return () => {
+      clearTimeout(testTimeout);
+    };
+  }, [count]);
+
   if(!loading) {
 
     return (<>
@@ -38,8 +60,8 @@ export const DefaultPage = () => {
         </Alert>
     </Snackbar>
       <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
-      <Typography variant="h1" sx={{ textAlign: 'center' }}>
-        Over 0+ Counts Made
+      <Typography variant="h1" sx={{ textAlign: 'center', m: 1 }}>
+        Over <Typography variant='h1' component={'span'} sx={{ textAlign: 'center', background: 'linear-gradient(to right, #FF8C00, #FFA500)', }}>&nbsp;{`${count.toString().slice(count.toString().length - 1)}${'0'.repeat(Math.floor(count/10))}`}&nbsp;</Typography> Counts Made
       </Typography>
         {!counter && <Paper elevation={8} sx={{mb: 2, display: 'flex', alignItems: 'stretch', background: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),url(${SwingBg})`, minHeight: '33vh', p: 2, backgroundSize: 'cover', backgroundPosition: 'top right'}}>
           <Grid container direction={'row'}>
@@ -49,7 +71,6 @@ export const DefaultPage = () => {
             <Grid item xs={12}>
               <Typography color="white" variant='body1' sx={{m: 2, textShadow: '1px 1px black'}}>countGG is the largest website solely dedicated to counting, where users can count in real-time. With a simple and intuitive interface, users can participate in one of the biggest collaborations on the Internet. Whether it's for fun or competition, countGG provides a unique and engaging experience for counting enthusiasts of all levels.</Typography>
               <Typography color="white" variant='h6' sx={{m: 2, textShadow: '1px 1px black'}}>Sign up for free. Drop a count. Make history.</Typography>
-              <Typography color="white" variant='body1' sx={{m: 2, textShadow: '1px 1px black'}}>Over 0 counts made!</Typography>
             </Grid>
             <Grid item xs={12} sx={{flexGrow: 1}}>
               <Typography></Typography>
@@ -88,11 +109,16 @@ export const DefaultPage = () => {
             </Box>
           </Modal>
 
-          
-        <Paper onClick={()=>{navigate(`/thread/test`)}} elevation={8} sx={{cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', minHeight: '33vh', p: 2, }}>
+          <Link color={'inherit'} underline='none' href={`/thread/main`} onClick={(e) => {e.preventDefault();navigate(`/thread/main`);}}>
+        <Paper elevation={8} sx={{cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', minHeight: '33vh', p: 2, }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <img src="https://placekitten.com/600/400" alt="Kitten" />
+            <CardMedia
+              component="img"
+              sx={{  width: '100%', maxHeight: '300px', borderRadius: '16px', objectFit: 'contain', p: 1 }}
+              image={'https://placekitten.com/600/400'}
+              alt={"Kitten"}
+            />
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="h3" sx={{ mb: 2 }}>
@@ -103,11 +129,17 @@ export const DefaultPage = () => {
             </Typography>
           </Grid>
         </Grid>
-        </Paper>
-        <Paper elevation={8} onClick={()=>{navigate(`/threads`)}} sx={{cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', minHeight: '33vh', p: 2, }}>
+        </Paper></Link>
+        <Link color={'inherit'} underline='none' href={`/threads`} onClick={(e) => {e.preventDefault();navigate(`/threads`);}}>
+        <Paper elevation={8} sx={{cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', minHeight: '33vh', p: 2, }}>
           <Grid container direction={'row-reverse'} spacing={2}>
         <Grid item xs={12} md={6}>
-          <img src="https://placekitten.com/600/400" alt="Kitten" />
+          <CardMedia
+              component="img"
+              sx={{  width: '100%', maxHeight: '300px', borderRadius: '16px', objectFit: 'contain', p: 1 }}
+              image={'https://placekitten.com/800/300'}
+              alt={"Kitten"}
+            />
         </Grid>
         <Grid item xs={12} md={6}>
           <Typography variant="h3" sx={{ mb: 2 }}>
@@ -118,7 +150,7 @@ export const DefaultPage = () => {
           </Typography>
         </Grid>
         </Grid>
-        </Paper>
+        </Paper></Link>
       </Box>
       </>
     )

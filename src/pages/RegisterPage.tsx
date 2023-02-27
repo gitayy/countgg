@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Loading } from "../components/Loading";
 import { registerCounter } from "../utils/api";
 import { CounterContext } from "../utils/contexts/CounterContext";
-import { pronouns } from "../utils/helpers"
+import { isValidHexColor, pronouns } from "../utils/helpers"
 import { HexColorPicker } from "react-colorful";
 import { RulesPage } from "./RulesPage";
 
@@ -26,11 +26,6 @@ export const RegisterPage = () => {
         }    
         setSnackbarOpen(false);
       };
-
-      function isValidHexColor(color: string): boolean {
-        const hexColorRegex = /^[0-9A-Fa-f]{6}$/;
-        return hexColorRegex.test(color);
-      }
 
     const rulesNext = () => {
         setStep(1);

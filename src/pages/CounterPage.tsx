@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { CounterContext } from '../utils/contexts/CounterContext';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useFetchLoadCounter } from '../utils/hooks/useFetchLoadCounter';
@@ -14,6 +14,7 @@ import { Loading } from '../components/Loading';
 import { CounterCard } from '../components/CounterCard';
 import { convertToTimestamp, formatDateExact } from '../utils/helpers';
 import { adminToggleBan, adminToggleMute } from '../utils/api';
+import { AchievementType } from '../utils/types';
 
   export const CounterPage = () => {
     const params = useParams();
@@ -22,8 +23,27 @@ import { adminToggleBan, adminToggleMute } from '../utils/api';
     const newSocket = useContext(SocketContext);
     const { loadedCounter, loadedCounterLoading } = useFetchLoadCounter(counterId);
     // const { loadedCounterStats, loadedCounterStatsLoading } = useFetchLoadCounterStats(counterId);
-    const { achievements, achievementsloading } = useFetchAchievements(counterId);
+    const { achievements, achievementsLoading, setAchievements, allPublicAchievements } = useFetchAchievements(counterId);
+    const [unearnedAchievements, setUnearnedAchievements] = useState<AchievementType[]>([]);
+    const [unearnedAchievementsLoading, setUnearnedAchievementsLoading] = useState(true);
     const isMounted = useIsMounted();
+
+    useEffect(() => {
+      if(allPublicAchievements.length > 0) {
+        const publicAchievementsNotEarned = allPublicAchievements.filter(achievement => {
+          return !achievements.some(userAchievement => userAchievement.id === achievement.id);
+        });
+        const sortedUnearnedPublicAchievements = publicAchievementsNotEarned.sort((a, b) => {
+          return b.countersEarned - a.countersEarned;
+        });
+        const sortedAchievements = achievements.sort((a, b) => {
+          return a.countersEarned - b.countersEarned;
+        });
+        setUnearnedAchievements(sortedUnearnedPublicAchievements);
+        setAchievements(sortedAchievements);
+        setUnearnedAchievementsLoading(false);
+      }
+    }, [allPublicAchievements])
 
     const [tabValue, setTabValue] = useState('1');
 
@@ -58,7 +78,7 @@ import { adminToggleBan, adminToggleMute } from '../utils/api';
     };
 
     
-    if(loadedCounter && !loadedCounterLoading && !achievementsloading && isMounted.current) {
+    if(loadedCounter && !loadedCounterLoading && !achievementsLoading && !unearnedAchievementsLoading && isMounted.current) {
 
       return (
         <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
@@ -81,10 +101,13 @@ import { adminToggleBan, adminToggleMute } from '../utils/api';
                 <Typography>Color: {loadedCounter.color}</Typography>
               </TabPanel>
               <TabPanel value="2">
-                No stats found :( (Coming soon)
+                User stats are coming soon!
               </TabPanel>
               <TabPanel value="3">
+                <Typography variant='h5'>Unlocked</Typography>
                 <Achievements achievements={achievements}></Achievements>
+                <Typography variant='h5'>Locked</Typography>
+                <Achievements achievements={unearnedAchievements} locked={true}></Achievements>
               </TabPanel>
             </TabContext>
             

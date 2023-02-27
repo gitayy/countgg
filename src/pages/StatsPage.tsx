@@ -9,8 +9,8 @@ export const StatsPage = () => {
   if(!loading) {
 
     return (
-      <Box sx={{ bgcolor: 'primary.light', flexGrow: 1}}>
-        Coming soon
+      <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
+        Stats are coming soon! Sorry I couldn't meet the deadline!
       </Box>
     )
   } else {

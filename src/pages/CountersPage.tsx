@@ -9,8 +9,8 @@ export const CountersPage = () => {
   if(!loading) {
 
     return (
-      <Box sx={{ bgcolor: 'primary.light', flexGrow: 1}}>
-        Coming soon
+      <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
+        Counters page is coming soon. You'll be able to search for profiles here.
       </Box>
     )
   } else {

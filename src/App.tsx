@@ -33,6 +33,7 @@ import data from '@emoji-mart/data/sets/14/twitter.json'
 import { init } from 'emoji-mart'
 import { custom_emojis } from './utils/custom_emojis';
 import { RulesPage } from './pages/RulesPage';
+import { PostFinderPage } from './pages/PostFinderPage';
 
 const GA_TR_ID = process.env.REACT_APP_GA_TR_ID || "G-0000000000"
 
@@ -43,8 +44,12 @@ function App() {
   const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light');
 
   useEffect(() => {
-    setMode(prefersDarkMode ? 'dark' : 'light');
-  }, [prefersDarkMode])
+    if(user && user.pref_nightMode != 'System') {
+      setMode(user.pref_nightMode === 'On' ? 'dark' : 'light');  
+    } else {
+      setMode(prefersDarkMode ? 'dark' : 'light');
+    }
+  }, [prefersDarkMode, user])
 
   const [snack, setSnack] = useState({
     message: '',
@@ -210,6 +215,7 @@ function App() {
             </Route>
             <Route path="/counters" element={<CountersPage />} />
             <Route path="/uuid" element={<UuidPage />} />
+            <Route path="/post-finder" element={<PostFinderPage />} />
             <Route path="/rules" element={<RulesPage />} />
             <Route path="/privacy-policy" element={<PrivacyPage />} />
             <Route path="/about" element={<AboutPage />} />
@@ -250,6 +256,7 @@ function App() {
             </Route>
             <Route path="/counters" element={<CountersPage />} />
             <Route path="/uuid" element={<UuidPage />} />
+            <Route path="/post-finder" element={<PostFinderPage />} />
             <Route path="/rules" element={<RulesPage />} />
             <Route path="/privacy-policy" element={<PrivacyPage />} />
             <Route path="/about" element={<AboutPage />} />

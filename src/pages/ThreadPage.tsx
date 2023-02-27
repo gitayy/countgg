@@ -19,6 +19,7 @@ import { useFetchRecentChats } from '../utils/hooks/useFetchRecentChats';
 import remarkGfm from 'remark-gfm';
 import ReactMarkdown from 'react-markdown';
 import { adminToggleThreadLock } from '../utils/api';
+import { DailyHOCTable } from '../components/DailyHOCTable';
 
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const location = useLocation();
@@ -54,6 +55,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [lastCount, setLastCount] = useState<{lastCount: PostType, lastCounter: Counter}>();
+    const [dailyHOC, setDailyHOC] = useState<{[authorUUID: string]: {counter: Counter, counts: number}}>();
     const [newRecentPostLoaded, setNewRecentPostLoaded] = useState('');
     const [splits, setSplits] = useState<any>([]);
     const isMounted = useIsMounted();
@@ -73,9 +75,15 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
     const setThrottle = () => {
       throttle.current = true;
-      setTimeout(function() {
-        throttle.current = false;
-      }, 150);
+      if(thread_name === 'main') {
+        setTimeout(function() {
+          throttle.current = false;
+        }, 15000);
+      } else {
+        setTimeout(function() {
+          throttle.current = false;
+        }, 150);
+      }
     }
 
 
@@ -221,6 +229,11 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               setLastCount(data);
               addCounterToCache(data.lastCounter);
             });
+            socket.on(`dailyHOC`, function(data) {
+              console.log("DAILY HOC DATA");
+              console.log(data);
+              setDailyHOC(data);
+            });
             socket.on(`deleteComment`, function(data) {
               setRecentCounts(prevCounts => {
                 return prevCounts.map(post => {
@@ -313,6 +326,16 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 }
                 if(data.post.isValidCount) {
                   setLastCount({lastCount: data.post, lastCounter: data.counter});
+                  setDailyHOC(prevDailyHOC => {
+                      const updatedHOC = {
+                        ...prevDailyHOC,
+                        [data.counter.uuid]: {
+                          counter: data.counter,
+                          counts: prevDailyHOC !== undefined ? ((prevDailyHOC[data.counter.uuid]?.counts || 0) + 1) : 1,
+                        }
+                      };
+                      return updatedHOC;
+                  });
                 }
               });
 
@@ -630,7 +653,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.description : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           <Typography variant="h5" sx={{mt: 2, mb: 1}}>Rules</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.rules : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
-          {counter && thread && counter.roles.includes('admin') && <Button variant='contained' onClick={lockThread}>Lock Thread (locked: currently {thread.locked.toString()})</Button>}
+          {counter && thread && counter.roles.includes('admin') && <Button variant='contained' onClick={lockThread}>{thread.locked ? "Unlock Thread" : "Lock Thread"}</Button>}
         </TabPanel>
         <TabPanel value="tab_2" sx={{}}>
           <Typography variant='h4'>Chats</Typography>
@@ -640,16 +663,15 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         </TabPanel>
         <TabPanel value="tab_3" sx={{}}>
         {lastCount && <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Last count: {lastCount.lastCount.rawCount} by {lastCount.lastCounter.name}</Typography>}
-          Splits will go here.
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{table}</ReactMarkdown>
         </TabPanel>
         <TabPanel value="tab_4" sx={{}}>
-          Stats will go here (daily hoc, etc.)
+          <DailyHOCTable dailyHOC={dailyHOC}></DailyHOCTable>
         </TabPanel>
         </Box>
         </TabContext>
         )
-      }, [tabValue, thread, newChatsLoadedState, lastCount, splits])
+      }, [tabValue, thread, newChatsLoadedState, lastCount, splits, dailyHOC])
       
 
       if(!loading && !threadLoading && thread) {

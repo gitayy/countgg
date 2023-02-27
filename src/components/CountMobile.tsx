@@ -15,6 +15,30 @@ import data from '@emoji-mart/data/sets/14/twitter.json'
 
 const CountMobile = memo((props: any) => {
 
+  if(props.user && props.user.pref_standardize_format != 'Disabled' && props.post.countContent && props.post.rawCount) {
+    const format = props.user.pref_standardize_format;
+    switch (format) {
+      case 'No Separator':
+        props.post.countContent = props.post.rawCount;
+        break;
+      case 'Commas':
+        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        break;
+      case 'Periods':
+        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        break;
+      case 'Spaces':
+        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        break;
+      default:
+        break;
+    }
+  }
+
+  if(props.user && props.user.pref_time_since_last_count === false) {
+    props.post.timeSinceLastCount = props.post.timeSinceLastPost;
+  }
+
   // const isLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
   const theme = useTheme();
   const { counter } = props;
@@ -91,7 +115,7 @@ const CountMobile = memo((props: any) => {
 
 
 return (
-    <Box ref={props.contextRef} className={`count countMobile ${props.contextRef && "highlighted"}`} sx={{p: 0.5, wordWrap: 'break-word', boxSizing: 'border-box', border: '1px solid transparent', }}>
+    <Box ref={props.contextRef} className={`count countMobile ${props.contextRef && "highlighted"}`} sx={{p: 0.5, wordWrap: 'break-word', boxSizing: 'border-box', border: '1px solid transparent', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
           <Box>
               <Grid container>
                   <Grid item xs={12}>

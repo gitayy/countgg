@@ -41,18 +41,31 @@ const CountList = memo((props: any) => {
 
     //Add Ctrl+Enter submit shortcut
     useEffect(() => {
-        console.log("Adding Ctrl+Enter listener");
+        console.log("Adding Submit Shortcut listener");
         function handleKeyDown(event) {
-          if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-            handlePosting();
+          //Prevent Ctrl+0-9 from switching tabs
+          if ((event.ctrlKey || event.metaKey) && event.keyCode >= 48 && event.keyCode <= 57) {
+            event.preventDefault();
+          }
+          if(props.user && props.user.pref_submit_shortcut == 'Enter') {
+            if (event.key === 'Enter' && !event.shiftKey && !event.altKey) {
+              event.preventDefault();
+              handlePosting();
+            }
+          } else if(props.user && props.user.pref_submit_shortcut == 'Off') {
+            return;
+          } else {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+              handlePosting();
+            }
           }
         }
         window.addEventListener('keydown', handleKeyDown);
         return () => {
-          console.log("Removed Ctrl+Enter listener");
+          console.log("Removed Submit Shortcut listener");
           window.removeEventListener('keydown', handleKeyDown);
         };
-      }, [props.counter]);
+      }, [props.user]);
 
     //Scroll to bottom upon isDesktop change
     useEffect(() => {
@@ -191,7 +204,11 @@ const CountList = memo((props: any) => {
             props.handleSubmit(inputRef.current.value);
             props.setThrottle();
             setSubmitColor("primary")
-            inputRef.current.value = '';
+            if(!props.user || (props.user && props.user.pref_noClear !== true)) {
+              console.log("YEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+              console.log(props.user);
+              inputRef.current.value = '';
+            } 
             if(props.counter && props.user.pref_load_from_bottom) {
               console.log("Adding post to bottom, and scrolling.");
               changeScrolledToBottom(true);
@@ -242,10 +259,13 @@ const CountList = memo((props: any) => {
             console.log("Scrolling to the newest message based off of the first load.");
             messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
             setFirstLoad(false);
-          } else if (isScrolledToBottom) {
+          } else {
+            if (isScrolledToBottom && props.user && props.user.pref_load_from_bottom) {
+            console.log("Scrolling to the newest message based off of a new count being added, and loading from the bottom. Something else may already do this :P");
             if(!props.chatsOnly) {
               messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
               if(submitRef.current) {submitRef.current.scrollIntoView({ behavior: 'auto', block: 'end', });}
+            }
             }
             
             if (contextRef.current && !hasScrolledToContext) {
@@ -256,7 +276,7 @@ const CountList = memo((props: any) => {
             } 
           }
         }
-      }, [props.recentCounts, firstLoad, isScrolledToBottom, ]);
+      }, [props.recentCounts, firstLoad, ]);
 
       const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
         const element = event.currentTarget;
@@ -516,7 +536,7 @@ const CountList = memo((props: any) => {
                 const contextMatch = props.context && props.context === count.uuid;
                 const ref = contextMatch ? contextRef : null;
                 return (
-                  <Count myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+                  <Count user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
                 );
               })}
               {/* <Box sx={{position: 'fixed'}}>{Date.now() - props.latency}</Box> */}
@@ -528,7 +548,7 @@ const CountList = memo((props: any) => {
           const contextMatch = props.context && props.context === count.uuid;
           const ref = contextMatch ? contextRef : null;
           return (
-            <CountMobile myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+            <CountMobile user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
           );
         })}</Box>); 
       }

@@ -41,7 +41,7 @@ export const SnackbarComponent = () => {
         
 
       return(<>
-      {snack && <Snackbar sx={{cursor: 'pointer'}} open={snack.open} onClick={() => navigate(snack.url)} anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}>
+      {snack && <Snackbar sx={{cursor: 'pointer'}} open={snack.open} onClick={() => navigate(snack.url)} anchorOrigin={{vertical: 'top', horizontal: 'center'}}>
          <Alert>
            {snack.message}
          </Alert>

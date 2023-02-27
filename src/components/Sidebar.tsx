@@ -27,6 +27,7 @@ import { ColorModeContext } from '../utils/contexts/ColorModeContext';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import CountggLogo from '../assets/countgg-128.png'
 import GavelIcon from '@mui/icons-material/Gavel';
+import SearchIcon from '@mui/icons-material/Search';
 
 
 export const Sidebar = () => {
@@ -94,118 +95,118 @@ export const Sidebar = () => {
       <Toolbar />
       <Divider />
       <List>
+        <Link color={'inherit'} underline='none' href={`/`} onClick={(e) => {e.preventDefault();navigate(`/`);}}>
         <ListItem key={'home'} disablePadding>
-          <ListItemButton onClick={() => navigate('/')}>
+          <ListItemButton>
             <ListItemIcon>
               <HomeIcon></HomeIcon>
             </ListItemIcon>
-            <ListItemText primary={'Home'} />
-          </ListItemButton>
-        </ListItem>
+            <ListItemText primary={'Home'} />          
+          </ListItemButton>          
+        </ListItem></Link>
+        <Link color={'inherit'} underline='none' href={`/threads`} onClick={(e) => {e.preventDefault();navigate(`/threads`);}}>
         <ListItem key={'threads'} disablePadding>
-          <ListItemButton onClick={() => navigate(`/threads`)}>
+          <ListItemButton>
             <ListItemIcon>
               <StadiumIcon></StadiumIcon>
             </ListItemIcon>
             <ListItemText primary={'Threads'} />
           </ListItemButton>
-        </ListItem>
+        </ListItem></Link>
+        <Link color={'inherit'} underline='none' href={`/rules`} onClick={(e) => {e.preventDefault();navigate(`/rules`);}}>
         <ListItem key={'rules'} disablePadding>
-          <ListItemButton onClick={() => navigate(`/rules`)}>
+          <ListItemButton>
             <ListItemIcon>
               <GavelIcon></GavelIcon>
             </ListItemIcon>
             <ListItemText primary={'Rules'} />
           </ListItemButton>
-        </ListItem>
+        </ListItem></Link>
       </List>
       <Divider />
       <List>
+      <Link color={'inherit'} underline='none' href={`/stats`} onClick={(e) => {e.preventDefault();navigate(`/stats`);}}>
         <ListItem key={'stats'} disablePadding>
-          <ListItemButton onClick={() => navigate(`/stats`)}>
+          <ListItemButton>
             <ListItemIcon>
               <QueryStatsIcon></QueryStatsIcon>
             </ListItemIcon>
             <ListItemText primary={'Stats'} />
           </ListItemButton>
-        </ListItem>
-        {counter && counter.roles.includes("counter") && <ListItem key={'my_profile'} disablePadding>
-          <ListItemButton onClick={() => navigate(`/counter/${counter.uuid}`)}>
+        </ListItem></Link>
+        {counter && counter.roles.includes("counter") && <Link color={'inherit'} underline='none' href={`/counter/${counter.uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counter.uuid}`);}}><ListItem key={'my_profile'} disablePadding>
+          <ListItemButton>
             <ListItemIcon>
               <PersonIcon></PersonIcon>
             </ListItemIcon>
             <ListItemText primary={'My Profile'} />
           </ListItemButton>
-        </ListItem>}
+        </ListItem></Link>}
+        <Link color={'inherit'} underline='none' href={`/counters`} onClick={(e) => {e.preventDefault();navigate(`/counters`);}}>
         <ListItem key={'counters'} disablePadding>
-          <ListItemButton onClick={() => navigate(`/counters`)}>
+          <ListItemButton>
             <ListItemIcon>
               <GroupsIcon></GroupsIcon>
             </ListItemIcon>
             <ListItemText primary={'Counters'} />
           </ListItemButton>
-        </ListItem>
+        </ListItem></Link>
+        <Link color={'inherit'} underline='none' href={`/uuid`} onClick={(e) => {e.preventDefault();navigate(`/uuid`);}}>
         <ListItem key={'uuid'} disablePadding>
-          <ListItemButton onClick={() => navigate(`/uuid`)}>
+          <ListItemButton>
             <ListItemIcon>
               <CalculateIcon></CalculateIcon>
             </ListItemIcon>
             <ListItemText primary={'UUID to Time'} />
           </ListItemButton>
-        </ListItem>
+        </ListItem></Link>
+        <Link color={'inherit'} underline='none' href={`/post-finder`} onClick={(e) => {e.preventDefault();navigate(`/post-finder`);}}>
+        <ListItem key={'post-finder'} disablePadding>
+          <ListItemButton>
+            <ListItemIcon>
+              <SearchIcon></SearchIcon>
+            </ListItemIcon>
+            <ListItemText primary={'Post Finder'} />
+          </ListItemButton>
+        </ListItem></Link>
       </List>
       <Divider />
-      {counter && counter.roles.includes("gm") && <><List>
-        <ListItem key={'roster'} disablePadding>
-          <ListItemButton onClick={() => navigate(`/roster`)}>
-            <ListItemIcon>
-              <PersonIcon></PersonIcon>
-            </ListItemIcon>
-            <ListItemText primary={'My Roster'} />
-          </ListItemButton>
-        </ListItem>
-        <ListItem key={'free-agents'} disablePadding>
-          <ListItemButton onClick={() => navigate(`/free-agents`)}>
-            <ListItemIcon>
-              <PersonIcon></PersonIcon>
-            </ListItemIcon>
-            <ListItemText primary={'Free Agents'} />
-          </ListItemButton>
-        </ListItem>
-        </List><Divider /></>}
-      {counter && counter.roles.includes("admin") && <><List><ListItem key={'admin'} disablePadding>
+      {counter && counter.roles.includes("admin") && <><List><Link color={'inherit'} underline='none' href={`/admin`} onClick={(e) => {e.preventDefault();navigate(`/admin`);}}><ListItem key={'admin'} disablePadding>
           <ListItemButton onClick={() => navigate(`/admin`)}>
             <ListItemIcon>
               <PersonIcon></PersonIcon>
             </ListItemIcon>
             <ListItemText primary={'Admin'} />
           </ListItemButton>
-        </ListItem></List><Divider /></>}
+        </ListItem></Link></List><Divider /></>}
         <List>
+        <Link color={'inherit'} underline='none' href={`/about`} onClick={(e) => {e.preventDefault();navigate(`/about`);}}>
           <ListItem key={'about'} disablePadding>
-            <ListItemButton onClick={() => navigate(`/about`)}>
+            <ListItemButton>
               <ListItemIcon>
                 <InfoIcon></InfoIcon>
               </ListItemIcon>
               <ListItemText primary={'About'} />
             </ListItemButton>
-          </ListItem>
+          </ListItem></Link>
+          <Link color={'inherit'} underline='none' href={`/privacy-policy`} onClick={(e) => {e.preventDefault();navigate(`/privacy-policy`);}}>
           <ListItem key={'privacy-policy'} disablePadding>
-            <ListItemButton onClick={() => navigate(`/privacy-policy`)}>
+            <ListItemButton>
               <ListItemIcon>
                 <PrivacyTipIcon></PrivacyTipIcon>
               </ListItemIcon>
               <ListItemText primary={'Privacy Policy'} />
             </ListItemButton>
-          </ListItem>
+          </ListItem></Link>
+          <Link color={'inherit'} underline='none' href={`/contact-us`} onClick={(e) => {e.preventDefault();navigate(`/contact-us`);}}>
           <ListItem key={'contact-us'} disablePadding>
-            <ListItemButton onClick={() => navigate(`/contact-us`)}>
+            <ListItemButton>
               <ListItemIcon>
                 <AlternateEmailIcon></AlternateEmailIcon>
               </ListItemIcon>
               <ListItemText primary={'Contact'} />
             </ListItemButton>
-          </ListItem>
+          </ListItem></Link>
         </List>
     </div>
   );
@@ -367,9 +368,9 @@ export const Sidebar = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
-                <MenuItem onClick={() => navigate(`/counter/${counter.uuid}`)}>Profile</MenuItem>
-                <MenuItem onClick={() => navigate(`/prefs`)}>Preferences</MenuItem>
-                <MenuItem><Link target={'_blank'} color='inherit' underline='none' href='https://discord.gg/bfS9RQht6M'>Discord Server</Link></MenuItem>
+                <Link color={'inherit'} underline='none' href={`/counter/${counter.uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counter.uuid}`);}}><MenuItem>Profile</MenuItem></Link>
+                <Link color={'inherit'} underline='none' href={`/prefs`} onClick={(e) => {e.preventDefault();navigate(`/prefs`);}}><MenuItem>Preferences</MenuItem></Link>
+                <Link target={'_blank'} color='inherit' underline='none' href='https://discord.gg/bfS9RQht6M'><MenuItem>Discord Server</MenuItem></Link>
                 <MenuItem onClick={colorMode.toggleColorMode}>Theme: {theme.palette.mode.charAt(0).toUpperCase() + theme.palette.mode.slice(1)}</MenuItem>
                 <MenuItem onClick={() => logoutFunc()}>Log Out</MenuItem>
               </Menu>

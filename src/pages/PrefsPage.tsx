@@ -1,12 +1,13 @@
 import { useContext, useState } from 'react';
 import { CounterContext } from '../utils/contexts/CounterContext';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
-import { Alert, Box, Button, Container, FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Snackbar, Switch, Typography, AlertColor, Tooltip } from '@mui/material';
+import { Alert, Box, Button, Container, FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Snackbar, Switch, Typography, AlertColor, Tooltip, TextField } from '@mui/material';
 import { UserContext } from '../utils/contexts/UserContext';
-import { card_backgrounds, card_borders, titles } from '../utils/helpers';
+import { card_backgrounds, card_borders, customStrickenOptions, nightModeOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
 import { updateCounterPrefs } from '../utils/api';
 import { CounterCard } from '../components/CounterCard';
 import { Loading } from '../components/Loading';
+import { HexColorPicker } from 'react-colorful';
 
   export const PrefsPage = () => {
     const { user, userLoading } = useContext(UserContext);
@@ -23,6 +24,13 @@ import { Loading } from '../components/Loading';
     const [prefOnline, setPrefOnline] = useState<boolean>(user?.pref_online || false)
     const [prefDiscordPings, setPrefDiscordPings] = useState<boolean>(user?.pref_discord_pings || false);
     const [prefLoadFromBottom, setPrefLoadFromBottom] = useState<boolean>(user?.pref_load_from_bottom || false);
+    const [prefStrikeColor, setPrefStrikeColor] = useState(user?.pref_strike_color || '#cccccc')
+    const [prefStandardizeFormat, setPrefStandardizeFormat] = useState(user?.pref_standardize_format || 'Disabled')
+    const [prefNightMode, setPrefNightMode] = useState(user?.pref_nightMode || 'System')
+    const [prefSubmitShortcut, setPrefSubmitShortcut] = useState(user?.pref_submit_shortcut || 'CtrlEnter')
+    const [prefNoClear, setPrefNoClear] = useState(user?.pref_noClear || false)
+    const [prefTimeSinceLastCount, setPrefTimeSinceLastCount] = useState(user?.pref_time_since_last_count || false)
+    const [prefCustomStricken, setPrefCustomStricken] = useState(user?.pref_custom_stricken || 'Disabled')    
     const [cardStyle, setCardStyle] = useState(counter?.cardStyle || 'card_default');
     const [cardBorderStyle, setCardBorderStyle] = useState(counter?.cardBorderStyle || 'no_border_square');
     const [title, setTitle] = useState(counter?.title || 'COUNTER');
@@ -42,6 +50,13 @@ import { Loading } from '../components/Loading';
           user.pref_discord_pings = prefDiscordPings; 
           user.pref_online = prefOnline;
           user.pref_load_from_bottom = prefLoadFromBottom;
+          user.pref_time_since_last_count = prefTimeSinceLastCount;
+          user.pref_standardize_format = prefStandardizeFormat;
+          user.pref_nightMode = prefNightMode;
+          user.pref_submit_shortcut = prefSubmitShortcut;
+          user.pref_custom_stricken = prefCustomStricken;
+          user.pref_strike_color = prefStrikeColor;
+          user.pref_noClear = prefNoClear;
           counter.cardStyle = cardStyle;
           counter.cardBorderStyle = cardBorderStyle;
           counter.title = title;
@@ -129,6 +144,7 @@ import { Loading } from '../components/Loading';
                   })}
                 </Select>
             </FormControl>
+            
             <Box sx={{margin: '5px'}}>
               <CounterCard fullSize={false} maxHeight={32} maxWidth={32} boxPadding={2} counter={{...counter, cardStyle: cardStyle, cardBorderStyle: cardBorderStyle, title: title}}></CounterCard>
             </Box>
@@ -139,7 +155,8 @@ import { Loading } from '../components/Loading';
             <Box sx={{mt: 2, p: 1, borderRadius: '10px', bgcolor: 'background.paper', color: 'text.primary'}}>
             <Typography variant="h6">User Preferences</Typography>
             <FormGroup sx={{m: 2, userSelect: 'none'}}>
-              <FormControlLabel control={<Switch
+              {/* Uncomment these once complete */}
+              {/* <FormControlLabel control={<Switch
                   checked={prefOnline}
                   onChange={() => {setPrefOnline(!prefOnline)}}
                   inputProps={{ 'aria-label': 'pref-online' }}
@@ -147,12 +164,12 @@ import { Loading } from '../components/Loading';
                   <Tooltip title="When enabled, other users can see when you are online.">
                     <Typography variant="body1">Show my online status (not yet implemented)</Typography>
                   </Tooltip>
-                } />
-                <FormControlLabel control={<Switch
+                } /> */}
+                {/* <FormControlLabel control={<Switch
                 checked={prefDiscordPings}
                 onChange={() => {setPrefDiscordPings(!prefDiscordPings)}}
                 inputProps={{ 'aria-label': 'pref-discord-pings' }}
-              />} label="Ping me on Discord on mentions (not yet implemented)" />
+              />} label="Ping me on Discord on mentions (not yet implemented)" /> */}
               <FormControlLabel control={<Switch
                   checked={prefLoadFromBottom}
                   onChange={() => {setPrefLoadFromBottom(!prefLoadFromBottom)}}
@@ -162,6 +179,90 @@ import { Loading } from '../components/Loading';
                     <Typography variant="body1">Load new posts on bottom (not recommended)</Typography>
                   </Tooltip>
                 } />
+                <FormControlLabel control={<Switch
+                  checked={prefNoClear}
+                  onChange={() => {setPrefNoClear(!prefNoClear)}}
+                  inputProps={{ 'aria-label': 'pref-no-clear' }}
+                />} label={
+                  <Tooltip title="When enabled, the textbox does not automatically clear upon submitting a post.">
+                    <Typography variant="body1">Don't clear the textbox when submitting a post</Typography>
+                  </Tooltip>
+                } />
+                <FormControlLabel control={<Switch
+                  checked={prefTimeSinceLastCount}
+                  onChange={() => {setPrefTimeSinceLastCount(!prefTimeSinceLastCount)}}
+                  inputProps={{ 'aria-label': 'pref-time-since-last-count' }}
+                />} label={
+                    <Typography variant="body1">Show time since last valid count</Typography>
+                } />
+                <FormControl sx={{m: 2}}>
+                <InputLabel id="standardize-format-label">Standardize Format</InputLabel>
+                <Select
+                    labelId="standardize-format-label"
+                    id="standardize-format"
+                    value={prefStandardizeFormat}
+                    defaultValue={prefStandardizeFormat}
+                    label="Standardize Format"
+                    onChange={e => setPrefStandardizeFormat((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  {standardizeFormatOptions.map((card) => {
+                    return (<MenuItem value={card}>{card}</MenuItem>)
+                  })}
+                </Select>
+            </FormControl>
+            <FormControl sx={{m: 2}}>
+                <InputLabel id="night-mode-label">Night Mode</InputLabel>
+                <Select
+                    labelId="night-mode-label"
+                    id="night-mode"
+                    value={prefNightMode}
+                    defaultValue={prefNightMode}
+                    label="Night Mode"
+                    onChange={e => setPrefNightMode((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  {nightModeOptions.map((card) => {
+                    return (<MenuItem value={card}>{card}</MenuItem>)
+                  })}
+                </Select>
+            </FormControl>
+            <FormControl sx={{m: 2}}>
+                <InputLabel id="submit-shortcut-label">Submit Shortcut</InputLabel>
+                <Select
+                    labelId="submit-shortcut-label"
+                    id="submit-shortcut"
+                    value={prefSubmitShortcut}
+                    defaultValue={prefSubmitShortcut}
+                    label="Submit Shortcut"
+                    onChange={e => setPrefSubmitShortcut((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  {submitShortcutOptions.map((card) => {
+                      return (<MenuItem value={card}>{card}</MenuItem>)
+                  })}
+                </Select>
+            </FormControl>
+            <FormControl sx={{m: 2}}>
+                <InputLabel id="custom-stricken-label">Custom Stricken</InputLabel>
+                <Select
+                    labelId="custom-stricken-label"
+                    id="custom-stricken"
+                    value={prefCustomStricken}
+                    label="Custom Stricken"
+                    onChange={e => setPrefCustomStricken((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  {customStrickenOptions.map((card) => {
+                    return (<MenuItem value={card}>{card}</MenuItem>)
+                  })}
+                </Select>
+            </FormControl>
+                {prefCustomStricken !== 'Disabled' && <>
+                <HexColorPicker color={prefStrikeColor} onChange={setPrefStrikeColor} />
+                <TextField sx={{m: 2}} id="StrikeColor" onInput={e => setPrefStrikeColor((e.target as HTMLInputElement).value)} label="Strike Color" InputLabelProps={{ shrink: true }} value={prefStrikeColor}></TextField>
+                </>}
+
             </FormGroup>
             
             <FormGroup>
