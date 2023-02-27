@@ -15,20 +15,31 @@ import data from '@emoji-mart/data/sets/14/twitter.json'
 
 const CountMobile = memo((props: any) => {
 
+  let maybeSpace;
+
+  if (props.post.countContent && props.post.rawText.includes(props.post.countContent)) {
+    const index = props.post.rawText.indexOf(props.post.countContent) + props.post.countContent.length;
+    if (props.post.rawText[index] === ' ') {
+      maybeSpace = ' ';
+    }
+  }
+
+  let countContentCopy = props.post.countContent;
+
   if(props.user && props.user.pref_standardize_format != 'Disabled' && props.post.countContent && props.post.rawCount) {
     const format = props.user.pref_standardize_format;
     switch (format) {
       case 'No Separator':
-        props.post.countContent = props.post.rawCount;
+        countContentCopy = props.post.rawCount;
         break;
       case 'Commas':
-        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        countContentCopy = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         break;
       case 'Periods':
-        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        countContentCopy = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         break;
       case 'Spaces':
-        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        countContentCopy = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
         break;
       default:
         break;
@@ -84,15 +95,6 @@ const CountMobile = memo((props: any) => {
 
   const replyTimeColor = getReplyColorName(props.post.timeSinceLastPost);
 
-  let maybeSpace;
-
-  if (props.post.countContent && props.post.rawText.includes(props.post.countContent)) {
-    const index = props.post.rawText.indexOf(props.post.countContent) + props.post.countContent.length;
-    if (props.post.rawText[index] === ' ') {
-      maybeSpace = ' ';
-    }
-  }
-
   function handleDeleteComment() {
     props.socket.emit('deleteComment', {uuid: props.post.uuid})
   }
@@ -108,6 +110,7 @@ const CountMobile = memo((props: any) => {
 
   const components = {
     p: ('span' as any),
+    li: ({ children }) => <li style={{whiteSpace: 'initial'}}>{children}</li>,
     code: ({ children }) => { return (Object.keys(data.emojis).includes((children[0] as string).toLowerCase()) ? EmojiTest({id: (children[0] as string).toLowerCase(), size: 24, set: 'twitter'}) : <code>{children}</code>)}
   }
 
@@ -125,6 +128,7 @@ return (
                         <Link href={`/counter/${props.post.authorUUID}`}>
                         <CardMedia
                             component="img"
+                            className={renderedCounter.cardBorderStyle}
                             sx={{ width: '100%', maxWidth: props.maxWidth, maxHeight: props.maxHeight}}
                             image={`${renderedCounter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${renderedCounter.discordId}/${renderedCounter.avatar}` || CountggLogo}`}
                             alt={renderedCounter.name}
@@ -188,7 +192,7 @@ return (
           <Grid item xs={10} lg={7}>
             <Box sx={{ display: 'flex', flexDirection: 'row' }}>
               <Box sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, overflowWrap: 'anywhere' }}>
-                <Typography component="div" variant="body2" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{props.post.countContent}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }</Typography>
+                <Typography component="div" variant="body2" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment.startsWith('\n') ? `\u00A0${props.post.comment}` : props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }</Typography>
               </Box>
             </Box>
             </Grid>
@@ -202,11 +206,11 @@ return (
               {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" fontSize={12}>{minutesSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">m</Typography></Typography>) : null}
               {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" fontSize={12}>{secondsSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">s</Typography></Typography>) : null}
               <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastPost : msSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography></Box>
-              &nbsp;|&nbsp;
+              {props.post.timeSinceLastCount != props.post.timeSinceLastPost && <>&nbsp;|&nbsp;
               {hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{hoursSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">h</Typography></Typography>) : null}
               {minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{minutesSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">m</Typography></Typography>) : null}
               {secondsSinceLastCount > 0 || minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{secondsSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">s</Typography></Typography>) : null}
-              <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastCount : msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography>
+              <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastCount : msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography></>}
               {props.post.latency && <>&nbsp;|&nbsp;<Typography component="span" fontSize={12}>{props.post.latency}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography></>}
               </Box>
               {props.post.reactions && Object.entries(props.post.reactions).length > 0 &&

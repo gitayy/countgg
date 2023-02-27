@@ -18,8 +18,8 @@ const CountList = memo((props: any) => {
     const contextRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const [firstLoad, setFirstLoad] = useState(true);
-    const [isScrolledToBottom, setIsScrolledToBottom] = useState(true);
-    const [isScrolledToTop, setIsScrolledToTop] = useState(false);
+    const [isScrolledToBottom, setIsScrolledToBottom] = useState(props.user && props.user.pref_load_from_bottom ? true : false);
+    const [isScrolledToTop, setIsScrolledToTop] = useState(props.user && props.user.pref_load_from_bottom ? false : true);
     const [scrollThrottle, setScrollThrottle] = useState(false);
     const [isNewRecentCountAdded, setIsNewRecentCountAdded] = useState(false);
     const [keyboardType, setKeyboardType] = useState<"text" | "search" | "none" | "email" | "tel" | "url" | "numeric" | "decimal" | undefined>('text')
@@ -283,6 +283,7 @@ const CountList = memo((props: any) => {
         if (scrollDiagnostics.current) {
           console.log(`Scrolling. scrollHeight: ${element.scrollHeight}, scrollTop: ${element.scrollTop}, clientHeight: ${element.clientHeight}, scrollThrottle: ${scrollThrottle}, isScrolledToTop: ${isScrolledToTop}, isScrolledToBottom: ${isScrolledToBottom}, chats: ${props.chatsOnly}`);
         }
+        // setHasScrolled(true);
         if (element.scrollHeight - element.scrollTop - 2 <= element.clientHeight) {
           changeScrolledToBottom(true);
         } else {

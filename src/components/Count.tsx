@@ -18,20 +18,31 @@ import { HelpOutline } from '@mui/icons-material';
 
 const Count = memo((props: any) => {
 
+  let maybeSpace;
+  // let countContentCopy = (' ' + props.post.countContent).slice(1);
+  let countContentCopy = props.post.countContent;
+
+  if (props.post.countContent && props.post.rawText.includes(props.post.countContent)) {
+    const index = props.post.rawText.indexOf(props.post.countContent) + props.post.countContent.length;
+    if (props.post.rawText[index] === ' ') {
+      maybeSpace = ' ';
+    }
+  }
+  
   if(props.user && props.user.pref_standardize_format != 'Disabled' && props.post.countContent && props.post.rawCount) {
     const format = props.user.pref_standardize_format;
     switch (format) {
       case 'No Separator':
-        props.post.countContent = props.post.rawCount;
+        countContentCopy = props.post.rawCount;
         break;
       case 'Commas':
-        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        countContentCopy = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         break;
       case 'Periods':
-        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        countContentCopy = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         break;
       case 'Spaces':
-        props.post.countContent = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        countContentCopy = props.post.rawCount.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
         break;
       default:
         break;
@@ -56,7 +67,7 @@ const Count = memo((props: any) => {
   
   const uncachedCounter: Counter = defaultCounter(props.post.authorUUID);
   
-  const renderedCounter = counter || uncachedCounter;
+  const renderedCounter: Counter = counter || uncachedCounter;
 
   const hoursSinceLastCount = Math.floor(props.post.timeSinceLastCount / 3600000);
   const minutesSinceLastCount = Math.floor(props.post.timeSinceLastCount / 60000) % 60;
@@ -96,15 +107,6 @@ const Count = memo((props: any) => {
 
   const replyTimeColor = getReplyColorName(props.post.timeSinceLastPost);
 
-  let maybeSpace;
-
-  if (props.post.countContent && props.post.rawText.includes(props.post.countContent)) {
-    const index = props.post.rawText.indexOf(props.post.countContent) + props.post.countContent.length;
-    if (props.post.rawText[index] === ' ') {
-      maybeSpace = ' ';
-    }
-  }
-
   function handleDeleteComment() {
     props.socket.emit('deleteComment', {uuid: props.post.uuid})
   }
@@ -138,6 +140,7 @@ const Count = memo((props: any) => {
                           <Link href={`/counter/${props.post.authorUUID}`}>
                           <CardMedia
                               component="img"
+                              className={renderedCounter.cardBorderStyle}
                               sx={{ width: '100%', maxWidth: '64px', maxHeight: '64px'}}
                               image={`${renderedCounter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${renderedCounter.discordId}/${renderedCounter.avatar}` || CountggLogo}`}
                               alt={renderedCounter.name}
@@ -175,7 +178,7 @@ const Count = memo((props: any) => {
             <Grid item xs={6}>
               <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                 <CardContent sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, pb: 0, overflowWrap: 'anywhere', '&:last-child': {pb: '2px'} }}>
-                        <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{props.post.countContent}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment.startsWith('\n') ? `\u00A0${props.post.comment}` : props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
+                        <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment.startsWith('\n') ? `\u00A0${props.post.comment}` : props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
                     <Typography variant="subtitle1" component="div">
                         <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
                       </Typography>

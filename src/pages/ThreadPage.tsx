@@ -20,6 +20,7 @@ import remarkGfm from 'remark-gfm';
 import ReactMarkdown from 'react-markdown';
 import { adminToggleThreadLock } from '../utils/api';
 import { DailyHOCTable } from '../components/DailyHOCTable';
+import { SplitsTable } from '../components/SplitsTable';
 
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const location = useLocation();
@@ -480,7 +481,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               return updatedChats;
             });
             setLatencyStateTest(`${data.post_uuid}-reax-${Date.now()}`);
-            // setNewChatsLoadedState(`${data.post_uuid}-reax-${Date.now()}`);
+            setNewChatsLoadedState(`${data.post_uuid}-reax-${Date.now()}`);
           });
 
           socket.on(`thread_update`, function(data) {
@@ -663,7 +664,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         </TabPanel>
         <TabPanel value="tab_3" sx={{}}>
         {lastCount && <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Last count: {lastCount.lastCount.rawCount} by {lastCount.lastCounter.name}</Typography>}
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{table}</ReactMarkdown>
+          <SplitsTable splits={splits}></SplitsTable>
         </TabPanel>
         <TabPanel value="tab_4" sx={{}}>
           <DailyHOCTable dailyHOC={dailyHOC}></DailyHOCTable>
