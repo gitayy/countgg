@@ -76,15 +76,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
     const setThrottle = () => {
       throttle.current = true;
-      if(thread_name === 'main') {
-        setTimeout(function() {
-          throttle.current = false;
-        }, 15000);
-      } else {
         setTimeout(function() {
           throttle.current = false;
         }, 150);
-      }
     }
 
 
