@@ -86,11 +86,9 @@ const Count = memo((props: any) => {
   const handleConfirm = () => {
     // Perform the action based on the button that was clicked
     if (action === 'delete') {
-      console.log('Delete confirmed');
       handleDeleteComment();
       setOpen(false);
     } else if (action === 'strike') {
-      console.log('Strike confirmed');
       setOpen(false);
     }
   };
@@ -113,7 +111,6 @@ const Count = memo((props: any) => {
 
   const [pickerOpen, setPickerOpen] = useState(false);
   function handleEmojiSelect(emoji) {
-    console.log(emoji);
     props.socket.emit(`updateReactions`, {id: emoji.id, post_uuid: props.post.uuid})
     setPickerOpen(false);
   }
@@ -126,8 +123,6 @@ const Count = memo((props: any) => {
     // table: ({ children }) => <Table>{children}</Table>,
     code: ({ children }) => { return (Object.keys(data.emojis).includes((children[0] as string).toLowerCase()) ? EmojiTest({id: (children[0] as string).toLowerCase(), size: 24, set: 'twitter'}) : <code>{children}</code>)}
   }
-
-  console.log("Desktop Count Render");
 
     return (
           <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>

@@ -13,7 +13,6 @@ export function useFetchSpecificCount(uuid: string) {
       useEffect(() => {
         getCountByUuid(uuid)
         .then(({ data }) => {
-          console.log(data);
         if (isMounted.current && data.count) { 
             setSpecificCount(data.count); 
           for (const counter of data.counters) {

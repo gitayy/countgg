@@ -76,8 +76,6 @@ export const IndividualCountPage = memo(() => {
             });
             socket.on(`addCounterToCache`, function(data) {
               addCounterToCache(data);
-              console.log('Cached counters: ');
-              console.log(cachedCounters);
             });
 
             return () => {
@@ -91,7 +89,6 @@ export const IndividualCountPage = memo(() => {
     },[]);
 
     const deleteComment = useCallback((data) => {
-      console.log("Deleting comments");
       setSpecificCount((counts) =>
         counts.map((count) => {
           if (count.uuid === data.uuid) {
@@ -104,7 +101,6 @@ export const IndividualCountPage = memo(() => {
     }, [setSpecificCount]);
   
     useEffect(() => {
-      console.log('Creating socket useCallback');
       socket.on(`deleteComment`, deleteComment);
       return () => {
         socket.off(`deleteComment`, deleteComment);
@@ -113,7 +109,6 @@ export const IndividualCountPage = memo(() => {
 
     if(!loading && !threadLoading && thread && cachedCounters && specificCount[0]) {
 
-        console.log("IndividualCountPage render");
         return (
             <Box sx={{ bgcolor: 'background.paper', display: 'flex', justifyContent: 'center', flexGrow: 1, p: 2 }}>
               {isDesktop ? (

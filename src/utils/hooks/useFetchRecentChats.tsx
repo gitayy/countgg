@@ -17,7 +17,6 @@ export function useFetchRecentChats(thread_name: string, context: string | (stri
       useEffect(() => {
         getRecentCounts(thread_name, context, true)
         .then(({ data }) => {
-          console.log(data);
         if (isMounted.current && data.recentCounts) { 
           if(user && user.pref_load_from_bottom) {
             setRecentChats(data.recentCounts.reverse());

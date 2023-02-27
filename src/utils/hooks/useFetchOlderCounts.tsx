@@ -12,9 +12,7 @@ export function useFetchOlderCounts(thread_name: string, posts: PostType[], setP
       const isMounted = useIsMounted();
     
       useEffect(() => {
-        console.log("useFetchOlderCounts check! Should it load?");
         if(shouldLoad && posts.length > 0) {
-            console.log("useFetchOlderCounts should load!");
             getOlderCounts(thread_name, posts[0].uuid)
             .then(({ data }) => {
             if (isMounted.current && data.recentCounts) { 

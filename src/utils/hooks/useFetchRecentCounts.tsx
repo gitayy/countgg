@@ -19,13 +19,9 @@ export function useFetchRecentCounts(thread_name: string, context: string | (str
         .then(({ data }) => {
           console.log(data);
         if (isMounted.current && data.recentCounts) { 
-          console.log("Loaded! Reversing?");
           if(user && user.pref_load_from_bottom) {
-            console.log("Yes reversing");
             setRecentCounts(data.recentCounts.reverse());
           } else {
-            console.log("No reversing");
-            console.log(user);
             setRecentCounts(data.recentCounts);
           } 
           for (const counter of data.counters) {

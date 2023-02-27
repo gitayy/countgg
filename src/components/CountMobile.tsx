@@ -84,11 +84,9 @@ const CountMobile = memo((props: any) => {
   const handleConfirm = () => {
     // Perform the action based on the button that was clicked
     if (action === 'delete') {
-      console.log('Delete confirmed');
       handleDeleteComment();
       setOpen(false);
     } else if (action === 'strike') {
-      console.log('Strike confirmed');
       setOpen(false);
     }
   };
@@ -101,7 +99,6 @@ const CountMobile = memo((props: any) => {
 
   const [pickerOpen, setPickerOpen] = useState(false);
   function handleEmojiSelect(emoji) {
-    console.log(emoji);
     props.socket.emit(`updateReactions`, {id: emoji.id, post_uuid: props.post.uuid})
     setPickerOpen(false);
   }
@@ -113,8 +110,6 @@ const CountMobile = memo((props: any) => {
     li: ({ children }) => <li style={{whiteSpace: 'initial'}}>{children}</li>,
     code: ({ children }) => { return (Object.keys(data.emojis).includes((children[0] as string).toLowerCase()) ? EmojiTest({id: (children[0] as string).toLowerCase(), size: 24, set: 'twitter'}) : <code>{children}</code>)}
   }
-
-    console.log("Mobile Count Render");
 
 
 return (

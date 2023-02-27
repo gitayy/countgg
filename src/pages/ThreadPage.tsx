@@ -153,11 +153,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       }
     }, [counter]);
 
-    console.log("ThreadPage render loaded newest: ", loadedNewestRef.current);
-
     const cache_counts = ((count) => {
-      console.log("cache_counts loaded newest: ", loadedNewestRef.current);
-      // console.log(loadedNewest);
       if(userAsRef.current && userAsRef.current.pref_load_from_bottom) {
         if(loadedNewestRef.current == false) {
           setCachedCounts(prevCounts => {
@@ -178,7 +174,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     useEffect(() => {
       if(recentCountsLoading == false) {
         loadedNewestRef.current = loadedNewest;
-        console.log("Changing loadedNewestRef.current to: ", loadedNewest);
       }
     }, [recentCountsLoading])
 
@@ -196,7 +191,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               console.log("Connected to socket!");
               setSocketStatus("LIVE");
             });
-            console.log("Connected to socket (1)");              
+            console.log("Connected to socket!");
             setSocketStatus("LIVE");
             
             
@@ -220,7 +215,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           useEffect(() => {
 
           if(isMounted.current && userLoadingAsRef.current == false && socketStatus == 'LIVE') {
-            console.log('Starting socket functions. User should be done by now.');
             socket.emit('watch', thread_name)
 
             socket.on(`watcher_count`, function(data) {
@@ -231,8 +225,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               addCounterToCache(data.lastCounter);
             });
             socket.on(`dailyHOC`, function(data) {
-              console.log("DAILY HOC DATA");
-              console.log(data);
               setDailyHOC(data);
             });
             socket.on(`deleteComment`, function(data) {
@@ -247,8 +239,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             });
             socket.on(`addCounterToCache`, function(data) {
               addCounterToCache(data);
-              console.log('Cached counters:');
-              console.log(cachedCounters);
               setLatencyStateTest(data.uuid);
             });
             socket.on(`post`, function(data: {post: PostType, counter: Counter}) {
@@ -259,7 +249,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                     data.post.latency = Date.now() - latency.current;
                 }
                 addCounterToCache(data.counter);
-                console.log("Caching newly loaded post");
                 cache_counts(data.post);
                 if(loadedNewestRef.current) {
                   if(userAsRef.current && userAsRef.current.pref_load_from_bottom) {
@@ -276,7 +265,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                       }
                     });
                     if(data.post.hasComment) {
-                      console.log("Setting recent chats");
                       setRecentChats(prevChats => {
                         const newChats = [...prevChats, data.post];
                         if(chatsIsScrolledToNewest.current !== undefined && chatsIsScrolledToNewest.current) {
@@ -395,7 +383,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             });
 
             socket.on(`loadOldChats`, function(data) {
-              console.log("Loading old chats...");
               for (const counter of data.counters) {
                 addCounterToCache(counter);
             }
@@ -406,13 +393,11 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               setLoadedOldestChats(true);
             }
               if(userAsRef.current && userAsRef.current.pref_load_from_bottom) {
-                console.log("...from bottom");
                   setRecentChats(prevChats => {
                     const newChats = [...data.recentCounts.reverse(), ...prevChats];
                       return newChats;
                   });
                 } else {
-                  console.log("...from top");
                   setRecentChats(prevChats => {
                     const newChats = [...prevChats, ...data.recentCounts];
                       return newChats;
@@ -425,7 +410,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             });
 
             socket.on(`loadNewChats`, function(data) {
-              console.log("Loading new chats...");
               for (const counter of data.counters) {
                 addCounterToCache(counter);
             }
@@ -436,13 +420,11 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               setLoadedOldestChats(true);
             }
               if(userAsRef.current && userAsRef.current.pref_load_from_bottom) {
-                console.log("...from bottom");
                 setRecentChats(prevChats => {
                   const newChats = [...prevChats, ...data.recentCounts,];
                   return newChats;
                 });
               } else {
-                console.log("...from top");
                 setRecentChats(prevChats => {
                   const newChats = [...data.recentCounts.reverse(), ...prevChats];
                   return newChats;
@@ -455,7 +437,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           });
 
           socket.on(`updateReaction`, function(data) {
-            console.log("Updated reaction received: ", data);
             setRecentCounts(prevCounts => {
               const newCounts = prevCounts.map(post => {
                 if (post.uuid === data.post_uuid) {
@@ -501,7 +482,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           });
 
             return () => {
-              console.log("Disabling socket functions. Something happened. You *probably* disconnected, but maybe not.");
+              console.log("Disabling socket functions until you reconnect.");
                 socket.off('connection_error');
                 socket.off('post');
                 socket.off('lastCount');
@@ -515,7 +496,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     },[socketStatus]);
 
     const deleteComment = useCallback((data) => {
-      console.log("Looking for a comment to delete...");
       setRecentCounts((counts) =>
         counts.map((count) => {
           if (count.uuid === data.uuid) {
@@ -537,21 +517,14 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     }, [setRecentCounts]);
   
     useEffect(() => {
-      console.log('Creating deleteComment useCallback');
       socket.on(`deleteComment`, deleteComment);
       return () => {
         socket.off(`deleteComment`, deleteComment);
       };
     }, [deleteComment]);
 
-
-    const tableHeader = '| Number | Split |\n| ------ | ----- |';
-    const tableRows = splits.map((split) => {console.log(split); return(`| ${split.number} | ${split.split}ms |`)}).join('\n');
-    const table = `${tableHeader}\n${tableRows}`;
-
     const handleSubmit = (text: string) => {
         const submitText = text;
-        console.log("Submitting text: ", submitText);
         if(thread_name && counter) {
             socket.emit('post', {thread_name: thread_name, text: submitText});
         }
@@ -579,7 +552,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
 
       const snackbarMemo = useMemo(() => {
-        console.log("Snackbar Memo Render");
         return (<Snackbar
           open={snackbarOpen}
           autoHideDuration={6000}
@@ -592,7 +564,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       }, [snackbarSeverity, snackbarMessage, snackbarOpen]);
 
       const socketMemo = useMemo(() => {
-        console.log("Socket Memo Render");
         let color: "success" | "info" | "warning" | "error" | "default" | "primary" | "secondary" | undefined = 'info';
 
         if (socketStatus == 'DISCONNECTED') {
@@ -606,7 +577,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       }, [socketStatus, socketViewers]);
 
       const headerMemo = useMemo(() => {
-        console.log("Header Memo Render");
         if(thread) {return (
           <Box sx={{ display: 'flex', flexGrow: 0, p: 0.5, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
             <Typography sx={{p: 0.5}} variant="h6" color="text.primary">{thread.title}</Typography>
@@ -623,21 +593,18 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       }, [thread, socketStatus, socketViewers, theme, lastCount])
 
       const countListMemo = useMemo(() => {
-        console.log("Countlist Memo Render");
         return (          
         <CountList thread={thread} recentCountsLoading={recentCountsLoading} throttle={throttle} setThrottle={setThrottle} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} setRecentChats={setRecentChats} newRecentPostLoaded={newRecentPostLoaded} userLoading={userLoading} user={user} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} setRecentCounts={setRecentCounts} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} socket={socket} counter={counter} loading={loading} recentCounts={recentCounts} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
         )
       }, [cachedCounts, thread, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, userLoading, loading])
 
       const chatsMemo = useMemo(() => {
-        console.log("Chats Memo Render");
         return (      
         <CountList thread={thread} isDesktop={isDesktop} throttle={throttle} setThrottle={setThrottle} chatsOnly={true} newRecentPostLoaded={undefined} userLoading={userLoading} user={user} loadedOldest={loadedOldestChats} loadedNewest={loadedNewestChats} loadedOldCount={loadedOldChat} loadedNewCount={loadedNewChat} setRecentCounts={setRecentChats} isScrolledToTheBottom={chatsIsScrolledToTheBottom} isScrolledToTheTop={chatsIsScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={chatsIsScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} socket={socket} counter={counter} loading={loading} recentCounts={recentChats} handleLatencyCheckChange={undefined} handleLatencyChange={undefined} handleSubmit={undefined}></CountList>
         )
       }, [recentChatsLoading, newChatsLoadedState, loadedNewChat, loadedOldChat, deleteComments, loadedOldestChats, loadedNewestChats, chatsIsScrolledToNewest, userLoading, loading])
 
       const sidebarMemo = useMemo(() => {
-        console.log("Sidebar Memo Render");
         return (
           <TabContext value={tabValue}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
@@ -676,8 +643,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       
 
       if(!loading && !threadLoading && thread) {
-
-        console.log("ThreadPage render");
 
         return (<>
         {/* Render latency test 2. This one uses requestAnimationFrame and is the most accurate as possible */}

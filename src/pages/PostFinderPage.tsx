@@ -53,9 +53,6 @@ import { UserContext } from '../utils/contexts/UserContext';
                     addCounterToCache(counter);
                   }
                   setLoadedPosts(data.posts);
-                  
-                  console.log(data);
-                  // setLoading(false);
                 })
                 .catch((err) => {
                   console.log(err);
@@ -67,17 +64,11 @@ import { UserContext } from '../utils/contexts/UserContext';
                   }
                   setLoadedPosts(data.posts);
                   console.log(data);
-                  // setLoading(false);
                 })
                 .catch((err) => {
                   console.log(err);
                 })
             } 
-        //   if(res.status == 201) {
-        //     setSnackbarSeverity('success');
-        //     setSnackbarOpen(true)
-        //     setSnackbarMessage('Thread created successfully')
-        //   }
         }
         catch(err) {
           setSnackbarSeverity('error');

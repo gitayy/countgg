@@ -41,7 +41,6 @@ const CountList = memo((props: any) => {
 
     //Add Ctrl+Enter submit shortcut
     useEffect(() => {
-        console.log("Adding Submit Shortcut listener");
         function handleKeyDown(event) {
           //Prevent Ctrl+0-9 from switching tabs
           if ((event.ctrlKey || event.metaKey) && event.keyCode >= 48 && event.keyCode <= 57) {
@@ -62,14 +61,12 @@ const CountList = memo((props: any) => {
         }
         window.addEventListener('keydown', handleKeyDown);
         return () => {
-          console.log("Removed Submit Shortcut listener");
           window.removeEventListener('keydown', handleKeyDown);
         };
       }, [props.user]);
 
     //Scroll to bottom upon isDesktop change
     useEffect(() => {
-      console.log(`Scrolling to bottom, based on isDesktop changing. isDesktop: ${isDesktop}, isScrolledToBottom: ${isScrolledToBottom}`);
       if(isScrolledToBottom && props.counter && props.user && props.user.pref_load_from_bottom) {
         scrollToBottomAuto();
         setTimeout(function () {scrollToBottomAuto()}, 100);
@@ -105,7 +102,6 @@ const CountList = memo((props: any) => {
     }
 
     const handleUnfreeze = () => {
-      console.log("Handling Unfreeze");
       if(props.cachedCounts && props.cachedCounts.length > 0) {
         if(props.user && props.user.pref_load_from_bottom) {
           props.setRecentCounts(prevCounts => {
@@ -171,23 +167,21 @@ const CountList = memo((props: any) => {
 
     const scrollToBottomAuto = () => {
         if (messagesEndRef.current && isScrolledToBottom == false && submitRef.current) {
-            console.log('Scrolling to bottom');
             messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
             submitRef.current.scrollIntoView({ behavior: 'auto', block: 'start' });
             changeScrolledToBottom(true);
         } else {
-          console.log("Can't scroll to bottom, but something wants to. Probably already scrolled to bottom?");
+          //console.log("Can't scroll to bottom, but something wants to. Probably already scrolled to bottom?");
         }
     }
 
     const scrollToTopAuto = () => {
-      if (messagesEndRef.current && isScrolledToTop == false && submitRef.current) {
-        console.log('Scrolling to top');
+      if (messagesEndRef.current && submitRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: 'auto', });
         submitRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest' });
         changeScrolledToTop(true);
       } else {
-        console.log("Can't scroll to top, but something wants to. Probably already scrolled to top?");
+        //console.log("Can't scroll to top, but something wants to. Probably already scrolled to top?");
       }
   }
 
@@ -198,19 +192,15 @@ const CountList = memo((props: any) => {
         return;
       }
         if(inputRef.current && inputRef.current.value.trim().length > 0) {
-          console.log("This should really scroll to the bottom. ");
             props.handleLatencyChange(Date.now());
             props.handleLatencyCheckChange(inputRef.current.value.trim());
             props.handleSubmit(inputRef.current.value);
             props.setThrottle();
             setSubmitColor("primary")
             if(!props.user || (props.user && props.user.pref_noClear !== true)) {
-              console.log("YEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
-              console.log(props.user);
               inputRef.current.value = '';
             } 
             if(props.counter && props.user.pref_load_from_bottom) {
-              console.log("Adding post to bottom, and scrolling.");
               changeScrolledToBottom(true);
               if(isDesktop) {
                 scrollToBottomAuto();
@@ -219,12 +209,11 @@ const CountList = memo((props: any) => {
                 }, 100);
               }
             } else {
-                console.log("Adding post to top, and scrolling.");
-                changeScrolledToTop(true);
                 scrollToTopAuto();
                 setTimeout(function() {
                   scrollToTopAuto();
                 }, 100);
+                changeScrolledToTop(true);
             }
             inputRef.current.focus();            
         }
@@ -256,12 +245,10 @@ const CountList = memo((props: any) => {
       useEffect(() => {
         if (messagesEndRef.current && props.recentCounts && props.isMounted && (submitRef.current || props.chatsOnly)) {
           if (firstLoad) {
-            console.log("Scrolling to the newest message based off of the first load.");
             messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
             setFirstLoad(false);
           } else {
             if (isScrolledToBottom && props.user && props.user.pref_load_from_bottom) {
-            console.log("Scrolling to the newest message based off of a new count being added, and loading from the bottom. Something else may already do this :P");
             if(!props.chatsOnly) {
               messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
               if(submitRef.current) {submitRef.current.scrollIntoView({ behavior: 'auto', block: 'end', });}
@@ -269,7 +256,6 @@ const CountList = memo((props: any) => {
             }
             
             if (contextRef.current && !hasScrolledToContext) {
-              console.log("Scrolling to context");
               contextRef.current.scrollIntoView({ behavior: 'auto', block: 'center' });
               setHasScrolledToContext(true);
               changeScrolledToBottom(false);
@@ -290,9 +276,6 @@ const CountList = memo((props: any) => {
           changeScrolledToBottom(false);
         }
         if ((element.scrollHeight - element.scrollTop - 2 <= element.clientHeight) && !scrollThrottle) {
-          console.log("Manually scrolled to bottom?");
-          console.log("loadedOldest: ", props.loadedOldest);
-          console.log("loadedNewest: ", props.loadedNewest);
           changeScrolledToBottom(true);
           if(props.recentCounts && props.recentCounts[0] && props.loadedNewest == false && props.user && props.user.pref_load_from_bottom) {
             const distance_From_Top = element.scrollHeight;
@@ -302,8 +285,6 @@ const CountList = memo((props: any) => {
             } else {
               props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
             }
-            console.log("Asked for newer posts (pref fromBottom). There should still be more?");
-            console.log({thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid});
           } else if(props.recentCounts && props.recentCounts[0] && props.loadedOldest == false && props.userLoading == false && (!props.user || (props.user && !props.user.pref_load_from_bottom))) {
             const distance_From_Top = element.scrollHeight;
             distanceFromTop.current = distance_From_Top;
@@ -312,8 +293,6 @@ const CountList = memo((props: any) => {
             } else {
               props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
             }
-            console.log("Asked for older posts (from top) .There should still be more?");
-            console.log({thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid});
           }
         }
         if(element.scrollTop === 0) {
@@ -322,9 +301,6 @@ const CountList = memo((props: any) => {
           changeScrolledToTop(false);
         }
         if (element.scrollTop === 0 && !scrollThrottle) {
-          console.log("Manually scrolled to top?");
-          console.log("loadedOldest: ", props.loadedOldest);
-          console.log("loadedNewest: ", props.loadedNewest);
           changeScrolledToTop(true);
           if(props.recentCounts && props.recentCounts[0] && props.loadedOldest == false && props.user && props.user.pref_load_from_bottom) {
             const distance_From_Bottom = element.scrollHeight - element.scrollTop - element.clientHeight;
@@ -334,8 +310,6 @@ const CountList = memo((props: any) => {
             } else {
               props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
             }
-            console.log("Asked for older posts (pref fromBottom). There should still be more?");
-            console.log({thread_name: props.thread_name, uuid: props.recentCounts[0].uuid});
           } else if(props.recentCounts && props.recentCounts[0] && props.loadedNewest == false) {
             const distance_From_Bottom = element.scrollHeight - element.scrollTop - element.clientHeight;
             distanceFromBottom.current = distance_From_Bottom;
@@ -344,8 +318,6 @@ const CountList = memo((props: any) => {
             } else {
               props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
             }
-            console.log("Asked for newer posts (from top). There should still be more?");
-            console.log({thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid});
           }
         } else {
           if(isScrolledToTop) {
@@ -374,20 +346,18 @@ const CountList = memo((props: any) => {
       useEffect(() => {
         if(props.user && props.user.pref_load_from_bottom) {
         if(distanceFromBottom.current) {
-          console.log("Scrolling to the bottom after loading old counts: ", distanceFromBottom.current);
           scrollToDistanceFromBottom(distanceFromBottom.current);
           setTimeout(function() {
             scrollToDistanceFromBottom(distanceFromBottom.current);
           }, 100)
         } 
       } else if(distanceFromTop.current) {
-          console.log("Scrolling to the top after loading old counts: ", distanceFromTop.current);
           scrollToDistanceFromTop(distanceFromTop.current);
           setTimeout(function() {
             scrollToDistanceFromTop(distanceFromTop.current);
           }, 100)
         } else {
-          console.log("No dfb/dft current (loading old posts)");
+          // console.log("No dfb/dft current (loading old posts)");
         }
 
       }, [props.loadedOldCount]);
@@ -396,29 +366,23 @@ const CountList = memo((props: any) => {
       useEffect(() => {
         if(props.user && props.user.pref_load_from_bottom) {
           if(distanceFromTop.current) {
-          console.log("Scrolling to the bottom after loading new counts: ", distanceFromTop.current);
           scrollToDistanceFromTop(distanceFromTop.current);
           setTimeout(function() {
             scrollToDistanceFromTop(distanceFromTop.current);
           }, 100)
         }
        } else if(distanceFromBottom.current) {
-          console.log("Scrolling to the top after loading new counts: ", distanceFromBottom.current);
           scrollToDistanceFromBottom(distanceFromBottom.current);
           setTimeout(function() {
             scrollToDistanceFromBottom(distanceFromBottom.current);
           }, 100)
         } else {
-          console.log("No dft/dfb current (loading new posts)");
+          // console.log("No dft/dfb current (loading new posts)");
         }
 
       }, [props.loadedNewCount]);
 
-
-      console.log("CountList render");
-
       const scrollDownMemo = useMemo(() => {
-        console.log("scrollDown Render (For Fab)");
         return (<>{isNewRecentCountAdded && !firstLoad && ((props.user && props.user.pref_load_from_bottom && !isScrolledToBottom) || !props.user || (props.user && props.user.pref_load_from_bottom === false && !isScrolledToTop) ) && (<>
           {isDesktop ? (
               <Box sx={{ position: 'fixed', bottom: '130px', right: '10%' }}>
@@ -444,7 +408,6 @@ const CountList = memo((props: any) => {
       }, [isNewRecentCountAdded, firstLoad, isScrolledToTop, isScrolledToBottom, props.recentCounts, props.user])
 
       const submitButtonMemo = useMemo(() => {
-        console.log(`Submit Area Render (isDesktop: ${isDesktop})`);
         if(props.counter && props.counter.roles.includes('banned')) {
           return (
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
@@ -528,9 +491,7 @@ const CountList = memo((props: any) => {
       }, [inputRef, props.thread, submitColor, keyboardType, theme, isDesktop, props.counter, props.cachedCounts, props.loadedNewestRef, props.loadedNewest, forceRerenderSubmit, props.recentCountsLoading])
 
       const countsMemo = useMemo(() => {
-        console.log("All Counts Render");
         if(isDesktop) {
-          console.log("Rendering desktop counts...");
           return (
             <Box sx={{maxWidth: '100%', margin: 'initial',}}>
               {props.recentCounts.map(count => {
@@ -544,7 +505,6 @@ const CountList = memo((props: any) => {
             </Box>
           ); 
       } else {
-        console.log("Rendering mobile counts");
         return (<Box sx={{maxWidth: '100%', margin: 'auto'}}>{props.recentCounts.map(count => {
           const contextMatch = props.context && props.context === count.uuid;
           const ref = contextMatch ? contextRef : null;
@@ -558,14 +518,12 @@ const CountList = memo((props: any) => {
       const [submitHeight, setSubmitHeight] = useState(76);
 
       useEffect(() => {
-        console.log("Observing textbox size change");
         const submit = submitRef.current;
 
         if(!submit) return;
     
         const resizeObserver = new ResizeObserver(() => {
           // The size of the textbox has changed. 
-          console.log("Size of textbox changed");
           if(submitRef.current) {
             setSubmitHeight(submitRef.current.getBoundingClientRect().height);
           } 
@@ -574,7 +532,6 @@ const CountList = memo((props: any) => {
         resizeObserver.observe(submit);
     
         return () => {
-          console.log("Unobserving textbox size changes");
           resizeObserver.unobserve(submit);
         };
       }, [submitRef.current]);
