@@ -29,10 +29,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const thread_name:string = params.thread_name || "main";
     const navigate = useNavigate();
 
-    useEffect(() => {
-      console.log('Page changed');
-    }, [navigate]);
-
     const theme = useTheme();
     useEffect(() => {
       document.title = `${thread_name} | countGG`;
