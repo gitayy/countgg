@@ -43,9 +43,11 @@ export const DailyHOCTable = ({ dailyHOC }: Props) => {
             counter,
             counts,
           })).sort((a, b) => b.counts - a.counts);
+          const sumCounts = Object.values(dailyHOC).reduce((acc, { counts }) => acc + counts, 0);
         
           return (<>
             <Typography variant='h6'>Daily Leaderboard</Typography>
+            <Typography sx={{mb: 1}} variant='body2'>{sumCounts} {sumCounts != 1 ? "counts" : "count"}</Typography>
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
