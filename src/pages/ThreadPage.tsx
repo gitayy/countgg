@@ -28,6 +28,11 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const { context } = queryString.parse(window.location.search);
     const thread_name:string = params.thread_name || "main";
     const navigate = useNavigate();
+
+    useEffect(() => {
+      console.log('Page changed');
+    }, [navigate]);
+
     const theme = useTheme();
     useEffect(() => {
       document.title = `${thread_name} | countGG`;
@@ -476,7 +481,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           });
 
             return () => {
-              console.log("Disabling socket functions until you reconnect.");
+              console.log("Disabling socket functions until you reconnect / join another thread.");
+                socket.emit('leave_threads');
                 socket.off('connection_error');
                 socket.off('post');
                 socket.off('lastCount');

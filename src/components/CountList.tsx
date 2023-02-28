@@ -247,6 +247,7 @@ const CountList = memo((props: any) => {
           if (firstLoad) {
             messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
             setFirstLoad(false);
+            props.isScrolledToNewest.current = true;
           } else {
             if (isScrolledToBottom && props.user && props.user.pref_load_from_bottom) {
             if(!props.chatsOnly) {
