@@ -32,13 +32,13 @@ export const DefaultPage = () => {
     const updateCount = () => {
       testTimeout = setTimeout(function() {
 
-      if(count < 41) {
+      if(count < 51) {
         setCount(prevCount => {
-          return (prevCount + 1)
+          return ((prevCount + 1) % 10 == 0 ? prevCount + 2 : prevCount + 1)
         });
       }
 
-    }, 50);
+    }, 40);
     };
 
     updateCount();
@@ -61,7 +61,7 @@ export const DefaultPage = () => {
     </Snackbar>
       <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
       <Typography variant="h1" sx={{ textAlign: 'center', m: 1 }}>
-        Over <Typography variant='h1' component={'span'} sx={{ textAlign: 'center', background: 'linear-gradient(to right, #FF8C00, #FFA500)', }}>&nbsp;{`${count.toString().slice(count.toString().length - 1)}${'0'.repeat(Math.floor(count/10))}`}&nbsp;</Typography> Counts Made
+        Over <Typography variant='h1' component={'span'} sx={{ textAlign: 'center', background: 'linear-gradient(to right, #FF8C00, #FFA500)', }}>&nbsp;{`${parseInt(`${count.toString().slice(count.toString().length - 1)}${'0'.repeat(Math.floor(count/10))}`).toLocaleString()}`}&nbsp;</Typography> Counts Made
       </Typography>
         {!counter && <Paper elevation={8} sx={{mb: 2, display: 'flex', alignItems: 'stretch', background: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),url(${SwingBg})`, minHeight: '33vh', p: 2, backgroundSize: 'cover', backgroundPosition: 'top right'}}>
           <Grid container direction={'row'}>
