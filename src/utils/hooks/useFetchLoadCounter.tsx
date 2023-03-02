@@ -19,7 +19,7 @@ export function useFetchLoadCounter(counter_id: string) {
           console.log(err);
           setLoadedCounterLoading(false);
         })
-    }, []);
+    }, [counter_id]);
     
       return { loadedCounter, loadedCounterLoading };
     }
