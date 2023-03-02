@@ -42,6 +42,9 @@ axios.post(
   CONFIG
 );
 
+export const getCountersPage = (page: number) =>
+axios.get<{counters: Counter[], pageCount: number}>(`${API_URL}/counter/counters/${page}`, CONFIG);
+
 export const updateCounter = (counter: Counter) =>
 axios.post(
   `${API_URL}/counter/update`,
