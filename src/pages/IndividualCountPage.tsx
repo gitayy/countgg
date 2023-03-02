@@ -23,10 +23,6 @@ export const IndividualCountPage = memo(() => {
     const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
     
     const socket = useContext(SocketContext);
-    const [connected, setConnected] = useState(false);
-    const [connecting, setConnecting] = useState(false);
-    const [socketStatus, setSocketStatus] = useState("CONNECTING...");
-    const [socketViewers, setSocketViewers] = useState(1);
 
     const { user, userLoading } = useContext(UserContext);
     const { counter, loading } = useContext(CounterContext);
@@ -35,18 +31,9 @@ export const IndividualCountPage = memo(() => {
     const [ modalOpen, setModalOpen ] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
-    const [lastCount, setLastCount] = useState<{lastCount: PostType, lastCounter: Counter}>();
     const isMounted = useIsMounted();
 
-    // var latencyCheck = "";
-    // const [latencyCheck, setLatencyCheck] = useState('');
-    // const [latency, setLatency] = useState(0);
-    const latency = useRef(0);
-    const latencyCheck = useRef('');
     const myUUIDCheck = useRef('');
-    const [renderLatencyCheck, setRenderLatencyCheck] = useState(false);
-    // const [deleteComments, setDeleteComments] = useState(2);
-    const [deleteComments, setDeleteComments] = useState("");
     const [latencyStateTest, setLatencyStateTest] = useState("");
 
     //turn myUUIDCheck into uuid on counter load
@@ -79,6 +66,7 @@ export const IndividualCountPage = memo(() => {
             });
 
             return () => {
+                socket.emit('leave_threads');
                 socket.off('connection_error');
                 socket.off('post');
                 socket.off('lastCount');

@@ -17,7 +17,6 @@ export function useFetchRecentCounts(thread_name: string, context: string | (str
       useEffect(() => {
         getRecentCounts(thread_name, context)
         .then(({ data }) => {
-          console.log(data);
         if (isMounted.current && data.recentCounts) { 
           if(user && user.pref_load_from_bottom) {
             setRecentCounts(data.recentCounts.reverse());
