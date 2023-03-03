@@ -9484,6 +9484,11 @@ timsort@^0.3.0:
   resolved "https://registry.npmjs.org/timsort/-/timsort-0.3.0.tgz"
   integrity sha1-QFQRqOfmM5/mTbmiNN4R3DHgK9Q=
 
+tinycon@^0.6.8:
+  version "0.6.8"
+  resolved "https://registry.yarnpkg.com/tinycon/-/tinycon-0.6.8.tgz#e7da223e3ee0cbf9db7963fa335699bb21777a73"
+  integrity sha512-bF8Lxm4JUXF6Cw0XlZdugJ44GV575OinZ0Pt8vQPr8ooNqd2yyNkoFdCHzmdpHlgoqfSLfcyk4HDP1EyllT+ug==
+
 tmp@^0.2.1:
   version "0.2.1"
   resolved "https://registry.npmjs.org/tmp/-/tmp-0.2.1.tgz"

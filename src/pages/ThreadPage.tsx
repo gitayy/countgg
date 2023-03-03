@@ -21,6 +21,7 @@ import ReactMarkdown from 'react-markdown';
 import { adminToggleThreadLock } from '../utils/api';
 import { DailyHOCTable } from '../components/DailyHOCTable';
 import { SplitsTable } from '../components/SplitsTable';
+import { useFavicon } from '../utils/hooks/useFavicon';
 
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const location = useLocation();
@@ -28,6 +29,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const { context } = queryString.parse(window.location.search);
     const thread_name:string = params.thread_name || "main";
     const navigate = useNavigate();
+    const setFaviconCount = useFavicon();
 
     const theme = useTheme();
     useEffect(() => {
@@ -320,6 +322,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                       };
                       return updatedHOC;
                   });
+                }
+                if (document.hidden) {
+                  setFaviconCount();
                 }
               });
 
