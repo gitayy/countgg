@@ -87,7 +87,7 @@ import { AchievementType } from '../utils/types';
               <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <TabList onChange={handleTabChange} sx={{bgcolor: "background.paper"}} aria-label="Counter Tabs">
                   <Tab label="Info" value="1" />
-                  <Tab label="Stats" value="2" />
+                  <Tab label="Stats" value="2" disabled />
                   <Tab label="Achievements" value="3" />
                 </TabList>
               </Box>
@@ -101,7 +101,7 @@ import { AchievementType } from '../utils/types';
                 <Typography>Color: {loadedCounter.color}</Typography>
               </TabPanel>
               <TabPanel value="2">
-                User stats are coming soon!
+                
               </TabPanel>
               <TabPanel value="3">
                 <Typography variant='h5'>Unlocked</Typography>

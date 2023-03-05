@@ -45,6 +45,9 @@ axios.post(
 export const getCountersPage = (page: number) =>
 axios.get<{counters: Counter[], pageCount: number}>(`${API_URL}/counter/counters/${page}`, CONFIG);
 
+export const getThreadStats = (threadName: string) =>
+axios.get<{stats: {gets: object[], assists: object[], palindromes: object[], repdigits: object[], leaderboard: object[], last_updated: string}, counters: Counter[]}>(`${API_URL}/thread/stats/${threadName}`, CONFIG);
+
 export const updateCounter = (counter: Counter) =>
 axios.post(
   `${API_URL}/counter/update`,
