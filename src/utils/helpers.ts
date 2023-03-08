@@ -210,3 +210,4 @@ export const standardizeFormatOptions = ['Disabled', 'No Separator', 'Commas', '
 export const nightModeOptions = ['System', 'On', 'Off'];
 export const submitShortcutOptions = ['CtrlEnter', 'Enter', 'Off'];
 export const customStrickenOptions = ['Disabled', 'Enabled', 'Inverse'];
+export const postStyleOptions = ['Default', 'LC'];

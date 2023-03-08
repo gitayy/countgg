@@ -38,8 +38,6 @@ const PlaceCell = ({ place }: { place: number }) => {
 
 export const DailyHOCTable = ({ dailyHOC }: Props) => {
     const navigate = useNavigate();
-    console.log("lalala");
-    console.log(dailyHOC);
     if(dailyHOC !== undefined && dailyHOC !== null) {
         const rows = Object.entries(dailyHOC).map(([authorUUID, { counter, counts }]) => ({
             counter,

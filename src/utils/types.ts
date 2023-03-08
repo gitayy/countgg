@@ -16,6 +16,7 @@ export type User = {
   pref_standardize_format: string;
   pref_time_since_last_count: boolean;
   pref_custom_stricken: string;
+  pref_post_style: string;
   titles: number[];
   card_borders: number[];
   card_backgrounds: number[];

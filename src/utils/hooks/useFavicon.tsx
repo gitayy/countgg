@@ -7,11 +7,11 @@ export function useFavicon() {
   const countRef = useRef(0);
 
   tinycon.setOptions({
-	// width: 7,
-	// height: 9,
-	// font: '10px arial',
-	// color: '#ffffff',
-	// background: '#549A2F',
+	width: 7,
+	height: 12,
+	font: '9px Roboto',
+	color: '#ffffff',
+	background: '#549A2F',
 	fallback: true
 });
 
@@ -21,7 +21,6 @@ export function useFavicon() {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         // Store the current count when the page is hidden
-        countRef.current = tinycon.getBubble() || 0;
         tinycon.setBubble(0);
       } else {
         // Restore the previous count when the page is visible again
@@ -40,11 +39,6 @@ export function useFavicon() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
-
-//   const setCount = (count: number) => {
-//     countRef.current = count;
-//     tinycon.setBubble(count);
-//   };
 
   const setCount = () => {
     countRef.current += 1;

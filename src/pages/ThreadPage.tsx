@@ -117,7 +117,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [loadedNewChat, setLoadedNewChat] = useState(2);
     const chatsIsScrolledToTheBottom = useRef(false);
     const chatsIsScrolledToTheTop = useRef(false);
-    const chatsIsScrolledToNewest = useRef(false);
+    const chatsIsScrolledToNewest = useRef(true); // different default state
 
     // Needed to calculate server latency.
     const handleLatencyChange = (value) => {
@@ -329,6 +329,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               });
 
               socket.on(`loadOldCounts`, function(data) {
+                for (const counter of data.counters) {
+                  addCounterToCache(counter);
+                }
                 if(userAsRef.current && userAsRef.current.pref_load_from_bottom) {
                     setRecentCounts(prevCounts => {
                       const newCounts = [...data.recentCounts.reverse(), ...prevCounts];
@@ -343,9 +346,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                   if(data.recentCounts && data.recentCounts[0]) {
                     setLoadedOldCount(Date.now())
                   }
-                  for (const counter of data.counters) {
-                      addCounterToCache(counter);
-                  }
                   if(data.isNewest && isScrolledToNewest.current) {
                     setLoadedNewest(true);
                     loadedNewestRef.current = true;
@@ -356,6 +356,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               });
 
               socket.on(`loadNewCounts`, function(data) {
+                for (const counter of data.counters) {
+                  addCounterToCache(counter);
+                }
                 if(userAsRef.current && userAsRef.current.pref_load_from_bottom) {
                   setRecentCounts(prevCounts => {
                     const newCounts = [...prevCounts, ...data.recentCounts,];
@@ -370,9 +373,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 if(data.recentCounts && data.recentCounts[0]) {
                   setLoadedNewCount(Date.now())
                 }
-                for (const counter of data.counters) {
-                    addCounterToCache(counter);
-                }
                 if(data.isNewest && isScrolledToNewest.current) {
                   setLoadedNewest(true);
                   loadedNewestRef.current = true;
@@ -385,13 +385,13 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             socket.on(`loadOldChats`, function(data) {
               for (const counter of data.counters) {
                 addCounterToCache(counter);
-            }
-            if(data.isNewest) {
-              setLoadedNewestChats(true);
-            }
-            if(data.isOldest) {
-              setLoadedOldestChats(true);
-            }
+              }
+              if(data.isNewest) {
+                setLoadedNewestChats(true);
+              }
+              if(data.isOldest) {
+                setLoadedOldestChats(true);
+              }
               if(userAsRef.current && userAsRef.current.pref_load_from_bottom) {
                   setRecentChats(prevChats => {
                     const newChats = [...data.recentCounts.reverse(), ...prevChats];
@@ -412,13 +412,13 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             socket.on(`loadNewChats`, function(data) {
               for (const counter of data.counters) {
                 addCounterToCache(counter);
-            }
-            if(data.isNewest) {
-              setLoadedNewestChats(true);
-            }
-            if(data.isOldest) {
-              setLoadedOldestChats(true);
-            }
+              }
+              if(data.isNewest) {
+                setLoadedNewestChats(true);
+              }
+              if(data.isOldest) {
+                setLoadedOldestChats(true);
+              }
               if(userAsRef.current && userAsRef.current.pref_load_from_bottom) {
                 setRecentChats(prevChats => {
                   const newChats = [...prevChats, ...data.recentCounts,];

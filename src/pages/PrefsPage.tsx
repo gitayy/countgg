@@ -3,7 +3,7 @@ import { CounterContext } from '../utils/contexts/CounterContext';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import { Alert, Box, Button, Container, FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Snackbar, Switch, Typography, AlertColor, Tooltip, TextField } from '@mui/material';
 import { UserContext } from '../utils/contexts/UserContext';
-import { card_backgrounds, card_borders, customStrickenOptions, nightModeOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
+import { card_backgrounds, card_borders, customStrickenOptions, nightModeOptions, postStyleOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
 import { updateCounterPrefs } from '../utils/api';
 import { CounterCard } from '../components/CounterCard';
 import { Loading } from '../components/Loading';
@@ -30,7 +30,8 @@ import { HexColorPicker } from 'react-colorful';
     const [prefSubmitShortcut, setPrefSubmitShortcut] = useState(user?.pref_submit_shortcut || 'CtrlEnter')
     const [prefNoClear, setPrefNoClear] = useState(user?.pref_noClear || false)
     const [prefTimeSinceLastCount, setPrefTimeSinceLastCount] = useState(user?.pref_time_since_last_count || false)
-    const [prefCustomStricken, setPrefCustomStricken] = useState(user?.pref_custom_stricken || 'Disabled')    
+    const [prefCustomStricken, setPrefCustomStricken] = useState(user?.pref_custom_stricken || 'Disabled')  
+    const [prefPostStyle, setPrefPostStyle] = useState(user?.pref_post_style || 'Default')  
     const [cardStyle, setCardStyle] = useState(counter?.cardStyle || 'card_default');
     const [cardBorderStyle, setCardBorderStyle] = useState(counter?.cardBorderStyle || 'no_border_square');
     const [title, setTitle] = useState(counter?.title || 'COUNTER');
@@ -57,6 +58,7 @@ import { HexColorPicker } from 'react-colorful';
           user.pref_custom_stricken = prefCustomStricken;
           user.pref_strike_color = prefStrikeColor;
           user.pref_noClear = prefNoClear;
+          user.pref_post_style = prefPostStyle;
           counter.cardStyle = cardStyle;
           counter.cardBorderStyle = cardBorderStyle;
           counter.title = title;
@@ -239,6 +241,22 @@ import { HexColorPicker } from 'react-colorful';
                     sx={{width: 200}}
                 >
                   {submitShortcutOptions.map((card) => {
+                      return (<MenuItem value={card}>{card}</MenuItem>)
+                  })}
+                </Select>
+            </FormControl>
+            <FormControl sx={{m: 2}}>
+                <InputLabel id="post-style-label">Post Style</InputLabel>
+                <Select
+                    labelId="post-style-label"
+                    id="post-style"
+                    value={prefPostStyle}
+                    defaultValue={prefPostStyle}
+                    label="Post Style"
+                    onChange={e => setPrefPostStyle((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  {postStyleOptions.map((card) => {
                       return (<MenuItem value={card}>{card}</MenuItem>)
                   })}
                 </Select>

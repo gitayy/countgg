@@ -8,6 +8,7 @@ import LoginIcon from '@mui/icons-material/Login';
 import CountMobile from "./CountMobile";
 import AcUnitIcon from '@mui/icons-material/AcUnit';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import { HourBar } from "./HourBar";
 
 const CountList = memo((props: any) => {
     
@@ -42,8 +43,8 @@ const CountList = memo((props: any) => {
     //Add Ctrl+Enter submit shortcut
     useEffect(() => {
         function handleKeyDown(event) {
-          //Prevent Ctrl+0-9 from switching tabs
-          if ((event.ctrlKey || event.metaKey) && event.keyCode >= 48 && event.keyCode <= 57) {
+          //Prevent Ctrl+0-9 from switching tabs (including numpad numbers)
+          if ((event.ctrlKey || event.metaKey) && (event.keyCode >= 48 && event.keyCode <= 57 || event.keyCode >= 96 && event.keyCode <= 105)) {
             event.preventDefault();
           }
           if(props.user && props.user.pref_submit_shortcut == 'Enter') {
@@ -492,28 +493,121 @@ const CountList = memo((props: any) => {
       }, [inputRef, props.thread, submitColor, keyboardType, theme, isDesktop, props.counter, props.cachedCounts, props.loadedNewestRef, props.loadedNewest, forceRerenderSubmit, props.recentCountsLoading])
 
       const countsMemo = useMemo(() => {
-        if(isDesktop) {
-          return (
-            <Box sx={{maxWidth: '100%', margin: 'initial',}}>
-              {props.recentCounts.map(count => {
-                const contextMatch = props.context && props.context === count.uuid;
-                const ref = contextMatch ? contextRef : null;
-                return (
-                  <Count user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
-                );
-              })}
-              {/* <Box sx={{position: 'fixed'}}>{Date.now() - props.latency}</Box> */}
-            </Box>
-          ); 
-      } else {
-        return (<Box sx={{maxWidth: '100%', margin: 'auto'}}>{props.recentCounts.map(count => {
-          const contextMatch = props.context && props.context === count.uuid;
-          const ref = contextMatch ? contextRef : null;
-          return (
-            <CountMobile user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
-          );
-        })}</Box>); 
-      }
+          const countsByDayAndHour = {};
+          const today = new Date();
+          const yesterday = new Date(Date.now() - 86400000);
+          let prevHour;
+          let prevKey;
+
+          props.recentCounts.forEach((count, index) => {
+            const date = new Date(parseInt(count.timestamp));
+            const hour = date.getHours();
+            const key = `${date.getFullYear()}-${date.getDate()}-${hour}`;
+
+            if (!countsByDayAndHour[key]) {
+              const dateWithoutMinutes = new Date(date.setMinutes(0));
+              let day;
+              if (dateWithoutMinutes.toLocaleDateString() === today.toLocaleDateString()) {
+                day = 'Today at ' + dateWithoutMinutes.toLocaleTimeString([], { hour: 'numeric', minute: 'numeric' });
+              } else if (dateWithoutMinutes.toLocaleDateString() === yesterday.toLocaleDateString()) {
+                day = 'Yesterday at ' + dateWithoutMinutes.toLocaleTimeString([], { hour: 'numeric', minute: 'numeric' });
+              } else {
+                day = dateWithoutMinutes.toLocaleDateString() + ' at ' + dateWithoutMinutes.toLocaleTimeString([], { hour: 'numeric', minute: 'numeric' });
+              }
+              countsByDayAndHour[key] = {
+                day,
+                hour,
+                counts: [],
+              };
+            }
+
+            // if ((prevHour === hour || !prevHour) && index !== props.recentCounts.length - 1) {
+            //   countsByDayAndHour[key].showHourBar = true;
+            // } else {
+            //   countsByDayAndHour[key].showHourBar = false;
+            // }
+
+            if ((prevKey !== key || !prevKey || index === props.recentCounts.length - 1) && countsByDayAndHour[key].showHourBar !== false) {
+              if(props.user && props.user.pref_load_from_bottom && index === 0) {
+                countsByDayAndHour[key].showHourBar = false;
+              } else if((!props.user || (props.user && !props.user.pref_load_from_bottom)) && index === props.recentCounts.length - 1) {
+                countsByDayAndHour[key].showHourBar = false;
+              } else {
+                countsByDayAndHour[key].showHourBar = true;
+              }
+            } 
+            // else if(props.user && props.user.pref_load_from_bottom && index === 0) {
+            //   console.log("Yepper");
+            //   countsByDayAndHour[key].showHourBar = false;
+            // }
+            // else if(index === props.recentCounts.length - 1) {
+            //   countsByDayAndHour[key].showHourBar = false;
+            // }
+        
+            countsByDayAndHour[key].counts.push(count);
+        
+            prevHour = hour;
+            prevKey = key;
+          });
+          return Object.keys(countsByDayAndHour).map((key, index) => {
+            const { day, counts, showHourBar } = countsByDayAndHour[key];
+            const shouldShowHourBar = showHourBar
+            return (
+              <div key={key}>
+                {props.user && props.user.pref_load_from_bottom && shouldShowHourBar && (
+                  <HourBar label={day} />
+                )}
+                {counts.map(count => {
+                  const contextMatch = props.context && props.context === count.uuid;
+                  const ref = contextMatch ? contextRef : null;
+                  if(isDesktop) {
+                  return (
+                    <Count user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+                  );
+                  } else {
+                    return (
+                      <CountMobile user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+                    );
+                  }
+                })}
+                {/* {shouldShowHourBar && (
+                  <HourBar label={`${day} at ${hour}:00`} hour={hour} />
+                )} */}
+                {/* {isToday && !shouldShowHourBar && (
+                  <HourBar label="Today" hour={day} />
+                )}
+                {isYesterday && !shouldShowHourBar && (
+                  <HourBar label="Yesterday" hour={day} />
+                )}
+                {!isToday && !isYesterday && !shouldShowHourBar && (
+                  <HourBar label={day} hour={day} />
+                )} */}
+                {(!props.user || (props.user && !props.user.pref_load_from_bottom)) && shouldShowHourBar && (
+                  <HourBar label={day} />
+                )}
+              </div>
+            );
+          });
+      //     return (
+      //       <Box sx={{maxWidth: '100%', margin: 'initial',}}>
+      //         {/* {props.recentCounts.map(count => {
+      //           const contextMatch = props.context && props.context === count.uuid;
+      //           const ref = contextMatch ? contextRef : null;
+      //           return (
+      //             <Count user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+      //           );
+      //         })} */}
+      //       </Box>
+      //     ); 
+      // } else {
+      //   return (<Box sx={{maxWidth: '100%', margin: 'auto'}}>{props.recentCounts.map(count => {
+      //     const contextMatch = props.context && props.context === count.uuid;
+      //     const ref = contextMatch ? contextRef : null;
+      //     return (
+      //       <CountMobile user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+      //     );
+      //   })}</Box>); 
+      // }
       }, [props.recentCounts, cachedCounters, isDesktop]);
 
       const [submitHeight, setSubmitHeight] = useState(76);

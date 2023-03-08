@@ -28,7 +28,7 @@ export const StatsPage = () => {
   const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
 
   const { allThreads, allThreadsLoading } = useFetchAllThreads();
-    const [selectedThread, setSelectedThread] = useState<ThreadType>();
+    const [selectedThread, setSelectedThread] = useState<ThreadType|{name: string, uuid: string}>();
     const [name, setName] = useState('');
     const [uuid, setUuid] = useState('');
 
@@ -84,8 +84,13 @@ export const StatsPage = () => {
     };
 
     const handleThreadSelection = (event: SelectChangeEvent<string>) => {
-      const selectedThread = allThreads.find(thread => thread.uuid === event.target.value);
-      setSelectedThread(selectedThread);
+      if(event.target.value == 'all') {
+        setSelectedThread({name: 'all', uuid: 'all'});
+      } else {
+        const selectedThread = allThreads.find(thread => thread.uuid === event.target.value);
+        setSelectedThread(selectedThread);
+      }
+      
     };
 
   if(!loading && !allThreadsLoading) {
@@ -98,6 +103,7 @@ export const StatsPage = () => {
           value={selectedThread ? selectedThread.uuid : ''}
           onChange={handleThreadSelection}
         >
+          <MenuItem key={'all'} value={'all'}>all</MenuItem>
           {allThreads.map(thread => (
             <MenuItem key={thread.uuid} value={thread.uuid}>{thread.name}</MenuItem>
           ))}
