@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, TextField, Typography } from '@mui/material';
-import { convertToTimestamp, formatDateExact, formatTimeDiff} from '../utils/helpers';
+import { convertToTimestamp, formatDate, formatDateExact, formatTimeDiff} from '../utils/helpers';
 import { useLocation } from 'react-router-dom';
 
 export const UuidPage = () => {
@@ -30,8 +30,7 @@ export const UuidPage = () => {
           variant="outlined"
           fullWidth
           margin="normal"
-          value={uuid1}
-          onChange={(e) => setUuid1(e.target.value)}
+          onChange={(e) => setUuid1(e.target.value.slice(-36))}
         />
   
         <TextField
@@ -39,19 +38,18 @@ export const UuidPage = () => {
           variant="outlined"
           fullWidth
           margin="normal"
-          value={uuid2}
-          onChange={(e) => setUuid2(e.target.value)}
+          onChange={(e) => setUuid2(e.target.value.slice(-36))}
         />
   
         {timestamp1 !== null && (
           <Typography variant="body1" component="p">
-            UUID 1 timestamp: {formatDateExact(timestamp1)} ({timestamp1})
+            UUID 1 timestamp: {formatDateExact(timestamp1)} ({timestamp1}, {formatDate(timestamp1)})
           </Typography>
         )}
   
         {timestamp2 !== null && (
           <Typography variant="body1" component="p">
-            UUID 2 timestamp: {formatDateExact(timestamp2)} ({timestamp2})
+            UUID 2 timestamp: {formatDateExact(timestamp2)} ({timestamp2}, {formatDate(timestamp2)})
           </Typography>
         )}
   

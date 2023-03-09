@@ -84,12 +84,13 @@ export const addCounterToCache = (counter: Counter) => {
 export const formatDate = (timestamp: number) => {
   const date = new Date(timestamp);
   const now = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
 
   // check if date is today or yesterday
-  const diffInDays = Math.round((now.getTime() - date.getTime()) / (1000 * 3600 * 24));
-  if (diffInDays === 0) {
+  if(date.toDateString() === now.toDateString()) {
     return `Today at ${date.toLocaleTimeString()}`;
-  } else if (diffInDays === 1) {
+  } else if(date.toDateString() === yesterday.toDateString()) {
     return `Yesterday at ${date.toLocaleTimeString()}`;
   }
 
