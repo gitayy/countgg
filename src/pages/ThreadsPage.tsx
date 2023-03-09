@@ -1,5 +1,5 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { useContext } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useContext, useEffect } from 'react';
 import { CounterContext } from '../utils/contexts/CounterContext';
 import { Box, Typography } from '@mui/material';
 import { Loading } from '../components/Loading';
@@ -11,6 +11,14 @@ export const ThreadsPage = () => {
   const navigate = useNavigate();
   const { counter, loading } = useContext(CounterContext);
   const { allThreads } = useFetchAllThreads();
+
+  const location = useLocation();
+    useEffect(() => {
+        document.title = `Threads | countGG`;
+        return (() => {
+          document.title = 'countGG';
+        })
+      }, [location.pathname]);
 
   if(!loading && allThreads ) {
 

@@ -22,7 +22,6 @@ import InfoIcon from '@mui/icons-material/Info';
 import PrivacyTipIcon from '@mui/icons-material/PrivacyTip';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import { logout } from '../utils/api';
-import useAnalyticsEventTracker from '../utils/helpers';
 import { ColorModeContext } from '../utils/contexts/ColorModeContext';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import CountggLogo from '../assets/countgg-128.png'
@@ -32,7 +31,6 @@ import SearchIcon from '@mui/icons-material/Search';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
-  const gaEventTracker = useAnalyticsEventTracker('Login');
   const { hash } = useLocation();
 
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
@@ -96,7 +94,7 @@ export const Sidebar = () => {
       <Divider />
       <List>
         <Link color={'inherit'} underline='none' href={`/`} onClick={(e) => {e.preventDefault();navigate(`/`);}}>
-        <ListItem key={'home'} disablePadding>
+        <ListItem onClick={handleDrawerToggle} key={'home'}  disablePadding>
           <ListItemButton>
             <ListItemIcon>
               <HomeIcon></HomeIcon>
@@ -105,7 +103,7 @@ export const Sidebar = () => {
           </ListItemButton>          
         </ListItem></Link>
         <Link color={'inherit'} underline='none' href={`/threads`} onClick={(e) => {e.preventDefault();navigate(`/threads`);}}>
-        <ListItem key={'threads'} disablePadding>
+        <ListItem onClick={handleDrawerToggle} key={'threads'} disablePadding>
           <ListItemButton>
             <ListItemIcon>
               <StadiumIcon></StadiumIcon>
@@ -114,7 +112,7 @@ export const Sidebar = () => {
           </ListItemButton>
         </ListItem></Link>
         <Link color={'inherit'} underline='none' href={`/rules`} onClick={(e) => {e.preventDefault();navigate(`/rules`);}}>
-        <ListItem key={'rules'} disablePadding>
+        <ListItem onClick={handleDrawerToggle} key={'rules'} disablePadding>
           <ListItemButton>
             <ListItemIcon>
               <GavelIcon></GavelIcon>
@@ -126,7 +124,7 @@ export const Sidebar = () => {
       <Divider />
       <List>
       <Link color={'inherit'} underline='none' href={`/stats`} onClick={(e) => {e.preventDefault();navigate(`/stats`);}}>
-        <ListItem key={'stats'} disablePadding>
+        <ListItem onClick={handleDrawerToggle} key={'stats'} disablePadding>
           <ListItemButton>
             <ListItemIcon>
               <QueryStatsIcon></QueryStatsIcon>
@@ -134,7 +132,7 @@ export const Sidebar = () => {
             <ListItemText primary={'Stats'} />
           </ListItemButton>
         </ListItem></Link>
-        {counter && counter.roles.includes("counter") && <Link color={'inherit'} underline='none' href={`/counter/${counter.uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counter.uuid}`);}}><ListItem key={'my_profile'} disablePadding>
+        {counter && counter.roles.includes("counter") && <Link color={'inherit'} underline='none' href={`/counter/${counter.uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counter.uuid}`);}}><ListItem onClick={handleDrawerToggle} key={'my_profile'} disablePadding>
           <ListItemButton>
             <ListItemIcon>
               <PersonIcon></PersonIcon>
@@ -143,7 +141,7 @@ export const Sidebar = () => {
           </ListItemButton>
         </ListItem></Link>}
         <Link color={'inherit'} underline='none' href={`/counters`} onClick={(e) => {e.preventDefault();navigate(`/counters`);}}>
-        <ListItem key={'counters'} disablePadding>
+        <ListItem onClick={handleDrawerToggle} key={'counters'} disablePadding>
           <ListItemButton>
             <ListItemIcon>
               <GroupsIcon></GroupsIcon>
@@ -152,7 +150,7 @@ export const Sidebar = () => {
           </ListItemButton>
         </ListItem></Link>
         <Link color={'inherit'} underline='none' href={`/uuid`} onClick={(e) => {e.preventDefault();navigate(`/uuid`);}}>
-        <ListItem key={'uuid'} disablePadding>
+        <ListItem onClick={handleDrawerToggle} key={'uuid'} disablePadding>
           <ListItemButton>
             <ListItemIcon>
               <CalculateIcon></CalculateIcon>
@@ -161,7 +159,7 @@ export const Sidebar = () => {
           </ListItemButton>
         </ListItem></Link>
         <Link color={'inherit'} underline='none' href={`/post-finder`} onClick={(e) => {e.preventDefault();navigate(`/post-finder`);}}>
-        <ListItem key={'post-finder'} disablePadding>
+        <ListItem onClick={handleDrawerToggle} key={'post-finder'} disablePadding>
           <ListItemButton>
             <ListItemIcon>
               <SearchIcon></SearchIcon>
@@ -171,7 +169,7 @@ export const Sidebar = () => {
         </ListItem></Link>
       </List>
       <Divider />
-      {counter && counter.roles.includes("admin") && <><List><Link color={'inherit'} underline='none' href={`/admin`} onClick={(e) => {e.preventDefault();navigate(`/admin`);}}><ListItem key={'admin'} disablePadding>
+      {counter && counter.roles.includes("admin") && <><List><Link color={'inherit'} underline='none' href={`/admin`} onClick={(e) => {e.preventDefault();navigate(`/admin`);}}><ListItem onClick={handleDrawerToggle} key={'admin'} disablePadding>
           <ListItemButton onClick={() => navigate(`/admin`)}>
             <ListItemIcon>
               <PersonIcon></PersonIcon>
@@ -181,7 +179,7 @@ export const Sidebar = () => {
         </ListItem></Link></List><Divider /></>}
         <List>
         <Link color={'inherit'} underline='none' href={`/about`} onClick={(e) => {e.preventDefault();navigate(`/about`);}}>
-          <ListItem key={'about'} disablePadding>
+          <ListItem onClick={handleDrawerToggle} key={'about'} disablePadding>
             <ListItemButton>
               <ListItemIcon>
                 <InfoIcon></InfoIcon>
@@ -190,7 +188,7 @@ export const Sidebar = () => {
             </ListItemButton>
           </ListItem></Link>
           <Link color={'inherit'} underline='none' href={`/privacy-policy`} onClick={(e) => {e.preventDefault();navigate(`/privacy-policy`);}}>
-          <ListItem key={'privacy-policy'} disablePadding>
+          <ListItem onClick={handleDrawerToggle} key={'privacy-policy'} disablePadding>
             <ListItemButton>
               <ListItemIcon>
                 <PrivacyTipIcon></PrivacyTipIcon>
@@ -199,7 +197,7 @@ export const Sidebar = () => {
             </ListItemButton>
           </ListItem></Link>
           <Link color={'inherit'} underline='none' href={`/contact-us`} onClick={(e) => {e.preventDefault();navigate(`/contact-us`);}}>
-          <ListItem key={'contact-us'} disablePadding>
+          <ListItem onClick={handleDrawerToggle} key={'contact-us'} disablePadding>
             <ListItemButton>
               <ListItemIcon>
                 <AlternateEmailIcon></AlternateEmailIcon>
@@ -331,7 +329,7 @@ export const Sidebar = () => {
           </Modal></>}
           {!counter && loading == false && (
             <div>
-              <Button href={loginRedirect} onClick={()=>gaEventTracker('login')} variant="contained" color="secondary" startIcon={<LoginIcon />}>
+              <Button href={loginRedirect} variant="contained" color="secondary" startIcon={<LoginIcon />}>
                 Login
               </Button>
             </div>

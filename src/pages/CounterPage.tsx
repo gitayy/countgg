@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { useContext, useEffect, useState } from 'react';
 import { CounterContext } from '../utils/contexts/CounterContext';
 import { SocketContext } from '../utils/contexts/SocketContext';
@@ -27,6 +27,16 @@ import { AchievementType } from '../utils/types';
     const [unearnedAchievements, setUnearnedAchievements] = useState<AchievementType[]>([]);
     const [unearnedAchievementsLoading, setUnearnedAchievementsLoading] = useState(true);
     const isMounted = useIsMounted();
+
+    const location = useLocation();
+    useEffect(() => {
+      if(counter) {
+        document.title = `${counter.name}'s Profile | countGG`;
+      }
+        return (() => {
+          document.title = 'countGG';
+        })
+      }, [location.pathname, counter]);
 
     useEffect(() => {
       if(allPublicAchievements.length > 0) {

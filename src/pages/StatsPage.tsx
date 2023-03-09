@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { CounterContext } from '../utils/contexts/CounterContext';
 import { Box, FormControl, MenuItem, Select, SelectChangeEvent, Tab, Theme, Typography, useMediaQuery } from '@mui/material';
 import { Loading } from '../components/Loading';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getCountersPage, getThreadStats } from '../utils/api';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import { Counter, ThreadType } from '../utils/types';
@@ -26,6 +26,14 @@ export const StatsPage = () => {
   const isMounted = useIsMounted();
   const navigate = useNavigate();
   const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
+
+  const location = useLocation();
+    useEffect(() => {
+        document.title = `Stats | countGG`;
+        return (() => {
+          document.title = 'countGG';
+        })
+      }, [location.pathname]);
 
   const { allThreads, allThreadsLoading } = useFetchAllThreads();
     const [selectedThread, setSelectedThread] = useState<ThreadType|{name: string, uuid: string}>();

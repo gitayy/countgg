@@ -4,7 +4,7 @@ import { Box, Card, CardContent, Grid, Link, Pagination, PaginationItem, Theme, 
 import { Loading } from '../components/Loading';
 import { Counter } from '../utils/types';
 import { getCountersPage } from '../utils/api';
-import { Link as routerLink, useNavigate } from 'react-router-dom';
+import { Link as routerLink, useLocation, useNavigate } from 'react-router-dom';
 import { CounterCard } from '../components/CounterCard';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 
@@ -18,6 +18,14 @@ export const CountersPage = () => {
   const isMounted = useIsMounted();
   const navigate = useNavigate();
   const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
+
+  const location = useLocation();
+    useEffect(() => {
+        document.title = `Counters | countGG`;
+        return (() => {
+          document.title = 'countGG';
+        })
+      }, [location.pathname]);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);

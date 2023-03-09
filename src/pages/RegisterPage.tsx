@@ -1,7 +1,7 @@
 import { areArraysEqual } from "@mui/base";
 import { Alert, Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, Snackbar, Step, StepLabel, Stepper, TextField, Typography } from "@mui/material";
-import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Loading } from "../components/Loading";
 import { registerCounter } from "../utils/api";
 import { CounterContext } from "../utils/contexts/CounterContext";
@@ -17,6 +17,14 @@ export const RegisterPage = () => {
     const [name, setName] = useState(counter?.name || '')
     const [color, setColor] = useState(counter?.color || '#006b99')
     const [counter_pronouns, setPronouns] = useState<number>(areArraysEqual((counter?.pronouns || []), pronouns[0]) && 0 || areArraysEqual((counter?.pronouns || []), pronouns[1]) && 1 || areArraysEqual((counter?.pronouns || []), pronouns[2]) && 2 || !(counter?.pronouns[0]) && 2 || 0);
+
+    const location = useLocation();
+    useEffect(() => {
+        document.title = `Register | countGG`;
+        return (() => {
+          document.title = 'countGG';
+        })
+      }, [location.pathname]);
 
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');

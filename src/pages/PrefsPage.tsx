@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { CounterContext } from '../utils/contexts/CounterContext';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import { Alert, Box, Button, Container, FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Snackbar, Switch, Typography, AlertColor, Tooltip, TextField } from '@mui/material';
@@ -8,11 +8,21 @@ import { updateCounterPrefs } from '../utils/api';
 import { CounterCard } from '../components/CounterCard';
 import { Loading } from '../components/Loading';
 import { HexColorPicker } from 'react-colorful';
+import { useLocation } from 'react-router-dom';
 
   export const PrefsPage = () => {
     const { user, userLoading } = useContext(UserContext);
     const { counter, loading } = useContext(CounterContext);
     const isMounted = useIsMounted();
+
+    const location = useLocation();
+    useEffect(() => {
+        document.title = `Preferences | countGG`;
+        return (() => {
+          document.title = 'countGG';
+        })
+      }, [location.pathname]);
+    
 
     const [tabValue, setTabValue] = useState('1');
 

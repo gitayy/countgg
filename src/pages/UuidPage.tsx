@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, TextField, Typography } from '@mui/material';
 import { convertToTimestamp, formatDateExact, formatTimeDiff} from '../utils/helpers';
+import { useLocation } from 'react-router-dom';
 
 export const UuidPage = () => {
     const [uuid1, setUuid1] = useState('');
@@ -9,6 +10,14 @@ export const UuidPage = () => {
     const timestamp1 = convertToTimestamp(uuid1);
     const timestamp2 = convertToTimestamp(uuid2);
     const timeDiff = timestamp1 && timestamp2 ? Math.abs(timestamp1 - timestamp2) : null;
+
+    const location = useLocation();
+    useEffect(() => {
+        document.title = `UUID Calculator | countGG`;
+        return (() => {
+          document.title = 'countGG';
+        })
+      }, [location.pathname]);
   
     return (
         <Box sx={{ bgcolor: 'background.paper', flexGrow: 1, p: 2, color: 'text.primary'}}>

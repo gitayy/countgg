@@ -1,6 +1,16 @@
 import { Box } from "@mui/material";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 export const PrivacyPage = () => {
+
+    const location = useLocation();
+    useEffect(() => {
+        document.title = `Privacy Policy | countGG`;
+        return (() => {
+          document.title = 'countGG';
+        })
+      }, [location.pathname]);
 
 return (<>
 <Box sx={{ bgcolor: 'background.paper', flexGrow: 1, p: 3}}>

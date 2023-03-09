@@ -1,6 +1,6 @@
 import { Box, TextField, Button, Zoom, Fab, useTheme, useMediaQuery, Typography, IconButton, alpha, Theme, Tooltip } from "@mui/material";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import useAnalyticsEventTracker, { cachedCounters } from "../utils/helpers";
+import { cachedCounters } from "../utils/helpers";
 import Count  from "./Count";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { Send as SendIcon, Keyboard as KeyboardIcon } from '@mui/icons-material';
@@ -35,8 +35,6 @@ const CountList = memo((props: any) => {
     if (window.location.href.indexOf("scrollDiagnostics") > -1) {
       scrollDiagnostics.current = true;
     }
-
-    const gaEventTracker = useAnalyticsEventTracker('Login');
     const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
 
@@ -485,7 +483,7 @@ const CountList = memo((props: any) => {
           return (
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', maxHeight: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 0, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
                 <Typography color="text.primary" variant="h6">Sign up to join. &nbsp;</Typography>
-              &nbsp;<Button href={loginRedirect} onClick={()=>gaEventTracker('login')} variant="contained" color="secondary" startIcon={<LoginIcon />}>
+              &nbsp;<Button href={loginRedirect} variant="contained" color="secondary" startIcon={<LoginIcon />}>
                 Sign Up
               </Button>
             </Box>)

@@ -17,7 +17,6 @@ import { PrefsPage } from './pages/PrefsPage';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { ThreadsPage } from './pages/ThreadsPage';
-import ReactGA from 'react-ga4';
 import { createTheme, CssBaseline, darkScrollbar, PaletteMode, responsiveFontSizes, ThemeProvider, useMediaQuery } from '@mui/material';
 import { blue, grey } from '@mui/material/colors';
 import { ColorModeContext } from './utils/contexts/ColorModeContext';
@@ -34,14 +33,16 @@ import { init } from 'emoji-mart'
 import { custom_emojis } from './utils/custom_emojis';
 import { RulesPage } from './pages/RulesPage';
 import { PostFinderPage } from './pages/PostFinderPage';
-
-const GA_TR_ID = process.env.REACT_APP_GA_TR_ID || "G-0000000000"
+import ReactGA from 'react-ga4';
 
 function App() {
   const { user, userLoading } = useFetchUser();
   const { counter, loading } = useCounterConfig();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light');
+
+  const GA_TR_ID = process.env.REACT_APP_GA_TR_ID || "G-0000000000"
+  ReactGA.initialize(GA_TR_ID);
 
   useEffect(() => {
     if(user && user.pref_nightMode != 'System') {
@@ -50,6 +51,10 @@ function App() {
       setMode(prefersDarkMode ? 'dark' : 'light');
     }
   }, [prefersDarkMode, user])
+
+  // useEffect(() => {
+  //   ReactGA.send({ hitType: "pageview", page: "/my-path", title: "Custom Title" });
+  // }, [prefersDarkMode, user])
 
   const [snack, setSnack] = useState({
     message: '',

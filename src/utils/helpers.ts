@@ -1,17 +1,7 @@
-import ReactGA from "react-ga4";
 import { Counter } from './types';
 import { format } from 'date-fns';
 import { createElement } from 'react';
 import { validate as uuid_validate } from 'uuid';
-
-
-const useAnalyticsEventTracker = (category="Blog category") => {
-  const eventTracker = (action = "test action", label = "test label") => {
-    ReactGA.event({category, action, label});
-  }
-  return eventTracker;
-}
-export default useAnalyticsEventTracker;
 
 export const titles = {
   'COUNTER': {value: 1, style: 'title-default'},

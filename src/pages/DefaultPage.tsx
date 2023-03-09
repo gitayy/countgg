@@ -5,7 +5,7 @@ import { CounterContext } from '../utils/contexts/CounterContext';
 import { Alert, AlertColor, Box, Button, CardMedia, Grid, Link, Modal, Paper, Snackbar, Typography } from '@mui/material';
 import { Loading } from '../components/Loading';
 import SwingBg from '../assets/swing2.png';
-import useAnalyticsEventTracker, { modalStyle } from '../utils/helpers';
+import { modalStyle } from '../utils/helpers';
 
 export const DefaultPage = () => {
   const navigate = useNavigate();
@@ -21,8 +21,6 @@ export const DefaultPage = () => {
       }    
       setSnackbarOpen(false);
   };
-
-  const gaEventTracker = useAnalyticsEventTracker('Login');
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
   const [count, setCount] = useState(0);
@@ -77,7 +75,7 @@ export const DefaultPage = () => {
             </Grid>
             <Grid item xs={12} sx={{alignSelf: 'flex-end'}}>
               <Button sx={{m: 1}} onClick={()=>{navigate(`/about`)}}>Learn more</Button>
-              <Button sx={{m: 1}} href={loginRedirect} onClick={()=>gaEventTracker('login')} variant="contained">Sign up</Button>
+              <Button sx={{m: 1}} href={loginRedirect} variant="contained">Sign up</Button>
             </Grid>
           </Grid>
         </Paper>}

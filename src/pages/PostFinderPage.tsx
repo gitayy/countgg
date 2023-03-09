@@ -8,6 +8,7 @@ import Count from '../components/Count';
 import CountMobile from '../components/CountMobile';
 import { addCounterToCache, cachedCounters } from '../utils/helpers';
 import { UserContext } from '../utils/contexts/UserContext';
+import { useLocation } from 'react-router-dom';
   
   export const PostFinderPage = () => {
     const { user, userLoading } = useContext(UserContext);
@@ -25,6 +26,14 @@ import { UserContext } from '../utils/contexts/UserContext';
     const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>('error');
 
     const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
+
+    const location = useLocation();
+    useEffect(() => {
+        document.title = `Post Finder | countGG`;
+        return (() => {
+          document.title = 'countGG';
+        })
+      }, [location.pathname]);
 
     useEffect(() => {
       if (!selectedThread) return;

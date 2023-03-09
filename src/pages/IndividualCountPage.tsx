@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { memo, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { CounterContext } from '../utils/contexts/CounterContext';
 import { Box, Link, Stack, Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
@@ -19,6 +19,14 @@ export const IndividualCountPage = memo(() => {
     const count_uuid:string = params.count_uuid || "main";
     const navigate = useNavigate();
     const theme = useTheme();
+
+    const location = useLocation();
+    useEffect(() => {
+        document.title = `View Post | countGG`;
+        return (() => {
+          document.title = 'countGG';
+        })
+      }, [location.pathname]);
 
     const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
     

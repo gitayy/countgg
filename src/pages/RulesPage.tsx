@@ -1,5 +1,6 @@
 import { Box, Button, Link, Typography } from '@mui/material';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Expandable } from '../components/Expandable';
 
 interface Props {
@@ -8,6 +9,14 @@ interface Props {
 }
 
   export const RulesPage: FC<Props> = ({isRegistering, onceDone}) => {
+
+    const location = useLocation();
+    useEffect(() => {
+        document.title = `Rules | countGG`;
+        return (() => {
+          document.title = 'countGG';
+        })
+      }, [location.pathname]);
 
     const rules = [
         {
