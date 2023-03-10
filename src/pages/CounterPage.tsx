@@ -30,13 +30,13 @@ import { AchievementType } from '../utils/types';
 
     const location = useLocation();
     useEffect(() => {
-      if(counter) {
-        document.title = `${counter.name}'s Profile | countGG`;
+      if(loadedCounter) {
+        document.title = `${loadedCounter.name}'s Profile | countGG`;
       }
         return (() => {
           document.title = 'countGG';
         })
-      }, [location.pathname, counter]);
+      }, [location.pathname, loadedCounter]);
 
     useEffect(() => {
       if(allPublicAchievements.length > 0) {
