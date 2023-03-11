@@ -36,7 +36,7 @@ export const custom_emojis = [
           skins: [{ src: Dafek }],
         },
         {
-          id: 'Fr',
+          id: 'fr-emoji',
           name: 'Fr',
           keywords: ['fr', 'forreal', 'lowkey'],
           skins: [{ src: Fr }],

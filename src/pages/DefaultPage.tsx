@@ -59,7 +59,10 @@ export const DefaultPage = () => {
     </Snackbar>
       <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
       <Typography variant="h1" sx={{ textAlign: 'center', m: 1 }}>
-        Over <Typography variant='h1' component={'span'} sx={{ textAlign: 'center', background: 'linear-gradient(to right, #FF8C00, #FFA500)', }}>&nbsp;{`${parseInt(`${count.toString().slice(count.toString().length - 1)}${'0'.repeat(Math.floor(count/10))}`).toLocaleString()}`}&nbsp;</Typography> Counts Made
+        Over <Typography variant='h1' component={'span'} sx={{ textAlign: 'center', background: 'linear-gradient(to right, #FF8C00, #FFA500)', }}>&nbsp;{`${parseInt(`${count.toString().slice(count.toString().length - 1)}${'0'.repeat(Math.floor(count/10))}`).toLocaleString()}`}&nbsp;</Typography> Counts
+      </Typography>
+      <Typography variant="body1" component={'div'} sx={{ textAlign: 'center', m: 1 }}>
+      on countGG.com
       </Typography>
         {!counter && <Paper elevation={8} sx={{mb: 2, display: 'flex', alignItems: 'stretch', background: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),url(${SwingBg})`, minHeight: '33vh', p: 2, backgroundSize: 'cover', backgroundPosition: 'top right'}}>
           <Grid container direction={'row'}>
@@ -119,12 +122,24 @@ export const DefaultPage = () => {
             />
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography variant="h3" sx={{ mb: 2 }}>
+            <Link variant="h3" underline={'hover'} color={'text.primary'} sx={{ mb: 2 }}>
               Main Thread
+            </Link>
+            <Typography variant="body1" component={'div'}>
+            &nbsp;
             </Typography>
-            <Typography variant="body1">
-            The main thread is the heart of countGG, where users come together to count by one in real-time. Mistakes are allowed, and every count made on this thread is recorded for all to see. The thread acts as a hub of community engagement and excitement, with users cheering each other on and building a sense of camaraderie as they work together to reach counting milestones. The main thread is always buzzing with activity, and users can watch the numbers rise in real-time as the count continues to grow.
+            <Typography variant="body1" component={'div'}>
+            The main thread is the heart of countGG, being the largest thread on the site. 
             </Typography>
+            <Typography variant="body1" component={'div'}>
+            &nbsp;
+            </Typography>
+            <Typography variant="body1" component={'div'}>
+            Count up by 1... it's that simple!
+            </Typography>
+            <Button variant='contained' sx={{mt: 4}}>
+            View Main Thread 
+            </Button>
           </Grid>
         </Grid>
         </Paper></Link>
@@ -140,16 +155,32 @@ export const DefaultPage = () => {
             />
         </Grid>
         <Grid item xs={12} md={6}>
-          <Typography variant="h3" sx={{ mb: 2 }}>
+          <Link variant="h3" underline={'hover'} color={'text.primary'} sx={{ mb: 2 }}>
             Side Threads
+          </Link>
+          <Typography variant="body1" component={'div'}>
+            &nbsp;
           </Typography>
           <Typography variant="body1">
-          countGG is not just about the main thread, but also offers a variety of side threads for users to participate in. These side threads often have unique rules and challenges, ranging from counting by letters, to "restart on mistakes", to being the first to post each hour. These threads provide a fun and engaging way for users to interact with each other and compete in a variety of ways beyond just counting by 1.
+            countGG is not just about the main thread, but also offers a variety of side threads for users to participate in. These threads have unique rules, ranging from counting by letters, to "restart on mistakes", to being the first to post each hour. These threads provide a fun way for users to interact with each other and compete in a variety of ways beyond just counting by 1.
           </Typography>
+          <Typography variant="body1" component={'div'}>
+            &nbsp;
+          </Typography>
+          <Button variant='contained' sx={{mt: 4}}>
+            View All Threads 
+          </Button>
         </Grid>
         </Grid>
         </Paper></Link>
-      </Box>
+        <Typography variant="body2" component={'div'} sx={{ textAlign: 'center', m: 1 }}>
+          since February 27, 2023 — &nbsp;
+          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/about`} onClick={(e) => {e.preventDefault();navigate(`/about`);}}>About</Link> — &nbsp;
+          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/privacy-policy`} onClick={(e) => {e.preventDefault();navigate(`/privacy-policy`);}}>Privacy Policy</Link> — &nbsp;
+          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/contact-us`} onClick={(e) => {e.preventDefault();navigate(`/contact-us`);}}>Contact Us</Link> — &nbsp;
+          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/`} onClick={(e) => {e.preventDefault();navigate(`/`);}}>countGG.com</Link>
+        </Typography>
+      </Box>      
       </>
     )
   } else {

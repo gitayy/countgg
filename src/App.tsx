@@ -52,10 +52,6 @@ function App() {
     }
   }, [prefersDarkMode, user])
 
-  // useEffect(() => {
-  //   ReactGA.send({ hitType: "pageview", page: "/my-path", title: "Custom Title" });
-  // }, [prefersDarkMode, user])
-
   const [snack, setSnack] = useState({
     message: '',
     color: '',
