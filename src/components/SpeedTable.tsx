@@ -19,7 +19,7 @@ export const SpeedTable = ({ speed, thread }: Props) => {
 
   const navigate = useNavigate();
 
-    if((!speed) || (!thread)) {return <></>} else {
+    if((!speed) || (!thread) || (typeof speed[Symbol.iterator] !== 'function')) {return <></>} else {
 
     // Create an object to store the best time of each counter
     const bestTimes: Record<string, any> = {};
