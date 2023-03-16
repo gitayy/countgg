@@ -19,7 +19,7 @@ export const SpeedTable = ({ speed, thread }: Props) => {
 
   const navigate = useNavigate();
 
-    if((!speed) || speed === undefined) return <></>;
+    if((!speed) || (!thread)) {return <></>} else {
 
     // Create an object to store the best time of each counter
     const bestTimes: Record<string, any> = {};
@@ -132,6 +132,6 @@ return (
         onPageChange={handleChangePage}
       />
   </TableContainer>
-)
+)}
 
 }
