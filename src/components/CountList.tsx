@@ -193,8 +193,9 @@ const CountList = memo((props: any) => {
         if(inputRef.current && inputRef.current.value.trim().length > 0) {
             props.handleLatencyChange(Date.now());
             props.handleLatencyCheckChange(inputRef.current.value.trim());
-            props.handleSubmit(inputRef.current.value);
+            props.handleSubmit(inputRef.current.value, props.refScroll.current);
             props.setThrottle();
+            props.refScroll.current = [];
             setSubmitColor("primary")
             if(!props.user || (props.user && props.user.pref_noClear !== true)) {
               inputRef.current.value = '';

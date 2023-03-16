@@ -13,6 +13,7 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import { useFetchAllThreads } from '../utils/hooks/useFetchAllThreads';
+import { SpeedTable } from '../components/SpeedTable';
 
 export const StatsPage = () => {
   const { counter, loading } = useContext(CounterContext);
@@ -21,7 +22,7 @@ export const StatsPage = () => {
   const [page, setPage] = useState<number|undefined>();
   const [count, setCount] = useState(0);
   const [urlCheck, setUrlCheck] = useState(false);
-  const [stats, setStats] = useState<{gets: object[], assists: object[], palindromes: object[], repdigits: object[], leaderboard: object[], last_updated: string}>();
+  const [stats, setStats] = useState<{gets: object[], assists: object[], palindromes: object[], repdigits: object[], speed: object[], leaderboard: object[], last_updated: string}>();
   const [statsLoading, setStatsLoading] = useState(true);
   const isMounted = useIsMounted();
   const navigate = useNavigate();
@@ -117,15 +118,16 @@ export const StatsPage = () => {
           ))}
         </Select>
       </FormControl>
-        {stats && <>
+        {stats && selectedThread && <>
           <TabContext value={tabValue}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
         <TabList onChange={handleTabChange} aria-label="Live Game Tabs">
           <Tab label="Leaderboard" value="tab_0" />
-          <Tab label="Gets" value="tab_1" />
-          <Tab label="Assists" value="tab_2" />
-          <Tab label="Palindromes" value="tab_3" />
-          <Tab label="Repdigits" value="tab_4" />
+          {stats['gets'] && Object.keys(stats['gets']).length > 0 && <Tab label="Gets" value="tab_1" />}
+          {stats['assists'] && Object.keys(stats['assists']).length > 0 && <Tab label="Assists" value="tab_2" />}
+          {stats['palindromes'] && Object.keys(stats['palindromes']).length > 0 && <Tab label="Palindromes" value="tab_3" />}
+          {stats['repdigits'] && Object.keys(stats['repdigits']).length > 0 && <Tab label="Repdigits" value="tab_4" />}
+          {stats['speed'] && stats['speed'].length > 0 && <Tab label="Speed" value="tab_5" />}
         </TabList>
       </Box>
         <Box sx={{flexGrow: 1, p: 2, bgcolor: 'background.paper', color: 'text.primary'}}>
@@ -148,6 +150,10 @@ export const StatsPage = () => {
         <TabPanel value="tab_4" sx={{}}>
           <Typography variant='h6'>Repdigits</Typography>
           <LeaderboardTable stat={stats.repdigits} justLB={true}></LeaderboardTable>
+        </TabPanel>
+        <TabPanel value="tab_5" sx={{}}>
+          <Typography variant='h6'>Speed</Typography>
+          <SpeedTable speed={stats.speed} thread={selectedThread}></SpeedTable>
         </TabPanel>
         </Box>
         </TabContext>

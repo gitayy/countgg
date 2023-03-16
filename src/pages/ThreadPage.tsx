@@ -42,8 +42,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
     
     const socket = useContext(SocketContext);
-    const [connected, setConnected] = useState(false);
-    const [connecting, setConnecting] = useState(false);
     const [socketStatus, setSocketStatus] = useState("CONNECTING...");
     const [socketViewers, setSocketViewers] = useState(1);
 
@@ -55,7 +53,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const loadedNewestRef = useRef(false);
     const loadedNewestChatRef = useRef(false);
     const [ cachedCounts, setCachedCounts ] = useState<PostType[]>([]);
-    const [ modalOpen, setModalOpen ] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [lastCount, setLastCount] = useState<{lastCount: PostType, lastCounter: Counter}>();
@@ -70,7 +67,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const latency = useRef(0);
     const latencyCheck = useRef('');
     const myUUIDCheck = useRef('');
-    // const [renderLatencyCheck, setRenderLatencyCheck] = useState(false); // Used for render latency test 1. 
     const [deleteComments, setDeleteComments] = useState("");
     const [latencyStateTest, setLatencyStateTest] = useState("");
     const [newChatsLoadedState, setNewChatsLoadedState] = useState("");
@@ -84,6 +80,19 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         }, 150);
     }
 
+    const refScroll = useRef<any>([]);
+    useEffect(() => {
+      const scrollCheck = (event) => {
+        const { key: test } = event;
+            if (refScroll.current.at(-1) !== test) {
+              refScroll.current = [...refScroll.current, test].slice(-5);
+            }
+      };
+      document.addEventListener('keydown', scrollCheck);  
+      return () => {
+        document.removeEventListener('keydown', scrollCheck);
+      };
+    }, []);
 
     // Render latency test 2. This one uses requestAnimationFrame and is the most accurate as possible!
 
@@ -108,7 +117,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
     const [loadedOldCount, setLoadedOldCount] = useState(2);
     const [loadedNewCount, setLoadedNewCount] = useState(2);
-    // const [postsLoaded, setPostsLoaded] = useState(0);
     const isScrolledToNewest = useRef(false);
     const isScrolledToTheTop = useRef(false);
     const isScrolledToTheBottom = useRef(false);
@@ -524,10 +532,10 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       };
     }, [deleteComment]);
 
-    const handleSubmit = (text: string) => {
+    const handleSubmit = (text: string, refScroll: any) => {
         const submitText = text;
         if(thread_name && counter) {
-            socket.emit('post', {thread_name: thread_name, text: submitText});
+          socket.emit('post', {thread_name: thread_name, text: submitText, refScroll: refScroll});
         }
       };
 
@@ -595,7 +603,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
       const countListMemo = useMemo(() => {
         return (          
-        <CountList thread={thread} recentCountsLoading={recentCountsLoading} throttle={throttle} setThrottle={setThrottle} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} setRecentChats={setRecentChats} newRecentPostLoaded={newRecentPostLoaded} userLoading={userLoading} user={user} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} setRecentCounts={setRecentCounts} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} socket={socket} counter={counter} loading={loading} recentCounts={recentCounts} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
+        <CountList thread={thread} recentCountsLoading={recentCountsLoading} throttle={throttle} setThrottle={setThrottle} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} refScroll={refScroll} setRecentChats={setRecentChats} newRecentPostLoaded={newRecentPostLoaded} userLoading={userLoading} user={user} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} setRecentCounts={setRecentCounts} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} socket={socket} counter={counter} loading={loading} recentCounts={recentCounts} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
         )
       }, [cachedCounts, thread, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, userLoading, loading])
 
