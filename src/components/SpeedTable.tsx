@@ -34,7 +34,7 @@ export const SpeedTable = ({ speed, thread }: Props) => {
         obj.timeFancy = formatTimeDiff(timestamp1, timestamp2)
         for (const counter of obj.qualifiedCounters) {
             const time = obj.time || Infinity;
-            if (!bestTimes[counter] || time < bestTimes[counter]) {
+            if (!bestTimes[counter] || time < bestTimes[counter]['time']) {
                 bestTimes[counter] = obj;
             }
         }
