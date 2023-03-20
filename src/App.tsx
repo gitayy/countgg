@@ -34,6 +34,7 @@ import { custom_emojis } from './utils/custom_emojis';
 import { RulesPage } from './pages/RulesPage';
 import { PostFinderPage } from './pages/PostFinderPage';
 import ReactGA from 'react-ga4';
+import BlogPage from './pages/BlogPage';
 
 function App() {
   const { user, userLoading } = useFetchUser();
@@ -208,6 +209,7 @@ function App() {
             {counter && counter.roles.includes('discord_verified') && <Route path="/register" element={<RegisterPage />} />}
             <Route path="/" element={<DefaultPage />} />
             <Route path="/counter/:counterId" element={<CounterPage />} />
+            <Route path="/blog/:blog" element={<BlogPage />} />
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/threads" element={<ThreadsPage />} />
             <Route path="/thread/:thread_name">
@@ -249,6 +251,7 @@ function App() {
           <Route path="*" element={<div>Page Not Found</div>} />
             <Route path="/" element={<DefaultPage />} />
             <Route path="/counter/:counterId" element={<CounterPage />} />
+            <Route path="/blog/:blog" element={<BlogPage />} />
             <Route path="/stats" element={<StatsPage />} />
             <Route path="/threads" element={<ThreadsPage />} />
             <Route path="/thread/:thread_name">

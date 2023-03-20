@@ -4,7 +4,7 @@ import { CounterContext } from '../utils/contexts/CounterContext';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useFetchLoadCounter } from '../utils/hooks/useFetchLoadCounter';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
-import { Box, Button, Tab, Typography } from '@mui/material';
+import { Box, Button, MenuItem, Select, Tab, Typography } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -21,12 +21,14 @@ import { AchievementType } from '../utils/types';
     const counterId:string = params.counterId || '';
     const { counter, loading } = useContext(CounterContext);
     const newSocket = useContext(SocketContext);
-    const { loadedCounter, loadedCounterLoading } = useFetchLoadCounter(counterId);
+    const { loadedCounter, loadedCounterStats, loadedCounterLoading } = useFetchLoadCounter(counterId);
     // const { loadedCounterStats, loadedCounterStatsLoading } = useFetchLoadCounterStats(counterId);
     const { achievements, achievementsLoading, setAchievements, allPublicAchievements } = useFetchAchievements(counterId);
     const [unearnedAchievements, setUnearnedAchievements] = useState<AchievementType[]>([]);
     const [unearnedAchievementsLoading, setUnearnedAchievementsLoading] = useState(true);
     const isMounted = useIsMounted();
+
+    const [ statThread, setStatThread ] = useState('all'); 
 
     const location = useLocation();
     useEffect(() => {
@@ -87,6 +89,8 @@ import { AchievementType } from '../utils/types';
       }
     };
 
+    console.log(loadedCounterStats);
+
     
     if(loadedCounter && !loadedCounterLoading && !achievementsLoading && !unearnedAchievementsLoading && isMounted.current) {
 
@@ -97,7 +101,7 @@ import { AchievementType } from '../utils/types';
               <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <TabList onChange={handleTabChange} sx={{bgcolor: "background.paper"}} aria-label="Counter Tabs">
                   <Tab label="Info" value="1" />
-                  <Tab label="Stats" value="2" disabled />
+                  <Tab label="Stats" value="2" disabled={(!loadedCounterStats || Object.keys(loadedCounterStats).length === 0) ? true : false} />
                   <Tab label="Achievements" value="3" />
                 </TabList>
               </Box>
@@ -111,7 +115,22 @@ import { AchievementType } from '../utils/types';
                 <Typography>Color: {loadedCounter.color}</Typography>
               </TabPanel>
               <TabPanel value="2">
-                
+              <Select
+                value={statThread}
+                onChange={(e) => setStatThread((e.target as HTMLSelectElement).value)}
+              >
+                {Object.keys(loadedCounterStats).map((stat) => {
+                  return <MenuItem key={stat} value={stat}>{stat}</MenuItem>
+                })}
+                </Select>
+                {loadedCounterStats && loadedCounterStats[statThread] && <>
+                  <Typography sx={{mb: 2}} component={'div'}>Posts: {loadedCounterStats[statThread]['posts'].toLocaleString()}</Typography>
+                  <Typography sx={{mb: 2}} component={'div'}>Counts: {loadedCounterStats[statThread]['counts'].toLocaleString()} ({(loadedCounterStats[statThread]['counts'] / loadedCounterStats[statThread]['posts']).toLocaleString(undefined, {style: 'percent'})})</Typography>
+                  <Typography sx={{mb: 2}} component={'div'}>Stricken: {loadedCounterStats[statThread]['mistakes'].toLocaleString()} ({(loadedCounterStats[statThread]['mistakes'] / loadedCounterStats[statThread]['counts']).toLocaleString(undefined, {style: 'percent'})})</Typography>
+                  <Typography sx={{mb: 2}} component={'div'}>Parity: {loadedCounterStats[statThread]['odds'].toLocaleString()} ({(loadedCounterStats[statThread]['odds'] / loadedCounterStats[statThread]['counts']).toLocaleString(undefined, {style: 'percent'})}) odds // {loadedCounterStats[statThread]['evens'].toLocaleString()} ({(loadedCounterStats[statThread]['evens'] / loadedCounterStats[statThread]['counts']).toLocaleString(undefined, {style: 'percent'})}) evens</Typography>
+                  <Typography sx={{mb: 2}} component={'div'}>Avg. time since last post: {loadedCounterStats[statThread]['avg_post_reply'].toLocaleString()}ms</Typography>
+                  <Typography sx={{mb: 2}} component={'div'}>Avg. time since last count: {loadedCounterStats[statThread]['avg_count_reply'].toLocaleString()}ms</Typography>
+                </>}
               </TabPanel>
               <TabPanel value="3">
                 <Typography variant='h5'>Unlocked</Typography>

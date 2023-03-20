@@ -167,7 +167,7 @@ import { useLocation } from 'react-router-dom';
                     <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
                     {loadedPosts.map((count, countIndex) => (<>
                       <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}><Link underline='always' color={"text.secondary"} href={`/thread/${name}?context=${count.uuid}`}>Context</Link></Typography>
-                        <Count user={user} key={count.uuid} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
+                        <Count user={user} key={count.uuid} post={count} thread={selectedThread} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
                         </>
                     ))}
                     </Box>
@@ -179,7 +179,7 @@ import { useLocation } from 'react-router-dom';
                     <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
                     {loadedPosts.map((count, countIndex) => (<>
                       <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}><Link underline='always' color={"text.secondary"} href={`/thread/${name}?context=${count.uuid}`}>Context</Link></Typography>
-                        <CountMobile user={user} key={count.uuid} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
+                        <CountMobile user={user} key={count.uuid} post={count} thread={selectedThread} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
                         </>
                     ))}
                     </Box>

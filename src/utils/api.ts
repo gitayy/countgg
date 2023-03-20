@@ -45,6 +45,9 @@ axios.post(
 export const getCountersPage = (page: number) =>
 axios.get<{counters: Counter[], pageCount: number}>(`${API_URL}/counter/counters/${page}`, CONFIG);
 
+export const getFreeSecretAchievement = () =>
+axios.get<any>(`${API_URL}/counter/free_secret_achievement`, CONFIG);
+
 export const getThreadStats = (threadName: string) =>
 axios.get<{stats: {gets: object[], assists: object[], palindromes: object[], repdigits: object[], speed: object[], leaderboard: object[], last_updated: string}, counters: Counter[]}>(`${API_URL}/thread/stats/${threadName}`, CONFIG);
 

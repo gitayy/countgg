@@ -146,7 +146,7 @@ export const formatTimeDiff = (time1, time2) => {
   if (hours) result.push(`${hours} hour${hours > 1 ? 's' : ''}`);
   if (minutes) result.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
   if (seconds) result.push(`${seconds} second${seconds > 1 ? 's' : ''}`);
-  if (milliseconds) result.push(`${milliseconds} millisecond${milliseconds > 1 ? 's' : ''}`);
+  if (milliseconds) result.push(`${milliseconds} millisecond${milliseconds > 0 && milliseconds < 2 ? '' : 's'}`);
 
   return result.join(', ');
 } 
