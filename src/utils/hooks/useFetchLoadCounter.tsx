@@ -14,7 +14,6 @@ export function useFetchLoadCounter(counter_id: string) {
         loadCounter(counter_id)
         .then(({ data }) => {
           if (isMounted.current) { 
-            console.log(data);
             setLoadedCounter(data.loadedCounter); 
             setLoadedCounterStats(data.loadedCounterStats)
           }

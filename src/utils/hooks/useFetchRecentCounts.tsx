@@ -12,7 +12,7 @@ export function useFetchRecentCounts(thread_name: string, context: string | (str
       const [loadedOldest, setLoadedOldest] = useState(false); 
       const [loadedNewest, setLoadedNewest] = useState(true);
       const isMounted = useIsMounted();
-      const { user, userLoading } = useContext(UserContext);
+      const { user, userLoading, loadedSiteVer } = useContext(UserContext);
     
       useEffect(() => {
         getRecentCounts(thread_name, context)

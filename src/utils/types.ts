@@ -85,6 +85,17 @@ export type AchievementType = {
   isPublic: boolean;
   description: string;
   countersEarned: number;
+  maxProgress: number;
+}
+
+export type CounterAchievementType = {
+  id: number;
+  counterUUID: string; 
+  achievementId: number;
+  progress: number;
+  isComplete: boolean;
+  lastChecked: boolean;
+  timestamp: string; 
 }
 
 export const unverified_roles = ['unverified', 'manual_verification_needed', 'discord_verified', 'denied']

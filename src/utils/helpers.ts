@@ -3,17 +3,25 @@ import { format } from 'date-fns';
 import { createElement } from 'react';
 import { validate as uuid_validate } from 'uuid';
 
+export const site_version = "v1.1.0";
+export var loaded_site_version;
+export function updateSiteVer(siteVer: string) {
+  loaded_site_version = siteVer;
+}
+
 export const titles = {
   'COUNTER': {value: 1, style: 'title-default'},
   'BETA TESTER': {value: 2, style: 'title-default'},
   'THE BIG ONE': {value: 3, style: 'title-default'},
   'NOTHING PERSONNEL': {value: 4, style: 'title-default'},
   'CAN I GET UHHHH': {value: 5, style: 'title-default'},
+  // 'TEST TITLE': {value: 6, style: 'title-default'}
 };
 
 export const card_backgrounds = {
   'card_default': {value: 1, style: 'light'},
   'card_wavypurple': {value: 2, style: 'dark'},
+  // 'test_background': {value: 3, style: 'light'}
 }
 
 export const card_borders = {
@@ -21,6 +29,7 @@ export const card_borders = {
   'no_border_circle': {value: 2},
   'border_square_blue': {value: 3},
   'border_circle_blue': {value: 4},
+  // 'test_border': {value: 5}
 }
 
 export const pronouns: [string, string, string, string][] = [['he', 'him', 'his', 'his'], ['she', 'her', 'her', 'hers'], ['they', 'them', 'their', 'theirs']];

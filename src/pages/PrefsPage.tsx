@@ -11,7 +11,7 @@ import { HexColorPicker } from 'react-colorful';
 import { useLocation } from 'react-router-dom';
 
   export const PrefsPage = () => {
-    const { user, userLoading } = useContext(UserContext);
+    const { user, userLoading, loadedSiteVer } = useContext(UserContext);
     const { counter, loading } = useContext(CounterContext);
     const isMounted = useIsMounted();
 

@@ -11,7 +11,7 @@ import { UserContext } from '../utils/contexts/UserContext';
 import { useLocation } from 'react-router-dom';
   
   export const PostFinderPage = () => {
-    const { user, userLoading } = useContext(UserContext);
+    const { user, userLoading, loadedSiteVer } = useContext(UserContext);
     const { counter, loading } = useContext(CounterContext);
     const { allThreads, allThreadsLoading } = useFetchAllThreads();
     const [selectedThread, setSelectedThread] = useState<ThreadType>();

@@ -35,9 +35,11 @@ import { RulesPage } from './pages/RulesPage';
 import { PostFinderPage } from './pages/PostFinderPage';
 import ReactGA from 'react-ga4';
 import BlogPage from './pages/BlogPage';
+import { AchievementsPage } from './pages/AchievementsPage';
+import { AchievementPage } from './pages/AchievementPage';
 
 function App() {
-  const { user, userLoading } = useFetchUser();
+  const { user, userLoading, loadedSiteVer, setLoadedSiteVer } = useFetchUser();
   const { counter, loading } = useCounterConfig();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light');
@@ -190,7 +192,7 @@ function App() {
         <ThemeProvider theme={theme}>
         <CssBaseline />
         <UserContext.Provider
-      value={{user, userLoading}}
+      value={{user, userLoading, loadedSiteVer, setLoadedSiteVer}}
       >
         <CounterContext.Provider
       value={{counter, loading}}
@@ -219,6 +221,10 @@ function App() {
             <Route path="/counters" element={<CountersPage />} />
             <Route path="/uuid" element={<UuidPage />} />
             <Route path="/post-finder" element={<PostFinderPage />} />
+            <Route path="/achievements">
+              <Route index={true} element={<AchievementsPage />} />
+              <Route path="/achievements/:achievementId" element={<AchievementPage />} />
+            </Route>
             <Route path="/rules" element={<RulesPage />} />
             <Route path="/privacy-policy" element={<PrivacyPage />} />
             <Route path="/about" element={<AboutPage />} />
@@ -240,7 +246,7 @@ function App() {
         <ThemeProvider theme={theme}>
         <CssBaseline />
         <UserContext.Provider
-      value={{user, userLoading}}
+      value={{user, userLoading, loadedSiteVer, setLoadedSiteVer}}
       >
         <CounterContext.Provider
       value={{counter, loading}}>
@@ -261,6 +267,10 @@ function App() {
             <Route path="/counters" element={<CountersPage />} />
             <Route path="/uuid" element={<UuidPage />} />
             <Route path="/post-finder" element={<PostFinderPage />} />
+            <Route path="/achievements">
+              <Route index={true} element={<AchievementsPage />} />
+              <Route path="/achievements/:achievementId" element={<AchievementPage />} />
+            </Route>
             <Route path="/rules" element={<RulesPage />} />
             <Route path="/privacy-policy" element={<PrivacyPage />} />
             <Route path="/about" element={<AboutPage />} />

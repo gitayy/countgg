@@ -10,7 +10,7 @@ const CONFIG: AxiosRequestConfig = { withCredentials: true };
 const API_URL = `${process.env.REACT_APP_API_HOST}/api`
 
 export const getAuthStatus = () =>
-  axios.get<User>(`${API_URL}/auth/status`, CONFIG);
+  axios.get<{user: User, site_version: string}>(`${API_URL}/auth/status`, CONFIG);
 
   export const logout = () =>
   axios.post(
@@ -109,8 +109,11 @@ axios.post(
   CONFIG
 );
 
-export const getAchievements = (uuid: string) =>
+export const getAchievements = (uuid?: string) =>
 axios.get<any>(`${API_URL}/counter/achievements/${uuid}`, CONFIG);
+
+export const getAchievement = (id: number) =>
+axios.get<any>(`${API_URL}/counter/achievement/${id}`, CONFIG);
 
   //Admin API
 export const getUnapproved = () =>

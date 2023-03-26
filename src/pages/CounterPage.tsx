@@ -23,8 +23,9 @@ import { AchievementType } from '../utils/types';
     const newSocket = useContext(SocketContext);
     const { loadedCounter, loadedCounterStats, loadedCounterLoading } = useFetchLoadCounter(counterId);
     // const { loadedCounterStats, loadedCounterStatsLoading } = useFetchLoadCounterStats(counterId);
-    const { achievements, achievementsLoading, setAchievements, allPublicAchievements } = useFetchAchievements(counterId);
+    const { achievements, achievementsLoading, setAchievements, allAchievements } = useFetchAchievements(counterId);
     const [unearnedAchievements, setUnearnedAchievements] = useState<AchievementType[]>([]);
+    const [earnedAchievements, setEarnedAchievements] = useState<AchievementType[]>([]);
     const [unearnedAchievementsLoading, setUnearnedAchievementsLoading] = useState(true);
     const isMounted = useIsMounted();
 
@@ -41,21 +42,29 @@ import { AchievementType } from '../utils/types';
       }, [location.pathname, loadedCounter]);
 
     useEffect(() => {
-      if(allPublicAchievements.length > 0) {
-        const publicAchievementsNotEarned = allPublicAchievements.filter(achievement => {
-          return !achievements.some(userAchievement => userAchievement.id === achievement.id);
+      if(allAchievements && allAchievements.length > 0) {
+        // const publicAchievementsNotEarned = allPublicAchievements.filter(achievement => {
+        //   return !achievements.some(userAchievement => userAchievement.id === achievement.id);
+        // });
+        const earned = allAchievements.filter(achievement => {
+          return achievements.some(userAchievement => userAchievement.achievementId === achievement.id && userAchievement.isComplete);;
+        });
+        const publicAchievementsNotEarned = allAchievements.filter(achievement => {
+          return achievement.isPublic && !achievements.some(userAchievement => userAchievement.achievementId === achievement.id && userAchievement.isComplete);;
         });
         const sortedUnearnedPublicAchievements = publicAchievementsNotEarned.sort((a, b) => {
           return b.countersEarned - a.countersEarned;
         });
-        const sortedAchievements = achievements.sort((a, b) => {
-          return a.countersEarned - b.countersEarned;
-        });
+        // const sortedAchievements = achievements.sort((a, b) => {
+        //   return a.countersEarned - b.countersEarned;
+        // });
+        const sortedAchievements = achievements
         setUnearnedAchievements(sortedUnearnedPublicAchievements);
+        setEarnedAchievements(earned);
         setAchievements(sortedAchievements);
         setUnearnedAchievementsLoading(false);
       }
-    }, [allPublicAchievements])
+    }, [allAchievements])
 
     const [tabValue, setTabValue] = useState('1');
 
@@ -134,9 +143,9 @@ import { AchievementType } from '../utils/types';
               </TabPanel>
               <TabPanel value="3">
                 <Typography variant='h5'>Unlocked</Typography>
-                <Achievements achievements={achievements}></Achievements>
+                <Achievements achievements={earnedAchievements} locked={false} counter={loadedCounter} counterAchievements={achievements}></Achievements>
                 <Typography variant='h5'>Locked</Typography>
-                <Achievements achievements={unearnedAchievements} locked={true}></Achievements>
+                <Achievements achievements={unearnedAchievements} locked={true} counter={loadedCounter} counterAchievements={achievements}></Achievements>
               </TabPanel>
             </TabContext>
             

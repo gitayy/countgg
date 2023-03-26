@@ -32,7 +32,7 @@ export const IndividualCountPage = memo(() => {
     
     const socket = useContext(SocketContext);
 
-    const { user, userLoading } = useContext(UserContext);
+    const { user, userLoading, loadedSiteVer } = useContext(UserContext);
     const { counter, loading } = useContext(CounterContext);
     const { thread, threadLoading } = useFetchThread(thread_name);
     const { specificCount, specificCountLoading, setSpecificCount } = useFetchSpecificCount(count_uuid);

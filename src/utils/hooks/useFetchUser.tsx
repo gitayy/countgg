@@ -6,12 +6,16 @@ import { useIsMounted } from './useIsMounted';
 export function useFetchUser() {
   const [user, setUser] = useState<User>();
   const [userLoading, setUserLoading] = useState<boolean>(true);
+  const [loadedSiteVer, setLoadedSiteVer] = useState<string>();
   const isMounted = useIsMounted();
 
   useEffect(() => {
     getAuthStatus()
       .then(({ data }) => {
-        if (isMounted.current) { setUser(data); }
+        if (isMounted.current) { 
+          setUser(data.user); 
+          setLoadedSiteVer(data.site_version);
+        }
         setUserLoading(false);
       })
       .catch((err) => {
@@ -19,5 +23,5 @@ export function useFetchUser() {
       })
   }, []);
 
-  return { user, userLoading };
+  return { user, userLoading, loadedSiteVer, setLoadedSiteVer };
 }

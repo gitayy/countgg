@@ -4,6 +4,8 @@ import { User } from '../types';
 type UserContextType = {
     user?: User;
     userLoading: boolean,
+    loadedSiteVer?: string, 
+    setLoadedSiteVer?: Function,
     error?: boolean
   };
   

@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import { CounterContext } from '../utils/contexts/CounterContext';
@@ -10,7 +10,7 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
-import { Avatar, Badge, Button, CardMedia, Divider, Drawer, Link, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Modal, Skeleton, Step, StepLabel, Stepper, useTheme } from '@mui/material';
+import { Avatar, Badge, Button, CardMedia, Checkbox, Divider, Drawer, Link, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Modal, Skeleton, Step, StepLabel, Stepper, Tooltip, useTheme } from '@mui/material';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import HomeIcon from '@mui/icons-material/Home';
 import StadiumIcon from '@mui/icons-material/Stadium';
@@ -27,6 +27,12 @@ import { useIsMounted } from '../utils/hooks/useIsMounted';
 import CountggLogo from '../assets/countgg-128.png'
 import GavelIcon from '@mui/icons-material/Gavel';
 import SearchIcon from '@mui/icons-material/Search';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { site_version } from '../utils/helpers';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import ErrorIcon from '@mui/icons-material/Error';
+import PendingIcon from '@mui/icons-material/Pending';
+import { SocketContext } from '../utils/contexts/SocketContext';
 
 
 export const Sidebar = () => {
@@ -35,8 +41,13 @@ export const Sidebar = () => {
 
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
-  const { user, userLoading } = useContext(UserContext);
+  const { user, userLoading, loadedSiteVer, setLoadedSiteVer } = useContext(UserContext);
   const { counter, loading } = useContext(CounterContext);
+  const socket = useContext(SocketContext);
+
+  socket.on(`site_version`, function(data) {
+    if(setLoadedSiteVer) {setLoadedSiteVer(data)}
+  });
 
   
 
@@ -90,7 +101,8 @@ export const Sidebar = () => {
 
   const drawer = (
     <div>
-      <Toolbar />
+      {/* <Toolbar /> */}
+      <Typography variant='body2' sx={{m: 2, display: 'flex', alignItems: 'end'}}>countGG {site_version}&nbsp;{loadedSiteVer ? (site_version === loadedSiteVer ? <Tooltip title="Up to date"><VerifiedIcon color='success' /></Tooltip> : <Tooltip placement='right' title="Not up to date. Try to refresh, or clear your cache."><ErrorIcon color='error' /></Tooltip>) : <PendingIcon color="disabled" />}</Typography>
       <Divider />
       <List>
         <Link color={'inherit'} underline='none' href={`/`} onClick={(e) => {e.preventDefault();navigate(`/`);}}>
@@ -147,6 +159,15 @@ export const Sidebar = () => {
               <GroupsIcon></GroupsIcon>
             </ListItemIcon>
             <ListItemText primary={'Counters'} />
+          </ListItemButton>
+        </ListItem></Link>
+        <Link color={'inherit'} underline='none' href={`/achievements`} onClick={(e) => {e.preventDefault();navigate(`/achievements`);}}>
+        <ListItem onClick={handleDrawerToggle} key={'achievements'} disablePadding>
+          <ListItemButton>
+            <ListItemIcon>
+              <EmojiEventsIcon></EmojiEventsIcon>
+            </ListItemIcon>
+            <ListItemText primary={'Achievements'} />
           </ListItemButton>
         </ListItem></Link>
         <Link color={'inherit'} underline='none' href={`/uuid`} onClick={(e) => {e.preventDefault();navigate(`/uuid`);}}>
@@ -211,7 +232,8 @@ export const Sidebar = () => {
 
   return (
     <Box sx={{ flexGrow: 1, minHeight: 65, maxHeight: 65 }}>
-      <AppBar position="static" color="primary" sx={{ borderBottom: '1px solid', borderColor: 'rgba(194, 224, 255, 0.30)' }}>
+      {/* {loaded_site_version && site_version !== loaded_site_version && <Box><Typography variant='body2' sx={{m: 2, bgcolor: 'red', display: 'flex', alignItems: 'end'}}>Not updated</Typography></Box>} */}
+      <AppBar position="static" color={'primary'} sx={{bgcolor: loadedSiteVer && site_version !== loadedSiteVer ? 'red' : '', borderBottom: '1px solid', borderColor: 'rgba(194, 224, 255, 0.30)' }}>
         <Toolbar sx={{ minHeight: 65, maxHeight: 65 }}>
           <IconButton
             size="large"

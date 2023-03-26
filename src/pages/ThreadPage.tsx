@@ -45,7 +45,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [socketStatus, setSocketStatus] = useState("CONNECTING...");
     const [socketViewers, setSocketViewers] = useState(1);
 
-    const { user, userLoading } = useContext(UserContext);
+    const { user, userLoading, loadedSiteVer } = useContext(UserContext);
     const { counter, loading } = useContext(CounterContext);
     const { thread, threadLoading, setThread } = useFetchThread(thread_name);
     const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest } = useFetchRecentCounts(thread_name, context);
