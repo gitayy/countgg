@@ -176,7 +176,8 @@ const replyColorNames = [
 ];
 
 export function getReplyColorName(time: number, per: number = 100) {
-  const intervalIndex = Math.ceil((time+1) / per);
+  if(typeof(time) === 'string') {time = parseFloat(time)}
+  const intervalIndex = Math.ceil((time+.0001) / per);
   if (time < 1) {
     return replyColorNames[0];
   }

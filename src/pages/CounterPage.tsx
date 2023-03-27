@@ -97,9 +97,6 @@ import { AchievementType } from '../utils/types';
         console.log("Counter not loaded yet.");
       }
     };
-
-    console.log(loadedCounterStats);
-
     
     if(loadedCounter && !loadedCounterLoading && !achievementsLoading && !unearnedAchievementsLoading && isMounted.current) {
 
