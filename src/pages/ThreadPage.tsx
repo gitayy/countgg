@@ -791,7 +791,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         <TabPanel value="tab_1" sx={{flexGrow: 1, p: 4}}>
           <Typography variant="h5" sx={{mb: 1}}>About</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.description : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
-          <Timer></Timer>
+          {/* <Timer></Timer> */}
           <Typography variant="h5" sx={{mt: 2, mb: 1}}>Rules</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.rules : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           {counter && thread && counter.roles.includes('admin') && <Button variant='contained' onClick={lockThread}>{thread.locked ? "Unlock Thread" : "Lock Thread"}</Button>}
