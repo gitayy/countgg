@@ -67,6 +67,8 @@ const CountMobile = memo((props: any) => {
   
   const renderedCounter = counter || uncachedCounter;
 
+  const teamEmoji = renderedCounter.roles.includes('blaze') ? '🔥' : renderedCounter.roles.includes('radiant') ? '⭐' : renderedCounter.roles.includes('wave') ? '🌊' : '';
+
   const hoursSinceLastCount = Math.floor(props.post.timeSinceLastCount / 3600000);
   const minutesSinceLastCount = Math.floor(props.post.timeSinceLastCount / 60000) % 60;
   const secondsSinceLastCount = Math.floor(props.post.timeSinceLastCount / 1000) % 60;
@@ -138,7 +140,7 @@ return (
                           </Grid>
                           <Grid item xs={12} sx={{}}>
                           <Typography fontSize={12} variant="subtitle1" color={renderedCounter.color} sx={{textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowX: 'hidden'}} component="div">
-                          <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
+                          <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{teamEmoji.length > 0 && teamEmoji}{renderedCounter.name}{teamEmoji.length > 0 && teamEmoji}</Link>&nbsp;
                     </Typography>
                           </Grid>
                           </Grid>

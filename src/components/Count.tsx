@@ -117,6 +117,8 @@ const Count = memo((props: any) => {
   }
   
   const anchorRef = useRef(null);
+
+  const teamEmoji = renderedCounter.roles.includes('blaze') ? '🔥' : renderedCounter.roles.includes('radiant') ? '⭐' : renderedCounter.roles.includes('wave') ? '🌊' : '';
   
   const components = {
     p: ('span' as any),
@@ -163,7 +165,7 @@ const Count = memo((props: any) => {
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end' }}>
               <Typography component="span" variant="body1" fontFamily={'Verdana'} fontSize={14} color={"text.primary"} sx={{whiteSpace: 'pre-wrap', mr: 1}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment.startsWith('\n') ? `\u00A0${props.post.comment}` : props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography fontFamily={'Verdana'} fontSize={14} component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
           <Typography fontSize={13} fontFamily={'Verdana'} component="span">
-              <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
+              <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{teamEmoji.length > 0 && teamEmoji}{renderedCounter.name}{teamEmoji.length > 0 && teamEmoji}</Link>&nbsp;
             </Typography>
             </Box>
             {Object.entries(props.post.reactions).length > 0 && <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}>
@@ -277,7 +279,7 @@ const Count = memo((props: any) => {
                 <CardContent sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, pb: 0, overflowWrap: 'anywhere', '&:last-child': {pb: '2px'} }}>
                         <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment.startsWith('\n') ? `\u00A0${props.post.comment}` : props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
                     <Typography variant="subtitle1" component="div">
-                        <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
+                        <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{teamEmoji.length > 0 && teamEmoji}{renderedCounter.name}{teamEmoji.length > 0 && teamEmoji}</Link>&nbsp;
                       </Typography>
                       <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}>
                       {props.post.reactions && Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {
