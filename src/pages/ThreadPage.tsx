@@ -125,7 +125,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <DialogTitle>Are you sure?</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              You may only rob once per day. Your ability to rob resets at midnight Eastern.
+              You may only rob once per day. Your ability to rob resets at midnight Eastern (US).
             </DialogContentText>
           </DialogContent>
           <DialogActions>
