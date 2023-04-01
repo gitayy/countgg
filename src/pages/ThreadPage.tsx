@@ -851,11 +851,11 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <SplitsTable splits={splits}></SplitsTable>
         </TabPanel>
         <TabPanel value="tab_4" sx={{flexGrow: 1}}>
-          {thread_name === 'main' && bank > -1 && counter && (!counter.lastRob || (counter.lastRob && ((parseFloat(counter.lastRob) < moment().tz('America/New_York').startOf('day').unix() * 1000)))) && <>
+          {thread_name === 'main' && bank > -1 && <>
           <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Bank: ${bank}</Typography>
-          <Button variant="contained" onClick={() => openRobConfirm()}>
+          {counter && (!counter.lastRob || (counter.lastRob && ((parseFloat(counter.lastRob) < moment().tz('America/New_York').startOf('day').unix() * 1000)))) && <Button variant="contained" onClick={() => openRobConfirm()}>
             Rob
-          </Button>
+          </Button>}
           <ConfirmDialog
             open={robOpen}
             handleCancel={() => robCancel()}
