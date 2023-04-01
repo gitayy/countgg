@@ -41,7 +41,7 @@ export function AchievementSmall({ achievement, locked, counterAchievement }: Pr
           )}
           {/* {counterAchievement && !counterAchievement.isComplete && <ProgressBar label={counterAchievement.progress > 0 && `${counterAchievement.progress}`} now={counterAchievement.progress} max={achievement.maxProgress} />} */}
           {/* {counterAchievement && counterAchievement.isComplete && <ProgressBar variant="success" label={`Complete`} now={1} max={1} />} */}
-          {counterAchievement && !counterAchievement.isComplete && <LinearProgressWithLabel color="success" progress={counterAchievement.progress} max={achievement.maxProgress} />}
+          {counterAchievement && !counterAchievement.isComplete && counterAchievement.progress !== undefined && achievement.maxProgress !== undefined && <LinearProgressWithLabel color="success" progress={counterAchievement.progress} max={achievement.maxProgress} />}
           {counterAchievement && counterAchievement.isComplete && <LinearProgressWithLabel color="success" progress={1} max={1} />}
         </CardContent>
         <CardActions sx={{ display: 'flex', justifyContent: 'flex-end' }}>
