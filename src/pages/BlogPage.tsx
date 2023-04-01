@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
-import { Box, Typography, Avatar, Card, Container, Grid, CardContent } from '@mui/material';
+import React, { useContext, useEffect, useState } from 'react';
+import { Box, Typography, Avatar, Card, Container, Grid, CardContent, Button } from '@mui/material';
 import { blogs } from '../utils/blogs';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { UserContext } from '../utils/contexts/UserContext';
+import { SocketContext } from '../utils/contexts/SocketContext';
 
 
 const BlogPage = () => {
@@ -9,7 +11,18 @@ const BlogPage = () => {
     const params = useParams();
     const blog:number = parseInt(params.blog || "1") || 1;
 
+    const { user, counter, loading, setCounter, allegiance } = useContext(UserContext); 
+    const socket = useContext(SocketContext);
+
     let title, author, date, body, avatarImage;
+
+    const [isNo, setIsNo] = useState(false);
+    const [isYes, setIsYes] = useState(false);
+
+    const handleYes = () => {
+      socket.emit('requestBlogKey');
+      setIsYes(true);
+    }
 
     const location = useLocation();
         useEffect(() => {
@@ -74,6 +87,10 @@ const BlogPage = () => {
               <Box sx={{display: 'flex', flexDirection: 'column'}}>
   <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2 }}>
   {body}
+  {blog == 4 && user && counter && allegiance && (!user.inventory || user.inventory.filter(item => item['name'] === 'Blog Key').length === 0) && <><Typography sx={{mb: 2}} component={'div'}>Wait... I just remembered, I found this key earlier. Does it look like it's yours?</Typography>
+  {isNo ? <Typography sx={{mb: 2}} component={'div'}>Okay, I guess I'll keep it...</Typography> : isYes ? <>Ok, here you go. Don't ask me for another one... I'm out.</> : <><Button onClick={() => {handleYes()}} variant='contained'>Yes</Button> <Button variant='contained' onClick={() => {setIsNo(true)}}>No</Button></>}
+  </>}
+  {user && user.inventory && user.inventory.filter(item => item['name'] === 'Blog Key').length > 0 && <><Typography sx={{mb: 2}} component={'div'}>Hope you like your key!</Typography></>}
   </Box>
   <Grid container>
   {/* <Box sx={{display: 'flex', justifyContent: 'space-between'}}> */}

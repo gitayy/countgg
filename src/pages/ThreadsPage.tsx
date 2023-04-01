@@ -1,15 +1,15 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useContext, useEffect } from 'react';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { Box, Typography } from '@mui/material';
 import { Loading } from '../components/Loading';
 import { useFetchAllThreads } from '../utils/hooks/useFetchAllThreads';
 import { ThreadCard } from '../components/ThreadCard';
+import { UserContext } from '../utils/contexts/UserContext';
 
 export const ThreadsPage = () => {
   const params = useParams();
   const navigate = useNavigate();
-  const { counter, loading } = useContext(CounterContext);
+  const { counter, loading } = useContext(UserContext);
   const { allThreads } = useFetchAllThreads();
 
   const location = useLocation();

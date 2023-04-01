@@ -1,6 +1,5 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useContext, useEffect, useState } from 'react';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useFetchLoadCounter } from '../utils/hooks/useFetchLoadCounter';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
@@ -17,11 +16,12 @@ import { adminToggleBan, adminToggleMute } from '../utils/api';
 import { AchievementType } from '../utils/types';
 import { AchievementSmall } from '../components/AchievementSmall';
 import { useFetchAchievement } from '../utils/hooks/useFetchAchievement';
+import { UserContext } from '../utils/contexts/UserContext';
 
   export const AchievementPage = () => {
     const params = useParams();
     const achievementId:number = parseInt(params.achievementId || '0');
-    const { counter, loading } = useContext(CounterContext);
+    const { counter, loading } = useContext(UserContext);
     const { achievement, counterAchievements, countersWhoEarnedAchievement, achievementLoading } = useFetchAchievement(achievementId);
     const isMounted = useIsMounted();
     const navigate = useNavigate();
@@ -54,7 +54,7 @@ import { useFetchAchievement } from '../utils/hooks/useFetchAchievement';
                 } else {
                     return;
                 }
-            })}</>}            
+            })}</>}
         </Box>
         )
     } else if(!loading && !achievement && !achievementLoading && isMounted.current) {

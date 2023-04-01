@@ -4,15 +4,15 @@ import { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Loading } from "../components/Loading";
 import { registerCounter } from "../utils/api";
-import { CounterContext } from "../utils/contexts/CounterContext";
 import { isValidHexColor, pronouns } from "../utils/helpers"
 import { HexColorPicker } from "react-colorful";
 import { RulesPage } from "./RulesPage";
+import { UserContext } from "../utils/contexts/UserContext";
 
 
 export const RegisterPage = () => {
     const navigate = useNavigate();
-    const { counter, loading } = useContext(CounterContext); 
+    const { counter } = useContext(UserContext); 
     const [step, setStep] = useState(0);
     const [name, setName] = useState(counter?.name || '')
     const [color, setColor] = useState(counter?.color || '#006b99')

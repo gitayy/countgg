@@ -1,6 +1,5 @@
 import { useLocation, useParams } from 'react-router-dom';
 import { useContext, useEffect, useState } from 'react';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useFetchLoadCounter } from '../utils/hooks/useFetchLoadCounter';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
@@ -15,11 +14,12 @@ import { CounterCard } from '../components/CounterCard';
 import { convertToTimestamp, formatDateExact } from '../utils/helpers';
 import { adminToggleBan, adminToggleMute } from '../utils/api';
 import { AchievementType } from '../utils/types';
+import { UserContext } from '../utils/contexts/UserContext';
 
   export const CounterPage = () => {
     const params = useParams();
     const counterId:string = params.counterId || '';
-    const { counter, loading } = useContext(CounterContext);
+    const { counter, loading } = useContext(UserContext);
     const newSocket = useContext(SocketContext);
     const { loadedCounter, loadedCounterStats, loadedCounterLoading } = useFetchLoadCounter(counterId);
     // const { loadedCounterStats, loadedCounterStatsLoading } = useFetchLoadCounterStats(counterId);

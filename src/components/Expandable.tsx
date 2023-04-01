@@ -12,7 +12,7 @@ interface Props {
 
 export const Expandable: FC<Props> = ({ title, description, isExpanded, onToggle, index }) => {
   return (
-    <Box onClick={() => onToggle(index)}>
+    <Box onClick={() => onToggle(index)} sx={{mb: 2}}>
     <Accordion sx={{mb: 0.5}}>
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Typography variant="h6">{title}</Typography>

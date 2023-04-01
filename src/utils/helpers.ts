@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { createElement } from 'react';
 import { validate as uuid_validate } from 'uuid';
 
-export const site_version = "v1.1.0";
+export const site_version = "v1.2.0";
 export var loaded_site_version;
 export function updateSiteVer(siteVer: string) {
   loaded_site_version = siteVer;
@@ -15,13 +15,28 @@ export const titles = {
   'THE BIG ONE': {value: 3, style: 'title-default'},
   'NOTHING PERSONNEL': {value: 4, style: 'title-default'},
   'CAN I GET UHHHH': {value: 5, style: 'title-default'},
-  // 'TEST TITLE': {value: 6, style: 'title-default'}
+  'TEAM BLAZE': {value: 6, style: 'title-default'},
+  'HOT': {value: 7, style: 'title-default'},
+  '🔥': {value: 8, style: 'title-default'},
+  'TEAM RADIANT': {value: 9, style: 'title-default'},
+  'DAZZLING': {value: 10, style: 'title-default'},
+  '⭐': {value: 11, style: 'title-default'},
+  'TEAM WAVE': {value: 12, style: 'title-default'},
+  'SOAKED': {value: 13, style: 'title-default'},
+  '🌊': {value: 14, style: 'title-default'},
 };
 
 export const card_backgrounds = {
   'card_default': {value: 1, style: 'light'},
   'card_wavypurple': {value: 2, style: 'dark'},
-  // 'test_background': {value: 3, style: 'light'}
+  'card_rainbow_light': {value: 3, style: 'light'},
+  'card_rainbow_dark': {value: 4, style: 'dark'},
+  'card_blaze_1': {value: 5, style: 'dark'},
+  'card_blaze_2': {value: 6, style: 'dark'},
+  'card_radiant_1': {value: 7, style: 'light'},
+  'card_radiant_2': {value: 8, style: 'light'},
+  'card_wave_1': {value: 9, style: 'light'},
+  'card_wave_2': {value: 10, style: 'light'},
 }
 
 export const card_borders = {
@@ -29,7 +44,12 @@ export const card_borders = {
   'no_border_circle': {value: 2},
   'border_square_blue': {value: 3},
   'border_circle_blue': {value: 4},
-  // 'test_border': {value: 5}
+  'border_blaze_square': {value: 5},
+  'border_blaze_circle': {value: 6},
+  'border_radiant_square': {value: 7},
+  'border_radiant_circle': {value: 8},
+  'border_wave_square': {value: 9},
+  'border_wave_circle': {value: 10},
 }
 
 export const pronouns: [string, string, string, string][] = [['he', 'him', 'his', 'his'], ['she', 'her', 'her', 'hers'], ['they', 'them', 'their', 'theirs']];

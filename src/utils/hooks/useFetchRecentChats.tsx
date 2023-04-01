@@ -12,7 +12,7 @@ export function useFetchRecentChats(thread_name: string, context: string | (stri
       const [loadedOldestChats, setLoadedOldestChats] = useState(false); 
       const [loadedNewestChats, setLoadedNewestChats] = useState(true);
       const isMounted = useIsMounted();
-      const { user, userLoading, loadedSiteVer } = useContext(UserContext);
+      const { user } = useContext(UserContext);
     
       useEffect(() => {
         getRecentCounts(thread_name, context, true)

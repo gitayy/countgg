@@ -1,14 +1,14 @@
 import { useContext, useState } from 'react';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { GmRoster } from '../components/GmRoster';
 import { adminApproveCounter, adminApproveDiscord, adminDeny } from '../utils/api';
 import { Box, Button, Container } from '@mui/material';
 import { GridSelectionModel } from '@mui/x-data-grid';
 import { Loading } from '../components/Loading';
 import { useFetchUnapproved } from '../utils/hooks/useFetchUnapproved';
+import { UserContext } from '../utils/contexts/UserContext';
 
   export const AdminApprovePage = () => {
-    const { counter, loading } = useContext(CounterContext);
+    const { counter, loading } = useContext(UserContext);
     const [adminSelectionModel, setAdminSelectionModel] = useState<GridSelectionModel>([]);
     const { unapproved, unapprovedLoading } = useFetchUnapproved();
 

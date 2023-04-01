@@ -21,6 +21,8 @@ export type User = {
   card_borders: number[];
   card_backgrounds: number[];
   money: number;
+  inventory: any[];
+  isUhh: boolean;
 };
 
 export type Counter = {
@@ -36,6 +38,7 @@ export type Counter = {
   pronouns: [string, string, string, string],
   title: string,
   xp: number,
+  lastRob?: string,
 };
 
 export type PostType = {
@@ -99,3 +102,25 @@ export type CounterAchievementType = {
 }
 
 export const unverified_roles = ['unverified', 'manual_verification_needed', 'discord_verified', 'denied']
+
+export type AllegianceType = {
+  id: number,
+  name: string,
+  val: {
+    ph: number,
+    team_inventory: object[],
+    members: string[],
+    pm2: string[],
+    pm3: string[],
+    c: number,
+    q: {
+      lU: string|null,
+      tTA: number,
+      cA: string[],
+      qH: string[],
+    },
+    p0: [number, number],
+    p1: [number, number],
+    p2: [number, number]
+  }
+}

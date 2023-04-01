@@ -1,13 +1,11 @@
  import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { UserContext } from '../utils/contexts/UserContext';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { Box, Container, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
   
   export const AdminPage = () => {
     const navigate = useNavigate();
-    const { user} = useContext(UserContext);
-    const { counter, loading } = useContext(CounterContext);
+    const { counter } = useContext(UserContext);
    
     if(counter && counter.roles.includes('admin')) {
     return (<>

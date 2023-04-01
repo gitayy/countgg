@@ -56,5 +56,16 @@ export const blogs = [
             <Typography sx={{mb: 2}} component={'div'}>April is sure to bring some surprises... check in soon!</Typography>
             </>
         ), 
+    },
+    {
+        title: "Key",
+        author: "admin", 
+        avatarImage: adminAvatar, 
+        date: "April 1, 2023", 
+        body: (
+            <>
+            <Typography sx={{mb: 2}} component={'div'}>It seems quite a few countGG members are searching for keys...</Typography>
+            </>
+        ), 
     }, 
 ]

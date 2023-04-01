@@ -37,7 +37,6 @@ interface Props {
             title: "At least three inputs per count: final two digits, and submit.",
             description: [
                 `Scripts exist to automatically paste after submitting. These are allowed, but three inputs are required per count.`,
-                `We plan on implementing built-in auto-pasting features to increase fairness between platforms and operating systems.`,
                 `You may not automatically increment the final two digits of a count. These must be inputted manually.`,
                 `You may not automatically submit. Each count must have a unique, manual submit input, separate from inputting the final two digits.`,
                 `Violations risk a ban. But don't be afraid to ask any questions about what may or may not be allowed.`
@@ -48,6 +47,13 @@ interface Props {
             description: [
                 `countGG has a very generous rate limit, but spamming off-topic posts will risk a mute or a ban.`,
             ],
+        },
+        {
+          title: "No alternate accounts.",
+          description: [
+              `You can only have one account at a time. Signing up with an alternate account puts you at risk of a permaban.`,
+              `If you want to make a new account or transfer Discord accounts, contact admins privately and we can get it done.`
+          ],
         },
         {
             title: "No impersonation.",

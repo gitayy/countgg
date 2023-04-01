@@ -3,6 +3,7 @@ import {
   User,
   Counter,
   ThreadType,
+  AllegianceType,
 } from './types';
 
 
@@ -10,7 +11,13 @@ const CONFIG: AxiosRequestConfig = { withCredentials: true };
 const API_URL = `${process.env.REACT_APP_API_HOST}/api`
 
 export const getAuthStatus = () =>
-  axios.get<{user: User, site_version: string}>(`${API_URL}/auth/status`, CONFIG);
+  axios.get<{
+    user: User,
+    counter: Counter, 
+    allegiance: AllegianceType, 
+    teammates: Counter[],
+    site_version: string
+  }>(`${API_URL}/auth/status`, CONFIG);
 
   export const logout = () =>
   axios.post(
@@ -20,7 +27,7 @@ export const getAuthStatus = () =>
   );
 
 export const getCounter = () =>
-  axios.get<Counter>(`${API_URL}/counter/info`, CONFIG);
+  axios.get<{counter: Counter, allegiance?: AllegianceType}>(`${API_URL}/counter/info`, CONFIG);
 
 export const getAllThreads = () =>
 axios.get<ThreadType[]>(`${API_URL}/thread/all`, CONFIG);
@@ -114,6 +121,15 @@ axios.get<any>(`${API_URL}/counter/achievements/${uuid}`, CONFIG);
 
 export const getAchievement = (id: number) =>
 axios.get<any>(`${API_URL}/counter/achievement/${id}`, CONFIG);
+
+// Contest related
+
+export const joinAlliance = (timestamp: string) =>
+axios.post(
+  `${API_URL}/counter/joinAlliance`,
+  {timestamp: timestamp},
+  CONFIG
+);
 
   //Admin API
 export const getUnapproved = () =>

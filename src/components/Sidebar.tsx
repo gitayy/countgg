@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -41,8 +40,7 @@ export const Sidebar = () => {
 
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
-  const { user, userLoading, loadedSiteVer, setLoadedSiteVer } = useContext(UserContext);
-  const { counter, loading } = useContext(CounterContext);
+  const { user, loading, loadedSiteVer, setLoadedSiteVer, counter } = useContext(UserContext);
   const socket = useContext(SocketContext);
 
   socket.on(`site_version`, function(data) {

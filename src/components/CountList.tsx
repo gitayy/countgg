@@ -45,14 +45,14 @@ const CountList = memo((props: any) => {
           if ((event.ctrlKey || event.metaKey) && (event.keyCode >= 48 && event.keyCode <= 57 || event.keyCode >= 96 && event.keyCode <= 105)) {
             event.preventDefault();
           }
-          if(props.user && props.user.pref_submit_shortcut == 'Enter') {
+          if(inputRef.current && inputRef.current === document.activeElement && props.user && props.user.pref_submit_shortcut == 'Enter') {
             if (event.key === 'Enter' && !event.shiftKey && !event.altKey) {
               event.preventDefault();
               handlePosting();
             }
           } else if(props.user && props.user.pref_submit_shortcut == 'Off') {
             return;
-          } else {
+          } else if(inputRef.current && inputRef.current === document.activeElement) {
             if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
               handlePosting();
             }
@@ -62,7 +62,7 @@ const CountList = memo((props: any) => {
         return () => {
           window.removeEventListener('keydown', handleKeyDown);
         };
-      }, [props.user]);
+      }, [props.user, inputRef]);
 
     //Scroll to bottom upon isDesktop change
     useEffect(() => {
@@ -286,7 +286,7 @@ const CountList = memo((props: any) => {
             } else {
               props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
             }
-          } else if(props.recentCounts && props.recentCounts[0] && props.loadedOldest == false && props.userLoading == false && (!props.user || (props.user && !props.user.pref_load_from_bottom))) {
+          } else if(props.recentCounts && props.recentCounts[0] && props.loadedOldest == false && props.loading == false && (!props.user || (props.user && !props.user.pref_load_from_bottom))) {
             const distance_From_Top = element.scrollHeight;
             distanceFromTop.current = distance_From_Top;
             if(props.chatsOnly) {
@@ -489,7 +489,7 @@ const CountList = memo((props: any) => {
               </Button>
             </Box>)
         }
-      }, [inputRef, props.thread, submitColor, keyboardType, theme, isDesktop, props.counter, props.cachedCounts, props.loadedNewestRef, props.loadedNewest, forceRerenderSubmit, props.recentCountsLoading])
+      }, [inputRef, props.thread, props.loading, submitColor, keyboardType, theme, isDesktop, props.counter, props.cachedCounts, props.loadedNewestRef, props.loadedNewest, forceRerenderSubmit, props.recentCountsLoading])
 
       const countsMemo = useMemo(() => {
           const countsByDayAndHour = {};

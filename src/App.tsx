@@ -4,7 +4,6 @@ import { useCounterConfig } from './utils/hooks/useFetchCounter';
 import { AdminPage } from './pages/AdminPage';
 import { AdminThreadPage } from './pages/AdminThreadPage';
 import { UserContext } from './utils/contexts/UserContext';
-import { CounterContext } from './utils/contexts/CounterContext';
 import { RegisterPage } from './pages/RegisterPage';
 import { Sidebar } from './components/Sidebar';
 import { AdminApprovePage } from './pages/AdminApprovePage';
@@ -37,10 +36,12 @@ import ReactGA from 'react-ga4';
 import BlogPage from './pages/BlogPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { AchievementPage } from './pages/AchievementPage';
+import { ContestPage } from './pages/ContestPage';
+import { April2023SignupPage } from './pages/April2023SignupPage';
 
 function App() {
-  const { user, userLoading, loadedSiteVer, setLoadedSiteVer } = useFetchUser();
-  const { counter, loading } = useCounterConfig();
+  const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, allegiance, setAllegiance } = useFetchUser();
+  // const { counter, loading, setCounter, allegiance, setAllegiance } = useCounterConfig();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light');
 
@@ -185,17 +186,14 @@ function App() {
   }, []);
 
   return (
-      (user) ? (
+      // (user) ? (
         <>
         <LocalizationProvider dateAdapter={AdapterMoment}>
         <ColorModeContext.Provider value={colorMode}>
         <ThemeProvider theme={theme}>
         <CssBaseline />
         <UserContext.Provider
-      value={{user, userLoading, loadedSiteVer, setLoadedSiteVer}}
-      >
-        <CounterContext.Provider
-      value={{counter, loading}}
+      value={{user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, allegiance, setAllegiance}}
       >
         <CookiesProvider>
         <SocketContext.Provider value={socket}>
@@ -225,6 +223,8 @@ function App() {
               <Route index={true} element={<AchievementsPage />} />
               <Route path="/achievements/:achievementId" element={<AchievementPage />} />
             </Route>
+            <Route path="/contest" element={<April2023SignupPage />} />
+            <Route path="/contest-rules" element={<ContestPage />} />
             <Route path="/rules" element={<RulesPage />} />
             <Route path="/privacy-policy" element={<PrivacyPage />} />
             <Route path="/about" element={<AboutPage />} />
@@ -233,56 +233,57 @@ function App() {
           </Routes>
           </SocketContext.Provider>
           </CookiesProvider>
-          </CounterContext.Provider>
           </UserContext.Provider>
           </ThemeProvider>
           </ColorModeContext.Provider>
           </LocalizationProvider>
         </>
-      ) : (
-        <>
-        <LocalizationProvider dateAdapter={AdapterMoment}>
-        <ColorModeContext.Provider value={colorMode}>
-        <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <UserContext.Provider
-      value={{user, userLoading, loadedSiteVer, setLoadedSiteVer}}
-      >
-        <CounterContext.Provider
-      value={{counter, loading}}>
-          <Routes>
-            <Route path="/*" element={<Sidebar />} />
-          </Routes>
-        <Routes>
-          <Route path="*" element={<div>Page Not Found</div>} />
-            <Route path="/" element={<DefaultPage />} />
-            <Route path="/counter/:counterId" element={<CounterPage />} />
-            <Route path="/blog/:blog" element={<BlogPage />} />
-            <Route path="/stats" element={<StatsPage />} />
-            <Route path="/threads" element={<ThreadsPage />} />
-            <Route path="/thread/:thread_name">
-              <Route index={true} element={<ThreadPage />} />
-              <Route path="/thread/:thread_name/:count_uuid" element={<IndividualCountPage />} />
-            </Route>
-            <Route path="/counters" element={<CountersPage />} />
-            <Route path="/uuid" element={<UuidPage />} />
-            <Route path="/post-finder" element={<PostFinderPage />} />
-            <Route path="/achievements">
-              <Route index={true} element={<AchievementsPage />} />
-              <Route path="/achievements/:achievementId" element={<AchievementPage />} />
-            </Route>
-            <Route path="/rules" element={<RulesPage />} />
-            <Route path="/privacy-policy" element={<PrivacyPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/contact-us" element={<AboutPage />} />
-        </Routes>
-        </CounterContext.Provider>
-        </UserContext.Provider>
-        </ThemeProvider>
-        </ColorModeContext.Provider>
-        </LocalizationProvider>
-        </>
-      )
+      // ) : (
+      //   <>
+      //   <LocalizationProvider dateAdapter={AdapterMoment}>
+      //   <ColorModeContext.Provider value={colorMode}>
+      //   <ThemeProvider theme={theme}>
+      //   <CssBaseline />
+      //   <UserContext.Provider
+      // value={{user, userLoading, loadedSiteVer, setLoadedSiteVer}}
+      // >
+      //   <CounterContext.Provider
+      // value={{counter, loading}}>
+      //     <Routes>
+      //       <Route path="/*" element={<Sidebar />} />
+      //     </Routes>
+      //   <Routes>
+      //     <Route path="*" element={<div>Page Not Found</div>} />
+      //       <Route path="/" element={<DefaultPage />} />
+      //       <Route path="/counter/:counterId" element={<CounterPage />} />
+      //       <Route path="/blog/:blog" element={<BlogPage />} />
+      //       <Route path="/stats" element={<StatsPage />} />
+      //       <Route path="/threads" element={<ThreadsPage />} />
+      //       <Route path="/thread/:thread_name">
+      //         <Route index={true} element={<ThreadPage />} />
+      //         <Route path="/thread/:thread_name/:count_uuid" element={<IndividualCountPage />} />
+      //       </Route>
+      //       <Route path="/counters" element={<CountersPage />} />
+      //       <Route path="/uuid" element={<UuidPage />} />
+      //       <Route path="/post-finder" element={<PostFinderPage />} />
+      //       <Route path="/achievements">
+      //         <Route index={true} element={<AchievementsPage />} />
+      //         <Route path="/achievements/:achievementId" element={<AchievementPage />} />
+      //       </Route>
+      //       <Route path="/contest" element={<April2023SignupPage />} />
+      //       <Route path="/contest-rules" element={<ContestPage />} />
+      //       <Route path="/rules" element={<RulesPage />} />
+      //       <Route path="/privacy-policy" element={<PrivacyPage />} />
+      //       <Route path="/about" element={<AboutPage />} />
+      //       <Route path="/contact-us" element={<AboutPage />} />
+      //   </Routes>
+      //   </CounterContext.Provider>
+      //   </UserContext.Provider>
+      //   </ThemeProvider>
+      //   </ColorModeContext.Provider>
+      //   </LocalizationProvider>
+      //   </>
+      // )
   );
 }
 export default App;

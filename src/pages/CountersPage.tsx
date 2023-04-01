@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState } from 'react';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { Box, Card, CardContent, Grid, Link, Pagination, PaginationItem, Theme, Typography, useMediaQuery } from '@mui/material';
 import { Loading } from '../components/Loading';
 import { Counter } from '../utils/types';
@@ -7,9 +6,10 @@ import { getCountersPage } from '../utils/api';
 import { Link as routerLink, useLocation, useNavigate } from 'react-router-dom';
 import { CounterCard } from '../components/CounterCard';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
+import { UserContext } from '../utils/contexts/UserContext';
 
 export const CountersPage = () => {
-  const { counter, loading } = useContext(CounterContext);
+  const { counter, loading } = useContext(UserContext);
   const [counters, setCounters] = useState<Counter[]>([]);
   const [countersLoading, setCountersLoading] = useState<boolean>(true);
   const [page, setPage] = useState<number|undefined>();

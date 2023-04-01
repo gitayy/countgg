@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState } from 'react';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import { Alert, Box, Button, Container, FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Snackbar, Switch, Typography, AlertColor, Tooltip, TextField } from '@mui/material';
 import { UserContext } from '../utils/contexts/UserContext';
@@ -11,8 +10,7 @@ import { HexColorPicker } from 'react-colorful';
 import { useLocation } from 'react-router-dom';
 
   export const PrefsPage = () => {
-    const { user, userLoading, loadedSiteVer } = useContext(UserContext);
-    const { counter, loading } = useContext(CounterContext);
+    const { user, counter } = useContext(UserContext);
     const isMounted = useIsMounted();
 
     const location = useLocation();

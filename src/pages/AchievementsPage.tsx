@@ -1,6 +1,5 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useContext, useEffect, useState } from 'react';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useFetchLoadCounter } from '../utils/hooks/useFetchLoadCounter';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
@@ -16,9 +15,10 @@ import { convertToTimestamp, formatDateExact } from '../utils/helpers';
 import { adminToggleBan, adminToggleMute } from '../utils/api';
 import { AchievementType } from '../utils/types';
 import { AchievementSmall } from '../components/AchievementSmall';
+import { UserContext } from '../utils/contexts/UserContext';
 
   export const AchievementsPage = () => {
-    const { counter, loading } = useContext(CounterContext);
+    const { counter, loading } = useContext(UserContext);
     const { achievements, achievementsLoading, setAchievements, allAchievements } = useFetchAchievements();
     const [unearnedAchievements, setUnearnedAchievements] = useState<AchievementType[]>([]);
     const [earnedAchievements, setEarnedAchievements] = useState<AchievementType[]>([]);

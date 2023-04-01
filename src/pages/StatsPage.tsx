@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState } from 'react';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { Box, FormControl, MenuItem, Select, SelectChangeEvent, Tab, Theme, Typography, useMediaQuery } from '@mui/material';
 import { Loading } from '../components/Loading';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -14,9 +13,10 @@ import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import { useFetchAllThreads } from '../utils/hooks/useFetchAllThreads';
 import { SpeedTable } from '../components/SpeedTable';
+import { UserContext } from '../utils/contexts/UserContext';
 
 export const StatsPage = () => {
-  const { counter, loading } = useContext(CounterContext);
+  const { counter, loading } = useContext(UserContext);
   // const [counters, setCounters] = useState<Counter[]>([]);
   // const [countersLoading, setCountersLoading] = useState<boolean>(true);
   const [page, setPage] = useState<number|undefined>();

@@ -62,6 +62,47 @@ html,
   background: #FAF9F6;
 }
 
+.card_blaze_1 {
+  background: linear-gradient(135deg, #bf0000, #cf0000, #df0000, #ef0000, #ff0000, #ef0000, #df0000, #cf0000, #bf0000) fixed;
+}
+
+.card_blaze_2 {
+  background: #ff000080;
+  transition: background 0.6s linear;
+  text-shadow: 0px 0px 7px black;
+}
+
+.card_blaze_2:hover {
+  background: #ff0000;
+}
+
+.card_radiant_1 {
+  background: linear-gradient(135deg, #FFC107C0, #FFC107D0, #FFC107E0, #FFC107F0, #FFC107, #FFC107F0, #FFC107E0, #FFC107D0, #FFC107C0) fixed;
+}
+
+.card_radiant_2 {
+  background: #FFC10780;
+  transition: background 0.6s linear;
+  /* text-shadow: 0px 0px 7px white; */
+}
+
+.card_radiant_2:hover {
+  background: #FFC107;
+}
+
+.card_wave_1 {
+  background: linear-gradient(135deg, #0099bf, #0099cf, #0099df, #0099ef, #0099ff, #0099ef, #0099df, #0099cf, #0099bf) fixed;
+}
+
+.card_wave_2 {
+  background: #0099ff80;
+  transition: background 0.6s linear;
+}
+
+.card_wave_2:hover {
+  background: #0099ff;
+}
+
 .counter_card {
   border-radius : 10px;
   color: white;
@@ -118,6 +159,47 @@ html,
   border-radius: 50%;
 }
 
+/* .border_radiant_1 {
+  border-radius: 10px;
+  border: solid #FFC107;
+} */
+
+.border_radiant_circle {
+  border-radius: 50%;
+  box-shadow: 0px 0px 4px 3px #FFC107;
+  /* border: solid #FFC107; */
+}
+
+.border_radiant_square {
+  box-shadow: 0px 0px 4px 3px #FFC107;
+  /* transition: box-shadow 0.6s linear; */
+  border-radius: 10px;
+}
+
+.border_blaze_square {
+  box-shadow: 0px 0px 4px 3px #ff0000;
+  border-radius: 10px;
+}
+
+.border_blaze_circle {
+  border-radius: 50%;
+  box-shadow: 0px 0px 4px 3px #ff0000;
+}
+
+.border_wave_square {
+  box-shadow: 0px 0px 4px 3px #0099ff;
+  border-radius: 10px;
+}
+
+.border_wave_circle {
+  border-radius: 50%;
+  box-shadow: 0px 0px 4px 3px #0099ff;
+}
+
+/* .border_radiant_1:hover {
+  box-shadow: 0px 0px 0px 3px green;
+} */
+
 .card_pic_container {
   display: flex;
 }
@@ -165,4 +247,67 @@ html,
   to {
     margin-left: 0%;
   }
+}
+
+.rainbow, .card_rainbow_dark { 
+background: linear-gradient(124deg, #ff2400, #e81d1d, #e8b71d, #e3e81d, #1de840, #1ddde8, #2b1de8, #dd00f3, #dd00f3);
+background-size: 1800% 1800%;
+
+-webkit-animation: rainbow 18s ease infinite;
+-z-animation: rainbow 18s ease infinite;
+-o-animation: rainbow 18s ease infinite;
+  animation: rainbow 18s ease infinite;}
+
+  .card_rainbow_light {
+    background: linear-gradient(124deg, #ff240080, #e81d1d80, #e8b71d80, #e3e81d80, #1de84080, #1ddde880, #2b1de880, #dd00f380, #dd00f380);
+background-size: 1800% 1800%;
+
+-webkit-animation: rainbow 18s ease infinite;
+-z-animation: rainbow 18s ease infinite;
+-o-animation: rainbow 18s ease infinite;
+  animation: rainbow 18s ease infinite;
+  }
+
+@-webkit-keyframes rainbow {
+  0%{background-position:0% 82%}
+  50%{background-position:100% 19%}
+  100%{background-position:0% 82%}
+}
+@-moz-keyframes rainbow {
+  0%{background-position:0% 82%}
+  50%{background-position:100% 19%}
+  100%{background-position:0% 82%}
+}
+@-o-keyframes rainbow {
+  0%{background-position:0% 82%}
+  50%{background-position:100% 19%}
+  100%{background-position:0% 82%}
+}
+@keyframes rainbow { 
+  0%{background-position:0% 82%}
+  50%{background-position:100% 19%}
+  100%{background-position:0% 82%}
+}
+
+.zoom-in {
+  animation-name: zoom-in;
+  transform-origin: top left;
+  animation-duration: 50s;
+}
+
+@keyframes zoom-in {
+  from {
+    transform: scale(0.1);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.react-terminal-line {
+  white-space: break-spaces!important;
+}
+
+.react-terminal {
+  overflow-y: hidden!important;
 }

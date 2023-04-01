@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState } from 'react';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { Container, Box, FormControl, InputLabel, Select, MenuItem, Button, Input, Alert, AlertColor, Snackbar, FormControlLabel, Checkbox, SelectChangeEvent, Typography, Stack, Link, useMediaQuery, Theme, Toolbar, Tooltip } from '@mui/material';
 import { useFetchAllThreads } from '../utils/hooks/useFetchAllThreads';
 import { adminCreateThread, findPostByThreadAndNumber, findPostByThreadAndRawCount } from '../utils/api';
@@ -11,8 +10,7 @@ import { UserContext } from '../utils/contexts/UserContext';
 import { useLocation } from 'react-router-dom';
   
   export const PostFinderPage = () => {
-    const { user, userLoading, loadedSiteVer } = useContext(UserContext);
-    const { counter, loading } = useContext(CounterContext);
+    const { user, counter } = useContext(UserContext);
     const { allThreads, allThreadsLoading } = useFetchAllThreads();
     const [selectedThread, setSelectedThread] = useState<ThreadType>();
 
@@ -72,7 +70,7 @@ import { useLocation } from 'react-router-dom';
                     addCounterToCache(counter);
                   }
                   setLoadedPosts(data.posts);
-                  console.log(data);
+                  // console.log(data);
                 })
                 .catch((err) => {
                   console.log(err);

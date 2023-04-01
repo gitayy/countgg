@@ -1,14 +1,15 @@
 import { Card, Box, CardMedia, CardContent, Typography, Grid, createTheme, responsiveFontSizes, ThemeProvider } from "@mui/material";
 import CountggLogo from '../assets/countgg-128.png'
+import { card_backgrounds, titles } from "../utils/helpers";
 
 
 export function CounterCard(props) {
 
+  const titleInfo = titles[props.counter.title];
+  const backgroundInfo = card_backgrounds[props.counter.cardStyle];
   let counterCardTheme = createTheme({
     palette: {
-      mode: props.counter.cardStyle == 'card_wavypurple' && 'dark'
-      || props.counter.cardStyle == 'card_default' && 'light'
-      || 'light',
+      mode: backgroundInfo.style || 'light',
     },
   });
   counterCardTheme = responsiveFontSizes(counterCardTheme);
@@ -40,7 +41,7 @@ export function CounterCard(props) {
                             </View> */}
                         </Typography>
                     {/* </Box> */}
-                    <Typography variant="subtitle1" color={"text.secondary"} component="div">
+                    <Typography className={titleInfo && titleInfo.style ? titleInfo.style : 'title-default'} variant="subtitle1" color={"text.secondary"} component="div">
                       {props.counter.title}&nbsp;
                       </Typography>
 

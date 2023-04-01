@@ -1,20 +1,20 @@
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import { useContext, useEffect, useState } from 'react';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { Alert, AlertColor, Box, Button, CardMedia, Grid, Link, Modal, Paper, Snackbar, Typography } from '@mui/material';
 import { Loading } from '../components/Loading';
 import SwingBg from '../assets/swing2.png';
 import { modalStyle } from '../utils/helpers';
+import { SocketContext } from '../utils/contexts/SocketContext';
 
 export const DefaultPage = () => {
   const navigate = useNavigate();
-  const { user } = useContext(UserContext);
-  const { counter, loading } = useContext(CounterContext);
+  const { user, counter, loading, allegiance } = useContext(UserContext);
   const [ modalOpen, setModalOpen ] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>('error');
+  const socket = useContext(SocketContext);
   const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
       if (reason === 'clickaway') {
         return;
@@ -24,6 +24,10 @@ export const DefaultPage = () => {
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
   const [count, setCount] = useState(5);
+
+  const lol = user && user.inventory && allegiance ? (user.inventory.filter(item => item['name'] === 'Small Key').length === 0) : false
+  // console.log(user && user.inventory ? user.inventory.filter(item => item['name'] === 'Small Key') : 'Nope');
+  // console.log(user);
 
   useEffect(() => {
     var testTimeout;
@@ -44,6 +48,10 @@ export const DefaultPage = () => {
       clearTimeout(testTimeout);
     };
   }, [count]);
+
+  const handleNotAKey = () => {
+    socket.emit('notAKey');
+  }
 
   if(!loading) {
 
@@ -178,6 +186,7 @@ export const DefaultPage = () => {
           <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/about`} onClick={(e) => {e.preventDefault();navigate(`/about`);}}>About</Link> — &nbsp;
           <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/privacy-policy`} onClick={(e) => {e.preventDefault();navigate(`/privacy-policy`);}}>Privacy Policy</Link> — &nbsp;
           <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/contact-us`} onClick={(e) => {e.preventDefault();navigate(`/contact-us`);}}>Contact Us</Link> — &nbsp;
+          {user && counter && allegiance && lol && <><Typography sx={{cursor: 'pointer', color: 'inherit', textDecoration: 'none', '&:hover': { textDecoration: 'underline' }}} component={'span'} variant='body2' onClick={(e) => {e.preventDefault(); handleNotAKey()}}>Not a key</Typography> — &nbsp;</>}
           <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/`} onClick={(e) => {e.preventDefault();navigate(`/`);}}>countGG.com</Link>
         </Typography>
       </Box>      

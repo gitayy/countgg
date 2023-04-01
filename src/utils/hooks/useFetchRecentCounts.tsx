@@ -12,31 +12,33 @@ export function useFetchRecentCounts(thread_name: string, context: string | (str
       const [loadedOldest, setLoadedOldest] = useState(false); 
       const [loadedNewest, setLoadedNewest] = useState(true);
       const isMounted = useIsMounted();
-      const { user, userLoading, loadedSiteVer } = useContext(UserContext);
+      const { user, loading } = useContext(UserContext);
     
       useEffect(() => {
-        getRecentCounts(thread_name, context)
-        .then(({ data }) => {
-        if (isMounted.current && data.recentCounts) { 
-          if(user && user.pref_load_from_bottom) {
-            setRecentCounts(data.recentCounts.reverse());
-          } else {
-            setRecentCounts(data.recentCounts);
-          } 
-          for (const counter of data.counters) {
-              addCounterToCache(counter)
+        if(!loading) {
+          getRecentCounts(thread_name, context)
+          .then(({ data }) => {
+          if (isMounted.current && data.recentCounts) { 
+            if(user && !loading && user.pref_load_from_bottom) {
+              setRecentCounts(data.recentCounts.reverse());
+            } else {
+              setRecentCounts(data.recentCounts);
+            } 
+            for (const counter of data.counters) {
+                addCounterToCache(counter)
+            }
           }
+          if(data.isOldest !== undefined) {
+            setLoadedOldest(data.isOldest);
+            setLoadedNewest(data.isNewest);
+          }
+            setRecentCountsLoading(false);
+          })
+          .catch((err) => {
+            console.log(err);
+          })
         }
-        if(data.isOldest !== undefined) {
-          setLoadedOldest(data.isOldest);
-          setLoadedNewest(data.isNewest);
-        }
-          setRecentCountsLoading(false);
-        })
-        .catch((err) => {
-          console.log(err);
-        })
-    }, []);
+    }, [loading]);
     
       return { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest };
     }

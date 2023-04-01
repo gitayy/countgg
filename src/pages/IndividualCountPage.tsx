@@ -1,6 +1,5 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { memo, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { CounterContext } from '../utils/contexts/CounterContext';
 import { Box, Link, Stack, Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
 import { addCounterToCache, cachedCounters } from '../utils/helpers';
@@ -32,8 +31,7 @@ export const IndividualCountPage = memo(() => {
     
     const socket = useContext(SocketContext);
 
-    const { user, userLoading, loadedSiteVer } = useContext(UserContext);
-    const { counter, loading } = useContext(CounterContext);
+    const { user, counter, loading } = useContext(UserContext);
     const { thread, threadLoading } = useFetchThread(thread_name);
     const { specificCount, specificCountLoading, setSpecificCount } = useFetchSpecificCount(count_uuid);
     const [ modalOpen, setModalOpen ] = useState(false);
@@ -54,7 +52,8 @@ export const IndividualCountPage = memo(() => {
     //Handle Socket data
     useEffect(() => {
         if(isMounted) {
-            socket.emit('watch', thread_name)
+            socket.emit('watch', thread_name);
+            socket.emit('watchCount', count_uuid);
 
             socket.on("connect_error", (err) => {
               console.log(`connect_error due to ${err.message}`);
@@ -75,6 +74,7 @@ export const IndividualCountPage = memo(() => {
 
             return () => {
                 socket.emit('leave_threads');
+                socket.emit('unwatchCount', count_uuid);
                 socket.off('connection_error');
                 socket.off('post');
                 socket.off('lastCount');

@@ -4,6 +4,8 @@ import { Counter } from '../utils/types';
 
 interface Props {
   dailyHOC: {[authorUUID: string]: { counter: Counter, counts: number }}|undefined;
+  name: string;
+  countName: string;
 }
 
 const PlaceCell = ({ place }: { place: number }) => {
@@ -36,7 +38,7 @@ const PlaceCell = ({ place }: { place: number }) => {
   };
   
 
-export const DailyHOCTable = ({ dailyHOC }: Props) => {
+export const DailyHOCTable = ({ dailyHOC, name, countName }: Props) => {
     const navigate = useNavigate();
     if(dailyHOC !== undefined && dailyHOC !== null) {
         const rows = Object.entries(dailyHOC).map(([authorUUID, { counter, counts }]) => ({
@@ -46,7 +48,7 @@ export const DailyHOCTable = ({ dailyHOC }: Props) => {
           const sumCounts = Object.values(dailyHOC).reduce((acc, { counts }) => acc + counts, 0);
         
           return (<>
-            <Typography variant='h6'>Daily Leaderboard</Typography>
+            <Typography variant='h6'>{name}</Typography>
             <Typography sx={{mb: 1}} variant='body2'>{sumCounts} {sumCounts != 1 ? "counts" : "count"}</Typography>
             <TableContainer component={Paper}>
               <Table>
@@ -54,11 +56,15 @@ export const DailyHOCTable = ({ dailyHOC }: Props) => {
                   <TableRow>
                   <TableCell>Rank</TableCell>
                     <TableCell>Name</TableCell>
-                    <TableCell>Counts</TableCell>
+                    <TableCell>{countName}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {rows.map((row, index) => (
+                  {rows.map((row, index) => {
+                    // console.log("HERES ROW");
+                    // console.log(row);
+
+                    return (
                     <TableRow key={row.counter.name}>
                       <PlaceCell place={index + 1} />
                       <TableCell component="th" scope="row" sx={{color: row.counter.color}}>
@@ -67,14 +73,14 @@ export const DailyHOCTable = ({ dailyHOC }: Props) => {
                         </Link>
                       </TableCell>
                       <TableCell>{row.counts}</TableCell>
-                    </TableRow>
-                  ))}
+                    </TableRow>)}
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
             </>
           );
     } else {
-        return <>No daily leaderboard found.</>;
+        return <>No {name} found.</>;
     }
 };
