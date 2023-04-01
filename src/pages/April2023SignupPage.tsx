@@ -537,8 +537,8 @@ export const April2023SignupPage = ({ fullPage = true }: {fullPage?: boolean}) =
             p: 4,
           }}
         >
-          <h2 id="modal-title">Modal Title</h2>
-          <p id="modal-description">Modal Description</p>
+          <h2 id="modal-title">{modalTitle}</h2>
+          <p id="modal-description">{modalDesc}</p>
           <Button onClick={() => {handleModalClose()}}>Close</Button>
         </Box>
       </Modal>
