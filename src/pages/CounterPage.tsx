@@ -81,7 +81,7 @@ import { UserContext } from '../utils/contexts/UserContext';
           console.log("Did not work");
         }
       } else {
-        console.log("Counter not loaded yet.");
+        console.log("Counter not loaded yet");
       }
     };
 
@@ -94,7 +94,7 @@ import { UserContext } from '../utils/contexts/UserContext';
           console.log("Did not work");
         }
       } else {
-        console.log("Counter not loaded yet.");
+        console.log("Counter not loaded yet");
       }
     };
     
