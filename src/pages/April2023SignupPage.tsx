@@ -15,6 +15,7 @@ import { LinearProgressWithLabel } from "../utils/styles";
 import { InventoryItem } from "../components/InventoryItem";
 import { cachedCounters, defaultCounter } from "../utils/helpers";
 import { SocketContext } from "../utils/contexts/SocketContext";
+import CaesarCipher from "../components/Caesar";
 
 export const April2023SignupPage = ({ fullPage = true }: {fullPage?: boolean}) => {
     const navigate = useNavigate();
@@ -54,6 +55,9 @@ export const April2023SignupPage = ({ fullPage = true }: {fullPage?: boolean}) =
     const userKeyCount = allegiance && user && user.inventory ? user.inventory.filter(item => {return item['type'] === 'key'}).length : 0;
     const teamKeyCount = allegiance && user && allegiance.val.team_inventory ? allegiance.val.team_inventory.filter(item => {return item['type'] === 'key'}).length : 0
     const combinedKeyCount = userKeyCount + teamKeyCount;
+
+    const isEmboldened = counter && counter.roles.includes('emboldened') && !counter.roles.includes('ascended') ? true : false;
+    const isAscended = counter && counter.roles.includes('ascended') ? true : false;
 
     const handleOpeningPackage = () => {
         socket.emit('openPackage');
@@ -535,6 +539,9 @@ export const April2023SignupPage = ({ fullPage = true }: {fullPage?: boolean}) =
             border: '2px solid #000',
             boxShadow: 24,
             p: 4,
+            maxHeight: '500px',
+            width: '70vw',
+            overflowY: 'scroll',
           }}
         >
           <h2 id="modal-title">{modalTitle}</h2>
@@ -562,7 +569,42 @@ export const April2023SignupPage = ({ fullPage = true }: {fullPage?: boolean}) =
                     return;
                 }
             })}</span> : <span>... hmm, who was it again? Time to find out...</span>}</Typography>
-            {user && userKeyCount === 0
+            {counter && counter.roles.includes('emboldened') && <Typography sx={{mt: 1}} variant="body1">
+                You feel emboldened. You have successfully opened your package. You ask around your community... and it turns out that there are a few others, now:
+                {allegiance && allegiance.val.pm2.length > 0 ? <span>&nbsp;{allegiance.val.pm2.map((counter, index) => {
+                    const counterFromCache = cachedCounters[counter] ? cachedCounters[counter] : defaultCounter(counter);
+                if(index <= 199) {
+                    return <Typography key={counterFromCache.uuid} component={'span'}><Link color={counterFromCache.color} underline='hover' href={`/counter/${counterFromCache.uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counterFromCache.uuid}`);}}>{counterFromCache.name}</Link>{index + 1 < allegiance.val.pm2.length ? ', ' : ''}</Typography>
+                } else if(index == 200) {
+                    return <Typography key={'extra'} component={'span'}>and {allegiance.val.pm2.length - 200} more</Typography>
+                } else {
+                    return;
+                }
+            })}</span> : <span>... hmm, who was it again?</span>}
+                </Typography>}
+
+                {counter && counter.roles.includes('ascended') && <Typography sx={{mt: 1}} variant="body1">
+                You have ascended. You're safe from harm's way. Congratulations. There are a few others, namely,
+                {allegiance && allegiance.val.pm3.length > 0 ? <span>&nbsp;{allegiance.val.pm3.map((counter, index) => {
+                    const counterFromCache = cachedCounters[counter] ? cachedCounters[counter] : defaultCounter(counter);
+                if(index <= 199) {
+                    return <Typography key={counterFromCache.uuid} component={'span'}><Link color={counterFromCache.color} underline='hover' href={`/counter/${counterFromCache.uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counterFromCache.uuid}`);}}>{counterFromCache.name}</Link>{index + 1 < allegiance.val.pm3.length ? ', ' : ''}</Typography>
+                } else if(index == 200) {
+                    return <Typography key={'extra'} component={'span'}>and {allegiance.val.pm3.length - 200} more</Typography>
+                } else {
+                    return;
+                }
+            })}</span> : <span>... hmm, who was it again?</span>}
+                </Typography>}
+            {isAscended ? <>
+                <Typography sx={{mt: 1}} variant="body1">It feels good. You can sleep easy tonight.</Typography>
+            </> : isEmboldened ? <>
+            <Typography sx={{mt: 1}} variant="body1">With your package finally opened, you know what to do.</Typography>
+            <Box sx={{mt: 1}}>
+            <CaesarCipher text={"Let's do this."} /></Box>
+            {/* <Typography sx={{mt: 1}} variant="body1">Emboldened much.</Typography> */}
+            </> 
+            : <>{user && userKeyCount === 0
             ? <>
                 {isBlaze && <>
                 <Typography sx={{mt: 1}} variant="body1">Only 106 degrees inside. Celsius. It's chilly. Time for some fresh air... you open your door to go on a walk.</Typography>
@@ -646,7 +688,7 @@ export const April2023SignupPage = ({ fullPage = true }: {fullPage?: boolean}) =
                 <Typography sx={{mt: 1}} variant="body1">It's time to <Typography component={'span'} sx={{fontWeight: 'bold'}}>find some more keys!</Typography> </Typography>
                 </>}
                 </> 
-                :<></>}
+                :<></>} </>}
             </Paper>
 
             {user && allegiance && <>
@@ -664,6 +706,14 @@ export const April2023SignupPage = ({ fullPage = true }: {fullPage?: boolean}) =
                         </Fragment>
                     })}
                     {combinedKeyCount === 0 && <Typography>But there's nothing in here... yet...</Typography>}
+                    {(isEmboldened || isAscended) && <>
+                    <audio controls>
+                        <source src={`${process.env.REACT_APP_API_HOST}/api/counter/gift`} type="audio/mpeg" />
+                    </audio>
+                    <audio controls>
+                        <source src={`${process.env.REACT_APP_API_HOST}/api/counter/puzzle`} type="audio/mpeg" />
+                    </audio>
+                    </>}
                     </Box>
                 {/* <LinearProgressWithLabel color="success" progress={allegiance.val.p0[0]} max={allegiance.val.p0[1]} />
                 <LinearProgressWithLabel color="success" progress={allegiance.val.p1[0]} max={allegiance.val.p1[1]} />

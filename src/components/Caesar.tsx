@@ -8,10 +8,10 @@ function CaesarCipher({ text }) {
   useEffect(() => {
     setTimeout(() => {
       setIsInit(true);
-    }, 3600000);
+    }, 60000);
     setTimeout(() => {
       setIsCiphered(false);
-    }, 3603000);
+    }, 70000);
   }, []);
 
   useEffect(() => {

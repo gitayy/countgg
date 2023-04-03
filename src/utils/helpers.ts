@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { createElement } from 'react';
 import { validate as uuid_validate } from 'uuid';
 
-export const site_version = "v1.2.0";
+export const site_version = "v1.2.1";
 export var loaded_site_version;
 export function updateSiteVer(siteVer: string) {
   loaded_site_version = siteVer;
