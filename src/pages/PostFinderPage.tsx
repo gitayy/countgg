@@ -7,7 +7,7 @@ import Count from '../components/Count';
 import CountMobile from '../components/CountMobile';
 import { addCounterToCache, cachedCounters } from '../utils/helpers';
 import { UserContext } from '../utils/contexts/UserContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
   
   export const PostFinderPage = () => {
     const { user, counter } = useContext(UserContext);
@@ -22,6 +22,7 @@ import { useLocation } from 'react-router-dom';
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>('error');
+    const navigate = useNavigate();
 
     const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
 
@@ -164,7 +165,7 @@ import { useLocation } from 'react-router-dom';
                 <Stack direction="column" alignItems="center" sx={{width: '50%'}}>
                     <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
                     {loadedPosts.map((count, countIndex) => (<>
-                      <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}><Link underline='always' color={"text.secondary"} href={`/thread/${name}?context=${count.uuid}`}>Context</Link></Typography>
+                      <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}><Link onClick={(e) => {e.preventDefault();navigate(`/thread/${name}?context=${count.uuid}`);}} underline='always' color={"text.secondary"} href={`/thread/${name}?context=${count.uuid}`}>Context</Link></Typography>
                         <Count user={user} key={count.uuid} post={count} thread={selectedThread} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
                         </>
                     ))}
@@ -176,7 +177,7 @@ import { useLocation } from 'react-router-dom';
                 <Stack direction="column" alignItems="center" sx={{width: '100%'}}>
                     <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
                     {loadedPosts.map((count, countIndex) => (<>
-                      <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}><Link underline='always' color={"text.secondary"} href={`/thread/${name}?context=${count.uuid}`}>Context</Link></Typography>
+                      <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}><Link onClick={(e) => {e.preventDefault();navigate(`/thread/${name}?context=${count.uuid}`);}} underline='always' color={"text.secondary"} href={`/thread/${name}?context=${count.uuid}`}>Context</Link></Typography>
                         <CountMobile user={user} key={count.uuid} post={count} thread={selectedThread} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
                         </>
                     ))}

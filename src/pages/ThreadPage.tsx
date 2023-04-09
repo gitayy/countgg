@@ -70,7 +70,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [robOpen, setRobOpen] = useState(false);
 
     const robConfirm = () => {
-      // console.log('Ok');
       socket.emit(`rob`);
       setRobOpen(false);
     };
@@ -82,42 +81,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const openRobConfirm = () => {
       setRobOpen(true);
     };
-
-    const [despacito, setDespacito] = useState(1);
-    const [konamiCodeEntered, setKonamiCodeEntered] = useState(false);
-    const [konamiCodeSequence, setKonamiCodeSequence] = useState<string[]>([]);
-
-    const handleDespacito = () => {
-      setDespacito(prevDespacito => {return prevDespacito + 1})
-    }
-
-    useEffect(() => {
-      if (despacito === 2) {
-        const konamiCode = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyB", "KeyA"];
-        const checkCode = (event) => {
-          const key = event.code;
-          setKonamiCodeSequence((prev) => [...prev.slice(-9), key]);
-        };
-  
-        window.addEventListener("keydown", checkCode);
-  
-        if (konamiCodeSequence.length === konamiCode.length) {
-          const sequenceMatches = konamiCode.every((code, index) => konamiCodeSequence[index] === code);
-          if (sequenceMatches) {
-            setKonamiCodeEntered(true);
-          }
-          setKonamiCodeSequence([]);
-        }
-  
-        return () => window.removeEventListener("keydown", checkCode);
-      }
-    }, [despacito, konamiCodeSequence]);
-
-    useEffect(() => {
-      if (konamiCodeEntered) {
-        socket.emit('requestKonamiKey');
-      }
-    }, [konamiCodeEntered]);
 
     const ConfirmDialog = ({ open, handleCancel, handleConfirm }) => {
       return (
@@ -182,13 +145,14 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     }
     const startRenderRef = useRef(0);
     const endRenderRef = useRef(0);
+    const postTextRef = useRef('');
     const [renderTime, setRenderTime] = useState<number>();
 
     useEffect(() => {  
       if(renderLatencyEnabled.current) {
         requestAnimationFrame(() => {
-          endRenderRef.current = performance.now();
-          console.log(`Count took ${endRenderRef.current - startRenderRef.current} ms to render (${endRenderRef.current}, ${startRenderRef.current}) `);
+          endRenderRef.current = Date.now();
+          console.log(`Post took ${endRenderRef.current - startRenderRef.current} ms to render (${startRenderRef.current} to ${endRenderRef.current}): ${postTextRef.current} `);
           setRenderTime(endRenderRef.current - startRenderRef.current);
         });
       }
@@ -332,7 +296,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             });
             socket.on(`post`, function(data: {post: PostType, counter: Counter}) {
               if(renderLatencyEnabled.current) {
-                startRenderRef.current = performance.now(); // Needed for render latency test 2
+                startRenderRef.current = Date.now(); // Needed for render latency test 2
+                postTextRef.current = data.post.rawText;
               }              
                 if(latencyCheck.current == data.post.rawText && data.post.authorUUID == myUUIDCheck.current) {
                     data.post.latency = Date.now() - latency.current;
@@ -622,7 +587,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const handleSubmit = (text: string, refScroll: any) => {
         const submitText = text;
         if(thread_name && counter) {
-          socket.emit('post', {thread_name: thread_name, text: submitText, refScroll: refScroll});
+          socket.emit('post', {thread_name: thread_name, text: submitText, refScroll: refScroll, latency: renderLatencyEnabled.current});
         }
       };
 
@@ -667,17 +632,11 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         } else if (socketStatus == 'LIVE') {
           color = 'success';
         }
-        return (<Box onClick={() => {handleDespacito()}} sx={{ml: 5, p: 0.5, display: 'flex', alignItems: 'center'}}>
-        {despacito === 1 ? <>
+        return (<Box sx={{ml: 5, p: 0.5, display: 'flex', alignItems: 'center'}}>
         <Box sx={{bgcolor: `${color}.light`, width: 8, height: 8, borderRadius: '50%'}}></Box>
-        &nbsp;<Typography color={"text.primary"} variant="body1">{socketStatus}</Typography> &nbsp; <Typography color={"text.secondary"} variant="body2">{socketViewers} {socketViewers === 1 ? 'viewer' : 'viewers'}</Typography></>
-          : despacito === 2 ? <><Box sx={{bgcolor: `error.light`, width: 8, height: 8, borderRadius: '50%'}}></Box>
-          &nbsp;<Typography color={"text.primary"} variant="body1">DEAD</Typography> &nbsp; <Typography color={"text.secondary"} variant="body2">69 viewers</Typography></>
-          : <><Box sx={{bgcolor: `grey.400`, width: 8, height: 8, borderRadius: '50%'}}></Box>
-          &nbsp;<Typography color={"text.primary"} variant="body1">CLOSED</Typography> &nbsp; <Typography color={"text.secondary"} variant="body2">0 viewers</Typography></>
-        }
+        &nbsp;<Typography color={"text.primary"} variant="body1">{socketStatus}</Typography> &nbsp; <Typography color={"text.secondary"} variant="body2">{socketViewers} {socketViewers === 1 ? 'viewer' : 'viewers'}</Typography>
           </Box>)
-      }, [socketStatus, socketViewers, despacito]);
+      }, [socketStatus, socketViewers]);
 
       const headerMemo = useMemo(() => {
         if(thread) {return (
@@ -693,7 +652,15 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             </Box>
           )
         }
-      }, [thread, socketStatus, socketViewers, theme, lastCount, despacito])
+      }, [thread, socketStatus, socketViewers, theme, lastCount])
+
+      const robConfirmMemo = useMemo(() => {
+        return <ConfirmDialog
+        open={robOpen}
+        handleCancel={() => robCancel()}
+        handleConfirm={() => robConfirm()}
+      />
+      }, [robOpen])
 
       const countListMemo = useMemo(() => {
         return (          
@@ -714,75 +681,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         <TabList onChange={handleTabChange} variant={'scrollable'} allowScrollButtonsMobile aria-label="Counting Tabs">
           <Tab label="About" value="tab_1" />
           <Tab label="Chats" value="tab_2" />
-
-          {(!loading && !counter || (counter && !counter.roles.includes('contestant'))) &&
-          <Tab
-            label={counter && counter.roles.includes('contestant') ? <span style={{display: 'block'}}><Typography component={'span'} sx={{ fontSize: 18, color: '#fff', textShadow: '0px 0px 3px black' }}>🔑</Typography>&nbsp;Teams</span> : <Badge badgeContent={1} color="error"><span style={{display: 'block'}}><Typography component={'span'} sx={{ fontSize: 18, color: '#fff', textShadow: '0px 0px 3px black' }}>🔑</Typography>&nbsp;Teams</span></Badge>}
-            value="tab_teams"
-            sx={{
-              bgcolor: '#8a8a8a80',
-              color: 'text.primary',
-              boxShadow: '0px 1px 5px rgba(0, 0, 0, 0.2)',
-              '&.Mui-selected': {
-                bgcolor: '#8a8a8a',
-                color: '#fff!important',
-                boxShadow: '0px 1px 5px rgba(0, 0, 0, 0.5)',
-                textShadow: '0px 0px 3px black'
-              },
-            }}
-          />
-          }
-          {counter && counter.roles.includes('blaze') &&
-          <Tab
-            label={<span style={{display: 'block'}}><Typography component={'span'} sx={{ fontSize: 18, color: '#fff', textShadow: '0px 0px 3px black',}}>🔥</Typography>&nbsp;Blaze</span>}
-            value="tab_blaze"
-            sx={{
-              bgcolor: '#ff000080',
-              color: 'text.primary',
-              boxShadow: '0px 1px 5px rgba(0, 0, 0, 0.2)',
-              '&.Mui-selected': {
-                bgcolor: '#ff0000',
-                color: '#fff!important',
-                boxShadow: '0px 1px 5px rgba(0, 153, 255, 0.5)',
-                textShadow: '0px 0px 3px black'
-              },
-            }}
-          />
-          }
-          {counter && counter.roles.includes('radiant') &&
-          <Tab
-            label={<span style={{display: 'block'}}><Typography component={'span'} sx={{ fontSize: 18, color: '#fff', textShadow: '0px 0px 3px black',}}>⭐</Typography>&nbsp;Radiant</span>}
-            value="tab_radiant"
-            sx={{
-              bgcolor: '#FFC10780',
-              color: 'text.primary',
-              boxShadow: '0px 1px 5px rgba(0, 0, 0, 0.2)',
-              '&.Mui-selected': {
-                bgcolor: '#FFC107',
-                color: '#fff!important',
-                boxShadow: '0px 1px 5px rgba(0, 153, 255, 0.5)',
-                textShadow: '0px 0px 3px black'
-              },
-            }}
-          />
-          }
-          {counter && counter.roles.includes('wave') &&
-          <Tab
-            label={<span style={{display: 'block'}}><Typography component={'span'} sx={{ fontSize: 18, color: '#fff', textShadow: '0px 0px 3px black',}}>🌊</Typography>&nbsp;Wave</span>}
-            value="tab_wave"
-            sx={{
-              bgcolor: '#0099ff80',
-              color: 'text.primary',
-              boxShadow: '0px 1px 5px rgba(0, 0, 0, 0.2)',
-              '&.Mui-selected': {
-                bgcolor: '#0099ff',
-                color: '#fff!important',
-                boxShadow: '0px 1px 5px rgba(0, 153, 255, 0.5)',
-                textShadow: '0px 0px 3px black'
-              },
-            }}
-          />
-          }
           <Tab label="Splits" value="tab_3" />
           <Tab label="Stats" value="tab_4" />
         </TabList>
@@ -791,7 +689,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         <TabPanel value="tab_1" sx={{flexGrow: 1, p: 4}}>
           <Typography variant="h5" sx={{mb: 1}}>About</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.description : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
-          {/* <Timer></Timer> */}
           <Typography variant="h5" sx={{mt: 2, mb: 1}}>Rules</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.rules : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           {counter && thread && counter.roles.includes('admin') && <Button variant='contained' onClick={lockThread}>{thread.locked ? "Unlock Thread" : "Lock Thread"}</Button>}
@@ -800,50 +697,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <Typography variant='h4'>Chats</Typography>
           <Box sx={{height: '70vh'}}>
           {chatsMemo}
-          </Box>
-        </TabPanel>
-        {(!counter || (counter && !counter.roles.includes('contestant'))) &&
-        <TabPanel value="tab_teams" sx={{flexGrow: 1}}>
-          <Typography variant='h4'>Teams</Typography>
-          {(!counter || (counter && !counter.roles.includes('counter'))) && <Badge badgeContent={1} color="error">
-          <Box display="flex" alignItems="center" sx={{p: 2, border: '1px solid', borderColor: 'warning.main'}}>
-            <Box component={InfoOutlined} sx={{ fontSize: 24, color: 'info.main', mr: 1 }} />
-            <Typography variant="body1">
-              {!counter && <>It looks you aren't signed up to countGG. Sign in using the login link above to join a team.</>}
-              {counter && !counter.roles.includes('counter') && <>Your registration is not complete. Once you finish registration, you'll be able to join a team.</>}
-            </Typography>
-          </Box></Badge>}
-          {counter && !counter.roles.includes('contestant') &&
-          <Badge badgeContent={1} color="error">
-          <Box display="flex" alignItems="center" sx={{p: 2, border: '1px solid', borderColor: 'warning.main'}}>
-            <Box component={InfoOutlined} sx={{ fontSize: 24, color: 'info.main', mr: 1 }} />
-            <Typography variant="body1">
-              To join a team, you need to agree to the rules of the Count Allegiance.{' '}
-              <Link href="/contest" underline="always">
-                Click here
-              </Link>{' '}
-              to join.
-            </Typography>
-          </Box></Badge>
-          }
-          {/* <April2023SignupPage></April2023SignupPage> */}
-        </TabPanel>}
-        <TabPanel value="tab_blaze" sx={{height: 'fill-available', p: 0}}>
-        <Box sx={{display: 'flex', flexDirection: 'column', width: '100%', height: '100%'}}>
-            <April2023SignupPage fullPage={false}></April2023SignupPage>
-            <TerminalController></TerminalController>
-          </Box>
-        </TabPanel>
-        <TabPanel value="tab_radiant" sx={{height: 'fill-available', p: 0}}>
-          <Box sx={{display: 'flex', flexDirection: 'column', width: '100%', height: '100%'}}>
-            <April2023SignupPage fullPage={false}></April2023SignupPage>
-            <TerminalController></TerminalController>
-          </Box>
-        </TabPanel>
-        <TabPanel value="tab_wave" sx={{height: 'fill-available', p: 0}}>
-        <Box sx={{display: 'flex', flexDirection: 'column', width: '100%', height: '100%'}}>
-            <April2023SignupPage fullPage={false}></April2023SignupPage>
-            <TerminalController></TerminalController>
           </Box>
         </TabPanel>
         <TabPanel value="tab_3" sx={{flexGrow: 1}}>
@@ -856,11 +709,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           {counter && (!counter.lastRob || (counter.lastRob && ((parseFloat(counter.lastRob) < moment().tz('America/New_York').startOf('day').unix() * 1000)))) && <Button variant="contained" onClick={() => openRobConfirm()}>
             Rob
           </Button>}
-          <ConfirmDialog
-            open={robOpen}
-            handleCancel={() => robCancel()}
-            handleConfirm={() => robConfirm()}
-          />
           </>}
           {dailyHOC && <DailyHOCTable dailyHOC={dailyHOC} name={'Daily Leaderboard'} countName={'Counts'}></DailyHOCTable>}
           {/* {dailyRobs && <DailyRobTable ></DailyRobTable>} */}
@@ -891,6 +739,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             <Box sx={{display: 'flex', flexDirection: 'column', minHeight: 500, height: 'calc(100vh - 65px)', overflowY: 'auto', bgcolor: 'background.paper'}}>
             {headerMemo}
               {sidebarMemo}
+              {robConfirmMemo}
               </Box>
               </Grid>
         </Grid>

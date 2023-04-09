@@ -41,7 +41,6 @@ import { April2023SignupPage } from './pages/April2023SignupPage';
 
 function App() {
   const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, allegiance, setAllegiance } = useFetchUser();
-  // const { counter, loading, setCounter, allegiance, setAllegiance } = useCounterConfig();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light');
 

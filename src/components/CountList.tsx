@@ -520,12 +520,6 @@ const CountList = memo((props: any) => {
               };
             }
 
-            // if ((prevHour === hour || !prevHour) && index !== props.recentCounts.length - 1) {
-            //   countsByDayAndHour[key].showHourBar = true;
-            // } else {
-            //   countsByDayAndHour[key].showHourBar = false;
-            // }
-
             if ((prevKey !== key || !prevKey || index === props.recentCounts.length - 1) && countsByDayAndHour[key].showHourBar !== false) {
               if(props.user && props.user.pref_load_from_bottom && index === 0) {
                 countsByDayAndHour[key].showHourBar = false;
@@ -535,13 +529,6 @@ const CountList = memo((props: any) => {
                 countsByDayAndHour[key].showHourBar = true;
               }
             } 
-            // else if(props.user && props.user.pref_load_from_bottom && index === 0) {
-            //   console.log("Yepper");
-            //   countsByDayAndHour[key].showHourBar = false;
-            // }
-            // else if(index === props.recentCounts.length - 1) {
-            //   countsByDayAndHour[key].showHourBar = false;
-            // }
         
             countsByDayAndHour[key].counts.push(count);
         
@@ -569,44 +556,12 @@ const CountList = memo((props: any) => {
                     );
                   }
                 })}
-                {/* {shouldShowHourBar && (
-                  <HourBar label={`${day} at ${hour}:00`} hour={hour} />
-                )} */}
-                {/* {isToday && !shouldShowHourBar && (
-                  <HourBar label="Today" hour={day} />
-                )}
-                {isYesterday && !shouldShowHourBar && (
-                  <HourBar label="Yesterday" hour={day} />
-                )}
-                {!isToday && !isYesterday && !shouldShowHourBar && (
-                  <HourBar label={day} hour={day} />
-                )} */}
                 {(!props.user || (props.user && !props.user.pref_load_from_bottom)) && shouldShowHourBar && (
                   <HourBar label={day} />
                 )}
               </div>
             );
           });
-      //     return (
-      //       <Box sx={{maxWidth: '100%', margin: 'initial',}}>
-      //         {/* {props.recentCounts.map(count => {
-      //           const contextMatch = props.context && props.context === count.uuid;
-      //           const ref = contextMatch ? contextRef : null;
-      //           return (
-      //             <Count user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
-      //           );
-      //         })} */}
-      //       </Box>
-      //     ); 
-      // } else {
-      //   return (<Box sx={{maxWidth: '100%', margin: 'auto'}}>{props.recentCounts.map(count => {
-      //     const contextMatch = props.context && props.context === count.uuid;
-      //     const ref = contextMatch ? contextRef : null;
-      //     return (
-      //       <CountMobile user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
-      //     );
-      //   })}</Box>); 
-      // }
       }, [props.recentCounts, cachedCounters, isDesktop]);
 
       const [submitHeight, setSubmitHeight] = useState(76);
@@ -648,10 +603,8 @@ const CountList = memo((props: any) => {
             <Box ref={boxRef} onScroll={handleScroll} sx={{ height: submitRef.current ? `calc(100% - ${submitHeight}px)` : 'calc(100% - 76px)', flexGrow: 1, bgcolor: 'background.paper', overflow: 'auto', position: 'relative' }}>
               <div ref={messagesEndRef}></div>
                     {countsMemo}
-                    
                 </Box>
                 {scrollDownMemo}
-                
                 </>
             )
 }

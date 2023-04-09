@@ -26,7 +26,7 @@ export const ThreadsPage = () => {
         <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
             <Typography variant="h4">All Threads</Typography>
             <Box sx={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center'}}>
-            <ThreadCard title={"Main Thread"} description={"The simplest, yet largest thread on countGG. 1, 2, 3..."} href={`/thread/main`} color1={'#9be15d'} color2={'#00e3ae'}></ThreadCard>
+            <ThreadCard title={"Main Thread"} description={"The simplest thread on countGG. 1, 2, 3..."} href={`/thread/main`} color1={'#9be15d'} color2={'#00e3ae'}></ThreadCard>
             <ThreadCard title={"Test Thread"} description={"Test out anything here! Spam, practice, or anything."} href={`/thread/test`} color1={'#fc00ff'} color2={'#00dbde'}></ThreadCard>
             <ThreadCard title={"Letters"} description={"Count by English letters!"} href={`/thread/letters`} color1={'#ff9966'} color2={'#ff5e62'}></ThreadCard>
             <ThreadCard title={"Slow"} description={"You can only count once an hour..."} href={`/thread/slow`} color1={'#3a1c71'} color2={'#d76d77'}></ThreadCard>

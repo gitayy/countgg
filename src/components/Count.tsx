@@ -6,7 +6,7 @@ import { Counter } from "../utils/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
 import { SentimentVerySatisfied } from '@mui/icons-material';
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Picker from '@emoji-mart/react'; // works in @latest
 import { custom_emojis } from "../utils/custom_emojis";
 import ReactMarkdown from 'react-markdown';
@@ -52,6 +52,8 @@ const Count = memo((props: any) => {
   if(props.user && props.user.pref_time_since_last_count === false) {
     props.post.timeSinceLastCount = props.post.timeSinceLastPost;
   }
+
+  const navigate = useNavigate();
 
   // const isLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
   const theme = useTheme();
@@ -118,7 +120,7 @@ const Count = memo((props: any) => {
   
   const anchorRef = useRef(null);
 
-  const teamEmoji = renderedCounter.roles.includes('blaze') ? '🔥' : renderedCounter.roles.includes('radiant') ? '⭐' : renderedCounter.roles.includes('wave') ? '🌊' : '';
+  // const teamEmoji = renderedCounter.roles.includes('blaze') ? '🔥' : renderedCounter.roles.includes('radiant') ? '⭐' : renderedCounter.roles.includes('wave') ? '🌊' : '';
   
   const components = {
     p: ('span' as any),
@@ -137,7 +139,7 @@ const Count = memo((props: any) => {
               <Grid item xs={12}>
                 <Grid container sx={{width: '95%'}}>
                   <Grid item xs={12} sx={{color: 'text.primary', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                  <Link fontSize={9} href={url} underline={'hover'} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textAlign: 'right'}} variant="caption" color="textSecondary">{formatDate(parseInt(props.post.timestamp))} {props.post.latency && <> (<Typography component={'span'} fontSize={9} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography>)</>}</Link>
+                  <Link fontSize={9} onClick={(e) => {e.preventDefault();navigate(url);}} href={url} underline={'hover'} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textAlign: 'right'}} variant="caption" color="textSecondary">{formatDate(parseInt(props.post.timestamp))} {props.post.latency && <> (<Typography component={'span'} fontSize={9} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography>)</>}</Link>
                   <Box sx={{ textAlign: 'left', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', ...(hoursSinceLastPost > 9 && {scale: '0.75'})}}>
                   {/* {props.post.latency && <Box sx={{display: 'flex', justifyContent: 'center', width: '100%', textAlign: 'center'}}><Typography fontFamily={'Verdana'} fontSize={10} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography></Box>} */}
                   {/* {props.post.latency && <Box sx={{textAlign: 'left'}}><Typography fontFamily={'Verdana'} fontSize={10} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography></Box>} */}
@@ -165,7 +167,7 @@ const Count = memo((props: any) => {
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end' }}>
               <Typography component="span" variant="body1" fontFamily={'Verdana'} fontSize={14} color={"text.primary"} sx={{whiteSpace: 'pre-wrap', mr: 1}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment.startsWith('\n') ? `\u00A0${props.post.comment}` : props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography fontFamily={'Verdana'} fontSize={14} component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
           <Typography fontSize={13} fontFamily={'Verdana'} component="span">
-              <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{teamEmoji.length > 0 && teamEmoji}{renderedCounter.name}{teamEmoji.length > 0 && teamEmoji}</Link>&nbsp;
+              <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${props.post.authorUUID}`);}} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
             </Typography>
             </Box>
             {Object.entries(props.post.reactions).length > 0 && <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}>
@@ -236,7 +238,7 @@ const Count = memo((props: any) => {
                       <Grid container sx={{display: 'flex'}}>
                         <Grid item xs={2} sx={{margin: 'auto', justifyContent: 'center', display: 'grid', marginTop: 0}}>
                         <Box sx={{p: props.boxPadding}}>
-                          <Link href={`/counter/${props.post.authorUUID}`}>
+                          <Link href={`/counter/${props.post.authorUUID}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${props.post.authorUUID}`);}}>
                           <CardMedia
                               component="img"
                               className={renderedCounter.cardBorderStyle}
@@ -268,7 +270,7 @@ const Count = memo((props: any) => {
                             </Grid>
                             <Grid item xs={12} sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                               <Box sx={{textAlign: 'left'}}></Box>
-                              <Link href={url} underline={'hover'} sx={{ textAlign: 'right'}} variant="caption" color="textSecondary">{formatDate(parseInt(props.post.timestamp))}</Link>
+                              <Link onClick={(e) => {e.preventDefault();navigate(url);}} href={url} underline={'hover'} sx={{ textAlign: 'right'}} variant="caption" color="textSecondary">{formatDate(parseInt(props.post.timestamp))}</Link>
                             </Grid>
                           </Grid>
                         </Grid>
@@ -279,7 +281,7 @@ const Count = memo((props: any) => {
                 <CardContent sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, pb: 0, overflowWrap: 'anywhere', '&:last-child': {pb: '2px'} }}>
                         <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment.startsWith('\n') ? `\u00A0${props.post.comment}` : props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
                     <Typography variant="subtitle1" component="div">
-                        <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{teamEmoji.length > 0 && teamEmoji}{renderedCounter.name}{teamEmoji.length > 0 && teamEmoji}</Link>&nbsp;
+                        <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${props.post.authorUUID}`);}} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
                       </Typography>
                       <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}>
                       {props.post.reactions && Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {

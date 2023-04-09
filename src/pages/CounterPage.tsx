@@ -129,7 +129,7 @@ import { UserContext } from '../utils/contexts/UserContext';
                   return <MenuItem key={stat} value={stat}>{stat}</MenuItem>
                 })}
                 </Select>
-                {loadedCounterStats && loadedCounterStats[statThread] && <>
+                {loadedCounterStats && loadedCounterStats[statThread] && loadedCounterStats[statThread]['posts'] && <>
                   <Typography sx={{mb: 2}} component={'div'}>Posts: {loadedCounterStats[statThread]['posts'].toLocaleString()}</Typography>
                   <Typography sx={{mb: 2}} component={'div'}>Counts: {loadedCounterStats[statThread]['counts'].toLocaleString()} ({(loadedCounterStats[statThread]['counts'] / loadedCounterStats[statThread]['posts']).toLocaleString(undefined, {style: 'percent'})})</Typography>
                   <Typography sx={{mb: 2}} component={'div'}>Stricken: {loadedCounterStats[statThread]['mistakes'].toLocaleString()} ({(loadedCounterStats[statThread]['mistakes'] / (loadedCounterStats[statThread]['mistakes'] + loadedCounterStats[statThread]['counts'])).toLocaleString(undefined, {style: 'percent'})})</Typography>

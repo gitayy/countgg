@@ -5,7 +5,7 @@ import { Counter } from "../utils/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
 import { SentimentVerySatisfied } from '@mui/icons-material';
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { custom_emojis } from "../utils/custom_emojis";
 import Picker from '@emoji-mart/react';
 import CountggLogo from '../assets/countgg-128.png'
@@ -54,6 +54,7 @@ const CountMobile = memo((props: any) => {
   const theme = useTheme();
   const { counter } = props;
   const location = useLocation();
+  const navigate = useNavigate();
 
   // check if pathname ends with the post UUID
   const isSameUuid = location.pathname.endsWith(props.post.uuid);
@@ -67,7 +68,7 @@ const CountMobile = memo((props: any) => {
   
   const renderedCounter = counter || uncachedCounter;
 
-  const teamEmoji = renderedCounter.roles.includes('blaze') ? '🔥' : renderedCounter.roles.includes('radiant') ? '⭐' : renderedCounter.roles.includes('wave') ? '🌊' : '';
+  // const teamEmoji = renderedCounter.roles.includes('blaze') ? '🔥' : renderedCounter.roles.includes('radiant') ? '⭐' : renderedCounter.roles.includes('wave') ? '🌊' : '';
 
   const hoursSinceLastCount = Math.floor(props.post.timeSinceLastCount / 3600000);
   const minutesSinceLastCount = Math.floor(props.post.timeSinceLastCount / 60000) % 60;
@@ -122,7 +123,7 @@ return (
                     <Grid container sx={{display: 'flex'}}>
                       <Grid item xs={2} sx={{ margin: 'auto', justifyContent: 'center', display: 'grid', marginTop: 0}}>
                       <Box sx={{p: props.boxPadding}}>
-                        <Link href={`/counter/${props.post.authorUUID}`}>
+                        <Link href={`/counter/${props.post.authorUUID}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${props.post.authorUUID}`);}}>
                         <CardMedia
                             component="img"
                             className={renderedCounter.cardBorderStyle}
@@ -136,11 +137,11 @@ return (
                       <Grid item xs={7}>
                         <Grid container>
                           <Grid item xs={12} sx={{color: 'text.primary'}}>
-                          <Link href={url} fontSize={9} underline={'hover'} sx={{ textAlign: 'right'}} variant="caption" color="textSecondary">{formatDate(parseInt(props.post.timestamp))}</Link>
+                          <Link onClick={(e) => {e.preventDefault();navigate(url);}} href={url} fontSize={9} underline={'hover'} sx={{ textAlign: 'right'}} variant="caption" color="textSecondary">{formatDate(parseInt(props.post.timestamp))}</Link>
                           </Grid>
                           <Grid item xs={12} sx={{}}>
                           <Typography fontSize={12} variant="subtitle1" color={renderedCounter.color} sx={{textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowX: 'hidden'}} component="div">
-                          <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} href={`/counter/${props.post.authorUUID}`}>{teamEmoji.length > 0 && teamEmoji}{renderedCounter.name}{teamEmoji.length > 0 && teamEmoji}</Link>&nbsp;
+                          <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${props.post.authorUUID}`);}} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.name}</Link>&nbsp;
                     </Typography>
                           </Grid>
                           </Grid>

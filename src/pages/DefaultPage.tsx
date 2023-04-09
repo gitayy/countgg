@@ -23,24 +23,20 @@ export const DefaultPage = () => {
   };
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
-  const [count, setCount] = useState(5);
-
-  const lol = user && user.inventory && allegiance ? (user.inventory.filter(item => item['name'] === 'Small Key').length === 0) : false
-  // console.log(user && user.inventory ? user.inventory.filter(item => item['name'] === 'Small Key') : 'Nope');
-  // console.log(user);
+  const [count, setCount] = useState(15);
 
   useEffect(() => {
     var testTimeout;
     const updateCount = () => {
       testTimeout = setTimeout(function() {
 
-      if(count < 9) {
+      if(count < 17) {
         setCount(prevCount => {
           return ((prevCount + 1) % 10 == 0 ? prevCount + 1 : prevCount + 1)
         });
       }
 
-    }, 400);
+    }, 700);
     };
 
     updateCount();
@@ -137,7 +133,7 @@ export const DefaultPage = () => {
             &nbsp;
             </Typography>
             <Typography variant="body1" component={'div'}>
-            The main thread is the heart of countGG, being the largest thread on the site. 
+            The main thread is the heart of countGG.
             </Typography>
             <Typography variant="body1" component={'div'}>
             &nbsp;
@@ -183,11 +179,10 @@ export const DefaultPage = () => {
         </Paper></Link>
         <Typography variant="body2" component={'div'} sx={{ textAlign: 'center', m: 1 }}>
           since February 27, 2023 — &nbsp;
-          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/about`} onClick={(e) => {e.preventDefault();navigate(`/about`);}}>About</Link> — &nbsp;
-          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/privacy-policy`} onClick={(e) => {e.preventDefault();navigate(`/privacy-policy`);}}>Privacy Policy</Link> — &nbsp;
-          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/contact-us`} onClick={(e) => {e.preventDefault();navigate(`/contact-us`);}}>Contact Us</Link> — &nbsp;
-          {user && counter && allegiance && lol && <><Typography sx={{cursor: 'pointer', color: 'inherit', textDecoration: 'none', '&:hover': { textDecoration: 'underline' }}} component={'span'} variant='body2' onClick={(e) => {e.preventDefault(); handleNotAKey()}}>Not a key</Typography> — &nbsp;</>}
-          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} component={'span'} href={`/`} onClick={(e) => {e.preventDefault();navigate(`/`);}}>countGG.com</Link>
+          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/about`} onClick={(e) => {e.preventDefault();navigate(`/about`);}}>About</Link> — &nbsp;
+          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/privacy-policy`} onClick={(e) => {e.preventDefault();navigate(`/privacy-policy`);}}>Privacy Policy</Link> — &nbsp;
+          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/contact-us`} onClick={(e) => {e.preventDefault();navigate(`/contact-us`);}}>Contact Us</Link> — &nbsp;
+          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/`} onClick={(e) => {e.preventDefault();navigate(`/`);}}>countGG.com</Link>
         </Typography>
       </Box>      
       </>

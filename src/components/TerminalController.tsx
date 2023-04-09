@@ -44,41 +44,13 @@ export const TerminalController = (props = {}) => {
       ld.push(<TerminalInput key={Math.random()}>{input}</TerminalInput>);
     if (['help', '-help', '--help', 'h', '-h', '--h'].includes(input.toLocaleLowerCase().trim())) {
       ld.push(
-      <TerminalOutput key={Math.random()}>hint</TerminalOutput>,
-      <TerminalOutput key={Math.random()}>-- GRANTS USER UNIQUE HINT</TerminalOutput>,
-      <TerminalOutput key={Math.random()}>question [number?]</TerminalOutput>,
-      <TerminalOutput key={Math.random()}>-- DISPLAYS CURRENT QUESTION</TerminalOutput>,
-      <TerminalOutput key={Math.random()}>answer &lt;answer&gt;</TerminalOutput>,
-      <TerminalOutput key={Math.random()}>-- SUBMITS ANSWER ATTEMPT. USERS MAY NOT ATTEMPT TWO QUESTIONS IN A ROW</TerminalOutput>,
+      <TerminalOutput key={Math.random()}>solve &lt;solution&gt;</TerminalOutput>,
+      <TerminalOutput key={Math.random()}>-- SUBMITS SOLUTION ATTEMPT</TerminalOutput>,
       <TerminalOutput key={Math.random()}>clear</TerminalOutput>,
       <TerminalOutput key={Math.random()}>-- CLEARS TERMINAL</TerminalOutput>,
       );
-    } else if (input.toLocaleLowerCase().trim() === 'hint') {
-      socket.emit('requestHint');
     } else if (input.toLocaleLowerCase().trim() === 'clear') {
       ld = defaultLines;
-    } else if (input.toLocaleLowerCase().startsWith('question') && allegiance) {
-      const match = input.match(/^question\s*(\d+)?$/i);
-      if (match) {
-        const questionIndex = match[1] ? parseInt(match[1]) - 1 : allegiance.val.q.qH.length - 1;
-        const question = allegiance.val.q.qH[questionIndex];
-        if (question) {
-          ld.push(<TerminalOutput key={Math.random()}>"{question}"</TerminalOutput>);
-        } else {
-          ld.push(<TerminalOutput key={Math.random()}>{`No question ${questionIndex + 1} found`}</TerminalOutput>);
-        }
-      } else {
-        ld.push(<TerminalOutput key={Math.random()}>{`Unrecognized question number: ${input}`}</TerminalOutput>);        
-      }
-    } else if(isAnswerAttempt && allegiance && counter) {
-      if(Date.now() < allegiance.val.q.tTA) {
-        ld.push(<TerminalOutput key={Math.random()}><span style={{color: 'red'}}>ERROR: MUST WAIT {allegiance.val.q.tTA - Date.now()} BEFORE NEXT ATTEMPT</span></TerminalOutput>);
-      } else if(counter.uuid === allegiance.val.q.lU) {
-        ld.push(<TerminalOutput key={Math.random()}><span style={{color: 'red'}}>ERROR: USER MAY NOT SUBMIT TWO ANSWERS IN A ROW</span></TerminalOutput>);
-      } else {
-        ld.push(<TerminalOutput key={Math.random()}>SUBMITTING ANSWER "{isAnswerAttempt[1].trim()}"</TerminalOutput>);
-        socket.emit('submitQuizAnswer', isAnswerAttempt[1].trim());
-      }
     } else if(isSolveAttempt && allegiance && counter && counter.roles.includes('emboldened') && !counter.roles.includes('ascended')) {
         ld.push(<TerminalOutput key={Math.random()}>SUBMITTING SOLUTION "{isSolveAttempt[1].trim()}"</TerminalOutput>);
         socket.emit('submitSolve', isSolveAttempt[1].trim());

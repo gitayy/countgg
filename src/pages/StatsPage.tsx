@@ -17,8 +17,6 @@ import { UserContext } from '../utils/contexts/UserContext';
 
 export const StatsPage = () => {
   const { counter, loading } = useContext(UserContext);
-  // const [counters, setCounters] = useState<Counter[]>([]);
-  // const [countersLoading, setCountersLoading] = useState<boolean>(true);
   const [page, setPage] = useState<number|undefined>();
   const [count, setCount] = useState(0);
   const [urlCheck, setUrlCheck] = useState(false);
@@ -121,7 +119,7 @@ export const StatsPage = () => {
         {stats && selectedThread && <>
           <TabContext value={tabValue}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-        <TabList onChange={handleTabChange} aria-label="Live Game Tabs">
+        <TabList onChange={handleTabChange} variant={'scrollable'} allowScrollButtonsMobile aria-label="Live Game Tabs">
           <Tab label="Leaderboard" value="tab_0" />
           {stats['gets'] && Object.keys(stats['gets']).length > 0 && <Tab label="Gets" value="tab_1" />}
           {stats['assists'] && Object.keys(stats['assists']).length > 0 && <Tab label="Assists" value="tab_2" />}
