@@ -126,9 +126,9 @@ export const DefaultPage = () => {
             />
           </Grid>
           <Grid item xs={12} md={6}>
-            <Link variant="h3" underline={'hover'} color={'text.primary'} sx={{ mb: 2 }}>
+            <Typography variant="h3" color={'text.primary'} sx={{ mb: 2, '&:hover': {textDecoration: 'underline'} }}>
               Main Thread
-            </Link>
+            </Typography>
             <Typography variant="body1" component={'div'}>
             &nbsp;
             </Typography>
@@ -159,9 +159,9 @@ export const DefaultPage = () => {
             />
         </Grid>
         <Grid item xs={12} md={6}>
-          <Link variant="h3" underline={'hover'} color={'text.primary'} sx={{ mb: 2 }}>
+          <Typography variant="h3" color={'text.primary'} sx={{ mb: 2, '&:hover': {textDecoration: 'underline'} }}>
             Side Threads
-          </Link>
+          </Typography>
           <Typography variant="body1" component={'div'}>
             &nbsp;
           </Typography>
