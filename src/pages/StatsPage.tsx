@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { Box, FormControl, MenuItem, Select, SelectChangeEvent, Tab, Theme, Typography, useMediaQuery } from '@mui/material';
+import { Box, FormControl, IconButton, InputAdornment, MenuItem, Select, SelectChangeEvent, Tab, TextField, Theme, Typography, useMediaQuery } from '@mui/material';
 import { Loading } from '../components/Loading';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getCountersPage, getThreadStats } from '../utils/api';
@@ -14,6 +14,9 @@ import TabPanel from '@mui/lab/TabPanel';
 import { useFetchAllThreads } from '../utils/hooks/useFetchAllThreads';
 import { SpeedTable } from '../components/SpeedTable';
 import { UserContext } from '../utils/contexts/UserContext';
+import { DatePicker } from '@mui/x-date-pickers';
+import moment from 'moment-timezone';
+import ClearIcon from "@mui/icons-material/Clear";
 
 export const StatsPage = () => {
   const { counter, loading } = useContext(UserContext);
@@ -25,6 +28,20 @@ export const StatsPage = () => {
   const isMounted = useIsMounted();
   const navigate = useNavigate();
   const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
+
+  const [selectedDate, setSelectedDate] = useState<any | null>(null);
+
+  const disableDates = (date: any) => {
+    const minDate = moment('2023-02-22').tz('America/New_York').startOf('day').unix()
+    const maxDate = moment().tz('America/New_York').startOf('day').unix()
+    return date.unix() < minDate || date.unix() >= maxDate;
+  };
+
+  const disableYears = (date: any) => {
+    const minDate = moment('2023-01-01').tz('America/New_York').startOf('day').unix()
+    const maxDate = moment().tz('America/New_York').startOf('day').unix()
+    return date.unix() < minDate || date.unix() >= maxDate;
+  };
 
   const location = useLocation();
     useEffect(() => {
@@ -61,7 +78,10 @@ export const StatsPage = () => {
     async function fetchData() {
       if(page) {
         setStatsLoading(true);
-        getThreadStats(name)
+        let dateStr;
+        if(selectedDate && !disableDates(selectedDate)) {dateStr = selectedDate._d.toISOString().slice(0,10);}
+        // if(selectedDate && !disableDates(selectedDate)) {console.log("Heyo this date looks good:", selectedDate);} else if(selectedDate) {console.log("This date looks BAD:", selectedDate);}
+        getThreadStats(name, dateStr)
         .then(({ data }) => {
           if(isMounted.current) {
             for (const counter of data.counters) {
@@ -78,11 +98,7 @@ export const StatsPage = () => {
       }
       }
     if(urlCheck && page && name) {fetchData();}
-  }, [urlCheck, page, name]);
-
-  function handleChangePage(event, value) {
-    setPage(value);
-  }
+  }, [urlCheck, page, name, selectedDate]);
 
   const [tabValue, setTabValue] = useState('tab_0');
 
@@ -100,12 +116,18 @@ export const StatsPage = () => {
       
     };
 
+    const handleClearDate = () => {
+      setSelectedDate(null);
+    };
+
   if(!loading && !allThreadsLoading) {
 
     return (
       <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
-        <FormControl variant="standard" sx={{mb: 1}}>
-            {uuid.length == 0 && <Typography>Please select a thread.</Typography>}
+        <Box sx={{mb: 1, p: 2, pl: 0}}>
+        <FormControl variant="standard" sx={{mr: 4}}>
+            {/* {uuid.length == 0 && <Typography>Please select a thread.</Typography>} */}
+            <Typography>Please select a thread:</Typography>
         <Select
           value={selectedThread ? selectedThread.uuid : ''}
           onChange={handleThreadSelection}
@@ -116,6 +138,35 @@ export const StatsPage = () => {
           ))}
         </Select>
       </FormControl>
+        <DatePicker
+          label="Select a Date"
+          value={selectedDate}
+          onChange={(date) => setSelectedDate(date)}
+          // shouldDisableDate={disableDates}
+          // shouldDisableYear={disableYears}
+          minDate={new Date(moment('2023-02-23').tz('America/New_York').startOf('day').unix() * 1000 - 10000)}
+          maxDate={new Date(moment().tz('America/New_York').startOf('day').unix() * 1000)}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              InputProps={{
+                endAdornment: (
+                  <>
+                    {params?.InputProps?.endAdornment}
+                    {selectedDate && (
+                      <InputAdornment position="end">
+                        <IconButton onClick={handleClearDate}>
+                          <ClearIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    )}
+                  </>
+                ),
+              }}
+            />
+          )}
+        />
+      </Box>
         {stats && selectedThread && <>
           <TabContext value={tabValue}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
