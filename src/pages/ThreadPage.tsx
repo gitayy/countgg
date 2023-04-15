@@ -24,7 +24,6 @@ import { useFavicon } from '../utils/hooks/useFavicon';
 import Timer from '../components/Timer';
 import { ContestPage } from './ContestPage';
 import { InfoOutlined } from '@mui/icons-material';
-import { April2023SignupPage } from './April2023SignupPage';
 import moment from 'moment-timezone';
 import { TerminalController } from '../components/TerminalController';
 import { DailyRobTable } from '../components/DailyRobTable';
@@ -687,6 +686,13 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       </Box>
         <Box sx={{flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', overflowY: 'scroll'}}>
         <TabPanel value="tab_1" sx={{flexGrow: 1, p: 4}}>
+          {thread && counter && thread.countBans && thread.countBans.includes(counter.uuid) && 
+          <Box display="flex" alignItems="center" sx={{p: 2, border: '1px solid', borderColor: 'warning.main'}}>
+          <Box component={InfoOutlined} sx={{ fontSize: 24, color: 'info.main', mr: 1 }} />
+          <Typography variant="body1">
+            You can no longer count in this thread. You can still post, but any count attempts will be stricken.
+          </Typography>
+        </Box>}
           <Typography variant="h5" sx={{mb: 1}}>About</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.description : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           <Typography variant="h5" sx={{mt: 2, mb: 1}}>Rules</Typography>

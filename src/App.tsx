@@ -37,7 +37,7 @@ import BlogPage from './pages/BlogPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { AchievementPage } from './pages/AchievementPage';
 import { ContestPage } from './pages/ContestPage';
-import { April2023SignupPage } from './pages/April2023SignupPage';
+import { AdminAchievementPage } from './pages/AdminAchievementPage';
 
 function App() {
   const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, allegiance, setAllegiance } = useFetchUser();
@@ -185,7 +185,6 @@ function App() {
   }, []);
 
   return (
-      // (user) ? (
         <>
         <LocalizationProvider dateAdapter={AdapterMoment}>
         <ColorModeContext.Provider value={colorMode}>
@@ -205,6 +204,7 @@ function App() {
             {counter && counter.roles.includes('admin') && <Route path="/admin" element={<AdminPage />} />}
             {counter && counter.roles.includes('admin') && <Route path="/admin/threads" element={<AdminThreadPage />} />}
             {counter && counter.roles.includes('admin') && <Route path="/admin/approve" element={<AdminApprovePage />} />}
+            {counter && counter.roles.includes('admin') && <Route path="/admin/achievements" element={<AdminAchievementPage />} />}
             {counter && counter.roles.includes('discord_verified') && <Route path="/register" element={<RegisterPage />} />}
             <Route path="/" element={<DefaultPage />} />
             <Route path="/counter/:counterId" element={<CounterPage />} />
@@ -222,7 +222,6 @@ function App() {
               <Route index={true} element={<AchievementsPage />} />
               <Route path="/achievements/:achievementId" element={<AchievementPage />} />
             </Route>
-            <Route path="/contest" element={<April2023SignupPage />} />
             <Route path="/contest-rules" element={<ContestPage />} />
             <Route path="/rules" element={<RulesPage />} />
             <Route path="/privacy-policy" element={<PrivacyPage />} />
@@ -237,52 +236,6 @@ function App() {
           </ColorModeContext.Provider>
           </LocalizationProvider>
         </>
-      // ) : (
-      //   <>
-      //   <LocalizationProvider dateAdapter={AdapterMoment}>
-      //   <ColorModeContext.Provider value={colorMode}>
-      //   <ThemeProvider theme={theme}>
-      //   <CssBaseline />
-      //   <UserContext.Provider
-      // value={{user, userLoading, loadedSiteVer, setLoadedSiteVer}}
-      // >
-      //   <CounterContext.Provider
-      // value={{counter, loading}}>
-      //     <Routes>
-      //       <Route path="/*" element={<Sidebar />} />
-      //     </Routes>
-      //   <Routes>
-      //     <Route path="*" element={<div>Page Not Found</div>} />
-      //       <Route path="/" element={<DefaultPage />} />
-      //       <Route path="/counter/:counterId" element={<CounterPage />} />
-      //       <Route path="/blog/:blog" element={<BlogPage />} />
-      //       <Route path="/stats" element={<StatsPage />} />
-      //       <Route path="/threads" element={<ThreadsPage />} />
-      //       <Route path="/thread/:thread_name">
-      //         <Route index={true} element={<ThreadPage />} />
-      //         <Route path="/thread/:thread_name/:count_uuid" element={<IndividualCountPage />} />
-      //       </Route>
-      //       <Route path="/counters" element={<CountersPage />} />
-      //       <Route path="/uuid" element={<UuidPage />} />
-      //       <Route path="/post-finder" element={<PostFinderPage />} />
-      //       <Route path="/achievements">
-      //         <Route index={true} element={<AchievementsPage />} />
-      //         <Route path="/achievements/:achievementId" element={<AchievementPage />} />
-      //       </Route>
-      //       <Route path="/contest" element={<April2023SignupPage />} />
-      //       <Route path="/contest-rules" element={<ContestPage />} />
-      //       <Route path="/rules" element={<RulesPage />} />
-      //       <Route path="/privacy-policy" element={<PrivacyPage />} />
-      //       <Route path="/about" element={<AboutPage />} />
-      //       <Route path="/contact-us" element={<AboutPage />} />
-      //   </Routes>
-      //   </CounterContext.Provider>
-      //   </UserContext.Provider>
-      //   </ThemeProvider>
-      //   </ColorModeContext.Provider>
-      //   </LocalizationProvider>
-      //   </>
-      // )
   );
 }
 export default App;

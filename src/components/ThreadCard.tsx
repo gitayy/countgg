@@ -16,7 +16,7 @@ export const ThreadCard = ({title, description, href, color1, color2}) => {
           navigate(href);
         }}>
         <Box sx={{cursor: 'pointer', display: 'inline', maxWidth: '100%'}}>
-        <Card sx={styles.card}>
+        <Card className="threadcard" sx={styles.card}>
       <Box sx={styles.media} />
       <CardContent>
         <Typography sx={styles.title}>{title}</Typography>

@@ -23,6 +23,8 @@ import { UserContext } from '../utils/contexts/UserContext';
     const [autoValidated, setAutoValidated] = useState(false);
     const [moderators, setModerators] = useState('');
     const [verifiers, setVerifiers] = useState('');
+    const [countBans, setCountBans] = useState('');
+    const [postBans, setPostBans] = useState('');
     const [resetOnMistakes, setResetOnMistakes] = useState(false);
     const [allowDoublePosts, setAllowDoublePosts] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -38,14 +40,16 @@ import { UserContext } from '../utils/contexts/UserContext';
       setRules(selectedThread.rules);
       setFirstValidCount(selectedThread.firstValidCount);
       setValidationType(selectedThread.validationType);
-      setVisibleTo(selectedThread.visibleTo.join(','));
-      setUpdatableBy(selectedThread.updatableBy.join(','));
+      setVisibleTo(selectedThread.visibleTo ? selectedThread.visibleTo.join(',') : '');
+      setUpdatableBy(selectedThread.updatableBy ? selectedThread.updatableBy.join(',') : '');
       setLocked(selectedThread.locked);
       setAutoValidated(selectedThread.autoValidated);
       setResetOnMistakes(selectedThread.resetOnMistakes);
       setAllowDoublePosts(selectedThread.allowDoublePosts);
-      setModerators(selectedThread.moderators.join(','));
-      setVerifiers(selectedThread.verifiers.join(','));
+      setModerators(selectedThread.moderators ? selectedThread.moderators.join(',') : '');
+      setVerifiers(selectedThread.verifiers ? selectedThread.verifiers.join(',') : '');
+      setCountBans(selectedThread.countBans ? selectedThread.countBans.join(',') : '');
+      setPostBans(selectedThread.postBans ? selectedThread.postBans.join(',') : '');
     }, [selectedThread]);
 
     const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
@@ -58,7 +62,7 @@ import { UserContext } from '../utils/contexts/UserContext';
     const sendValues = async () => {
       if(name) {
         try {
-        const res = await adminCreateThread(name, title, description, rules, firstValidCount, validationType, visibleTo, updatableBy, locked, autoValidated, resetOnMistakes, allowDoublePosts, moderators, verifiers, uuid);
+        const res = await adminCreateThread(name, title, description, rules, firstValidCount, validationType, visibleTo, updatableBy, locked, autoValidated, resetOnMistakes, allowDoublePosts, moderators, verifiers, countBans, postBans, uuid);
           if(res.status == 201) {
             setSnackbarSeverity('success');
             setSnackbarOpen(true)
@@ -214,6 +218,28 @@ import { UserContext } from '../utils/contexts/UserContext';
                   defaultValue={verifiers}
                   value={verifiers}
                   id="verifiers"
+                />
+              </FormControl>
+              <FormControl variant="standard" sx={{}} >
+                <InputLabel htmlFor="countBans" shrink>
+                Count Bans
+                </InputLabel>
+                <Input
+                  onInput={e => setCountBans((e.target as HTMLInputElement).value)}
+                  defaultValue={countBans}
+                  value={countBans}
+                  id="countBans"
+                />
+              </FormControl>
+              <FormControl variant="standard" sx={{}} >
+                <InputLabel htmlFor="postBans" shrink>
+                Post Bans
+                </InputLabel>
+                <Input
+                  onInput={e => setPostBans((e.target as HTMLInputElement).value)}
+                  defaultValue={postBans}
+                  value={postBans}
+                  id="postBans"
                 />
               </FormControl>
               <FormControlLabel

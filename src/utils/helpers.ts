@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { createElement } from 'react';
 import { validate as uuid_validate } from 'uuid';
 
-export const site_version = "v1.2.2";
+export const site_version = "v1.2.3";
 export var loaded_site_version;
 export function updateSiteVer(siteVer: string) {
   loaded_site_version = siteVer;
@@ -100,7 +100,20 @@ export const modalStyle = {
   overflowY: 'scroll',
 };
 
-export const cachedCounters = {} as { [key: string]: Counter };
+export const cachedCounters = {'[SYSTEM]': {
+  id: -1,
+  uuid: '[SYSTEM]',
+  name: '[SYSTEM]',
+  roles: ['counter'], 
+  title: 'SYSTEM', 
+  discordId: '0',
+  pronouns: ['IT', 'IT', 'IT', 'IT'],
+  avatar: '0',
+  cardStyle: 'card_default', 
+  cardBorderStyle: 'no_border_circle', 
+  xp: 0,
+  color: '#222222', 
+}} as { [key: string]: Counter };
 
 export const addCounterToCache = (counter: Counter) => {
   const { uuid } = counter;
@@ -125,6 +138,23 @@ export const formatDate = (timestamp: number) => {
 
   // format date in standard format
   return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+}
+
+export const formatDateWithMilliseconds = (timestamp: number) => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  // check if date is today or yesterday
+  if(date.toDateString() === now.toDateString()) {
+    return `Today at ${date.toLocaleTimeString(undefined, {hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3})}`;
+  } else if(date.toDateString() === yesterday.toDateString()) {
+    return `Yesterday at ${date.toLocaleTimeString(undefined, {hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3})}`;
+  }
+
+  // format date in standard format
+  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString(undefined, {hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3})}`;
 }
 
 export const formatDateExact = (timestamp: number) => {

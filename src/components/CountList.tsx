@@ -414,6 +414,11 @@ const CountList = memo((props: any) => {
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
                 <Typography color="text.primary" variant="body1">You are banned. You can't post until you've been unbanned.</Typography>
             </Box>)
+        } else if(props.counter && props.thread.postBans && props.thread.postBans.includes(props.counter.uuid)) {
+          return (
+            <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
+                <Typography color="text.primary" variant="body1">You are banned from this thread.</Typography>
+            </Box>)
         } else if(isDesktop && props.counter && props.counter.roles.includes("counter") && props.thread && props.thread.locked === false) {
         return (
           <Box ref={submitRef} sx={{maxWidth: '100%', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, padding: '0.5', background: alpha(theme.palette.background.paper, 0.9)}}>

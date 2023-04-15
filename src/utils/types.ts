@@ -79,6 +79,8 @@ export type ThreadType = {
   allowDoublePosts: boolean;
   moderators: string[];
   verifiers: string[];
+  countBans: string[];
+  postBans: string[];
 };
 
 export type AchievementType = {

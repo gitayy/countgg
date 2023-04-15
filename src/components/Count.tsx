@@ -1,7 +1,7 @@
 import { Box, CardMedia, CardContent, Typography, Grid,  IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link, Popover, useTheme, Table, Modal } from "@mui/material";
 import { memo, useRef, useState } from "react";
 import CountggLogo from '../assets/countgg-128.png'
-import { defaultCounter, EmojiTest, formatDate, getReplyColorName } from "../utils/helpers";
+import { defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName } from "../utils/helpers";
 import { Counter } from "../utils/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
@@ -139,7 +139,7 @@ const Count = memo((props: any) => {
               <Grid item xs={12}>
                 <Grid container sx={{width: '95%'}}>
                   <Grid item xs={12} sx={{color: 'text.primary', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                  <Link fontSize={9} onClick={(e) => {e.preventDefault();navigate(url);}} href={url} underline={'hover'} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textAlign: 'right'}} variant="caption" color="textSecondary">{formatDate(parseInt(props.post.timestamp))} {props.post.latency && <> (<Typography component={'span'} fontSize={9} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography>)</>}</Link>
+                  <Link fontSize={9} onClick={(e) => {e.preventDefault();navigate(url);}} href={url} underline={'hover'} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textAlign: 'right'}} variant="caption" color="textSecondary">{props.thread && props.thread.name === 'bars' ? formatDateWithMilliseconds(parseInt(props.post.timestamp)) : formatDate(parseInt(props.post.timestamp))} {props.post.latency && <> (<Typography component={'span'} fontSize={9} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography>)</>}</Link>
                   <Box sx={{ textAlign: 'left', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', ...(hoursSinceLastPost > 9 && {scale: '0.75'})}}>
                   {/* {props.post.latency && <Box sx={{display: 'flex', justifyContent: 'center', width: '100%', textAlign: 'center'}}><Typography fontFamily={'Verdana'} fontSize={10} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography></Box>} */}
                   {/* {props.post.latency && <Box sx={{textAlign: 'left'}}><Typography fontFamily={'Verdana'} fontSize={10} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography></Box>} */}
@@ -213,16 +213,13 @@ const Count = memo((props: any) => {
         <Button sx={{fontWeight: "bold"}} autoFocus onClick={handleConfirm}>Confirm</Button>
       </DialogActions>
     </Dialog>
-    {/* <Dialog open={openReax} onClose={handleCloseReax}>
-    <DialogContent>
-      <Typography variant="h5">Reactions</Typography>
-      <Typography variant="body1">
-        This is where you can put your help text.
-      </Typography></DialogContent>
-    </Dialog> */}
     </Box>
     }
     </Grid>
+    {props.post.chance && props.post.roll && <Grid item xs={12}>
+              <Box sx={{display: 'flex', justifyContent: 'left', width: '100%', textAlign: 'center'}}><Typography fontSize={9} sx={{width: 'fit-content', color: 'text.secondary'}} title="RNG roll versus the odds of it happening. These aren't stored permanently." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.roll} {props.post.roll > props.post.chance ? `>` : `<` } {props.post.chance}</Typography></Box>
+              </Grid>
+              }
     </Grid>
     </Box>
     </Box>
@@ -270,7 +267,7 @@ const Count = memo((props: any) => {
                             </Grid>
                             <Grid item xs={12} sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                               <Box sx={{textAlign: 'left'}}></Box>
-                              <Link onClick={(e) => {e.preventDefault();navigate(url);}} href={url} underline={'hover'} sx={{ textAlign: 'right'}} variant="caption" color="textSecondary">{formatDate(parseInt(props.post.timestamp))}</Link>
+                              <Link onClick={(e) => {e.preventDefault();navigate(url);}} href={url} underline={'hover'} sx={{ textAlign: 'right'}} variant="caption" color="textSecondary">{props.thread && props.thread.name === 'bars' ? formatDateWithMilliseconds(parseInt(props.post.timestamp)) : formatDate(parseInt(props.post.timestamp))}</Link>
                             </Grid>
                           </Grid>
                         </Grid>
@@ -339,16 +336,13 @@ const Count = memo((props: any) => {
                   <Button sx={{fontWeight: "bold"}} autoFocus onClick={handleConfirm}>Confirm</Button>
                 </DialogActions>
               </Dialog>
-              {/* <Dialog open={openReax} onClose={handleCloseReax}>
-              <DialogContent>
-                <Typography variant="h5">Reactions</Typography>
-                <Typography variant="body1">
-                  This is where you can put your help text.
-                </Typography></DialogContent>
-              </Dialog> */}
               </Box>
               }
               </Grid>
+              {props.post.chance && <Grid item xs={12}>
+              <Box sx={{display: 'flex', justifyContent: 'left', width: '100%', textAlign: 'center'}}><Typography fontSize={9} sx={{width: 'fit-content', color: 'text.secondary'}} title="RNG roll versus the odds of it happening. These aren't stored permanently." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.roll} {props.post.roll > props.post.chance ? `>` : `<` } {props.post.chance}</Typography></Box>
+              </Grid>
+              }
               </Grid>
               </Box>
               </Box>

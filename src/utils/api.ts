@@ -156,7 +156,7 @@ axios.post(
   CONFIG
 );
 
-export const adminCreateThread = (name: string, title: string, description: string, rules: string, firstValidCount: string, validationType: string, visibleTo: string, updatableBy: string, locked: boolean, autoValidated: boolean, resetOnMistakes: boolean, allowDoublePosts: boolean, moderators: string, verifiers: string, uuid?: string) =>
+export const adminCreateThread = (name: string, title: string, description: string, rules: string, firstValidCount: string, validationType: string, visibleTo: string, updatableBy: string, locked: boolean, autoValidated: boolean, resetOnMistakes: boolean, allowDoublePosts: boolean, moderators: string, verifiers: string, countBans: string, postBans: string, uuid?: string) =>
 axios.post(
   `${API_URL}/thread/create`,
   {name: name,
@@ -173,7 +173,18 @@ axios.post(
   allowDoublePosts: allowDoublePosts,
   moderators: moderators,
   verifiers: verifiers,
+  countBans: countBans,
+  postBans: postBans,
   uuid: uuid
+  },
+  CONFIG
+);
+
+export const adminAwardAchievement = (counter_uuid: string, achievement_id: number) =>
+axios.post(
+  `${API_URL}/counter/awardAchievement`,
+  {counter_uuid: counter_uuid,
+    achievement_id: achievement_id,
   },
   CONFIG
 );

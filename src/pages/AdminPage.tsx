@@ -27,6 +27,11 @@ import { Box, Container, List, ListItem, ListItemButton, ListItemText } from '@m
               <ListItemText primary="Approve Users" />
             </ListItemButton>
           </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton component="a" href="/admin/achievements">
+              <ListItemText primary="Award Achievements" />
+            </ListItemButton>
+          </ListItem>
         </List>
       </Box>
     </Container>

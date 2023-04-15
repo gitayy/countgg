@@ -23,6 +23,15 @@ html,
 }
 
 
+.threadcard {
+  transition: all .2s ease-in-out!important;
+}
+
+.threadcard:hover {
+  transform: scale(1.1);
+}
+
+
 
 .hidden {
   display: none!important;

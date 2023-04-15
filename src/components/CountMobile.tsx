@@ -1,6 +1,6 @@
 import {  Box, CardMedia, Typography, Grid, IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, useTheme, Link, Popover } from "@mui/material";
 import { memo, useRef, useState } from "react";
-import { defaultCounter, EmojiTest, formatDate, getReplyColorName } from "../utils/helpers";
+import { defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName } from "../utils/helpers";
 import { Counter } from "../utils/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
@@ -137,7 +137,7 @@ return (
                       <Grid item xs={7}>
                         <Grid container>
                           <Grid item xs={12} sx={{color: 'text.primary'}}>
-                          <Link onClick={(e) => {e.preventDefault();navigate(url);}} href={url} fontSize={9} underline={'hover'} sx={{ textAlign: 'right'}} variant="caption" color="textSecondary">{formatDate(parseInt(props.post.timestamp))}</Link>
+                          <Link onClick={(e) => {e.preventDefault();navigate(url);}} href={url} fontSize={9} underline={'hover'} sx={{ textAlign: 'right'}} variant="caption" color="textSecondary">{props.thread && props.thread.name === 'bars' ? formatDateWithMilliseconds(parseFloat(props.post.timestamp)) : formatDate(parseFloat(props.post.timestamp))}</Link>
                           </Grid>
                           <Grid item xs={12} sx={{}}>
                           <Typography fontSize={12} variant="subtitle1" color={renderedCounter.color} sx={{textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowX: 'hidden'}} component="div">
@@ -226,6 +226,10 @@ return (
                 })}
                 </Box>}
             </Grid>
+            {props.post.chance && <Grid item xs={12}>
+            <Box sx={{display: 'flex', justifyContent: 'left', width: '100%', textAlign: 'center'}}><Typography fontSize={9} sx={{width: 'fit-content', color: 'text.secondary'}} title="RNG roll versus the odds of it happening. These aren't stored permanently." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.roll} {props.post.roll > props.post.chance ? `>` : `<` } {props.post.chance}</Typography></Box>
+              </Grid>
+              }
             </Grid>
             </Box>
             </Box>
