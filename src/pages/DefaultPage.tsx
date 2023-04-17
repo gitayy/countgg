@@ -23,14 +23,14 @@ export const DefaultPage = () => {
   };
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
-  const [count, setCount] = useState(15);
+  const [count, setCount] = useState(20);
 
   useEffect(() => {
     var testTimeout;
     const updateCount = () => {
       testTimeout = setTimeout(function() {
 
-      if(count < 17) {
+      if(count < 22) {
         setCount(prevCount => {
           return ((prevCount + 1) % 10 == 0 ? prevCount + 1 : prevCount + 1)
         });
@@ -44,10 +44,6 @@ export const DefaultPage = () => {
       clearTimeout(testTimeout);
     };
   }, [count]);
-
-  const handleNotAKey = () => {
-    socket.emit('notAKey');
-  }
 
   if(!loading) {
 

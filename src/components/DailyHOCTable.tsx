@@ -64,7 +64,7 @@ export const DailyHOCTable = ({ dailyHOC, name, countName }: Props) => {
                     // console.log("HERES ROW");
                     // console.log(row);
 
-                    return (
+                    return row.counter ? (
                     <TableRow key={row.counter.name}>
                       <PlaceCell place={index + 1} />
                       <TableCell component="th" scope="row" sx={{color: row.counter.color}}>
@@ -73,7 +73,7 @@ export const DailyHOCTable = ({ dailyHOC, name, countName }: Props) => {
                         </Link>
                       </TableCell>
                       <TableCell>{row.counts}</TableCell>
-                    </TableRow>)}
+                    </TableRow>) : <></>}
                   )}
                 </TableBody>
               </Table>
