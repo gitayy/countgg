@@ -159,7 +159,7 @@ export const formatDateWithMilliseconds = (timestamp: number) => {
 
 export const formatDateExact = (timestamp: number) => {
   const fnsFormatted = format(timestamp, 'yyyy-MM-dd HH:mm:ss.SSS');
-  return fnsFormatted + timestamp.toString().split(".")[1]; //nanoseconds
+  return timestamp.toString().split(".")[1] ? fnsFormatted + timestamp.toString().split(".")[1] : fnsFormatted; //nanoseconds
 }
 
 export var latencyCheck = '';
@@ -227,7 +227,7 @@ const replyColorNames = [
 
 export function getReplyColorName(time: number, per: number = 100) {
   if(typeof(time) === 'string') {time = parseFloat(time)}
-  const intervalIndex = Math.ceil((time+.0001) / per);
+  const intervalIndex = Math.ceil(Math.round(time) / per);
   if (time < 1) {
     return replyColorNames[0];
   }

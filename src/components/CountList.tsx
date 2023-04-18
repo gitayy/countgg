@@ -506,7 +506,7 @@ const CountList = memo((props: any) => {
           props.recentCounts.forEach((count, index) => {
             const date = new Date(parseInt(count.timestamp));
             const hour = date.getHours();
-            const key = `${date.getFullYear()}-${date.getDate()}-${hour}`;
+            const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${hour}`;
 
             if (!countsByDayAndHour[key]) {
               const dateWithoutMinutes = new Date(date.setMinutes(0));

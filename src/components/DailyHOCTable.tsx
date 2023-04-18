@@ -31,7 +31,7 @@ const PlaceCell = ({ place }: { place: number }) => {
     }
   
     return (
-      <TableCell align="center" style={{ backgroundColor, color }}>
+      <TableCell align="center" sx={{color: color, backgroundColor: backgroundColor}}>
         {place}
       </TableCell>
     );

@@ -21,6 +21,6 @@ export function useFetchAchievements(uuid?: string) {
           .catch((err) => {
             console.log(err);
           })
-    }, []);    
+    }, [uuid]);    
      return { achievements, achievementsLoading, setAchievements, allAchievements };
     }

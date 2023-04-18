@@ -698,6 +698,12 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <Typography variant="h5" sx={{mt: 2, mb: 1}}>Rules</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.rules : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           {counter && thread && counter.roles.includes('admin') && <Button variant='contained' onClick={lockThread}>{thread.locked ? "Unlock Thread" : "Lock Thread"}</Button>}
+          {thread ? <><Box sx={{mt: 2}}>
+            <Typography variant='body2'>Auto validated: {thread.autoValidated.toString()}</Typography>
+            <Typography variant='body2'>Double counting: {thread.allowDoublePosts.toString()}</Typography>
+            <Typography variant='body2'>Reset on mistakes: {thread.resetOnMistakes.toString()}</Typography>
+            <Typography variant='body2'>UUID: {thread.uuid}</Typography>
+          </Box></> : <>Loading...</>}
         </TabPanel>
         <TabPanel value="tab_2" sx={{flexGrow: 1, p: 4}}>
           <Typography variant='h4'>Chats</Typography>

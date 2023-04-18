@@ -23,6 +23,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>('error');
     const navigate = useNavigate();
+    const [buttonDisable, setButtonDisable] = useState<boolean>(false);
 
     const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
 
@@ -55,26 +56,32 @@ import { useLocation, useNavigate } from 'react-router-dom';
       if(name) {
         try {
             if(countNumber !== null && countNumber > 0) {
+              setButtonDisable(true);
                 const res = await findPostByThreadAndNumber(uuid, countNumber.toString())
                 .then(({ data }) => {
                   for (const counter of data.counters) {
                     addCounterToCache(counter);
                   }
                   setLoadedPosts(data.posts);
+                  setButtonDisable(false);
                 })
                 .catch((err) => {
                   console.log(err);
+                  setButtonDisable(false);
                 })
             } else if(rawCount.length > 0) {
+              setButtonDisable(true);
                 const res = await findPostByThreadAndRawCount(uuid, rawCount).then(({ data }) => {
                   for (const counter of data.counters) {
                     addCounterToCache(counter);
                   }
                   setLoadedPosts(data.posts);
                   // console.log(data);
+                  setButtonDisable(false);
                 })
                 .catch((err) => {
                   console.log(err);
+                  setButtonDisable(false);
                 })
             } 
         }
@@ -82,6 +89,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
           setSnackbarSeverity('error');
           setSnackbarOpen(true)
           setSnackbarMessage('Error: Post not found, or server rejected your request.')
+          setButtonDisable(false);
         }
       }
     };
@@ -156,7 +164,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
                   disabled={countNumber !== null && countNumber > 0}
                 />
               </FormControl>
-                <Button variant='contained' onClick={findPost}>Submit</Button>
+                <Button variant='contained' disabled={buttonDisable} onClick={findPost}>Submit</Button>
             </Box>
             {loadedPosts && Array.isArray(loadedPosts) && 
             <Box sx={{ bgcolor: 'background.paper', display: 'flex', justifyContent: 'center', flexGrow: 1, p: 2 }}>
