@@ -119,7 +119,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       throttle.current = true;
         setTimeout(function() {
           throttle.current = false;
-        }, 150);
+        }, 100);
     }
 
     const refScroll = useRef<any>([]);
