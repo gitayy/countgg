@@ -26,7 +26,7 @@ const CountMobile = memo((props: any) => {
 
   let countContentCopy = props.post.countContent;
 
-  if(props.user && props.user.pref_standardize_format != 'Disabled' && props.post.countContent && props.post.rawCount) {
+  if(props.user && props.user.pref_standardize_format != 'Disabled' && props.thread.validationType != 'binary' && props.post.countContent && props.post.rawCount) {
     const format = props.user.pref_standardize_format;
     switch (format) {
       case 'No Separator':
