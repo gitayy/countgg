@@ -122,6 +122,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         }, 100);
     }
 
+
     const refScroll = useRef<any>([]);
     useEffect(() => {
       const scrollCheck = (event) => {

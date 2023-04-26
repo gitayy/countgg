@@ -38,6 +38,7 @@ import { AchievementsPage } from './pages/AchievementsPage';
 import { AchievementPage } from './pages/AchievementPage';
 import { ContestPage } from './pages/ContestPage';
 import { AdminAchievementPage } from './pages/AdminAchievementPage';
+import { TheRockPage } from './pages/TheRockPage';
 
 function App() {
   const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, allegiance, setAllegiance } = useFetchUser();
@@ -227,6 +228,7 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact-us" element={<AboutPage />} />
+            <Route path="/huh" element={<TheRockPage />} />
             {user && counter && <Route path="/prefs" element={<PrefsPage />} />}
           </Routes>
           </SocketContext.Provider>

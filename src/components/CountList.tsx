@@ -9,9 +9,11 @@ import CountMobile from "./CountMobile";
 import AcUnitIcon from '@mui/icons-material/AcUnit';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import { HourBar } from "./HourBar";
+import { useNavigate } from "react-router-dom";
 
 const CountList = memo((props: any) => {
     
+    const navigate = useNavigate();
     const boxRef = useRef<HTMLDivElement>(null);
     const theme = useTheme();
     const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg')) || props.isDesktop;
@@ -36,6 +38,7 @@ const CountList = memo((props: any) => {
       scrollDiagnostics.current = true;
     }
     const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
+    const [throttleCount, setThrottleCount] = useState(0);
 
 
     //Add Ctrl+Enter submit shortcut
@@ -187,6 +190,7 @@ const CountList = memo((props: any) => {
     const handlePosting = () => {
       if(props.throttle.current) {
         console.log("You are being throttled.");
+        setThrottleCount(prevThrottles => {return prevThrottles + 1})
         setSubmitColor("error")
         return;
       }
@@ -382,6 +386,23 @@ const CountList = memo((props: any) => {
         }
 
       }, [props.loadedNewCount]);
+
+      useEffect(() => {
+        setInterval(function() {
+          setThrottleCount(0);
+        }, 30000);
+      }, [])
+  
+      useEffect(() => {
+        if(throttleCount > 100) {
+          theRock();
+        }
+      }, [throttleCount])
+  
+      const theRock = () => {
+        navigate(`/huh`);
+      }
+  
 
       const scrollDownMemo = useMemo(() => {
         return (<>{isNewRecentCountAdded && !firstLoad && ((props.user && props.user.pref_load_from_bottom && !isScrolledToBottom) || !props.user || (props.user && props.user.pref_load_from_bottom === false && !isScrolledToTop) ) && (<>
