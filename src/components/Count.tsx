@@ -29,7 +29,7 @@ const Count = memo((props: any) => {
     }
   }
   
-  if(props.user && props.user.pref_standardize_format != 'Disabled' && props.thread.validationType != 'binary' && props.post.countContent && props.post.rawCount) {
+  if(props.user && props.user.pref_standardize_format != 'Disabled' && props.thread && props.thread.validationType != 'binary' && props.post.countContent && props.post.rawCount) {
     const format = props.user.pref_standardize_format;
     switch (format) {
       case 'No Separator':
