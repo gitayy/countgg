@@ -11,12 +11,16 @@ export type User = {
   pref_load_from_bottom: boolean;
   pref_strike_color: string;
   pref_submit_shortcut: string;
-  pref_noClear: boolean;
+  pref_clear: string;
   pref_nightMode: string;
   pref_standardize_format: string;
   pref_time_since_last_count: boolean;
   pref_custom_stricken: string;
   pref_post_style: string;
+  pref_reply_time_interval: number;
+  pref_night_mode_colors: string;
+  pref_post_position: string;
+  pref_hide_stricken: string;
   titles: number[];
   card_borders: number[];
   card_backgrounds: number[];

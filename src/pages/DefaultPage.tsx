@@ -23,14 +23,14 @@ export const DefaultPage = () => {
   };
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
-  const [count, setCount] = useState(20);
+  const [count, setCount] = useState(30);
 
   useEffect(() => {
     var testTimeout;
     const updateCount = () => {
       testTimeout = setTimeout(function() {
 
-      if(count < 22) {
+      if(count < 33) {
         setCount(prevCount => {
           return ((prevCount + 1) % 10 == 0 ? prevCount + 1 : prevCount + 1)
         });

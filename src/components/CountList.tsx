@@ -1,4 +1,4 @@
-import { Box, TextField, Button, Zoom, Fab, useTheme, useMediaQuery, Typography, IconButton, alpha, Theme, Tooltip } from "@mui/material";
+import { Box, TextField, Button, Zoom, Fab, useTheme, useMediaQuery, Typography, IconButton, alpha, Theme, Tooltip, Input } from "@mui/material";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { cachedCounters } from "../utils/helpers";
 import Count  from "./Count";
@@ -20,12 +20,13 @@ const CountList = memo((props: any) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const contextRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const customInputRef = useRef<HTMLInputElement>(null);
     const [firstLoad, setFirstLoad] = useState(true);
     const [isScrolledToBottom, setIsScrolledToBottom] = useState(props.user && props.user.pref_load_from_bottom ? true : false);
     const [isScrolledToTop, setIsScrolledToTop] = useState(props.user && props.user.pref_load_from_bottom ? false : true);
     const [scrollThrottle, setScrollThrottle] = useState(false);
     const [isNewRecentCountAdded, setIsNewRecentCountAdded] = useState(false);
-    const [keyboardType, setKeyboardType] = useState<"text" | "search" | "none" | "email" | "tel" | "url" | "numeric" | "decimal" | undefined>('text')
+    const [keyboardType, setKeyboardType] = useState<"text" | "search" | "none" | "email" | "tel" | "url" | "numeric" | "decimal" | undefined>('search')
     const [hasScrolledToContext, setHasScrolledToContext] = useState(false);
     const distanceFromBottom = useRef(0);
     const distanceFromTop = useRef(0);
@@ -39,6 +40,8 @@ const CountList = memo((props: any) => {
     }
     const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
     const [throttleCount, setThrottleCount] = useState(0);
+    const [gotNewerUUIDs, setGotNewerUUIDs] = useState<string[]>([]);
+    const [gotOlderUUIDs, setGotOlderUUIDs] = useState<string[]>([]);
 
 
     //Add Ctrl+Enter submit shortcut
@@ -187,7 +190,7 @@ const CountList = memo((props: any) => {
       }
   }
 
-    const handlePosting = () => {
+    const handlePosting = async () => {
       if(props.throttle.current) {
         console.log("You are being throttled.");
         setThrottleCount(prevThrottles => {return prevThrottles + 1})
@@ -201,8 +204,15 @@ const CountList = memo((props: any) => {
             props.setThrottle();
             props.refScroll.current = [];
             setSubmitColor("primary")
-            if(!props.user || (props.user && props.user.pref_noClear !== true)) {
+            if(!props.user || (props.user && props.user.pref_clear === 'Clear')) {
               inputRef.current.value = '';
+            } else if(props.user && props.user.pref_clear === 'Clipboard') {
+              inputRef.current.value = await navigator.clipboard.readText();
+              // console.log(await navigator.clipboard.readText());
+              // console.log((await (new Clipboard)).readText());
+            } 
+            else if(props.user && props.user.pref_clear === 'Custom') {
+              inputRef.current.value = customInputRef.current ? customInputRef.current.value : '';
             } 
             if(props.counter && props.user.pref_load_from_bottom) {
               changeScrolledToBottom(true);
@@ -224,10 +234,10 @@ const CountList = memo((props: any) => {
     }
 
     const toggleKeyboard = () => {
-      if(keyboardType == 'text') {
+      if(keyboardType == 'search') {
         setKeyboardType('numeric')
       } else {
-        setKeyboardType('text')
+        setKeyboardType('search')
       }
       if(inputRef.current) {
         inputRef.current.focus();
@@ -269,6 +279,51 @@ const CountList = memo((props: any) => {
         }
       }, [props.recentCounts, firstLoad, ]);
 
+      const loadPosts = (old: boolean) => {
+        setScrollThrottle(true);
+        
+        setTimeout(function() {
+          setScrollThrottle(false)
+        }, 1000);
+        if(old) {
+          if(props.chatsOnly) {
+            if(props.user && props.user.pref_load_from_bottom && !gotOlderUUIDs.includes(props.recentCounts[0].uuid)) {
+              setGotOlderUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
+              props.socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
+            } else if(!gotOlderUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
+              setGotOlderUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
+              props.socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
+            }
+          } else {
+            if(props.user && props.user.pref_load_from_bottom && !gotOlderUUIDs.includes(props.recentCounts[0].uuid)) {
+              setGotOlderUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
+              props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
+            } else if(!gotOlderUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
+              setGotOlderUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
+              props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
+            }
+          }
+        } else {
+          if(props.chatsOnly) {
+            if(props.user && props.user.pref_load_from_bottom && !gotNewerUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
+              setGotNewerUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
+              props.socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
+            } else if(!gotNewerUUIDs.includes(props.recentCounts[0].uuid)) {
+                setGotNewerUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
+                props.socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
+            }
+          } else {
+            if(props.user && props.user.pref_load_from_bottom && !gotNewerUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
+              setGotNewerUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
+              props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
+            } else if(!gotNewerUUIDs.includes(props.recentCounts[0].uuid)) {
+              setGotNewerUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
+              props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
+            }
+          }
+        }
+      }
+
       const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
         const element = event.currentTarget;
         if (scrollDiagnostics.current) {
@@ -285,19 +340,27 @@ const CountList = memo((props: any) => {
           if(props.recentCounts && props.recentCounts[0] && props.loadedNewest == false && props.user && props.user.pref_load_from_bottom) {
             const distance_From_Top = element.scrollHeight;
             distanceFromTop.current = distance_From_Top;
-            if(props.chatsOnly) {
-              props.socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
-            } else {
-              props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
-            }
+            loadPosts(false);
+            // if(props.chatsOnly && !gotNewerUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
+            //   setGotNewerUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
+            //   props.socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
+            // } else if(!gotNewerUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
+            //   setGotNewerUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
+            //   props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
+            // }
           } else if(props.recentCounts && props.recentCounts[0] && props.loadedOldest == false && props.loading == false && (!props.user || (props.user && !props.user.pref_load_from_bottom))) {
             const distance_From_Top = element.scrollHeight;
             distanceFromTop.current = distance_From_Top;
-            if(props.chatsOnly) {
-              props.socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
-            } else {
-              props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
-            }
+            loadPosts(true);
+            // if(props.chatsOnly && !gotOlderUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
+            //   setGotOlderUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
+            //   props.socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
+            // } else if(!gotOlderUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)){
+            //   console.log("Ayo...");
+            //   console.log(gotOlderUUIDs);
+            //   setGotOlderUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
+            //   props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
+            // }
           }
         }
         if(element.scrollTop === 0) {
@@ -310,19 +373,25 @@ const CountList = memo((props: any) => {
           if(props.recentCounts && props.recentCounts[0] && props.loadedOldest == false && props.user && props.user.pref_load_from_bottom) {
             const distance_From_Bottom = element.scrollHeight - element.scrollTop - element.clientHeight;
             distanceFromBottom.current = distance_From_Bottom;
-            if(props.chatsOnly) {
-              props.socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
-            } else {
-              props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
-            }
+            loadPosts(true);
+            // if(props.chatsOnly && !gotOlderUUIDs.includes(props.recentCounts[0].uuid)) {
+            //   setGotOlderUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
+            //   props.socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
+            // } else if(!gotOlderUUIDs.includes(props.recentCounts[0].uuid)) {
+            //   setGotOlderUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
+            //   props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
+            // }
           } else if(props.recentCounts && props.recentCounts[0] && props.loadedNewest == false) {
             const distance_From_Bottom = element.scrollHeight - element.scrollTop - element.clientHeight;
             distanceFromBottom.current = distance_From_Bottom;
-            if(props.chatsOnly) {
-              props.socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
-            } else {
-              props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
-            }
+            loadPosts(false);
+            // if(props.chatsOnly && !gotNewerUUIDs.includes(props.recentCounts[0].uuid)) {
+            //   setGotNewerUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
+            //   props.socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
+            // } else if(!gotNewerUUIDs.includes(props.recentCounts[0].uuid)) {
+            //   setGotNewerUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
+            //   props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
+            // }
           }
         } else {
           if(isScrolledToTop) {
@@ -402,6 +471,10 @@ const CountList = memo((props: any) => {
       const theRock = () => {
         navigate(`/huh`);
       }
+
+      const handleCustomInputChange = (event) => {
+        if(inputRef.current) inputRef.current.value = event.target.value;
+      }
   
 
       const scrollDownMemo = useMemo(() => {
@@ -453,11 +526,28 @@ const CountList = memo((props: any) => {
               fullWidth
               multiline
               maxRows={4}
-              style={{ borderRadius: '20px', padding: '10px', width: '70%' }}
+              style={{ borderRadius: '20px', padding: '10px', width: props.user && props.user.pref_clear === 'Custom' ? '50%' : '70%' }}
               autoFocus
               inputRef={inputRef}
               inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: "off" }}
           />
+                    {props.user && props.user.pref_clear === 'Custom' && <Input
+              // variant="outlined"
+              maxRows={1}
+              style={{ borderRadius: '20px', padding: '10px', width: '20%' }}
+              // autoFocus
+              onInput={handleCustomInputChange}
+              inputRef={customInputRef}
+              inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: "off" }}
+          />}
+          {/* <TextField
+              variant="outlined"
+              maxRows={1}
+              style={{ borderRadius: '20px', padding: '10px', width: '20%' }}
+              autoFocus
+              inputRef={customInputRef}
+              inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: "off" }}
+          /> */}
           <Tooltip title="Throttled" open={submitColor == "error" ? true : false} arrow>
           <IconButton color={submitColor} onClick={() => handlePosting()}>
             <SendIcon />
@@ -476,11 +566,20 @@ const CountList = memo((props: any) => {
                     fullWidth
                     multiline
                     maxRows={4}
-                    style={{ borderRadius: '20px', padding: '10px', width: '70%' }}
+                    style={{ borderRadius: '20px', padding: '10px', width: props.user && props.user.pref_clear === 'Custom' ? '40%' : '70%' }}
                     autoFocus
                     inputRef={inputRef}
-                    inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: "off" }}
+                    inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: "off", enterKeyHint: "send" }}
                 />
+                {props.user && props.user.pref_clear === 'Custom' && <Input
+              // variant="outlined"
+              maxRows={1}
+              style={{ borderRadius: '20px', padding: '10px', width: '30%' }}
+              onInput={handleCustomInputChange}
+              // autoFocus
+              inputRef={customInputRef}
+              inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: "off", }}
+                />}
                 <IconButton onClick={() => toggleKeyboard()}>
                   <KeyboardIcon />
                 </IconButton>
@@ -566,17 +665,18 @@ const CountList = memo((props: any) => {
             const shouldShowHourBar = showHourBar
             return (
               <div key={key}>
+                {index === 0 && (props.user && props.user.pref_load_from_bottom) && <Box sx={{width: '100%', display: 'flex', justifyContent: 'center'}}><Button variant="contained" disabled={scrollThrottle} onClick={() => {loadPosts(true)}}>Load More</Button></Box>}
                 {props.user && props.user.pref_load_from_bottom && shouldShowHourBar && (
                   <HourBar label={day} />
                 )}
                 {counts.map(count => {
                   const contextMatch = props.context && props.context === count.uuid;
                   const ref = contextMatch ? contextRef : null;
-                  if(isDesktop) {
+                  if(isDesktop && !(count.stricken && !count.hasComment && props.user && props.user.pref_hide_stricken === 'Hide')) {
                   return (
                     <Count user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
                   );
-                  } else {
+                  } else if(!(count.stricken && props.user && props.user.pref_hide_stricken === 'Hide')) {
                     return (
                       <CountMobile user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
                     );
@@ -585,10 +685,11 @@ const CountList = memo((props: any) => {
                 {(!props.user || (props.user && !props.user.pref_load_from_bottom)) && shouldShowHourBar && (
                   <HourBar label={day} />
                 )}
+                {index + 1 === Object.keys(countsByDayAndHour).length && (!props.user || (props.user && !props.user.pref_load_from_bottom)) && <Box sx={{width: '100%', display: 'flex', justifyContent: 'center'}}><Button variant="contained" disabled={scrollThrottle} onClick={() => {loadPosts(true)}}>Load More</Button></Box>}
               </div>
             );
           });
-      }, [props.recentCounts, cachedCounters, isDesktop]);
+      }, [props.recentCounts, cachedCounters, isDesktop, scrollThrottle]);
 
       const [submitHeight, setSubmitHeight] = useState(76);
 
@@ -613,10 +714,10 @@ const CountList = memo((props: any) => {
 
       if(props.user && props.user.pref_load_from_bottom) {
         return (<>
-          <Box ref={boxRef} onScroll={handleScroll} sx={{ height: submitRef.current ? `calc(100% - ${submitHeight}px)` : 'calc(100% - 76px)', flexGrow: 1, bgcolor: 'background.paper', overflow: 'auto', position: 'relative' }}>
+          <Box id="messages-box" ref={boxRef} onScroll={handleScroll} sx={{ height: submitRef.current ? `calc(100% - ${submitHeight}px)` : 'calc(100% - 76px)', flexGrow: 1, bgcolor: 'background.paper', overflow: 'auto', position: 'relative' }}>
       
                   {countsMemo}
-                  <div ref={messagesEndRef} />
+                  <div id="messagesEnd" ref={messagesEndRef} />
               </Box>
       
               {scrollDownMemo}

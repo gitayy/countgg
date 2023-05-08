@@ -113,52 +113,52 @@ function App() {
             }),
       },
       replyGold: {
-        light: '#f2ee0e',
-        dark: '#727200',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#727200' : '#f2ee0e',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#f2ee0e' : '#727200',
       },
       reply0: {
-        light: '#ef7070',
-        dark: '#4d0000',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#4d0000' : '#ef7070',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#ef7070' : '#4d0000',
       },
       reply100: {
-        light: '#ffaeae',
-        dark: '#980000',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#980000' : '#ffaeae',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#ffaeae' : '#980000',
       },
       reply200: {
-        light: '#ffebba',
-        dark: '#654700',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#654700' : '#ffebba',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#ffebba' : '#654700',
       },
       reply300: {
-        light: '#cfffba',
-        dark: '#216e00',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#216e00' : '#cfffba',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#cfffba' : '#216e00',
       },
       reply400: {
-        light: '#a2e8af',
-        dark: '#003b0b',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#003b0b' : '#a2e8af',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#a2e8af' : '#003b0b',
       },
       reply500: {
-        light: '#adffed',
-        dark: '#006b53',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#006b53' : '#adffed',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#adffed' : '#006b53',
       },
       reply600: {
-        light: '#add6ff',
-        dark: '#004183',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#004183' : '#add6ff',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#add6ff' : '#004183',
       },
       reply700: {
-        light: '#bcadff',
-        dark: '#14006c',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#14006c' : '#bcadff',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#bcadff' : '#14006c',
       },
       reply800: {
-        light: '#e9adff',
-        dark: '#460060',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#460060' : '#e9adff',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#e9adff' : '#460060',
       },
       reply900: {
-        light: '#ffadf8',
-        dark: '#6e0064',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#6e0064' : '#ffadf8',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#ffadf8' : '#6e0064',
       },
       reply1000: {
-        light: '#ededed',
-        dark: '#2a2a2a',
+        light: (user && user.pref_night_mode_colors === 'Dark') ? '#2a2a2a' : '#ededed',
+        dark: (user && user.pref_night_mode_colors === 'Light') ? '#ededed' : '#2a2a2a',
       },
     }
   });

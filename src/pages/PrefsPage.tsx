@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import { Alert, Box, Button, Container, FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Snackbar, Switch, Typography, AlertColor, Tooltip, TextField } from '@mui/material';
 import { UserContext } from '../utils/contexts/UserContext';
-import { card_backgrounds, card_borders, customStrickenOptions, nightModeOptions, postStyleOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
+import { card_backgrounds, card_borders, clearOptions, customStrickenOptions, hideStrickenOptions, nightModeColorOptions, nightModeOptions, postPositionOptions, postStyleOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
 import { updateCounterPrefs } from '../utils/api';
 import { CounterCard } from '../components/CounterCard';
 import { Loading } from '../components/Loading';
@@ -36,10 +36,14 @@ import { useLocation } from 'react-router-dom';
     const [prefStandardizeFormat, setPrefStandardizeFormat] = useState(user?.pref_standardize_format || 'Disabled')
     const [prefNightMode, setPrefNightMode] = useState(user?.pref_nightMode || 'System')
     const [prefSubmitShortcut, setPrefSubmitShortcut] = useState(user?.pref_submit_shortcut || 'CtrlEnter')
-    const [prefNoClear, setPrefNoClear] = useState(user?.pref_noClear || false)
+    const [prefClear, setPrefClear] = useState(user?.pref_clear || 'Clear')
     const [prefTimeSinceLastCount, setPrefTimeSinceLastCount] = useState(user?.pref_time_since_last_count || false)
     const [prefCustomStricken, setPrefCustomStricken] = useState(user?.pref_custom_stricken || 'Disabled')  
     const [prefPostStyle, setPrefPostStyle] = useState(user?.pref_post_style || 'Default')  
+    const [prefReplyTimeInterval, setPrefReplyTimeInterval] = useState(user?.pref_reply_time_interval || 100);
+    const [prefNightModeColors, setPrefNightModeColors] = useState(user?.pref_night_mode_colors || 'Default')  
+    const [prefPostPosition, setPrefPostPosition] = useState(user?.pref_post_position || 'Left')  
+    const [prefHideStricken, setPrefHideStricken] = useState(user?.pref_hide_stricken || 'Disabled')  
     const [cardStyle, setCardStyle] = useState(counter?.cardStyle || 'card_default');
     const [cardBorderStyle, setCardBorderStyle] = useState(counter?.cardBorderStyle || 'no_border_square');
     const [title, setTitle] = useState(counter?.title || 'COUNTER');
@@ -65,8 +69,12 @@ import { useLocation } from 'react-router-dom';
           user.pref_submit_shortcut = prefSubmitShortcut;
           user.pref_custom_stricken = prefCustomStricken;
           user.pref_strike_color = prefStrikeColor;
-          user.pref_noClear = prefNoClear;
+          user.pref_clear = prefClear;
           user.pref_post_style = prefPostStyle;
+          user.pref_reply_time_interval = prefReplyTimeInterval;
+          user.pref_night_mode_colors = prefNightModeColors;
+          user.pref_post_position = prefPostPosition;
+          user.pref_hide_stricken = prefHideStricken;
           counter.cardStyle = cardStyle;
           counter.cardBorderStyle = cardBorderStyle;
           counter.title = title;
@@ -83,6 +91,13 @@ import { useLocation } from 'react-router-dom';
           }
         }
       }
+
+      let [maybeU, setMaybeU] = useState("");
+      useEffect(() => {
+        if(Math.random() > 0.5) {
+          setMaybeU('u');
+        }
+      })
 
     if(user && counter) {
 
@@ -185,17 +200,8 @@ import { useLocation } from 'react-router-dom';
                   onChange={() => {setPrefLoadFromBottom(!prefLoadFromBottom)}}
                   inputProps={{ 'aria-label': 'pref-load-from-bottom' }}
                 />} label={
-                  <Tooltip title="When enabled, new posts appear on the bottom rather than on top. This causes more visual lag on each post (10+ ms).">
-                    <Typography variant="body1">Load new posts on bottom (not recommended)</Typography>
-                  </Tooltip>
-                } />
-                <FormControlLabel control={<Switch
-                  checked={prefNoClear}
-                  onChange={() => {setPrefNoClear(!prefNoClear)}}
-                  inputProps={{ 'aria-label': 'pref-no-clear' }}
-                />} label={
-                  <Tooltip title="When enabled, the textbox does not automatically clear upon submitting a post.">
-                    <Typography variant="body1">Don't clear the textbox when submitting a post</Typography>
+                  <Tooltip title="When enabled, new posts appear on the bottom rather than on top.">
+                    <Typography variant="body1">Load new posts on bottom</Typography>
                   </Tooltip>
                 } />
                 <FormControlLabel control={<Switch
@@ -205,6 +211,22 @@ import { useLocation } from 'react-router-dom';
                 />} label={
                     <Typography variant="body1">Show time since last valid count</Typography>
                 } />
+                <FormControl sx={{m: 2}}>
+                <InputLabel id="clear-label">Textbox Behavio{maybeU}r</InputLabel>
+                <Select
+                    labelId="clear-label"
+                    id="clear"
+                    value={prefClear}
+                    defaultValue={prefClear}
+                    label={`Textbox Behavio${maybeU}r`}
+                    onChange={e => setPrefClear((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  {clearOptions.map((card) => {
+                    return (<MenuItem value={card}>{card}</MenuItem>)
+                  })}
+                </Select>
+            </FormControl>
                 <FormControl sx={{m: 2}}>
                 <InputLabel id="standardize-format-label">Standardize Format</InputLabel>
                 <Select
@@ -270,6 +292,54 @@ import { useLocation } from 'react-router-dom';
                 </Select>
             </FormControl>
             <FormControl sx={{m: 2}}>
+                <InputLabel id="night-mode-colors-label">Night Mode Colors</InputLabel>
+                <Select
+                    labelId="night-mode-colors-label"
+                    id="night-mode-colors"
+                    value={prefNightModeColors}
+                    defaultValue={prefNightModeColors}
+                    label="Night Mode Colors"
+                    onChange={e => setPrefNightModeColors((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  {nightModeColorOptions.map((card) => {
+                      return (<MenuItem value={card}>{card}</MenuItem>)
+                  })}
+                </Select>
+            </FormControl>
+            <FormControl sx={{m: 2}}>
+                <InputLabel id="post-position-label">Post Position</InputLabel>
+                <Select
+                    labelId="post-position-label"
+                    id="post-position"
+                    value={prefPostPosition}
+                    defaultValue={prefPostPosition}
+                    label="Post Position"
+                    onChange={e => setPrefPostPosition((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  {postPositionOptions.map((card) => {
+                      return (<MenuItem value={card}>{card}</MenuItem>)
+                  })}
+                </Select>
+            </FormControl>
+            <FormControl sx={{m: 2}}>
+                <InputLabel id="hide-stricken-label">Hide Stricken</InputLabel>
+                <Select
+                    labelId="hide-stricken-label"
+                    id="hide-stricken"
+                    value={prefHideStricken}
+                    defaultValue={prefHideStricken}
+                    label="Hide Stricken"
+                    onChange={e => setPrefHideStricken((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  {hideStrickenOptions.map((card) => {
+                      return (<MenuItem value={card}>{card}</MenuItem>)
+                  })}
+                </Select>
+            </FormControl>
+            <FormControl sx={{m: 2}}>
                 <InputLabel id="custom-stricken-label">Custom Stricken</InputLabel>
                 <Select
                     labelId="custom-stricken-label"
@@ -292,7 +362,21 @@ import { useLocation } from 'react-router-dom';
             </FormGroup>
             
             <FormGroup>
-                {/* More here */}
+            <TextField
+              sx={{ m: 2 }}
+              id="ReplyTimeInterval"
+              type="number"
+              inputProps={{ min: "1", max: "10000", step: "1" }}
+              onInput={(e) => {
+                const value = parseInt((e.target as HTMLInputElement).value || "0", 10);
+                if (value >= 1 && value <= 10000) {
+                  setPrefReplyTimeInterval(value);
+                }
+              }}
+              label="Reply Time Interval"
+              InputLabelProps={{ shrink: true }}
+              value={prefReplyTimeInterval}
+            />
             </FormGroup> 
             <Button sx={{m: 2}} color="success" variant="contained" onClick={() => {savePrefs()}}>Save</Button>
             </Box>

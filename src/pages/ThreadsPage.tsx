@@ -71,7 +71,7 @@ export const ThreadsPage = () => {
             <Tabs value={tabValue} variant={'scrollable'} allowScrollButtonsMobile onChange={handleChange} sx={{bgcolor: 'background.paper'}} style={tabsStyle}>
       <Tab label="Traditional" value={"tab_1"} style={tabStyle} />
       <Tab label="Double Counting" value={"tab_2"} style={tabStyle} />
-      {/* <Tab disabled label="No Mistakes" value={"tab_3"} style={tabStyle} /> */}
+      <Tab label="No Mistakes" value={"tab_3"} style={tabStyle} />
       <Tab label="Miscellaneous" value={"tab_4"} style={tabStyle} />
     </Tabs>
     <TabPanel value="tab_1" sx={{flexGrow: 1}}>
@@ -98,8 +98,8 @@ export const ThreadsPage = () => {
      </TabPanel>
      <TabPanel value="tab_3" sx={{flexGrow: 1}}>
       <Box sx={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center'}}>
-            <ThreadCard title={"No Mistakes"} description={"Traditional counting... but it resets on mistakes!"} href={`/thread/double_counting`} color1={'#6A9113'} color2={'#141517'}></ThreadCard>
-            <ThreadCard title={"No Mistakes Double"} description={"Double counting, but resets on mistakes."} href={`/thread/odds_double`} color1={'#00c6ff'} color2={'#0072ff'}></ThreadCard>
+            <ThreadCard title={"No Mistakes"} description={"Traditional counting... but it resets on mistakes!"} href={`/thread/no_mistakes`} color1={'#9A0021'} color2={'#512221'}></ThreadCard>
+            <ThreadCard title={"No Mistakes Double"} description={"Double counting, but resets on mistakes."} href={`/thread/no_mistakes_double`} color1={'#CC3001'} color2={'#002C31'}></ThreadCard>
             </Box>
      </TabPanel>
      <TabPanel value="tab_4" sx={{flexGrow: 1}}>

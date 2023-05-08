@@ -106,7 +106,7 @@ const Count = memo((props: any) => {
   //   setOpenReax(false);
   // };
 
-  const replyTimeColor = getReplyColorName(props.post.timeSinceLastPost);
+  const replyTimeColor = getReplyColorName(props.post.timeSinceLastPost, props.user && props.user.pref_reply_time_interval !== undefined ? props.user.pref_reply_time_interval : undefined);
 
   function handleDeleteComment() {
     props.socket.emit('deleteComment', {uuid: props.post.uuid})
@@ -120,6 +120,12 @@ const Count = memo((props: any) => {
   
   const anchorRef = useRef(null);
 
+  const [expanded, setExpanded] = useState((props.user && props.user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment) ? false : true);
+
+  const handleExpand = () => {
+    setExpanded(!expanded);
+  };
+
   // const teamEmoji = renderedCounter.roles.includes('blaze') ? '🔥' : renderedCounter.roles.includes('radiant') ? '⭐' : renderedCounter.roles.includes('wave') ? '🌊' : '';
   
   const components = {
@@ -131,8 +137,10 @@ const Count = memo((props: any) => {
 
   if(props.user && props.user.pref_post_style == "LC") {
   return (
-  <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{ pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
-  <Box>
+    <>
+    {props.user && props.user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && <Typography className="minimized-post-toggler" variant="body2" onClick={() => handleExpand()} sx={{cursor: 'pointer', userSelect: 'none', marginLeft: '5px'}}>{expanded ? `[-]` : `[+]`} Show Hidden Post</Typography>}
+  <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{display: expanded ? 'block' : 'none', pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
+  <Box sx={{}}>
       <Grid container>
           <Grid item xs={4}>
             <Grid container sx={{display: 'flex'}}>
@@ -150,7 +158,7 @@ const Count = memo((props: any) => {
                   <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastCount : msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography>
                     {/* &nbsp;| */}&nbsp;</>}
                     </Box>
-                    <Box sx={{ textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
+                    <Box sx={{ color: props.user && props.user.pref_night_mode_colors && props.user.pref_night_mode_colors !== 'Default' ? (props.user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
                     {hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{hoursSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>h</Typography></Typography>) : null}
                     {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{minutesSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>m</Typography></Typography>) : null}
                     {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{secondsSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>s</Typography></Typography>) : null}
@@ -223,12 +231,15 @@ const Count = memo((props: any) => {
     </Grid>
     </Box>
     </Box>
+    </>
   
 )
   } else {
 
     return (
-          <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
+      <>
+    {props.user && props.user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && <Typography className="minimized-post-toggler" variant="body2" onClick={() => handleExpand()} sx={{cursor: 'pointer', userSelect: 'none', marginLeft: '5px'}}>{expanded ? `[-]` : `[+]`} Show Hidden Post</Typography>}
+          <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{display: expanded ? 'block' : 'none', pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
             <Box>
                 <Grid container>
                     <Grid item xs={4}>
@@ -249,7 +260,7 @@ const Count = memo((props: any) => {
                         </Grid>
                         <Grid item xs={10}>
                           <Grid container sx={{width: '95%'}}>
-                            <Grid item xs={12} sx={{color: 'text.primary', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <Grid item xs={12} sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                             <Box sx={{ textAlign: 'left', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', ...(hoursSinceLastPost > 9 && {scale: '0.75'})}}>
                               {props.post.timeSinceLastCount != props.post.timeSinceLastPost && <>
                             {hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{hoursSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">h</Typography></Typography>) : null}
@@ -258,7 +269,7 @@ const Count = memo((props: any) => {
                             <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastCount : msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography>
                               {/* &nbsp;| */}&nbsp;</>}
                               </Box>
-                              <Box sx={{ textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
+                              <Box sx={{ color: props.user && props.user.pref_night_mode_colors && props.user.pref_night_mode_colors !== 'Default' ? (props.user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
                               {hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{hoursSinceLastPost}<Typography component="span" variant="subtitle2">h</Typography></Typography>) : null}
                               {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{minutesSinceLastPost}<Typography component="span" variant="subtitle2">m</Typography></Typography>) : null}
                               {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{secondsSinceLastPost}<Typography component="span" variant="subtitle2">s</Typography></Typography>) : null}
@@ -346,7 +357,7 @@ const Count = memo((props: any) => {
               </Grid>
               </Box>
               </Box>
-            
+            </>
     )
             }
     });

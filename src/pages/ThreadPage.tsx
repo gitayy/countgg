@@ -394,13 +394,17 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 }
                 if(user && user.pref_load_from_bottom) {
                     setRecentCounts(prevCounts => {
-                      const newCounts = [...data.recentCounts.reverse(), ...prevCounts];
-                        return newCounts;
+                      const newCounts = data.recentCounts.filter(count => {
+                        return !prevCounts.some(prevCount => prevCount.uuid === count.uuid);
+                      });
+                      return [...newCounts.reverse(), ...prevCounts];
                     });
                   } else {
                     setRecentCounts(prevCounts => {
-                      const newCounts = [...prevCounts, ...data.recentCounts];
-                        return newCounts;
+                      const newCounts = data.recentCounts.filter(count => {
+                        return !prevCounts.some(prevCount => prevCount.uuid === count.uuid);
+                      });
+                      return [...prevCounts, ...newCounts];
                     });
                   }
                   if(data.recentCounts && data.recentCounts[0]) {
@@ -421,13 +425,17 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 }
                 if(user && user.pref_load_from_bottom) {
                   setRecentCounts(prevCounts => {
-                    const newCounts = [...prevCounts, ...data.recentCounts,];
-                    return newCounts;
+                    const newCounts = data.recentCounts.filter(count => {
+                      return !prevCounts.some(prevCount => prevCount.uuid === count.uuid);
+                    });
+                    return [...prevCounts, ...newCounts];
                   });
                 } else {
                   setRecentCounts(prevCounts => {
-                    const newCounts = [...data.recentCounts.reverse(), ...prevCounts];
-                    return newCounts;
+                    const newCounts = data.recentCounts.filter(count => {
+                      return !prevCounts.some(prevCount => prevCount.uuid === count.uuid);
+                    });
+                    return [...newCounts.reverse(), ...prevCounts];
                   });
                 }
                 if(data.recentCounts && data.recentCounts[0]) {
@@ -454,13 +462,17 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               }
               if(user && user.pref_load_from_bottom) {
                   setRecentChats(prevChats => {
-                    const newChats = [...data.recentCounts.reverse(), ...prevChats];
-                      return newChats;
+                    const newChats = data.recentCounts.filter(count => {
+                      return !prevChats.some(prevCount => prevCount.uuid === count.uuid);
+                    });
+                    return [...newChats.reverse(), ...prevChats];
                   });
                 } else {
                   setRecentChats(prevChats => {
-                    const newChats = [...prevChats, ...data.recentCounts];
-                      return newChats;
+                    const newChats = data.recentCounts.filter(count => {
+                      return !prevChats.some(prevCount => prevCount.uuid === count.uuid);
+                    });
+                    return [...prevChats, ...newChats];
                   });
                 }
                 if(data.recentCounts && data.recentCounts[0]) {
@@ -481,13 +493,17 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               }
               if(user && user.pref_load_from_bottom) {
                 setRecentChats(prevChats => {
-                  const newChats = [...prevChats, ...data.recentCounts,];
-                  return newChats;
+                  const newChats = data.recentCounts.filter(count => {
+                    return !prevChats.some(prevCount => prevCount.uuid === count.uuid);
+                  });
+                  return [...prevChats, ...newChats,];
                 });
               } else {
                 setRecentChats(prevChats => {
-                  const newChats = [...data.recentCounts.reverse(), ...prevChats];
-                  return newChats;
+                  const newChats = data.recentCounts.filter(count => {
+                    return !prevChats.some(prevCount => prevCount.uuid === count.uuid);
+                  });
+                  return [...newChats.reverse(), ...prevChats];
                 });
               }
               if(data.recentCounts && data.recentCounts[0]) {
@@ -743,7 +759,21 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         
         {snackbarMemo}
         <Grid container> 
-            <Grid item xs={12} lg={6} sx={{height: 'auto', }}>
+        {user && user.pref_post_position === "Right" ? <>            <Grid item xs={12} lg={6}>
+            <Box sx={{display: 'flex', flexDirection: 'column', minHeight: 500, height: 'calc(100vh - 65px)', overflowY: 'auto', bgcolor: 'background.paper'}}>
+            {headerMemo}
+              {sidebarMemo}
+              {robConfirmMemo}
+              </Box>
+              </Grid>
+              <Grid item xs={12} lg={6} sx={{height: 'auto', }}>
+            <Box sx={{minHeight: 500, height: 'calc(100vh - 65px)'}}>
+              {countListMemo}
+              </Box>
+              </Grid></>
+        
+      : <>
+      <Grid item xs={12} lg={6} sx={{height: 'auto', }}>
             <Box sx={{minHeight: 500, height: 'calc(100vh - 65px)'}}>
               {countListMemo}
               </Box>
@@ -754,7 +784,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               {sidebarMemo}
               {robConfirmMemo}
               </Box>
-              </Grid>
+              </Grid></>}
         </Grid>
         
         

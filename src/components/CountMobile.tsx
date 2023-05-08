@@ -94,7 +94,7 @@ const CountMobile = memo((props: any) => {
     }
   };
 
-  const replyTimeColor = getReplyColorName(props.post.timeSinceLastPost);
+  const replyTimeColor = getReplyColorName(props.post.timeSinceLastPost, props.user && props.user.pref_reply_time_interval !== undefined ? props.user.pref_reply_time_interval : undefined);
 
   function handleDeleteComment() {
     props.socket.emit('deleteComment', {uuid: props.post.uuid})
@@ -108,6 +108,12 @@ const CountMobile = memo((props: any) => {
   
   const anchorRef = useRef(null);
 
+  const [expanded, setExpanded] = useState((props.user && props.user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment) ? false : true);
+
+  const handleExpand = () => {
+    setExpanded(!expanded);
+  };
+
   const components = {
     p: ('span' as any),
     li: ({ children }) => <li style={{whiteSpace: 'initial'}}>{children}</li>,
@@ -116,7 +122,9 @@ const CountMobile = memo((props: any) => {
 
   if(props.user && props.user.pref_post_style == "LC") {
     return (
-    <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{ pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
+      <>
+      {props.user && props.user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && <Typography className="minimized-post-toggler" variant="body2" onClick={() => handleExpand()} sx={{cursor: 'pointer', userSelect: 'none', marginLeft: '5px'}}>{expanded ? `[-]` : `[+]`} Show Hidden Post</Typography>}
+    <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{ display: expanded ? 'block' : 'none', pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
     <Box>
         <Grid container>
             <Grid item xs={6}>
@@ -135,7 +143,7 @@ const CountMobile = memo((props: any) => {
                     <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastCount : msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography>
                       {/* &nbsp;| */}&nbsp;</>}
                       </Box>
-                      <Box sx={{ textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
+                      <Box sx={{ color: props.user && props.user.pref_night_mode_colors && props.user.pref_night_mode_colors !== 'Default' ? (props.user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
                       {hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{hoursSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>h</Typography></Typography>) : null}
                       {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{minutesSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>m</Typography></Typography>) : null}
                       {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{secondsSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>s</Typography></Typography>) : null}
@@ -208,10 +216,12 @@ const CountMobile = memo((props: any) => {
       </Grid>
       </Box>
       </Box>
-    
+      </>
   ) } else {
 return (
-    <Box ref={props.contextRef} className={`count countMobile ${props.contextRef && "highlighted"}`} sx={{p: 0.5, wordWrap: 'break-word', boxSizing: 'border-box', border: '1px solid transparent', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
+  <>
+  {props.user && props.user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && <Typography className="minimized-post-toggler" variant="body2" onClick={() => handleExpand()} sx={{cursor: 'pointer', userSelect: 'none', marginLeft: '5px'}}>{expanded ? `[-]` : `[+]`} Show Hidden Post</Typography>}
+    <Box ref={props.contextRef} className={`count countMobile ${props.contextRef && "highlighted"}`} sx={{display: expanded ? 'block' : 'none', p: 0.5, wordWrap: 'break-word', boxSizing: 'border-box', border: '1px solid transparent', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
           <Box>
               <Grid container>
                   <Grid item xs={12}>
@@ -294,7 +304,7 @@ return (
             </Grid>
             <Grid item xs={12} color="text.secondary">
               <Box>
-                <Box component='span' sx={{bgcolor: `${replyTimeColor}.${theme.palette.mode}`}}>
+                <Box component='span' sx={{color: props.user && props.user.pref_night_mode_colors && props.user.pref_night_mode_colors !== 'Default' ? (props.user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', bgcolor: `${replyTimeColor}.${theme.palette.mode}`}}>
             {hoursSinceLastPost > 0 ? (<Typography component="span" fontSize={12}>{hoursSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">h</Typography></Typography>) : null}
               {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" fontSize={12}>{minutesSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">m</Typography></Typography>) : null}
               {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" fontSize={12}>{secondsSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">s</Typography></Typography>) : null}
@@ -328,6 +338,7 @@ return (
             </Grid>
             </Box>
             </Box>
+            </>
   )}
 });
 
