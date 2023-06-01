@@ -16,6 +16,7 @@ import {
 } from "./util";
 import { decode, encode } from "./base64";
 import seedrandom from 'seedrandom';
+import { getLocalDate } from "../utils/helpers";
 
 enum GameState {
   Playing,
@@ -186,9 +187,14 @@ function Game(props: GameProps) {
 
   // Specify the target date (5-30-2023)
 const targetDate = new Date('2023-05-30');
+// const targetDate = getLocalDate(2023, 5, 30)
+
+console.log(targetDate);
 
 // Get the current date
-const currentDate = new Date();
+// const currentDate = new Date();
+const dateStr = new Date().toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', year: 'numeric' });
+const currentDate = new Date(dateStr);
 
 // Calculate the time difference in milliseconds
 const timeDiff = currentDate.getTime() - targetDate.getTime();
