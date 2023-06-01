@@ -16,7 +16,6 @@ import {
 } from "./util";
 import { decode, encode } from "./base64";
 import seedrandom from 'seedrandom';
-import { getLocalDate } from "../utils/helpers";
 
 enum GameState {
   Playing,
