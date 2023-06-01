@@ -39,6 +39,7 @@ import { AchievementPage } from './pages/AchievementPage';
 import { ContestPage } from './pages/ContestPage';
 import { AdminAchievementPage } from './pages/AdminAchievementPage';
 import { TheRockPage } from './pages/TheRockPage';
+import LrwoedPage from './lrwoed/LrwoedPage';
 
 function App() {
   const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, allegiance, setAllegiance } = useFetchUser();
@@ -173,7 +174,7 @@ function App() {
     }),
     [],
   );
-  var theme = useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
+  var theme = useMemo(() => createTheme(getDesignTokens(mode)), [mode, user]);
   theme = responsiveFontSizes(theme);
 
   let location = useLocation();
@@ -229,6 +230,7 @@ function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact-us" element={<AboutPage />} />
             <Route path="/huh" element={<TheRockPage />} />
+            <Route path="/lrwoed" element={<LrwoedPage />} />
             {user && counter && <Route path="/prefs" element={<PrefsPage />} />}
           </Routes>
           </SocketContext.Provider>

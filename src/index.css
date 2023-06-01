@@ -45,6 +45,14 @@ html,
   transform: scale(1.1);
 }
 
+.littlescale {
+  transition: all .2s ease-in-out!important;
+}
+
+.littlescale:hover {
+  transform: scale(1.03);
+}
+
 
 
 .hidden {

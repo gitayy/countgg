@@ -1,0 +1,272 @@
+/* * {
+  box-sizing: border-box;
+}
+
+body {
+  text-align: center;
+  background-color: #eeeeee;
+} */
+
+.Row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Row-letter {
+  margin: 2px;
+  border: 2px solid rgba(128, 128, 128, 0.8);
+  flex: 1;
+  max-width: 40px;
+  height: 40px;
+  font-size: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+.Row-letter-color {
+  margin: 2px;
+  border: 2px solid rgba(128, 128, 128, 0.8);
+  flex: 1;
+  max-width: 40px;
+  height: 40px;
+  font-size: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.Row-annotation {
+  margin-inline-start: 16px;
+  width: 5em;
+  text-align: start;
+}
+
+.App-container {
+  position: relative;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  justify-content: center;
+}
+
+.App-container h1 {
+  margin-top: 0;
+}
+
+.Game,
+h1 {
+  user-select: none;
+}
+
+.Game {
+  display: flex;
+  flex-direction: column;
+}
+
+table.Game-rows {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+table.Game-rows:focus {
+  outline: none;
+}
+
+table.Game-rows > tbody {
+  display: flex;
+  flex-direction: column;
+}
+
+.Game-keyboard {
+  display: flex;
+  flex-direction: column;
+}
+
+.Game-keyboard-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: stretch;
+}
+
+.Game-keyboard-button {
+  margin: 2px;
+  background-color: #cdcdcd;
+  padding: 2px;
+  text-transform: capitalize;
+  border-radius: 4px;
+  min-height: 40px;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 20px;
+  color: inherit;
+  text-decoration: inherit;
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.Game-keyboard-button-wide {
+  flex: 2;
+}
+
+.Game-keyboard-button:focus {
+  outline: none;
+}
+
+.letter-correct {
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  background-color: rgb(87, 172, 120);
+  color: white !important;
+}
+
+.letter-elsewhere {
+  border: 2px dotted rgba(0, 0, 0, 0.3);
+  background-color: #e9c601;
+  color: white !important;
+}
+
+.letter-absent {
+  border: 2px solid transparent;
+  background-color: rgb(162, 162, 162);
+  color: white !important;
+}
+
+body.dark {
+  background-color: #404040;
+  color: #e0e0e0;
+  color-scheme: dark;
+}
+
+body.dark .Game-keyboard-button {
+  color: #404040;
+}
+
+/* a,
+a:visited {
+  color: #8080ff;
+}
+
+a:active {
+  color: #cc77ff;
+} */
+
+.Game-options {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.Game-options > * + * {
+  margin-inline-start: 0.5rem;
+}
+
+.Game-options button {
+  min-width: 4rem;
+}
+
+.App-footer {
+  margin: -1rem 0 2rem 0;
+  font-size: 80%;
+  line-height: 1.5;
+}
+
+.App-about {
+  margin-top: -1rem;
+  line-height: 1.4;
+}
+
+.App-about b {
+  background-color: #888;
+  color: white;
+  padding: 1px 3px;
+  border-radius: 2px;
+}
+
+.App-about b.green-bg {
+  background-color: rgb(87, 172, 120);
+}
+
+.App-about b.yellow-bg {
+  background-color: #e9c601;
+}
+
+.Game-seed-info {
+  opacity: 0.7;
+  margin-top: 1em;
+  font-variant-numeric: tabular-nums;
+}
+
+.Game-sr-feedback,
+.sr-only {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.Settings {
+  text-align: left;
+  font-size: 18px;
+}
+
+.Settings-setting {
+  margin: 8px;
+  display: flex;
+  align-items: top;
+}
+
+.Settings-setting input {
+  width: 18px;
+  height: 18px;
+}
+
+.Settings-setting input[type="range"] {
+  width: 50px;
+  height: 18px;
+}
+
+.Settings-setting label {
+  margin-inline-start: 8px;
+  margin-inline-end: 8px;
+}
+
+.top-right {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+.emoji-link {
+  font-size: 24px;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.top-right > * + * {
+  margin-inline-start: 8px;
+}
+
+.App-container.color-blind .letter-correct,
+.App-container.color-blind .App-about b.green-bg {
+  background-color: #f5793a;
+}
+
+.App-container.color-blind .letter-elsewhere,
+.App-container.color-blind .App-about b.yellow-bg {
+  background-color: #85c0f9;
+}
