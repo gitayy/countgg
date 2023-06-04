@@ -16,6 +16,7 @@ import {
 } from "./util";
 import { decode, encode } from "./base64";
 import seedrandom from 'seedrandom';
+import moment from 'moment-timezone';
 
 enum GameState {
   Playing,
@@ -185,21 +186,42 @@ function Game(props: GameProps) {
   };
 
   // Specify the target date (5-30-2023)
-const targetDate = new Date('2023-05-30');
-// const targetDate = getLocalDate(2023, 5, 30)
+// const targetDate = new Date('2023-05-30');
+// // const targetDate = getLocalDate(2023, 5, 30)
+// targetDate.setHours(0, 0, 0, 0);
 
-console.log(targetDate);
+// const targetDatee = new Date('2023-05-30');
+// const targetDateString = targetDatee.toLocaleDateString(undefined, {
+//   year: 'numeric',
+//   month: '2-digit',
+//   day: '2-digit',
+// });
+// const targetDate = new Date(targetDateString);
 
-// Get the current date
+// console.log(targetDate);
+
+// // Get the current date
 // const currentDate = new Date();
-const dateStr = new Date().toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', year: 'numeric' });
-const currentDate = new Date(dateStr);
+// // const dateStr = new Date().toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', year: 'numeric' });
+// // const currentDate = new Date(dateStr);
 
-// Calculate the time difference in milliseconds
-const timeDiff = currentDate.getTime() - targetDate.getTime();
+// // const now = new Date();
+// // const todaySeed =
+// //   now.toLocaleDateString("en-US", { year: "numeric" }) +
+// //   now.toLocaleDateString("en-US", { month: "2-digit" }) +
+// //   now.toLocaleDateString("en-US", { day: "2-digit" });
+// // const currentDate = new Date(todaySeed);
 
-// Convert the time difference to days
-const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+// // Calculate the time difference in milliseconds
+// const timeDiff = currentDate.getTime() - targetDate.getTime();
+
+// // Convert the time difference to days
+// const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+
+const targetDate = moment.tz('2023-05-30', moment.tz.guess());
+const currentDate = moment();
+
+const daysDiff = currentDate.diff(targetDate, 'days');
 
   async function share(copiedHint: string, text?: string) {
     const url = seed
