@@ -113,31 +113,19 @@ import { useLocation, useNavigate } from 'react-router-dom';
           </Snackbar>
           <Container maxWidth="xl" sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
           <FormControl variant="standard" sx={{}}>
-            {uuid.length == 0 && <Typography>Please select a thread.</Typography>}
-        <Select
-          value={selectedThread ? selectedThread.uuid : ''}
-          onChange={handleThreadSelection}
-        >
-          {allThreads.map(thread => (
-            <MenuItem key={thread.uuid} value={thread.uuid}>{thread.name}</MenuItem>
-          ))}
-        </Select>
       </FormControl>
-        {uuid.length > 0 && <>
+        {uuid.length >= 0 && <>
             <Box sx={{bgcolor: 'background.paper', color: 'text.primary', p: 3}}> 
-            {selectedThread && selectedThread.name && <Typography variant="h6">Selected Thread: {selectedThread.name}</Typography>} 
-              <FormControl variant="standard" sx={{}} >
-                <InputLabel htmlFor="name" shrink>
-                  Thread Name
-                </InputLabel>
-                <Input
-                  onInput={e => setName((e.target as HTMLInputElement).value)}
-                  value={name}
-                  id="name" 
-                  disabled={uuid.length > 0}
-                />
-              </FormControl>
-              <FormControl variant="standard" sx={{}} >
+                  <Select
+                value={selectedThread ? selectedThread.uuid : ''}
+                onChange={handleThreadSelection}
+                sx={{mr: 2}}
+              >
+                {allThreads.map(thread => (
+                  <MenuItem key={thread.uuid} value={thread.uuid}>{thread.name}</MenuItem>
+                ))}
+              </Select>
+              {/* <FormControl variant="standard" sx={{}} >
                 <Tooltip title="Finds the nth count in a thread. In letters, 676th count would return ZZ, for example." placement='top'>
                 <InputLabel htmlFor="countNumber" shrink>
                   Count Number
@@ -150,8 +138,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
                   type='number'
                   disabled={rawCount.length > 0}
                 />
-              </FormControl>
-              <FormControl variant="standard" sx={{}} >
+              </FormControl> */}
+              <FormControl variant="standard" sx={{mr: 2}} >
               <Tooltip title="Finds the raw count in a thread. In letters, you can search for ZZ here, for example." placement='top'>
                 <InputLabel htmlFor="rawCount" shrink>
                     Raw Count

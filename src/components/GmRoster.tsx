@@ -1,5 +1,5 @@
 import { Container } from "@mui/material";
-import { GridColDef, GridRowsProp, DataGrid, GridSelectionModel } from "@mui/x-data-grid";
+import { GridColDef, GridRowsProp, DataGrid } from "@mui/x-data-grid";
 
 export function GmRoster(props) {
 

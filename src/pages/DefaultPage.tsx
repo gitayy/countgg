@@ -1,20 +1,38 @@
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import { useContext, useEffect, useState } from 'react';
-import { Alert, AlertColor, Box, Button, CardMedia, Grid, Link, Modal, Paper, Snackbar, Typography } from '@mui/material';
+import { Alert, AlertColor, Badge, Box, Button, CardMedia, Grid, Link, Modal, Paper, Snackbar, Typography, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
 import SwingBg from '../assets/swing2.png';
-import { modalStyle } from '../utils/helpers';
+import { calculateLevel, modalStyle } from '../utils/helpers';
 import { SocketContext } from '../utils/contexts/SocketContext';
+import { useIsMounted } from '../utils/hooks/useIsMounted';
+import PlusOneIcon from '@mui/icons-material/PlusOne';
+import GroupsIcon from '@mui/icons-material/Groups';
+import QueryStatsIcon from '@mui/icons-material/QueryStats';
+import ContentCutIcon from '@mui/icons-material/ContentCut';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import FeedIcon from '@mui/icons-material/Feed';
+import StarsIcon from '@mui/icons-material/Stars';
+import AbcIcon from '@mui/icons-material/Abc';
+import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
+import ChatIcon from '@mui/icons-material/Chat';
+import { DailyHOCTable } from '../components/DailyHOCTable';
+import { Counter, PostType } from '../utils/types';
 
 export const DefaultPage = () => {
   const navigate = useNavigate();
-  const { user, counter, loading, allegiance } = useContext(UserContext);
+  const { user, counter, loading, items } = useContext(UserContext);
+  const [lastCount, setLastCount] = useState<{lastCount: PostType, lastCounter: Counter}>();
+  const [dailyLeaderboard, setDailyLeaderboard] = useState<{[authorUUID: string]: {counter: Counter, counts: number}}>();
+  const sumCounts = dailyLeaderboard ? Object.values(dailyLeaderboard).reduce((acc, { counts }) => acc + counts, 0) : 0;
+  const sumUsers = dailyLeaderboard ? Object.values(dailyLeaderboard).length : 0;
   const [ modalOpen, setModalOpen ] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>('error');
   const socket = useContext(SocketContext);
+  const theme = useTheme();
   const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
       if (reason === 'clickaway') {
         return;
@@ -23,7 +41,63 @@ export const DefaultPage = () => {
   };
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
+  const isMounted = useIsMounted();
+  useEffect(() => {
+
+    // if(isMounted.current) {
+      socket.emit('watch', 'all')
+    // }
+
+    socket.on('defaultPage', function(data) {
+      const {users_online, total_counts, daily_leaderboard } = data;
+      setTotalCounts(total_counts);
+      setUsersOnline(users_online);
+      setDailyLeaderboard(daily_leaderboard);
+    });
+    socket.on('post', function(data) {
+      const { post, counter, thread, total_counts } = data;
+      // console.log(data);
+      // console.log(post, counter, thread, total_counts);
+      setTotalCounts(total_counts);
+      if(post.isValidCount) {
+        setLastCount({lastCount: post, lastCounter: counter});
+        setDailyLeaderboard(prevDailyHOC => {
+          const updatedHOC = {
+            ...prevDailyHOC,
+            [counter.uuid]: {
+              counter: counter,
+              counts: prevDailyHOC !== undefined ? ((prevDailyHOC[counter.uuid]?.counts || 0) + 1) : 1,
+            }
+          };
+          return updatedHOC;
+      });
+      }
+    });
+
+    socket.on(`dailyHOC`, function(data) {
+      // console.log("DAILY HOC");
+      // console.log(data);
+      // setDailyHOC(data);
+    });
+
+    return () => {
+      console.log("Disconnected: Disabling socket functions.");
+        socket.emit('leave_threads');
+        socket.off('defaultPage');
+        socket.off('post');
+        socket.off('dailyHOC');
+    }
+  }, [])
+
+
+  const [isCat, setIsCat] = useState(false);
+  const catify = () => {
+    setIsCat(!isCat)
+  }
+
   const [count, setCount] = useState(30);
+  const [totalCounts, setTotalCounts] = useState(-1);
+  const [usersOnline, setUsersOnline] = useState(-1);
 
   useEffect(() => {
     var testTimeout;
@@ -45,7 +119,25 @@ export const DefaultPage = () => {
     };
   }, [count]);
 
-  if(!loading) {
+  const bigButtonStyles = {
+    padding: '24px',
+    fontSize: '1.5rem',
+    // fontWeight: 'bold',
+    borderRadius: '8px',
+    border: '1px solid #1976d2',
+    color: '#ffffff',
+    '&:hover': {
+      border: '1px solid #1565c0',
+    },
+  };
+
+  let unclaimedRewards = 0;
+  if(counter && items) {
+    const xpItemsClaimed = items.filter(item => {return item.unlockMethod === 'xp'}).length;
+    unclaimedRewards = parseInt(calculateLevel(counter.xp).level) - xpItemsClaimed;
+  }
+
+  if(!loading && totalCounts > -1) {
 
     return (<>
     <Snackbar
@@ -57,12 +149,12 @@ export const DefaultPage = () => {
             {snackbarMessage}
         </Alert>
     </Snackbar>
-      <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
+      <Box sx={{ bgcolor: theme.palette.mode === 'light' ? 'primary.light' : 'background.paper', flexGrow: 1, p: 2, backgroundImage: isCat ? `url(https://placekitten.com/1500/1000?${new Date().getDay()})` : 'none', backgroundSize: `100% 100%`, backgroundRepeat: 'no-repeat'}}>
       <Typography variant="h1" sx={{ textAlign: 'center', m: 1 }}>
-        Over <Typography variant='h1' component={'span'} sx={{ textAlign: 'center', background: 'linear-gradient(to right, #FF8C00, #FFA500)', }}>&nbsp;{(count/10).toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1})}M&nbsp;</Typography> Counts
+     <Typography variant='h1' component={'span'} sx={{ textAlign: 'center', background: 'linear-gradient(to right, #FF8C00, #FFA500)', }}>&nbsp;{totalCounts.toLocaleString()}&nbsp;</Typography> Counts
       </Typography>
-      <Typography variant="body1" component={'div'} sx={{ textAlign: 'center', m: 1 }}>
-      on countGG.com
+      <Typography variant="body1" component={'div'} sx={{ textAlign: 'center', m: 1, }}>
+        <Box component='span' sx={{bgcolor: `success.light`, display: 'inline-block', width: 8, height: 8, borderRadius: '50%'}}></Box> {usersOnline.toLocaleString()} user{usersOnline === 1 ? `` : 's'} online | {sumCounts.toLocaleString()} counts today by {sumUsers} user{sumUsers === 1 ? `` : 's'}
       </Typography>
         {!counter && <Paper elevation={8} sx={{mb: 2, display: 'flex', alignItems: 'stretch', background: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),url(${SwingBg})`, minHeight: '33vh', p: 2, backgroundSize: 'cover', backgroundPosition: 'top right'}}>
           <Grid container direction={'row'}>
@@ -70,7 +162,7 @@ export const DefaultPage = () => {
               <Typography color="white" variant='h4' sx={{textShadow: '1px 1px black'}}>Welcome to countGG!</Typography>
             </Grid>
             <Grid item xs={12}>
-              <Typography color="white" variant='body1' sx={{m: 2, textShadow: '1px 1px black'}}>countGG is the largest website solely dedicated to counting, where users can count in real-time. With a simple and intuitive interface, users can participate in one of the biggest collaborations on the Internet. Whether it's for fun or competition, countGG provides a unique and engaging experience for counting enthusiasts of all levels.</Typography>
+              <Typography color="white" variant='body1' sx={{m: 2, textShadow: '1px 1px black'}}>countGG is the largest counting website ever, averaging over a million posts per month!</Typography>
               <Typography color="white" variant='h6' sx={{m: 2, textShadow: '1px 1px black'}}>Sign up for free. Drop a count. Make history.</Typography>
             </Grid>
             <Grid item xs={12} sx={{flexGrow: 1}}>
@@ -110,71 +202,244 @@ export const DefaultPage = () => {
             </Box>
           </Modal>
 
-          <Link color={'inherit'} underline='none' href={`/thread/main`} onClick={(e) => {e.preventDefault();navigate(`/thread/main`);}}>
-        <Paper elevation={8} sx={{cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', minHeight: '33vh', p: 2, }}>
+          {/* <Grid container> */}
+
+          <Grid container spacing={1.5} sx={{background: '#cccccc63', border: '1px solid gray', mt: 0}}>
+
+<Grid item xs={12} lg={6} sx={{padding: "6px"}}>
+ {/* Bigger items */}
+
+ <Grid container spacing={1.5}>
+
+ <Grid item xs={12} sx={{padding: "6px"}}>
+          <Link color={'inherit'} underline='none' href={`/threads`} onClick={(e) => {e.preventDefault();navigate(`/threads`);}}>
+          {/* <Button style={bigButtonStyles} startIcon={<PlusOneIcon style={{fontSize: '1.5rem'}} />}>
+      Counting
+    </Button> */}
+        <Paper className="littlescale card" elevation={8} sx={{
+          // background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
+          background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
+          cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <CardMedia
-              component="img"
-              sx={{  width: '100%', maxHeight: '300px', borderRadius: '16px', objectFit: 'contain', p: 1 }}
-              image={'https://placekitten.com/600/400'}
-              alt={"Kitten"}
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="h3" color={'text.primary'} sx={{ mb: 2, '&:hover': {textDecoration: 'underline'} }}>
-              Main Thread
+          <Grid item xs={12} md={12}>
+            <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+            // '&:hover': {textDecoration: 'underline'} 
+            }}>
+            <PlusOneIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> Counting
             </Typography>
-            <Typography variant="body1" component={'div'}>
-            &nbsp;
-            </Typography>
-            <Typography variant="body1" component={'div'}>
-            The main thread is the heart of countGG.
-            </Typography>
-            <Typography variant="body1" component={'div'}>
-            &nbsp;
-            </Typography>
-            <Typography variant="body1" component={'div'}>
-            Count up by 1... it's that simple!
-            </Typography>
-            <Button variant='contained' sx={{mt: 4}}>
-            View Main Thread 
-            </Button>
           </Grid>
         </Grid>
         </Paper></Link>
-        <Link color={'inherit'} underline='none' href={`/threads`} onClick={(e) => {e.preventDefault();navigate(`/threads`);}}>
-        <Paper elevation={8} sx={{cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', minHeight: '33vh', p: 2, }}>
-          <Grid container direction={'row-reverse'} spacing={2}>
-        <Grid item xs={12} md={6}>
-          <CardMedia
-              component="img"
-              sx={{  width: '100%', maxHeight: '300px', borderRadius: '16px', objectFit: 'contain', p: 1 }}
-              image={'https://placekitten.com/800/300'}
-              alt={"Kitten"}
-            />
         </Grid>
-        <Grid item xs={12} md={6}>
-          <Typography variant="h3" color={'text.primary'} sx={{ mb: 2, '&:hover': {textDecoration: 'underline'} }}>
-            Side Threads
-          </Typography>
-          <Typography variant="body1" component={'div'}>
-            &nbsp;
-          </Typography>
-          <Typography variant="body1">
-            countGG is not just about the main thread, but also offers a variety of side threads for users to participate in. These threads have unique rules, ranging from counting by letters, to "restart on mistakes", to being the first to post each hour. These threads provide a fun way for users to interact with each other and compete in a variety of ways beyond just counting by 1.
-          </Typography>
-          <Typography variant="body1" component={'div'}>
-            &nbsp;
-          </Typography>
-          <Button variant='contained' sx={{mt: 4}}>
-            View All Threads 
-          </Button>
-        </Grid>
-        </Grid>
-        </Paper></Link>
+        {/* <Grid item xs={12} md={6}>
+            <Link color={'inherit'} underline='none' href={`/rps`} onClick={(e) => {e.preventDefault();navigate(`/rps`);}}>
+              <Paper className="littlescale card" elevation={8} sx={{
+                background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
+                cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={12}>
+                  <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                  }}>
+                  <ContentCutIcon style={{fontSize: 'inherit', marginRight: '30px'}} /> RPS
+                  </Typography>
+                </Grid>
+              </Grid>
+              </Paper>
+            </Link>
+          </Grid> */}
+          {/* <Grid item xs={12} md={6}>
+            <Link color={'inherit'} underline='none' href={`/battleship`} onClick={(e) => {e.preventDefault();navigate(`/battleship`);}}>
+              <Paper className="littlescale card" elevation={8} sx={{
+                background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
+                cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={12}>
+                  <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                  }}>
+                  <Box style={{fontSize: 'inherit', marginRight: '30px'}}>💥</Box> Battleship
+                  </Typography>
+                </Grid>
+              </Grid>
+              </Paper>
+            </Link>
+          </Grid> */}
+          <Grid item xs={12} sx={{padding: "6px"}}>
+            <Link color={'inherit'} underline='none' href={`/lrwoed`} onClick={(e) => {e.preventDefault();navigate(`/lrwoed`);}}>
+              <Paper className="littlescale card" elevation={8} sx={{
+                background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
+                cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={12}>
+                  <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                  }}>
+                  <AbcIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> LRWOED
+                  </Typography>
+                </Grid>
+              </Grid>
+              </Paper>
+            </Link>
+          </Grid>
+          {/* <Grid item xs={12} md={6}>
+            <Link color={'inherit'} underline='none' href={`/baseball`} onClick={(e) => {e.preventDefault();navigate(`/baseball`);}}>
+              <Paper className="littlescale card" elevation={8} sx={{
+                background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
+                cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={12}>
+                  <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                  }}>
+                  <SportsBaseballIcon style={{fontSize: 'inherit', marginRight: '30px'}} /> Baseball
+                  </Typography>
+                </Grid>
+              </Grid>
+              </Paper>
+            </Link>
+          </Grid> */}
+
+</Grid>
+</Grid>
+
+<Grid item xs={12} lg={6} sx={{padding: "6px"}}>
+   {/* Smaller items */}
+   <Grid container spacing={1.5}>
+   <Grid item xs={6} sx={{padding: "6px"}}>
+          <Link color={'inherit'} underline='none' href={`/counters`} onClick={(e) => {e.preventDefault();navigate(`/counters`);}}>
+            <Paper className="littlescale card" elevation={8} sx={{
+              background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
+              cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={12}>
+                <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                }}>
+                <GroupsIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> Users
+                </Typography>
+              </Grid>
+            </Grid>
+            </Paper>
+            </Link>
+          </Grid>
+          <Grid item xs={6} sx={{padding: "6px"}}>
+          <Link color={'inherit'} underline='none' href={`/stats`} onClick={(e) => {e.preventDefault();navigate(`/stats`);}}>
+            <Paper className="littlescale card" elevation={8} sx={{
+              background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
+              cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={12}>
+                <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                }}>
+                <QueryStatsIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> Stats
+                </Typography>
+              </Grid>
+            </Grid>
+            </Paper>
+            </Link>
+          </Grid>
+          {/* <Grid item xs={6}>
+          <Link color={'inherit'} underline='none' href={`/shop`} onClick={(e) => {e.preventDefault();navigate(`/shop`);}}>
+            <Paper className="littlescale card" elevation={8} sx={{
+              background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
+              cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={12}>
+                <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                }}>
+                <ShoppingCartIcon style={{fontSize: 'inherit', marginRight: '30px'}} /> Shop
+                </Typography>
+              </Grid>
+            </Grid>
+            </Paper>
+            </Link>
+          </Grid> */}
+          {/* <Grid item xs={6} md={3}>
+          <Link color={'inherit'} underline='none' href={`/blog`} onClick={(e) => {e.preventDefault();navigate(`/blog`);}}>
+            <Paper className="littlescale card" elevation={8} sx={{
+              background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
+              cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={12}>
+                <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                }}>
+                <FeedIcon style={{fontSize: 'inherit', marginRight: '30px'}} /> Blog
+                </Typography>
+              </Grid>
+            </Grid>
+            </Paper>
+            </Link>
+          </Grid> */}
+          <Grid item xs={6} sx={{padding: "6px"}}>
+            {unclaimedRewards > 0
+            ?
+            <Box className='littlescale'>
+            <Badge color="error" sx={{ "& .MuiBadge-badge": { fontSize: 24, minWidth: 30, minHeight: 30 } }} badgeContent={unclaimedRewards}>
+            <Link color={'inherit'} underline='none' href={`/rewards`} onClick={(e) => {e.preventDefault();navigate(`/rewards`);}}>
+            <Paper className="card" elevation={8} sx={{
+              background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
+              cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={12}>
+                <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                }}>
+                <StarsIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> Rewards
+                </Typography>
+              </Grid>
+            </Grid>
+            </Paper>
+            </Link>
+            </Badge>
+            </Box>
+            :
+            <Link color={'inherit'} underline='none' href={`/rewards`} onClick={(e) => {e.preventDefault();navigate(`/rewards`);}}>
+            <Paper className="littlescale card" elevation={8} sx={{
+              background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
+              cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={12}>
+                <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                }}>
+                <StarsIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> Rewards
+                </Typography>
+              </Grid>
+            </Grid>
+            </Paper>
+            </Link>
+          }
+          </Grid>
+          {/* <Grid item xs={6}>
+          <Link color={'inherit'} underline='none' href={`/servers`} onClick={(e) => {e.preventDefault();navigate(`/servers`);}}>
+            <Paper className="littlescale card" elevation={8} sx={{
+              background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
+              cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={12}>
+                <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                }}>
+                <ChatIcon style={{fontSize: 'inherit', marginRight: '30px'}} /> Servers
+                </Typography>
+              </Grid>
+            </Grid>
+            </Paper>
+            </Link>
+          </Grid> */}
+          </Grid>
+</Grid>
+
+</Grid>
+
+         
+        {/* </Grid> */}
+
+<Grid container>
+  <Grid item xs={12} lg={6}>
+  {dailyLeaderboard && <DailyHOCTable mini={true} dailyHOC={dailyLeaderboard} name={'Sitewide Daily Leaders'} countName={'Counts'}></DailyHOCTable>}
+  </Grid>
+  <Grid item xs={12} lg={6}>
+    {/* Top Threads Today */}
+  </Grid>
+</Grid>
+
         <Typography variant="body2" component={'div'} sx={{ textAlign: 'center', m: 1 }}>
           since February 27, 2023 — &nbsp;
+          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} onClick={(e) => {e.preventDefault();catify()}}>Cat</Link> — &nbsp;
           <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/about`} onClick={(e) => {e.preventDefault();navigate(`/about`);}}>About</Link> — &nbsp;
           <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/privacy-policy`} onClick={(e) => {e.preventDefault();navigate(`/privacy-policy`);}}>Privacy Policy</Link> — &nbsp;
           <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/contact-us`} onClick={(e) => {e.preventDefault();navigate(`/contact-us`);}}>Contact Us</Link> — &nbsp;

@@ -40,9 +40,11 @@ import { ContestPage } from './pages/ContestPage';
 import { AdminAchievementPage } from './pages/AdminAchievementPage';
 import { TheRockPage } from './pages/TheRockPage';
 import LrwoedPage from './lrwoed/LrwoedPage';
+import { AdminSystemMessagePage } from './pages/AdminSystemMessagePage';
+import { SeasonPage } from './pages/SeasonPage';
 
 function App() {
-  const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, allegiance, setAllegiance } = useFetchUser();
+  const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems } = useFetchUser();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light');
 
@@ -193,7 +195,7 @@ function App() {
         <ThemeProvider theme={theme}>
         <CssBaseline />
         <UserContext.Provider
-      value={{user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, allegiance, setAllegiance}}
+      value={{user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems}}
       >
         <CookiesProvider>
         <SocketContext.Provider value={socket}>
@@ -207,6 +209,7 @@ function App() {
             {counter && counter.roles.includes('admin') && <Route path="/admin/threads" element={<AdminThreadPage />} />}
             {counter && counter.roles.includes('admin') && <Route path="/admin/approve" element={<AdminApprovePage />} />}
             {counter && counter.roles.includes('admin') && <Route path="/admin/achievements" element={<AdminAchievementPage />} />}
+            {counter && counter.roles.includes('admin') && <Route path="/admin/system_message" element={<AdminSystemMessagePage />} />}
             {counter && counter.roles.includes('discord_verified') && <Route path="/register" element={<RegisterPage />} />}
             <Route path="/" element={<DefaultPage />} />
             <Route path="/counter/:counterId" element={<CounterPage />} />
@@ -231,6 +234,7 @@ function App() {
             <Route path="/contact-us" element={<AboutPage />} />
             <Route path="/huh" element={<TheRockPage />} />
             <Route path="/lrwoed" element={<LrwoedPage />} />
+            <Route path="/rewards" element={<SeasonPage />} />
             {user && counter && <Route path="/prefs" element={<PrefsPage />} />}
           </Routes>
           </SocketContext.Provider>

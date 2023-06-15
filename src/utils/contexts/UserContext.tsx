@@ -1,5 +1,5 @@
-import { createContext, MutableRefObject } from 'react';
-import { AllegianceType, Counter, User } from '../types';
+import { createContext } from 'react';
+import { AllegianceType, Counter, Item, User } from '../types';
 
 type UserContextType = {
     user?: User;
@@ -10,8 +10,8 @@ type UserContextType = {
     error?: boolean
     counter?: Counter,
     setCounter?: Function, 
-    allegiance?: AllegianceType,
-    setAllegiance?: Function,   
+    items?: Item[],
+    setItems?: Function,
   };
   
   export const UserContext = createContext<UserContextType>({loading: true});

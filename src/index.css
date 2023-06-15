@@ -89,6 +89,412 @@ html,
   color: white;
 }
 
+/* .card_wavypurple {
+  background: linear-gradient(45deg, #F48FB1, #FFC1E3, #FFE6F2, #FFC1E3, #F48FB1);
+  position: relative;
+}
+
+.card_wavypurple:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/unicorn.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+.border_circle_blue {
+  mask-image: url("./assets/unicorn.png");
+  mask-size: cover;
+}
+
+.border_circle_blue:before {
+  content: "";
+  background-image: url("./assets/unicorn2.png");
+  background-size: cover;
+} */
+
+/* .border_circle_blue:before {
+  background-image: url("./assets/gamer.png");
+  border-radius: 61% 39% 70% 30% / 30% 30% 70% 70%;
+  border: 2px solid #d700fd; 
+} */
+
+
+
+/* .border_circle_blue {
+  position: relative;
+  border-radius: 50%;
+  content: "🎉";
+}
+
+*/
+
+  /*
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 40px; 
+  text-align: center;
+  line-height: 200px; 
+  border: solid #2196f3;
+  border-radius: 50%;
+  pointer-events: none; */
+
+  /* .border_circle_blue:after {
+    content: "";
+  background-image: url("./assets/gamer.png");
+  background-size: cover;
+  z-index: 3;
+}  */
+
+/* .border_circle_blue-parent {
+  background-image: url('./assets/gamer.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+} */
+
+
+/* .border_circle_blue:before {
+  content: "🎉";
+  background: linear-gradient(to right, #ff0000, #00ff00, #0000ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  position: absolute;
+  top: 0;
+  left: 0;
+} */
+
+.pfp-image::before {
+  content: "";
+  display: block;
+  padding-top: 100%; /* Adjust the percentage to match the desired aspect ratio */
+}
+
+.border_rewarded {
+  border-radius: 10px;
+  box-shadow: 0 0 10px #FFC107, 0 0 20px #F44336, 0 0 30px #2196F3;
+}
+
+.card_rewarded {
+  background: linear-gradient(to right, #ff0000, #00ff00, #0000ff);
+  position: relative;
+}
+
+.card_rewarded:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/reward.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+.card_blooming {
+  background: linear-gradient(to right, #FF6B6B, #FF8883, #FEB2AA, #FAD0C9);
+  position: relative;
+}
+
+.card_blooming:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/rose.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+/* .border_blooming {
+  border-radius: 50% 0% ;
+  border: 2px solid rgba(255, 0, 0, 0.5);
+} */
+.border_blooming {
+  mask-image: url("./assets/blossom.png");
+  mask-size: cover;
+}
+
+.card_music {
+  background: linear-gradient(to right, #9C27B0, #673AB7);
+  position: relative;
+}
+
+.card_music:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/music.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+/* .border_music {
+  border-radius: 61% 39% 70% 30% / 30% 30% 70% 70%;
+  border: 2px solid #d700fd;
+} */
+
+.border_music {
+  mask-image: url("./assets/music_note.png");
+  mask-size: cover;
+}
+
+.card_gamer {
+  background: linear-gradient(to bottom right, #1D1D1D, #FF0000, #FF6600, #FFFF00);
+  position: relative;
+}
+
+.card_gamer:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/gamer.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+.border_gamer {
+  mask-image: url("./assets/gamer.png");
+  mask-size: cover;
+}
+
+.card_boom {
+  background: linear-gradient(45deg, #FF5722, #FFEB3B, #FF5722);
+  position: relative;
+}
+
+.card_boom:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/boom.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+.border_boom {
+  mask-image: url("./assets/boom.png");
+  mask-size: cover;
+}
+
+.card_book {
+  background: linear-gradient(45deg, #A59B8D, #BEB5A9, #D7CFC4, #F2E9E1);
+  position: relative;
+}
+
+.card_book:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/book.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+.border_book {
+  mask-image: url("./assets/book2.png");
+  mask-size: cover;
+}
+
+.border_book:before {
+  content: "";
+  background-image: url("./assets/book3.png");
+  background-size: cover;
+}
+
+.card_globe {
+  background: linear-gradient(135deg, #44A08D, #8ABE8C, #CDEB76, #60BB93, #1CA085);
+  position: relative;
+}
+
+.card_globe:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/globe.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+.border_globe {
+  mask-image: url("./assets/globe2.png");
+  mask-size: cover;
+}
+
+.card_shield {
+  background: linear-gradient(45deg, #C0C0C0, #838383, #000000, #838383, #C0C0C0);
+  position: relative;
+}
+
+.card_shield:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/shield.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+.border_shield {
+  mask-image: url("./assets/shield.png");
+  mask-size: cover;
+}
+
+.card_sapling {
+  background: linear-gradient(135deg, #63B76C, #8AC483, #C4E49F, #FFF7B5, #FDEB88);
+  position: relative;
+}
+
+.card_sapling:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/sapling.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+.border_sapling {
+  mask-image: url("./assets/sapling.png");
+  mask-size: cover;
+}
+
+.card_sword {
+  background: linear-gradient(45deg, #662D91, #6F4492, #985CB0, #B275CE, #D08EEC);
+  position: relative;
+}
+
+.card_sword:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/sword.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+.border_sword {
+  mask-image: url("./assets/sword.png");
+  mask-size: cover;
+}
+
+.card_dragon {
+  background: linear-gradient(45deg, #FF4500, #FFA500, #FFD700, #FFA500, #FF4500);
+  position: relative;
+}
+
+.card_dragon:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/dragon.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+.border_dragon {
+  mask-image: url("./assets/dragon2.png");
+  mask-size: cover;
+}
+
+.border_dragon:before {
+  content: "";
+  background-image: url("./assets/dragon3.png");
+  background-size: cover;
+}
+
+.card_unicorn {
+  background: linear-gradient(45deg, #F48FB1, #FFC1E3, #FFE6F2, #FFC1E3, #F48FB1);
+  position: relative;
+}
+
+.card_unicorn:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 15px;
+  width: 50%;
+  height: 100%;
+  background-image: url("./assets/unicorn.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: top right;
+  z-index: 1;
+}
+
+.border_unicorn {
+  mask-image: url("./assets/unicorn.png");
+  mask-size: cover;
+}
+
+.border_unicorn:before {
+  content: "";
+  background-image: url("./assets/unicorn2.png");
+  background-size: cover;
+}
+
+
 .card_default {
   background: #FAF9F6;
 }
@@ -172,11 +578,11 @@ html,
 	filter: blur(5px);
 }
 
-.no_border_square {
+.border_no_border_square {
   border-radius: 10px;
 }
 
-.no_border_circle {
+.border_no_border_circle {
   border-radius: 50%;
 }
 

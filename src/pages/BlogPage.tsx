@@ -11,7 +11,7 @@ const BlogPage = () => {
     const params = useParams();
     const blog:number = parseInt(params.blog || "1") || 1;
 
-    const { user, counter, loading, setCounter, allegiance } = useContext(UserContext); 
+    const { user, counter, loading, setCounter } = useContext(UserContext); 
     const socket = useContext(SocketContext);
 
     let title, author, date, body, avatarImage;

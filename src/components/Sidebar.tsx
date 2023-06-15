@@ -9,7 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
-import { Avatar, Badge, Button, CardMedia, Checkbox, Divider, Drawer, Link, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Modal, Skeleton, Step, StepLabel, Stepper, Tooltip, useTheme } from '@mui/material';
+import { Avatar, Badge, Button, CardMedia, Divider, Drawer, Link, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Modal, Skeleton, Step, StepLabel, Stepper, Tooltip, useTheme } from '@mui/material';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import HomeIcon from '@mui/icons-material/Home';
 import StadiumIcon from '@mui/icons-material/Stadium';
@@ -27,12 +27,12 @@ import CountggLogo from '../assets/countgg-128.png'
 import GavelIcon from '@mui/icons-material/Gavel';
 import SearchIcon from '@mui/icons-material/Search';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import { site_version } from '../utils/helpers';
+import { calculateLevel, site_version } from '../utils/helpers';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import ErrorIcon from '@mui/icons-material/Error';
 import PendingIcon from '@mui/icons-material/Pending';
 import { SocketContext } from '../utils/contexts/SocketContext';
-
+import LinearProgress from '@mui/material/LinearProgress';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -40,12 +40,34 @@ export const Sidebar = () => {
 
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
-  const { user, loading, loadedSiteVer, setLoadedSiteVer, counter } = useContext(UserContext);
+  const { loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter } = useContext(UserContext);
   const socket = useContext(SocketContext);
 
-  socket.on(`site_version`, function(data) {
-    if(setLoadedSiteVer) {setLoadedSiteVer(data)}
-  });
+  const [xp, setXP] = useState<any>(0);
+
+
+  useEffect(() => {
+
+    socket.on(`site_version`, function(data) {
+      if(setLoadedSiteVer) {setLoadedSiteVer(data)}
+    });
+  
+    socket.on(`xp`, function(data) {
+      // console.log(`XP: ${data}`);
+      if(counter) {setXP(prevXP => {return parseInt(prevXP) + parseInt(data)})}
+      // if(counter && setCounter) {setCounter(prevCounter => {prevCounter.xp = parseInt(prevCounter.xp) + parseInt(data); return prevCounter});console.log(counter.xp);console.log(typeof(data));console.log(typeof(counter.xp));}
+    });
+
+    return (() => {
+      socket.off(`site_version`);
+      socket.off('xp');
+    });
+  }, [loading])
+
+  useEffect(() => {
+    if(counter) {setXP(counter.xp)}
+  }, [loading])
+  
 
   
 
@@ -56,7 +78,6 @@ export const Sidebar = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [modalOpen, setModalOpen] = useState<boolean>(((counter && !counter.color) && true) || false);
-  const isMounted = useIsMounted();
   const [registrationToggle, setRegistrationToggle] = useState(true);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -368,8 +389,14 @@ export const Sidebar = () => {
                 aria-haspopup="true"
                 onClick={handleMenu}
                 color="inherit"
+                sx={{borderRadius: '0'}}
               >
                 <Avatar alt={`${counter.name}`} src={`${counter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${counter.discordId}/${counter.avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>
+                <Box style={{ marginLeft: '8px', width: '100px' }}>
+                  <Typography variant="body1">LVL {calculateLevel(xp).level}</Typography>
+                  <LinearProgress variant="determinate" color='secondary' title={`${xp.toString()} / ${calculateLevel(xp).xpRequired}`} value={((xp - calculateLevel(xp).minXP) / (calculateLevel(xp).xpRequired - calculateLevel(xp).minXP)) * 100} sx={{borderRadius: '10px'}} />
+                  <Typography sx={{fontSize: '9px', mt: 0.5}}>{`${parseInt(xp).toLocaleString()} / ${calculateLevel(xp).xpRequired.toLocaleString()}`}</Typography>
+                </Box>
               </IconButton>
               <Menu
                 id="menu-appbar"

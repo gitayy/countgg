@@ -10,11 +10,10 @@ export function About() {
         <a href="https://www.powerlanguage.co.uk/wordle/">
           <i>Wordle</i>
         </a>{" "}
-        by <a href="https://twitter.com/powerlanguish">powerlanguage</a>, which
-        I think is based on the TV show <i>Lingo</i>.
+        by <a href="https://twitter.com/powerlanguish">powerlanguage</a>, but you can't guess any words in the dictionary. The correct answer will also be a non-dictionary word.
       </p>
       <p>
-        You get {maxGuesses} tries to guess a target word.
+        You get {maxGuesses} tries to guess a target "word".
         <br />
         After each guess, you get Mastermind-style feedback.
       </p>
@@ -23,14 +22,14 @@ export function About() {
         rowState={RowState.LockedIn}
         wordLength={4}
         cluedLetters={[
-          { clue: Clue.Absent, letter: "w" },
-          { clue: Clue.Absent, letter: "o" },
+          { clue: Clue.Absent, letter: "x" },
+          { clue: Clue.Absent, letter: "j" },
           { clue: Clue.Correct, letter: "r" },
           { clue: Clue.Elsewhere, letter: "d" },
         ]}
       />
       <p>
-        <b>W</b> and <b>O</b> aren't in the target word at all.
+        <b>X</b> and <b>J</b> aren't in the target word at all.
       </p>
       <p>
         <b className={"green-bg"}>R</b> is correct! The third letter is{" "}
@@ -53,9 +52,9 @@ export function About() {
         wordLength={4}
         cluedLetters={[
           { clue: Clue.Correct, letter: "d" },
-          { clue: Clue.Correct, letter: "a" },
+          { clue: Clue.Correct, letter: "v" },
           { clue: Clue.Correct, letter: "r" },
-          { clue: Clue.Absent, letter: "k" },
+          { clue: Clue.Absent, letter: "b" },
         ]}
         annotation={"So close!"}
       />
@@ -64,17 +63,14 @@ export function About() {
         wordLength={4}
         cluedLetters={[
           { clue: Clue.Correct, letter: "d" },
-          { clue: Clue.Correct, letter: "a" },
+          { clue: Clue.Correct, letter: "v" },
           { clue: Clue.Correct, letter: "r" },
-          { clue: Clue.Correct, letter: "t" },
+          { clue: Clue.Correct, letter: "h" },
         ]}
         annotation={"Got it!"}
       />
       <p>
-        This game will be free and ad-free forever,
-        <br />
-        but you can't buy me a coffee if
-        you'd like.
+        Yep... this game sucks.
       </p>
     </div>
   );

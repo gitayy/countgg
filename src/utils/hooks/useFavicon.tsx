@@ -7,13 +7,14 @@ export function useFavicon() {
   const countRef = useRef(0);
 
   tinycon.setOptions({
-    width: 7,
-    height: 12,
+    // width: 7,
+    // height: 12,
     // font: '9px Roboto',
-    font: 'Roboto',
+    // font: 'Roboto',
+    // font: `${10 * (Math.ceil(window.devicePixelRatio) || 1)}px sans-serif`,
     color: '#ffffff',
-    background: '#549A2F',
-    fallback: true
+    // background: '#145365',
+    fallback: true,
   });
 
   useEffect(() => {

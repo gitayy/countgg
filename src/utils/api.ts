@@ -4,6 +4,7 @@ import {
   Counter,
   ThreadType,
   AllegianceType,
+  Item,
 } from './types';
 
 
@@ -14,8 +15,7 @@ export const getAuthStatus = () =>
   axios.get<{
     user: User,
     counter: Counter, 
-    allegiance: AllegianceType, 
-    teammates: Counter[],
+    items: Item[], 
     site_version: string
   }>(`${API_URL}/auth/status`, CONFIG);
 
@@ -122,6 +122,13 @@ axios.get<any>(`${API_URL}/counter/achievements/${uuid}`, CONFIG);
 export const getAchievement = (id: number) =>
 axios.get<any>(`${API_URL}/counter/achievement/${id}`, CONFIG);
 
+export const unlockReward = (level: number) =>
+axios.post(
+  `${API_URL}/user/unlockReward`,
+  {level: level},
+  CONFIG
+);
+
 // Contest related
 
 export const joinAlliance = (timestamp: string) =>
@@ -207,5 +214,12 @@ export const adminToggleMute = (uuid: string) =>
 axios.post(
   `${API_URL}/counter/adminToggleMute`,
   {uuid: uuid},
+  CONFIG
+);
+
+export const adminSendSystemMessage = (message: string) =>
+axios.post(
+  `${API_URL}/counter/adminSendSystemMessage`,
+  {message: message},
   CONFIG
 );

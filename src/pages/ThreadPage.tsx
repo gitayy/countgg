@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import { Fragment, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AlertColor, alpha, Badge, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid, Link, Snackbar, Tab, Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Alert, AlertColor, alpha, Badge, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid, LinearProgress, Link, Snackbar, Tab, Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
 import { addCounterToCache, cachedCounters } from '../utils/helpers';
 import { useFetchRecentCounts } from '../utils/hooks/useFetchRecentCounts';
@@ -37,12 +37,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const setFaviconCount = useFavicon();
 
     const theme = useTheme();
-    useEffect(() => {
-      document.title = `${thread_name} | countGG`;
-      return (() => {
-        document.title = 'countGG';
-      })
-    }, [location.pathname]);
 
     const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
     
@@ -50,7 +44,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [socketStatus, setSocketStatus] = useState("CONNECTING...");
     const [socketViewers, setSocketViewers] = useState(1);
 
-    const { user, counter, loading, allegiance } = useContext(UserContext);
+    const { user, counter, loading } = useContext(UserContext);
     const { thread, threadLoading, setThread } = useFetchThread(thread_name);
     const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest } = useFetchRecentCounts(thread_name, context);
     const { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats } = useFetchRecentChats(thread_name, context);
@@ -61,9 +55,22 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [lastCount, setLastCount] = useState<{lastCount: PostType, lastCounter: Counter}>();
     const [dailyHOC, setDailyHOC] = useState<{[authorUUID: string]: {counter: Counter, counts: number}}>();
-    const [dailyRobs, setDailyRobs] = useState<{[authorUUID: string]: {counter: Counter, counts: number}}>();
+    const [dailyRobs, setDailyRobs] = useState<{ counterUUID: string, id: number, moneyRobbed: string, postUUID: string, timestamp: string }[]|undefined>();
     const [newRecentPostLoaded, setNewRecentPostLoaded] = useState('');
     const [splits, setSplits] = useState<any>([]);
+
+    useEffect(() => {
+      if(thread) {
+        document.title = `${thread.title} | countGG`;
+      } else if(threadLoading) {
+        document.title = `Loading...`;
+      } else if(!thread && !threadLoading) {
+        document.title = `No thread found`;
+      }
+      return (() => {
+        document.title = 'countGG';
+      })
+    }, [thread]);
     
     const [bank, setBank] = useState(-1);
     const [robOpen, setRobOpen] = useState(false);
@@ -272,9 +279,13 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               setDailyHOC(data);
             });
             socket.on(`dailyRobs`, function(data) {
+              const {robs, counters} = data;
+              // console.log(`HEEEY`);
+              // console.log(data);
               // console.log("DAILY ROBS");
               // console.log(data);
-              setDailyRobs(data);
+              setDailyRobs(robs);
+              if(counters) {for(const counter of counters) {addCounterToCache(counter)};}
             });
             socket.on(`bank`, function(data) {
               // console.log("Bank:", data);
@@ -292,7 +303,15 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             });
             socket.on(`addCounterToCache`, function(data) {
               addCounterToCache(data);
-              setLatencyStateTest(data.uuid);
+              setLatencyStateTest(`${data.uuid}_${Date.now()}`);
+            });
+            socket.on(`postBans`, function(data) {
+              if(data.counters) {
+                for(const counter of data.counters) {
+                  addCounterToCache(counter);
+                }
+              }
+              setLatencyStateTest(`${data.uuid}_${Date.now()}`);
             });
             socket.on(`post`, function(data: {post: PostType, counter: Counter}) {
               if(renderLatencyEnabled.current) {
@@ -363,7 +382,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 }
                 // setRenderLatencyCheck(true); //renderLatency test 1 requirement. 
                 setNewRecentPostLoaded(data.post.uuid); // Only do this here.
-                setLatencyStateTest(data.post.uuid);
+                setLatencyStateTest(`${data.post.uuid}_${Date.now()}`);
                 if(data.post.hasComment) {
                   setNewChatsLoadedState(data.post.uuid);
                 }
@@ -710,6 +729,12 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             You can no longer count in this thread. You can still post, but any count attempts will be stricken.
           </Typography>
         </Box>}
+        {thread && context && <Box display="flex" alignItems="center" sx={{p: 2, mb: 2, border: '1px solid', borderColor: 'warning.main'}}>
+            <Box component={InfoOutlined} sx={{ fontSize: 24, color: 'info.main', mr: 1 }} />
+            <Typography variant="body1">
+              You're viewing the context of an old post. For live updates, click <Link href={`/thread/${thread.name}`}>here</Link>.
+            </Typography>
+          </Box>}
           <Typography variant="h5" sx={{mb: 1}}>About</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.description : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           <Typography variant="h5" sx={{mt: 2, mb: 1}}>Rules</Typography>
@@ -722,14 +747,16 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             <Typography variant='body2'>UUID: {thread.uuid}</Typography>
           </Box></> : <>Loading...</>}
         </TabPanel>
-        <TabPanel value="tab_2" sx={{flexGrow: 1, p: 4}}>
-          <Typography variant='h4'>Chats</Typography>
-          <Box sx={{height: '70vh'}}>
+        <TabPanel value="tab_2" sx={{flexGrow: 1, p: 0}}>
+          {/* <Typography variant='h4'>Chats</Typography> */}
+          {/* <Box sx={{height: '70vh'}}> */}
           {chatsMemo}
-          </Box>
+          {/* </Box> */}
         </TabPanel>
         <TabPanel value="tab_3" sx={{flexGrow: 1}}>
-        {lastCount && <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Last count: {lastCount.lastCount.rawCount} by {lastCount.lastCounter.name}</Typography>}
+        {lastCount && <>
+        <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Last count: {lastCount.lastCount.rawCount} by {lastCount.lastCounter.name}</Typography>
+        {thread && lastCount.lastCount && lastCount.lastCount.rawCount && ['main', 'slow', 'bars', 'parity', 'yoco', 'roulette', 'tslc', 'randomhour', '1inx', 'countdown', 'tugofwar'].includes(thread.validationType) && <LinearProgress variant="determinate" color='primary' title={`${parseInt(lastCount.lastCount.rawCount) % 1000}`} value={(parseInt(lastCount.lastCount.rawCount) % 1000) / 10} sx={{borderRadius: '10px'}} />}</>}
           <SplitsTable splits={splits}></SplitsTable>
         </TabPanel>
         <TabPanel value="tab_4" sx={{flexGrow: 1}}>
@@ -739,8 +766,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             Rob
           </Button>}
           </>}
-          {dailyHOC && <DailyHOCTable dailyHOC={dailyHOC} name={'Daily Leaderboard'} countName={'Counts'}></DailyHOCTable>}
-          {/* {dailyRobs && <DailyRobTable ></DailyRobTable>} */}
+          {dailyHOC && <DailyHOCTable mini={false} dailyHOC={dailyHOC} name={'Daily Leaderboard'} countName={'Counts'}></DailyHOCTable>}
+          {dailyRobs && <DailyRobTable dailyRobs={dailyRobs}></DailyRobTable>}
         </TabPanel>
         </Box>
         </TabContext>

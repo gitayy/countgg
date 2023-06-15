@@ -1,5 +1,5 @@
-import { useContext, useEffect, useState } from 'react';
-import { Box, FormControl, IconButton, InputAdornment, MenuItem, Select, SelectChangeEvent, Tab, TextField, Theme, Typography, useMediaQuery } from '@mui/material';
+import { Fragment, useContext, useEffect, useState } from 'react';
+import { Autocomplete, Box, FormControl, IconButton, InputAdornment, MenuItem, Select, SelectChangeEvent, Tab, TextField, Theme, Typography, useMediaQuery } from '@mui/material';
 import { Loading } from '../components/Loading';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getCountersPage, getThreadStats } from '../utils/api';
@@ -52,7 +52,7 @@ export const StatsPage = () => {
       }, [location.pathname]);
 
   const { allThreads, allThreadsLoading } = useFetchAllThreads();
-    const [selectedThread, setSelectedThread] = useState<ThreadType|{name: string, uuid: string}>();
+    const [selectedThread, setSelectedThread] = useState<ThreadType|{name: string, uuid: string}|undefined>({name: 'all', uuid: 'all'});
     const [name, setName] = useState('');
     const [uuid, setUuid] = useState('');
 
@@ -126,7 +126,6 @@ export const StatsPage = () => {
       <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
         <Box sx={{mb: 1, p: 2, pl: 0}}>
         <FormControl variant="standard" sx={{mr: 4}}>
-            {/* {uuid.length == 0 && <Typography>Please select a thread.</Typography>} */}
             <Typography>Please select a thread:</Typography>
         <Select
           value={selectedThread ? selectedThread.uuid : ''}
@@ -138,6 +137,28 @@ export const StatsPage = () => {
           ))}
         </Select>
       </FormControl>
+      {/* <Autocomplete
+      options={allThreads}
+      getOptionLabel={(option) => option.name}
+      onChange={(event, value) => {
+        console.log(event.target);
+        console.log(event.currentTarget);
+        if(value && value.uuid) {
+          if(event. == 'all') {
+            setSelectedThread({name: 'all', uuid: 'all'});
+          } else {
+            setSelectedThread(value);
+          }
+        }
+        // const selectedOption = allThreads.find((thread) => thread.name === value.na);
+        // if (selectedOption) {
+        //   console.log('Selected UUID:', selectedOption.uuid);
+        // }
+      }}
+      renderInput={(params) => (
+        <TextField {...params} label="Select an option" variant="outlined" />
+      )}
+    /> */}
         <DatePicker
           label="Select a Date"
           value={selectedDate}

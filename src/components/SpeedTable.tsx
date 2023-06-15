@@ -1,4 +1,4 @@
-import { TableRow, TableCell, TableContainer, Table, TableHead, TableBody, Typography, Link, TablePagination } from "@mui/material";
+import { TableRow, TableCell, TableContainer, Table, TableHead, TableBody, Typography, Link, TablePagination, Avatar, CardHeader } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cachedCounters, convertToTimestamp, formatTimeDiff } from "../utils/helpers";
@@ -58,21 +58,16 @@ export const SpeedTable = ({ speed, thread }: Props) => {
             {obj.qualifiedCounters.map((author, index) => (
                 <span key={index}>
                 {cachedCounters[author] ? (
-                    <Link
-                    color={cachedCounters[author].color}
-                    underline="hover"
-                    href={`/counter/${cachedCounters[author].uuid}`}
-                    onClick={(e) => {
-                        e.preventDefault();
-                        navigate(`/counter/${cachedCounters[author].uuid}`);
-                    }}
-                    >
+                  <CardHeader sx={{p: 0}} avatar={cachedCounters[author] && cachedCounters[author].name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${cachedCounters[author].name}`} src={`${cachedCounters[author].avatar.length > 5 && `https://cdn.discordapp.com/avatars/${cachedCounters[author].discordId}/${cachedCounters[author].avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
+                  title={<Link color={cachedCounters[author].color} underline='hover' href={`/counter/${cachedCounters[author].uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[author].uuid}`);}}>
                     {cachedCounters[author].name}
                     </Link>
+                  }></CardHeader>
+
                 ) : (
                     <>{author}</>
                 )}
-                {index < obj.qualifiedCounters.length - 1 ? ", " : ""}
+                {/* {index < obj.qualifiedCounters.length - 1 ? ", " : ""} */}
                 </span>
             ))}
         </TableCell>
@@ -87,7 +82,16 @@ export const SpeedTable = ({ speed, thread }: Props) => {
         <TableRow key={row.counter}>
           <TableCell>{index + 1}</TableCell>
           <TableCell>
-          {cachedCounters[row.counter] ? <Link color={cachedCounters[row.counter].color} underline="hover" href={`/counter/${cachedCounters[row.counter].uuid}`} onClick={(e) => {e.preventDefault(); navigate(`/counter/${cachedCounters[row.counter].uuid}`);}}> {cachedCounters[row.counter].name}</Link> : <Link underline="hover" href={`/counter/${row.counter}`} onClick={(e) => {e.preventDefault(); navigate(`/counter/${row.counter}`);}}> {row.counter}</Link>}
+          {cachedCounters[row.counter] ? (
+                  <CardHeader sx={{p: 0}} avatar={cachedCounters[row.counter] && cachedCounters[row.counter].name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${cachedCounters[row.counter].name}`} src={`${cachedCounters[row.counter].avatar.length > 5 && `https://cdn.discordapp.com/avatars/${cachedCounters[row.counter].discordId}/${cachedCounters[row.counter].avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
+                  title={<Link color={cachedCounters[row.counter].color} underline='hover' href={`/counter/${cachedCounters[row.counter].uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[row.counter].uuid}`);}}>
+                    {cachedCounters[row.counter].name}
+                    </Link>
+                  }></CardHeader>
+
+                ) : (
+                    <>{row.counter}</>
+                )}
           </TableCell>
           <TableCell>{formatTimeDiff(0, row.obj.time)}</TableCell>
           <TableCell><Link underline="hover" href={`/thread/${thread.name}/${row.obj.start}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}/${row.obj.start}`);}}>{parseInt(row.obj.startCount).toLocaleString()}</Link></TableCell>
@@ -100,7 +104,7 @@ export const SpeedTable = ({ speed, thread }: Props) => {
 return (
   <TableContainer>
     <Typography sx={{mt: 2, mb: 2}} variant='body2'>Hall of Speed</Typography>
-    <Table>
+    <Table size="small">
       <TableHead>
         <TableRow>
           <TableCell>Rank</TableCell>

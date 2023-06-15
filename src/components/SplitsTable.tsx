@@ -1,4 +1,5 @@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography } from '@mui/material';
+import { convertMsToFancyTime } from '../utils/helpers';
 
 interface Props {
     splits: { number: string, split: number }[]|undefined;
@@ -23,7 +24,7 @@ export const SplitsTable = ({ splits }: Props) => {
                       <TableCell component="th" scope="row">
                         {split.number}
                       </TableCell>
-                      <TableCell>{split.split}ms</TableCell>
+                      <TableCell>{convertMsToFancyTime(split.split)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

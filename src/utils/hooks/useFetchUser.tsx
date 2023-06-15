@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getAuthStatus } from '../api';
-import { addCounterToCache, cachedCounters } from '../helpers';
-import { AllegianceType, Counter, User } from '../types';
+import { Counter, Item, User } from '../types';
 import { useIsMounted } from './useIsMounted';
 
 export function useFetchUser() {
@@ -9,7 +8,7 @@ export function useFetchUser() {
   const [loading, setLoading] = useState<boolean>(true);
   const [loadedSiteVer, setLoadedSiteVer] = useState<string>();
   const [counter, setCounter] = useState<Counter>();
-  const [allegiance, setAllegiance] = useState<AllegianceType>();
+  const [items, setItems] = useState<Item[]>();
   const isMounted = useIsMounted();
 
   useEffect(() => {
@@ -19,12 +18,7 @@ export function useFetchUser() {
           setUser(data.user); 
           setLoadedSiteVer(data.site_version);
           setCounter(data.counter);
-          setAllegiance(data.allegiance);
-          if(data.teammates) {
-            for(const counter of data.teammates) {
-              addCounterToCache(counter);
-            }
-          }
+          setItems(data.items);
         }
         setLoading(false);
       })
@@ -33,5 +27,5 @@ export function useFetchUser() {
       })
   }, []);
 
-  return { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, allegiance, setAllegiance };
+  return { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems };
 }

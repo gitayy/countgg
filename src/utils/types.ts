@@ -43,6 +43,7 @@ export type Counter = {
   title: string,
   xp: number,
   lastRob?: string,
+  emoji?: string,
 };
 
 export type PostType = {
@@ -129,4 +130,18 @@ export type AllegianceType = {
     p1: [number, number],
     p2: [number, number]
   }
+}
+
+export type Item = {
+  id: number;
+  name: string;
+  internal_name: string;
+  description: string;
+  category: string;
+  unlockMethod: string;
+  unlockDescription: string;
+  price: number;
+  quantity: number;
+  levelToUnlock: number;
+  achievementId: number;
 }

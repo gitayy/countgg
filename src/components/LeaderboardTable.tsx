@@ -1,4 +1,4 @@
-import { TableRow, TableCell, TableContainer, Table, TableHead, TableBody, Typography, Link } from "@mui/material";
+import { TableRow, TableCell, TableContainer, Table, TableHead, TableBody, Typography, Link, CardHeader, Avatar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { cachedCounters } from "../utils/helpers";
 
@@ -27,8 +27,18 @@ const leaderboardRows = Object.entries(leaderboard)
   .map(([author, count], index) => (
     <TableRow key={index}>
       <TableCell>{index + 1}</TableCell>
-      <TableCell>{cachedCounters[author] ? <Link color={cachedCounters[author].color} underline='hover' href={`/counter/${cachedCounters[author].uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[author].uuid}`);}}>{cachedCounters[author].name}</Link> : <>{author}</>}</TableCell>
-      <TableCell>{count}</TableCell>
+      <TableCell>
+      {cachedCounters[author] ? (
+                  <CardHeader sx={{p: 0}} avatar={cachedCounters[author] && cachedCounters[author].name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${cachedCounters[author].name}`} src={`${cachedCounters[author].avatar.length > 5 && `https://cdn.discordapp.com/avatars/${cachedCounters[author].discordId}/${cachedCounters[author].avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
+                  title={<Link color={cachedCounters[author].color} underline='hover' href={`/counter/${cachedCounters[author].uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[author].uuid}`);}}>
+                    {cachedCounters[author].name}
+                    </Link>
+                  }></CardHeader>
+                ) : (
+                    <>{author}</>
+                )}
+      </TableCell>
+      <TableCell>{count.toLocaleString()}</TableCell>
     </TableRow>
   ));
 
@@ -36,8 +46,8 @@ const leaderboardRows = Object.entries(leaderboard)
 
 return (
   <TableContainer>
-    <Typography sx={{mb: 1}} variant='body2'>{sumCounts.toLocaleString()} {sumCounts != 1 ? "counts" : "count"}</Typography>
-    <Table>
+    <Typography sx={{mb: 1}} variant='body2'>{sumCounts.toLocaleString()} {sumCounts !== 1 ? "counts" : "count"}</Typography>
+    <Table size="small">
       <TableHead>
         <TableRow>
           <TableCell>Rank</TableCell>

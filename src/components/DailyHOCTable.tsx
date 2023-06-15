@@ -1,11 +1,13 @@
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, Link } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, Link, CardHeader, Avatar } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { Counter } from '../utils/types';
+import { useState } from 'react';
 
 interface Props {
   dailyHOC: {[authorUUID: string]: { counter: Counter, counts: number }}|undefined;
   name: string;
   countName: string;
+  mini: boolean;
 }
 
 const PlaceCell = ({ place }: { place: number }) => {
@@ -38,8 +40,15 @@ const PlaceCell = ({ place }: { place: number }) => {
   };
   
 
-export const DailyHOCTable = ({ dailyHOC, name, countName }: Props) => {
+export const DailyHOCTable = ({ dailyHOC, name, countName, mini }: Props) => {
     const navigate = useNavigate();
+
+    const [expanded, setExpanded] = useState(!mini);
+
+  const toggleExpand = () => {
+    setExpanded(!expanded);
+  };
+
     if(dailyHOC !== undefined && dailyHOC !== null) {
         const rows = Object.entries(dailyHOC).map(([authorUUID, { counter, counts }]) => ({
             counter,
@@ -49,9 +58,9 @@ export const DailyHOCTable = ({ dailyHOC, name, countName }: Props) => {
         
           return (<>
             <Typography variant='h6'>{name}</Typography>
-            <Typography sx={{mb: 1}} variant='body2'>{sumCounts} {sumCounts != 1 ? "counts" : "count"}</Typography>
+            {!mini && <Typography sx={{mb: 1}} variant='body2'>{sumCounts} {sumCounts != 1 ? "counts" : "count"}</Typography>}
             <TableContainer component={Paper}>
-              <Table>
+              <Table size="small">
                 <TableHead>
                   <TableRow>
                   <TableCell>Rank</TableCell>
@@ -60,23 +69,27 @@ export const DailyHOCTable = ({ dailyHOC, name, countName }: Props) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {rows.map((row, index) => {
-                    // console.log("HERES ROW");
-                    // console.log(row);
-
+                  {rows.slice(0, expanded ? rows.length : 3).map((row, index) => {
                     return row.counter ? (
                     <TableRow key={row.counter.name}>
                       <PlaceCell place={index + 1} />
                       <TableCell component="th" scope="row" sx={{color: row.counter.color}}>
-                      <Link color={'inherit'} underline='hover' href={`/counter/${row.counter.uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${row.counter.uuid}`);}}>
+                      <CardHeader sx={{p: 0}} avatar={row.counter && row.counter.name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${row.counter.name}`} src={`${row.counter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${row.counter.discordId}/${row.counter.avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
+                      title={<Link color={'inherit'} underline='hover' href={`/counter/${row.counter.uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${row.counter.uuid}`);}}>
                         {row.counter.name}
                         </Link>
+                      }></CardHeader>
                       </TableCell>
-                      <TableCell>{row.counts}</TableCell>
+                      <TableCell>{row.counts.toLocaleString()}</TableCell>
                     </TableRow>) : <></>}
                   )}
                 </TableBody>
               </Table>
+              {mini && rows.length > 3 && (
+                <Typography variant="body2" onClick={toggleExpand} style={{ cursor: 'pointer' }}>
+                  {expanded ? 'Show less' : 'Show more'}
+                </Typography>
+              )}
             </TableContainer>
             </>
           );

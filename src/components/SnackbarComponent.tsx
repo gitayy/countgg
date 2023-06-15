@@ -1,19 +1,16 @@
 import { Alert, AlertColor, Snackbar } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useSound from "use-sound";
 import { SocketContext } from "../utils/contexts/SocketContext";
 import { UserContext } from "../utils/contexts/UserContext";
-import { useIsMounted } from "../utils/hooks/useIsMounted";
-import { usePageVisibility } from "../utils/hooks/usePageVisibility";
-
+import Confetti from 'react-confetti'
+import useWindowDimensions from "../utils/hooks/useWindowDimensions";
 
 export const SnackbarComponent = () => {
 
     const socket = useContext(SocketContext);
-    const {counter, loading, setCounter, setAllegiance} = useContext(UserContext);
+    const {counter, setCounter, items, setItems, user, setUser} = useContext(UserContext);
     const navigate = useNavigate();
-    const isVisible = usePageVisibility();
 
     const [snack, setSnack] = useState({
         message: '',
@@ -36,6 +33,34 @@ export const SnackbarComponent = () => {
             }, 5000);
           });
 
+          socket.on(`levelUp`, function(data) {
+            setSnack({ message: `Level ${data.level} reached! New reward available...`, severity: 'success', open: true, url: `/rewards`})
+            setConfetti(true);
+            setTimeout(() => {
+                setSnack({
+                    message: '',
+                    severity: '',
+                    open: false,
+                    url: ''
+                  });
+                  setConfetti(false);
+            }, 5000);
+          });
+
+          socket.on(`item`, function(data) {
+            setSnack({ message: `New ${data.item ? data.item.category : "item"} unlocked: ${data.item ? data.item.name : "???"}`, severity: 'success', open: true, url: `/prefs`})
+            setConfetti(true);
+            setTimeout(() => {
+                setSnack({
+                    message: '',
+                    severity: '',
+                    open: false,
+                    url: ''
+                  });
+                  setConfetti(false);
+            }, 5000);
+          });
+
           socket.on(`popupMessage`, function(data) {
             setSnack({ message: data, severity: 'error', open: true, url: `/counter/${counter ? counter.uuid : ''}`})
             setTimeout(() => {
@@ -51,6 +76,18 @@ export const SnackbarComponent = () => {
           socket.on(`setCounter`, function(data) {
             if(setCounter) {
               setCounter(data);
+            }
+          });
+
+          socket.on(`setItems`, function(data) {
+            if(setItems) {
+              setItems(data);
+            }
+          });
+
+          socket.on(`setUser`, function(data) {
+            if(setUser) {
+              setUser(data);
             }
           });
 
@@ -74,18 +111,14 @@ export const SnackbarComponent = () => {
           return(() => {
             socket.off(`setCounter`);
           })
-        }, [setCounter])
+        }, [setCounter])     
 
-        useEffect(() => {
-          socket.on(`setAllegiance`, function(data) {
-            if(setAllegiance) {
-              setAllegiance(data);
-            }
-          });
-          return(() => {
-            socket.off(`setAllegiance`);
-          })
-        }, [setAllegiance])        
+
+        const [confetti, setConfetti] = useState(false);
+        const { height, width } = useWindowDimensions();
+
+        // console.log("AYO@@2");
+        // console.log(height, width, window.innerHeight, window.innerWidth);
 
       return(<>
       {snack && <Snackbar sx={{cursor: 'pointer'}} open={snack.open} onClick={() => navigate(snack.url)} anchorOrigin={{vertical: 'top', horizontal: 'center'}}>
@@ -93,6 +126,9 @@ export const SnackbarComponent = () => {
            {snack.message}
          </Alert>
        </Snackbar>}
+       {confetti && <Confetti run={confetti} recycle={false} height={height || Math.floor(window.innerHeight)} width={width || Math.floor(window.innerWidth)} />}
+       {/* <Confetti /> */}
+       {/* <Confetti height={height || Math.floor(window.innerHeight)} width={width || Math.floor(window.innerWidth)} /> */}
       </>);
 
 }

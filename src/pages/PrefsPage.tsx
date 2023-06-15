@@ -8,10 +8,15 @@ import { CounterCard } from '../components/CounterCard';
 import { Loading } from '../components/Loading';
 import { HexColorPicker } from 'react-colorful';
 import { useLocation } from 'react-router-dom';
+import Count from '../components/Count';
 
   export const PrefsPage = () => {
-    const { user, counter } = useContext(UserContext);
+    const { user, counter, items } = useContext(UserContext);
     const isMounted = useIsMounted();
+
+
+    // console.log("AYO");
+    // console.log(items);
 
     const location = useLocation();
     useEffect(() => {
@@ -47,6 +52,7 @@ import { useLocation } from 'react-router-dom';
     const [cardStyle, setCardStyle] = useState(counter?.cardStyle || 'card_default');
     const [cardBorderStyle, setCardBorderStyle] = useState(counter?.cardBorderStyle || 'no_border_square');
     const [title, setTitle] = useState(counter?.title || 'COUNTER');
+    const [emoji, setEmoji] = useState(counter?.emoji || "None");
 
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -78,6 +84,7 @@ import { useLocation } from 'react-router-dom';
           counter.cardStyle = cardStyle;
           counter.cardBorderStyle = cardBorderStyle;
           counter.title = title;
+          counter.emoji = emoji === "None" ? undefined : emoji;
           try {const res = await updateCounterPrefs(user, counter);
           if(res.status == 201) {
             setSnackbarSeverity('success');
@@ -97,7 +104,7 @@ import { useLocation } from 'react-router-dom';
         if(Math.random() > 0.5) {
           setMaybeU('u');
         }
-      })
+      }, [])
 
     if(user && counter) {
 
@@ -114,7 +121,7 @@ import { useLocation } from 'react-router-dom';
         <Container maxWidth="xl" sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
           <Typography variant="h4">Preferences</Typography>
           <Box sx={{mt: 2, p: 1, borderRadius: '10px', bgcolor: 'background.paper', color: 'text.primary'}}>
-            <Typography variant="h6">Counter Preferences</Typography>
+            <Typography variant="h6">Profile Preferences</Typography>
             <FormControl sx={{m: 2}}>
                 <InputLabel id="card-style-label">Card Style</InputLabel>
                 <Select
@@ -126,9 +133,9 @@ import { useLocation } from 'react-router-dom';
                     onChange={e => setCardStyle((e.target as HTMLInputElement).value)}
                     sx={{width: 200}}
                 >
-                  {Object.keys(card_backgrounds).map((card) => {
-                    if(user.card_backgrounds.includes(card_backgrounds[card].value)) {
-                      return (<MenuItem value={card}>{card}</MenuItem>)
+                  {items && items.map((item) => {
+                    if(item.category === 'card') {
+                      return (<MenuItem value={item.internal_name}>{item.name}</MenuItem>)
                     }
                   })}
                 </Select>
@@ -144,9 +151,9 @@ import { useLocation } from 'react-router-dom';
                     onChange={e => setCardBorderStyle((e.target as HTMLInputElement).value)}
                     sx={{width: 200}}
                 >
-                  {Object.keys(card_borders).map((card) => {
-                    if(user.card_borders.includes(card_borders[card].value)) {
-                      return (<MenuItem value={card}>{card}</MenuItem>)
+                  {items && items.map((item) => {
+                    if(item.category === 'border') {
+                      return (<MenuItem value={item.internal_name}>{item.name}</MenuItem>)
                     }
                   })}
                 </Select>
@@ -162,23 +169,43 @@ import { useLocation } from 'react-router-dom';
                     onChange={e => setTitle((e.target as HTMLInputElement).value)}
                     sx={{width: 200}}
                 >
-                  {Object.keys(titles).map((card) => {
-                    if(user.titles.includes(titles[card].value)) {
-                      return (<MenuItem value={card}>{card}</MenuItem>)
+                  {items && items.map((item) => {
+                    if(item.category === 'title') {
+                      return (<MenuItem value={item.internal_name}>{item.name}</MenuItem>)
+                    }
+                  })}
+                </Select>
+            </FormControl>
+            <FormControl sx={{m: 2}}>
+                <InputLabel id="emoji-label">Emoji</InputLabel>
+                <Select
+                    labelId="emoji-label"
+                    id="emoji"
+                    value={emoji}
+                    defaultValue={emoji}
+                    label="Emoji"
+                    onChange={e => setEmoji((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  <MenuItem value={"None"}>None</MenuItem>
+                  {items && items.map((item) => {
+                    if(item.category === 'emoji') {
+                      return (<MenuItem value={item.internal_name}>{item.name}</MenuItem>)
                     }
                   })}
                 </Select>
             </FormControl>
             
             <Box sx={{margin: '5px'}}>
-              <CounterCard fullSize={false} maxHeight={32} maxWidth={32} boxPadding={2} counter={{...counter, cardStyle: cardStyle, cardBorderStyle: cardBorderStyle, title: title}}></CounterCard>
+              <CounterCard fullSize={false} maxHeight={32} maxWidth={32} boxPadding={2} counter={{...counter, cardStyle: cardStyle, cardBorderStyle: cardBorderStyle, title: title, emoji: emoji === 'None' ? undefined : emoji}}></CounterCard>
             </Box>
             <Box sx={{margin: '5px'}}>
-              <CounterCard sx={{p: 1}} fullSize={true} maxHeight={100} maxWidth={100} boxPadding={2} counter={{...counter, cardStyle: cardStyle, cardBorderStyle: cardBorderStyle, title: title}}></CounterCard>
+              <CounterCard sx={{p: 1}} fullSize={true} maxHeight={100} maxWidth={100} boxPadding={2} counter={{...counter, cardStyle: cardStyle, cardBorderStyle: cardBorderStyle, title: title, emoji: emoji === 'None' ? undefined : emoji}}></CounterCard>
             </Box>
             </Box>
             <Box sx={{mt: 2, p: 1, borderRadius: '10px', bgcolor: 'background.paper', color: 'text.primary'}}>
-            <Typography variant="h6">User Preferences</Typography>
+            <Typography variant="h6">Counting Preferences</Typography>
+            {/* <Count user={user} myCounter={fakeCounter} key={`fakeCount_${Math.random()}`} thread={{}} socket={{}} post={fakePost(fakeCounter)} counter={fakeCounter} maxWidth={'32px'} maxHeight={'32px'} /> */}
             <FormGroup sx={{m: 2, userSelect: 'none'}}>
               {/* Uncomment these once complete */}
               {/* <FormControlLabel control={<Switch

@@ -3,7 +3,6 @@ import { AchievementType, CounterAchievementType } from "../utils/types";
 import HelpIcon from '@mui/icons-material/Help';
 import CountggLogo from '../assets/countgg-128.png'
 import { LinearProgressWithLabel } from "../utils/styles";
-// import ProgressBar from 'react-bootstrap/ProgressBar';
 
 interface Props {
     achievement: AchievementType;
@@ -39,8 +38,6 @@ export function AchievementSmall({ achievement, locked, counterAchievement }: Pr
               </Tooltip>
             </Typography>
           )}
-          {/* {counterAchievement && !counterAchievement.isComplete && <ProgressBar label={counterAchievement.progress > 0 && `${counterAchievement.progress}`} now={counterAchievement.progress} max={achievement.maxProgress} />} */}
-          {/* {counterAchievement && counterAchievement.isComplete && <ProgressBar variant="success" label={`Complete`} now={1} max={1} />} */}
           {counterAchievement && !counterAchievement.isComplete && counterAchievement.progress !== undefined && achievement.maxProgress !== undefined && <LinearProgressWithLabel color="success" progress={counterAchievement.progress} max={achievement.maxProgress} />}
           {counterAchievement && counterAchievement.isComplete && <LinearProgressWithLabel color="success" progress={1} max={1} />}
         </CardContent>
