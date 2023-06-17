@@ -23,6 +23,7 @@ export const SnackbarComponent = () => {
     useEffect(() => {
         socket.on(`achievement`, function(data) {
             setSnack({ message: `Achievement unlocked: ${data.name}`, severity: 'success', open: true, url: `/counter/${counter?.uuid}`})
+            setConfetti(true);
             setTimeout(() => {
                 setSnack({
                     message: '',
@@ -30,6 +31,7 @@ export const SnackbarComponent = () => {
                     open: false,
                     url: ''
                   });
+                  setConfetti(false);
             }, 5000);
           });
 

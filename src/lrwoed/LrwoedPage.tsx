@@ -70,7 +70,7 @@ function LrwoedPage() {
 
   return (
     <Box sx={{bgcolor: "primary.light", display: 'flex', flexGrow: 1}}>
-    <Box sx={{bgcolor: "background.paper", pl: 2, pr: 2}} className={"App-container" + (colorBlind ? " color-blind" : "")}>
+    <Box sx={{bgcolor: "background.paper", pl: 2, pr: 2, maxWidth: '750px'}} className={"App-container" + (colorBlind ? " color-blind" : "")}>
       <h1>
         <span
           style={{

@@ -324,15 +324,15 @@ export const Sidebar = () => {
               </Typography>
               <Button variant='contained' target={'_blank'} href={'https://discord.gg/bfS9RQht6M'} sx={{mt: 1}}>Join Discord</Button>
               </>}
-              {counter.roles.includes('manual_verification_needed') && <>
+              {counter.roles.includes('manual_verification_needed') && !counter.color && <>
               <Typography id="modal-modal-title" variant="h6" component="h2" sx={{mt: 2}}>
                 Manual verification needed :(
               </Typography>
               <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                Unfortunately your Discord account is under 90 days old. If you're a new counter, please reach out to the Discord moderators with more information! 
+                Unfortunately your account requires manual verification. If you're a new counter, please reach out to the Discord moderators for help! 
               </Typography>
               <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                The account age limit is meant to deter abuse. Please send a direct message to the Discord mods and hopefully we can verify you. 
+                This measure is taken to prevent users from joining with alternate accounts. Sorry! Please  
               </Typography>
               <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                 If you needed to make a new account or transfer over an old account, reach out, we can help!
@@ -347,11 +347,14 @@ export const Sidebar = () => {
                 Create your profile
               </Typography>
               <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                Your name may not contain derogatory or hateful language. Profiles will be manually approved before becoming visible. If there is an issue with your chosen name, we will contact you via Discord. 
+                Your name may not contain derogatory or hateful language.
+              </Typography>
+              <Typography id="modal-modal-description" sx={{ mt: 2 }}>
+                Some users may need to be manually approved.
               </Typography>
               <Button variant='contained' onClick={() => {navigate(`/register`); setModalOpen(false)}} sx={{mt: 1}}>Continue</Button>
               </>}
-              {counter.roles.includes('discord_verified') && counter.color && <>
+              {counter.roles.includes('discord_verified') && counter.roles.includes('manual_verification_needed') && counter.color && <>
               <Typography id="modal-modal-title" variant="h6" component="h2" sx={{mt: 2}}>
                 You're almost there!
               </Typography>
@@ -359,12 +362,12 @@ export const Sidebar = () => {
                 Your registration is under review. No further action is needed from you at this time.  
               </Typography>
               <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                Moderators will review your counter submission and hopefully approve it soon. Should they find a need for you to change your name, they will reach out on Discord!   
+                Moderators will review your profile submission and hopefully approve it soon. Should they find a need for you to change your name, they will reach out on Discord!   
               </Typography>
               <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                 Your changes are not final. If you want to make any further changes to your profile, you may do so using the link below:    
               </Typography>
-              <Button variant='contained' onClick={() => {navigate(`/register`); setModalOpen(false)}} sx={{mt: 1}}>Edit Registration</Button>
+              <Button variant='contained' onClick={() => {navigate(`/register`); setModalOpen(false)}} sx={{mt: 1, mr: 1}}>Edit Registration</Button> <Button onClick={() => {setModalOpen(false)}} sx={{mt: 1}}>Close</Button>
               </>}
             </Box>
           </Modal></>}

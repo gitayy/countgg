@@ -1,8 +1,9 @@
-import { Card, Box, CardMedia, CardContent, Typography, Grid, createTheme, responsiveFontSizes, ThemeProvider } from "@mui/material";
+import { Card, Box, CardMedia, CardContent, Typography, Grid, createTheme, responsiveFontSizes, ThemeProvider, Alert, Badge } from "@mui/material";
 import CountggLogo from '../assets/countgg-128.png'
 import CountggLogo2 from '../assets/emotes/gg.png'
 
-import { card_backgrounds, titles } from "../utils/helpers";
+import { calculateLevel, card_backgrounds, titles } from "../utils/helpers";
+import StarBadge from "./StarBadge";
 
 
 export function CounterCard(props) {
@@ -16,7 +17,11 @@ export function CounterCard(props) {
   });
   counterCardTheme = responsiveFontSizes(counterCardTheme);
 
+
+  const level = parseInt(calculateLevel(props.counter.xp).level || "1")
+
     return (
+      <Badge badgeContent={level} anchorOrigin={{"vertical": "bottom", "horizontal": "right"}} color={level === 50 ? "warning" : level > 40 ? "success" : level > 20 ? "secondary" : "primary"} sx={{display: "block"}} >
         <Card elevation={8} id={`card_${props.counter.uuid}`} sx={{}}>
           <Box className={`card_${props.counter.cardStyle}`}>
             <ThemeProvider theme={counterCardTheme}>
@@ -69,6 +74,8 @@ export function CounterCard(props) {
               </ThemeProvider>
               </Box>
             </Card>
+            </Badge>
+            
             
     )
 

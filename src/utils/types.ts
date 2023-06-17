@@ -34,6 +34,7 @@ export type Counter = {
   id: number,
   discordId: string,
   name: string,
+  username: string,
   color: string,
   roles: string[],
   avatar: string,
