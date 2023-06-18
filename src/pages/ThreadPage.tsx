@@ -122,12 +122,28 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
     const throttle = useRef<boolean>(false);
 
+    // const setThrottle = () => {
+    //   throttle.current = true;
+    //     setTimeout(function() {
+    //       throttle.current = false;
+    //     }, 100);
+    // }
+
     const setThrottle = () => {
       throttle.current = true;
-        setTimeout(function() {
+      const startTime = performance.now();
+    
+      const updateThrottle = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        if (elapsed < 100) {
+          requestAnimationFrame(updateThrottle);
+        } else {
           throttle.current = false;
-        }, 100);
-    }
+        }
+      };
+    
+      requestAnimationFrame(updateThrottle);
+    };
 
 
     const refScroll = useRef<any>([]);
