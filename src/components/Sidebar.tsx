@@ -33,6 +33,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import PendingIcon from '@mui/icons-material/Pending';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import LinearProgress from '@mui/material/LinearProgress';
+import { XPDisplay } from './XPDisplay';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -43,33 +44,16 @@ export const Sidebar = () => {
   const { loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter } = useContext(UserContext);
   const socket = useContext(SocketContext);
 
-  const [xp, setXP] = useState<any>(0);
-
-
   useEffect(() => {
 
     socket.on(`site_version`, function(data) {
       if(setLoadedSiteVer) {setLoadedSiteVer(data)}
     });
-  
-    socket.on(`xp`, function(data) {
-      // console.log(`XP: ${data}`);
-      if(counter) {setXP(prevXP => {return parseInt(prevXP) + parseInt(data)})}
-      // if(counter && setCounter) {setCounter(prevCounter => {prevCounter.xp = parseInt(prevCounter.xp) + parseInt(data); return prevCounter});console.log(counter.xp);console.log(typeof(data));console.log(typeof(counter.xp));}
-    });
 
     return (() => {
       socket.off(`site_version`);
-      socket.off('xp');
     });
   }, [loading])
-
-  useEffect(() => {
-    if(counter) {setXP(counter.xp)}
-  }, [loading])
-  
-
-  
 
   const theme = useTheme();
   const colorMode = useContext(ColorModeContext);
@@ -395,11 +379,7 @@ export const Sidebar = () => {
                 sx={{borderRadius: '0'}}
               >
                 <Avatar alt={`${counter.name}`} src={`${counter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${counter.discordId}/${counter.avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>
-                <Box style={{ marginLeft: '8px', width: '100px' }}>
-                  <Typography variant="body1">LVL {calculateLevel(xp).level}</Typography>
-                  <LinearProgress variant="determinate" color='secondary' title={`${xp.toString()} / ${calculateLevel(xp).xpRequired}`} value={((xp - calculateLevel(xp).minXP) / (calculateLevel(xp).xpRequired - calculateLevel(xp).minXP)) * 100} sx={{borderRadius: '10px'}} />
-                  <Typography sx={{fontSize: '9px', mt: 0.5}}>{`${parseInt(xp).toLocaleString()} / ${calculateLevel(xp).xpRequired.toLocaleString()}`}</Typography>
-                </Box>
+                <XPDisplay />
               </IconButton>
               <Menu
                 id="menu-appbar"
