@@ -20,8 +20,10 @@ export function CounterCard(props) {
 
   const level = parseInt(calculateLevel(props.counter.xp).level || "1")
 
+  const xpToNext = calculateLevel(props.counter.xp).xpRequired;
+
     return (
-      <Badge badgeContent={level} anchorOrigin={{"vertical": "bottom", "horizontal": "right"}} color={level === 50 ? "warning" : level > 40 ? "success" : level > 20 ? "secondary" : "primary"} sx={{display: "block"}} >
+      <Badge title={`${props.counter.xp} / ${xpToNext}`} badgeContent={level} anchorOrigin={{"vertical": "bottom", "horizontal": "right"}} color={level === 50 ? "warning" : level > 40 ? "success" : level > 20 ? "secondary" : "primary"} sx={{display: "block"}} >
         <Card elevation={8} id={`card_${props.counter.uuid}`} sx={{}}>
           <Box className={`card_${props.counter.cardStyle}`}>
             <ThemeProvider theme={counterCardTheme}>
