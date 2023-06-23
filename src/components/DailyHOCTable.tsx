@@ -86,7 +86,7 @@ export const DailyHOCTable = ({ dailyHOC, name, countName, mini }: Props) => {
                 </TableBody>
               </Table>
               {mini && rows.length > 3 && (
-                <Typography variant="body2" onClick={toggleExpand} style={{ cursor: 'pointer' }}>
+                <Typography variant="body2" onClick={toggleExpand} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'center', padding: '5px' }}>
                   {expanded ? 'Show less' : 'Show more'}
                 </Typography>
               )}
