@@ -319,13 +319,13 @@ import Count from '../components/Count';
                 </Select>
             </FormControl>
             <FormControl sx={{m: 2}}>
-                <InputLabel id="night-mode-colors-label">Night Mode Colors</InputLabel>
+                <InputLabel id="night-mode-colors-label">Night Mode Colo{maybeU}rs</InputLabel>
                 <Select
                     labelId="night-mode-colors-label"
                     id="night-mode-colors"
                     value={prefNightModeColors}
                     defaultValue={prefNightModeColors}
-                    label="Night Mode Colors"
+                    label={`Night Mode Colo${maybeU}rs`}
                     onChange={e => setPrefNightModeColors((e.target as HTMLInputElement).value)}
                     sx={{width: 200}}
                 >
@@ -383,7 +383,7 @@ import Count from '../components/Count';
             </FormControl>
                 {prefCustomStricken !== 'Disabled' && <>
                 <HexColorPicker color={prefStrikeColor} onChange={setPrefStrikeColor} />
-                <TextField sx={{m: 2}} id="StrikeColor" onInput={e => setPrefStrikeColor((e.target as HTMLInputElement).value)} label="Strike Color" InputLabelProps={{ shrink: true }} value={prefStrikeColor}></TextField>
+                <TextField sx={{m: 2}} id="StrikeColor" onInput={e => setPrefStrikeColor((e.target as HTMLInputElement).value)} label={`Strike Colo${maybeU}r`} InputLabelProps={{ shrink: true }} value={prefStrikeColor}></TextField>
                 </>}
 
             </FormGroup>
