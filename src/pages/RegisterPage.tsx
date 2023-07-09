@@ -129,12 +129,12 @@ export const RegisterPage = () => {
             return <>
             <ThemeProvider theme={lightTheme}>
                 <Box sx={{bgcolor: 'background.paper'}}>
-                    <Count user={user} myCounter={counter} key={`fakeCount_${Math.random()}`} thread={{}} socket={{}} post={fakePost({...counter, name: name, username: username, color: color})} counter={counter} maxWidth={'32px'} maxHeight={'32px'} />
+                    <Count renderedCounter={counter} key={`fakeCount_${Math.random()}`} thread={{}} socket={{}} post={fakePost({...counter, name: name, username: username, color: color})} counter={counter} maxWidth={'32px'} maxHeight={'32px'} />
                 </Box>
             </ThemeProvider>
             <ThemeProvider theme={darkTheme}>
                 <Box sx={{bgcolor: 'background.paper'}}>
-                    <Count user={user} myCounter={counter} key={`fakeCount_${Math.random()}`} thread={{}} socket={{}} post={fakePost({...counter, name: name, username: username, color: color})} counter={counter} maxWidth={'32px'} maxHeight={'32px'} />
+                    <Count renderedCounter={counter} key={`fakeCount_${Math.random()}`} thread={{}} socket={{}} post={fakePost({...counter, name: name, username: username, color: color})} counter={counter} maxWidth={'32px'} maxHeight={'32px'} />
                 </Box>
             </ThemeProvider>
             </>

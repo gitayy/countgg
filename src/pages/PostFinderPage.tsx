@@ -162,7 +162,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
                     <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
                     {loadedPosts.map((count, countIndex) => (<>
                       <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}><Link onClick={(e) => {e.preventDefault();navigate(`/thread/${name}?context=${count.uuid}`);}} underline='always' color={"text.secondary"} href={`/thread/${name}?context=${count.uuid}`}>Context</Link></Typography>
-                        <Count user={user} key={count.uuid} post={count} thread={selectedThread} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
+                        <Count key={count.uuid} post={count} thread={selectedThread} renderedCounter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
                         </>
                     ))}
                     </Box>

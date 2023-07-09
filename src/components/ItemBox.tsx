@@ -50,7 +50,7 @@ const useStyles = {
   return (
     ['card', 'border', 'title'].includes(item.category)
     ? <CounterCard fullSize={true} maxHeight={100} maxWidth={100} boxPadding={2} counter={fakeCounter}></CounterCard>
-    : <Count user={user} myCounter={fakeCounter} key={`fakeCount_${Math.random()}`} thread={{}} socket={{}} post={fakePost(fakeCounter)} counter={fakeCounter} maxWidth={'32px'} maxHeight={'32px'} />
+    : <Count renderedCounter={fakeCounter} key={`fakeCount_${Math.random()}`} thread={{}} socket={{}} post={fakePost(fakeCounter)} maxWidth={'32px'} maxHeight={'32px'} />
     // <Box sx={useStyles}>
     //   <Typography variant="h6" component="h2" gutterBottom>
     //     {item.name}
