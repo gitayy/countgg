@@ -1,5 +1,5 @@
 import {  Box, CardMedia, Typography, Grid, IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, useTheme, Link, Popover, CardContent } from "@mui/material";
-import { memo, useRef, useState } from "react";
+import { memo, useContext, useRef, useState } from "react";
 import { defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName } from "../utils/helpers";
 import { Counter } from "../utils/types";
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -12,10 +12,12 @@ import CountggLogo from '../assets/countgg-128.png'
 import remarkGfm from "remark-gfm";
 import ReactMarkdown from "react-markdown";
 import data from '@emoji-mart/data/sets/14/twitter.json'
+import { UserContext } from "../utils/contexts/UserContext";
 
 const CountMobile = memo((props: any) => {
 
   let maybeSpace;
+  const { user, counter } = useContext(UserContext);
 
   if (props.post.countContent && props.post.rawText.includes(props.post.countContent)) {
     const index = props.post.rawText.indexOf(props.post.countContent) + props.post.countContent.length;
@@ -26,8 +28,8 @@ const CountMobile = memo((props: any) => {
 
   let countContentCopy = props.post.countContent;
 
-  if(props.user && props.user.pref_standardize_format != 'Disabled' && props.thread && props.thread.validationType != 'binary' && props.post.countContent && props.post.rawCount) {
-    const format = props.user.pref_standardize_format;
+  if(user && user.pref_standardize_format != 'Disabled' && props.thread && props.thread.validationType != 'binary' && props.post.countContent && props.post.rawCount) {
+    const format = user.pref_standardize_format;
     switch (format) {
       case 'No Separator':
         countContentCopy = props.post.rawCount;
@@ -46,13 +48,12 @@ const CountMobile = memo((props: any) => {
     }
   }
 
-  if(props.user && props.user.pref_time_since_last_count === false) {
+  if(user && user.pref_time_since_last_count === false) {
     props.post.timeSinceLastCount = props.post.timeSinceLastPost;
   }
 
   // const isLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
   const theme = useTheme();
-  const { counter } = props;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -94,7 +95,7 @@ const CountMobile = memo((props: any) => {
     }
   };
 
-  const replyTimeColor = getReplyColorName(props.post.timeSinceLastPost, props.user && props.user.pref_reply_time_interval !== undefined ? props.user.pref_reply_time_interval : undefined);
+  const replyTimeColor = getReplyColorName(props.post.timeSinceLastPost, user && user.pref_reply_time_interval !== undefined ? user.pref_reply_time_interval : undefined);
 
   function handleDeleteComment() {
     props.socket.emit('deleteComment', {uuid: props.post.uuid})
@@ -108,7 +109,7 @@ const CountMobile = memo((props: any) => {
   
   const anchorRef = useRef(null);
 
-  const [expanded, setExpanded] = useState((props.user && props.user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment) ? false : true);
+  const [expanded, setExpanded] = useState((user && user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment) ? false : true);
 
   const handleExpand = () => {
     setExpanded(!expanded);
@@ -120,11 +121,12 @@ const CountMobile = memo((props: any) => {
     code: ({ children }) => { return (Object.keys(data.emojis).includes((children[0] as string).toLowerCase()) ? EmojiTest({id: (children[0] as string).toLowerCase(), size: 24, set: 'twitter'}) : <code>{children}</code>)}
   }
 
-  if(props.user && props.user.pref_post_style == "LC") {
+  if(user && user.pref_post_style == "LC") {
+    // return (<div>{props.post.comment} {Date.now()}</div>);
     return (
       <>
-      {props.user && props.user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && <Typography className="minimized-post-toggler" variant="body2" onClick={() => handleExpand()} sx={{cursor: 'pointer', userSelect: 'none', marginLeft: '5px'}}>{expanded ? `[-]` : `[+]`} Show Hidden Post</Typography>}
-    <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{ display: expanded ? 'block' : 'none', pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
+      {user && user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && <Typography className="minimized-post-toggler" variant="body2" onClick={() => handleExpand()} sx={{cursor: 'pointer', userSelect: 'none', marginLeft: '5px'}}>{expanded ? `[-]` : `[+]`} Show Hidden Post</Typography>}
+    <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{ display: expanded ? 'block' : 'none', pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && user && user.pref_custom_stricken != 'Disabled' ? user.pref_strike_color : 'initial'), filter: (props.post.stricken && user && user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
     <Box>
         <Grid container>
             <Grid item xs={6}>
@@ -143,7 +145,7 @@ const CountMobile = memo((props: any) => {
                     <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastCount : msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography>
                       {/* &nbsp;| */}&nbsp;</>}
                       </Box>
-                      <Box sx={{ color: props.user && props.user.pref_night_mode_colors && props.user.pref_night_mode_colors !== 'Default' ? (props.user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
+                      <Box sx={{ color: user && user.pref_night_mode_colors && user.pref_night_mode_colors !== 'Default' ? (user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
                       {hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{hoursSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>h</Typography></Typography>) : null}
                       {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{minutesSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>m</Typography></Typography>) : null}
                       {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{secondsSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>s</Typography></Typography>) : null}
@@ -220,8 +222,8 @@ const CountMobile = memo((props: any) => {
   ) } else {
 return (
   <>
-  {props.user && props.user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && <Typography className="minimized-post-toggler" variant="body2" onClick={() => handleExpand()} sx={{cursor: 'pointer', userSelect: 'none', marginLeft: '5px'}}>{expanded ? `[-]` : `[+]`} Show Hidden Post</Typography>}
-    <Box ref={props.contextRef} className={`count countMobile ${props.contextRef && "highlighted"}`} sx={{display: expanded ? 'block' : 'none', p: 0.5, wordWrap: 'break-word', boxSizing: 'border-box', border: '1px solid transparent', background: (props.post.stricken && props.user && props.user.pref_custom_stricken != 'Disabled' ? props.user.pref_strike_color : 'initial'), filter: (props.post.stricken && props.user && props.user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
+  {user && user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && <Typography className="minimized-post-toggler" variant="body2" onClick={() => handleExpand()} sx={{cursor: 'pointer', userSelect: 'none', marginLeft: '5px'}}>{expanded ? `[-]` : `[+]`} Show Hidden Post</Typography>}
+    <Box ref={props.contextRef} className={`count countMobile ${props.contextRef && "highlighted"}`} sx={{display: expanded ? 'block' : 'none', p: 0.5, wordWrap: 'break-word', boxSizing: 'border-box', border: '1px solid transparent', background: (props.post.stricken && user && user.pref_custom_stricken != 'Disabled' ? user.pref_strike_color : 'initial'), filter: (props.post.stricken && user && user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
           <Box>
               <Grid container>
                   <Grid item xs={12}>
@@ -304,7 +306,7 @@ return (
             </Grid>
             <Grid item xs={12} color="text.secondary">
               <Box>
-                <Box component='span' sx={{color: props.user && props.user.pref_night_mode_colors && props.user.pref_night_mode_colors !== 'Default' ? (props.user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', bgcolor: `${replyTimeColor}.${theme.palette.mode}`}}>
+                <Box component='span' sx={{color: user && user.pref_night_mode_colors && user.pref_night_mode_colors !== 'Default' ? (user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', bgcolor: `${replyTimeColor}.${theme.palette.mode}`}}>
             {hoursSinceLastPost > 0 ? (<Typography component="span" fontSize={12}>{hoursSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">h</Typography></Typography>) : null}
               {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" fontSize={12}>{minutesSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">m</Typography></Typography>) : null}
               {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" fontSize={12}>{secondsSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">s</Typography></Typography>) : null}

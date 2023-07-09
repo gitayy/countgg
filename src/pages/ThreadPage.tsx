@@ -46,8 +46,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
     const { user, counter, loading } = useContext(UserContext);
     const { thread, threadLoading, setThread } = useFetchThread(thread_name);
-    const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest } = useFetchRecentCounts(thread_name, context);
-    const { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats } = useFetchRecentChats(thread_name, context);
+    const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest, recentCountsRef } = useFetchRecentCounts(thread_name, context);
+    const { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats, recentChatsRef } = useFetchRecentChats(thread_name, context);
     const loadedNewestRef = useRef(false);
     const loadedNewestChatRef = useRef(false);
     const [ cachedCounts, setCachedCounts ] = useState<PostType[]>([]);
@@ -120,32 +120,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [latencyStateTest, setLatencyStateTest] = useState("");
     const [newChatsLoadedState, setNewChatsLoadedState] = useState("");
 
-    const throttle = useRef<boolean>(false);
-
-    // const setThrottle = () => {
-    //   throttle.current = true;
-    //     setTimeout(function() {
-    //       throttle.current = false;
-    //     }, 100);
-    // }
-
-    const setThrottle = () => {
-      throttle.current = true;
-      const startTime = performance.now();
-    
-      const updateThrottle = (currentTime) => {
-        const elapsed = currentTime - startTime;
-        if (elapsed < 100) {
-          requestAnimationFrame(updateThrottle);
-        } else {
-          throttle.current = false;
-        }
-      };
-    
-      requestAnimationFrame(updateThrottle);
-    };
-
-
     const refScroll = useRef<any>([]);
     useEffect(() => {
       const scrollCheck = (event) => {
@@ -203,9 +177,12 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     }
 
     const [tabValue, setTabValue] = useState('tab_1');
+    const tabValueRef = useRef('tab_1')
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
       setTabValue(newValue);
+      tabValueRef.current = newValue;
+      if(newValue === 'tab_2') {setNewChatsLoadedState(Date.now().toString());}
     };
 
     const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>('error');
@@ -256,7 +233,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               console.log("Connected to socket!");
               setSocketStatus("LIVE");
             });
-            // console.log("Connected to socket!");
             setSocketStatus("LIVE");
             
             
@@ -290,21 +266,14 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               addCounterToCache(data.lastCounter);
             });
             socket.on(`dailyHOC`, function(data) {
-              // console.log("DAILY HOC");
-              // console.log(data);
               setDailyHOC(data);
             });
             socket.on(`dailyRobs`, function(data) {
               const {robs, counters} = data;
-              // console.log(`HEEEY`);
-              // console.log(data);
-              // console.log("DAILY ROBS");
-              // console.log(data);
               setDailyRobs(robs);
               if(counters) {for(const counter of counters) {addCounterToCache(counter)};}
             });
             socket.on(`bank`, function(data) {
-              // console.log("Bank:", data);
               setBank(data);
             });
             socket.on(`deleteComment`, function(data) {
@@ -329,11 +298,11 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               }
               setLatencyStateTest(`${data.uuid}_${Date.now()}`);
             });
-            socket.on(`post`, function(data: {post: PostType, counter: Counter}) {
+            socket.on(`post`, async function(data: {post: PostType, counter: Counter}) {
               if(renderLatencyEnabled.current) {
                 startRenderRef.current = Date.now(); // Needed for render latency test 2
                 postTextRef.current = data.post.rawText;
-              }              
+              }             
                 if(latencyCheck.current == data.post.rawText && data.post.authorUUID == myUUIDCheck.current) {
                     data.post.latency = Date.now() - latency.current;
                 }
@@ -341,9 +310,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 cache_counts(data.post);
                 if(loadedNewestRef.current) {
                   if(user && user.pref_load_from_bottom) {
-                    setRecentCounts(prevCounts => {
-                      const newCounts = [...prevCounts, data.post];
-                      if(isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
+                    recentCountsRef.current = (() => {
+                      const newCounts = [...recentCountsRef.current, data.post];
+                      if (isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
                         if (newCounts.length > 50) {
                           return newCounts.slice(newCounts.length - 50);
                         } else {
@@ -352,54 +321,45 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                       } else {
                         return newCounts;
                       }
-                    });
+                    })();                    
                     if(data.post.hasComment) {
-                      setRecentChats(prevChats => {
-                        const newChats = [...prevChats, data.post];
-                        if(chatsIsScrolledToNewest.current !== undefined && chatsIsScrolledToNewest.current) {
-                          if (newChats.length > 50) {
-                            return newChats.slice(newChats.length - 50);
-                          } else {
-                            return newChats;
-                          }
-                        } else {
-                          return newChats;
+                      recentChatsRef.current = [
+                        ...recentChatsRef.current,
+                        data.post
+                      ];
+                    
+                      if (chatsIsScrolledToNewest.current !== undefined && chatsIsScrolledToNewest.current) {
+                        if (recentChatsRef.current.length > 50) {
+                          recentChatsRef.current = recentChatsRef.current.slice(recentChatsRef.current.length - 50);
                         }
-                      });
+                      }
                     }
                   } else {
-                    setRecentCounts(prevCounts => {
-                      const newCounts = [data.post, ...prevCounts];
-                      if(isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
-                        if (newCounts.length > 50) {
-                          return newCounts.slice(0, 50);
-                        } else {
-                          return newCounts;
-                        }
-                      } else {
-                        return newCounts;
+                    recentCountsRef.current = [data.post, ...recentCountsRef.current];
+
+                    if (isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
+                      if (recentCountsRef.current.length > 50) {
+                        recentCountsRef.current = recentCountsRef.current.slice(0, 50);
                       }
-                    });
+                    }
                     if(data.post.hasComment) {
-                      setRecentChats(prevChats => {
-                        const newChats = [data.post, ...prevChats];
-                        if(chatsIsScrolledToNewest.current !== undefined && chatsIsScrolledToNewest.current) {
-                          if (newChats.length > 50) {
-                            return newChats.slice(0, 50);
-                          } else {
-                            return newChats;
-                          }
-                        } else {
-                          return newChats;
+                      recentChatsRef.current = [
+                        data.post,
+                        ...recentChatsRef.current
+                      ];
+                    
+                      if (chatsIsScrolledToNewest.current !== undefined && chatsIsScrolledToNewest.current) {
+                        if (recentChatsRef.current.length > 50) {
+                          recentChatsRef.current = recentChatsRef.current.slice(0, 50);
                         }
-                      });
+                      }
                     }
                   }
                 }
                 // setRenderLatencyCheck(true); //renderLatency test 1 requirement. 
-                setNewRecentPostLoaded(data.post.uuid); // Only do this here.
+                // setNewRecentPostLoaded(data.post.uuid); // Only do this here.
                 setLatencyStateTest(`${data.post.uuid}_${Date.now()}`);
-                if(data.post.hasComment) {
+                if(data.post.hasComment && tabValueRef.current === "tab_2") {
                   setNewChatsLoadedState(data.post.uuid);
                 }
                 if(data.post.isValidCount) {
@@ -427,21 +387,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 for (const counter of data.counters) {
                   addCounterToCache(counter);
                 }
-                if(user && user.pref_load_from_bottom) {
-                    setRecentCounts(prevCounts => {
-                      const newCounts = data.recentCounts.filter(count => {
-                        return !prevCounts.some(prevCount => prevCount.uuid === count.uuid);
-                      });
-                      return [...newCounts.reverse(), ...prevCounts];
-                    });
-                  } else {
-                    setRecentCounts(prevCounts => {
-                      const newCounts = data.recentCounts.filter(count => {
-                        return !prevCounts.some(prevCount => prevCount.uuid === count.uuid);
-                      });
-                      return [...prevCounts, ...newCounts];
-                    });
-                  }
+                  recentCountsRef.current = user && user.pref_load_from_bottom
+              ? [...data.recentCounts.filter(count => !recentCountsRef.current.some(prevCount => prevCount.uuid === count.uuid)).reverse(), ...recentCountsRef.current]
+              : [...recentCountsRef.current, ...data.recentCounts.filter(count => !recentCountsRef.current.some(prevCount => prevCount.uuid === count.uuid))];
                   if(data.recentCounts && data.recentCounts[0]) {
                     setLoadedOldCount(Date.now())
                   }
@@ -458,21 +406,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 for (const counter of data.counters) {
                   addCounterToCache(counter);
                 }
-                if(user && user.pref_load_from_bottom) {
-                  setRecentCounts(prevCounts => {
-                    const newCounts = data.recentCounts.filter(count => {
-                      return !prevCounts.some(prevCount => prevCount.uuid === count.uuid);
-                    });
-                    return [...prevCounts, ...newCounts];
-                  });
-                } else {
-                  setRecentCounts(prevCounts => {
-                    const newCounts = data.recentCounts.filter(count => {
-                      return !prevCounts.some(prevCount => prevCount.uuid === count.uuid);
-                    });
-                    return [...newCounts.reverse(), ...prevCounts];
-                  });
-                }
+                recentCountsRef.current = user && user.pref_load_from_bottom
+              ? [...recentCountsRef.current, ...data.recentCounts.filter(count => !recentCountsRef.current.some(prevCount => prevCount.uuid === count.uuid)).reverse()]
+              : [...data.recentCounts.filter(count => !recentCountsRef.current.some(prevCount => prevCount.uuid === count.uuid)), ...recentCountsRef.current];
                 if(data.recentCounts && data.recentCounts[0]) {
                   setLoadedNewCount(Date.now())
                 }
@@ -495,21 +431,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               if(data.isOldest) {
                 setLoadedOldestChats(true);
               }
-              if(user && user.pref_load_from_bottom) {
-                  setRecentChats(prevChats => {
-                    const newChats = data.recentCounts.filter(count => {
-                      return !prevChats.some(prevCount => prevCount.uuid === count.uuid);
-                    });
-                    return [...newChats.reverse(), ...prevChats];
-                  });
-                } else {
-                  setRecentChats(prevChats => {
-                    const newChats = data.recentCounts.filter(count => {
-                      return !prevChats.some(prevCount => prevCount.uuid === count.uuid);
-                    });
-                    return [...prevChats, ...newChats];
-                  });
-                }
+              recentChatsRef.current = user && user.pref_load_from_bottom
+              ? [...data.recentCounts.filter(count => !recentChatsRef.current.some(prevCount => prevCount.uuid === count.uuid)).reverse(), ...recentChatsRef.current]
+              : [...recentChatsRef.current, ...data.recentCounts.filter(count => !recentChatsRef.current.some(prevCount => prevCount.uuid === count.uuid))];
                 if(data.recentCounts && data.recentCounts[0]) {
                   setLoadedOldChat(Date.now()) // lol
                   setNewChatsLoadedState(data.recentCounts[0].uuid);
@@ -526,21 +450,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               if(data.isOldest) {
                 setLoadedOldestChats(true);
               }
-              if(user && user.pref_load_from_bottom) {
-                setRecentChats(prevChats => {
-                  const newChats = data.recentCounts.filter(count => {
-                    return !prevChats.some(prevCount => prevCount.uuid === count.uuid);
-                  });
-                  return [...prevChats, ...newChats,];
-                });
-              } else {
-                setRecentChats(prevChats => {
-                  const newChats = data.recentCounts.filter(count => {
-                    return !prevChats.some(prevCount => prevCount.uuid === count.uuid);
-                  });
-                  return [...newChats.reverse(), ...prevChats];
-                });
-              }
+              recentChatsRef.current = user && user.pref_load_from_bottom
+              ? [...recentChatsRef.current, ...data.recentCounts.filter(count => !recentChatsRef.current.some(prevCount => prevCount.uuid === count.uuid)).reverse()]
+              : [...data.recentCounts.filter(count => !recentChatsRef.current.some(prevCount => prevCount.uuid === count.uuid)), ...recentChatsRef.current];
               if(data.recentCounts && data.recentCounts[0]) {
                 setLoadedNewChat(Date.now()) // lol
                 setNewChatsLoadedState(data.recentCounts[0].uuid);
@@ -548,29 +460,23 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           });
 
           socket.on(`updateReaction`, function(data) {
-            setRecentCounts(prevCounts => {
-              const newCounts = prevCounts.map(post => {
-                if (post.uuid === data.post_uuid) {
-                  return {
-                    ...post,
-                    reactions: data.reactions
-                  };
-                }
-                return post;
-              });
-              return newCounts;
+            recentCountsRef.current = recentCountsRef.current.map(chat => {
+              if (chat.uuid === data.post_uuid) {
+                return {
+                  ...chat,
+                  reactions: data.reactions
+                };
+              }
+              return chat;
             });
-            setRecentChats(prevChats => {
-              const updatedChats = prevChats.map(chat => {
-                if (chat.uuid === data.post_uuid) {
-                  return {
-                    ...chat,
-                    reactions: data.reactions
-                  };
-                }
-                return chat;
-              });
-              return updatedChats;
+            recentChatsRef.current = recentChatsRef.current.map(chat => {
+              if (chat.uuid === data.post_uuid) {
+                return {
+                  ...chat,
+                  reactions: data.reactions
+                };
+              }
+              return chat;
             });
             setLatencyStateTest(`${data.post_uuid}-reax-${Date.now()}`);
             setNewChatsLoadedState(`${data.post_uuid}-reax-${Date.now()}`);
@@ -608,22 +514,18 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     },[socketStatus, loading]);
 
     const deleteComment = useCallback((data) => {
-      setRecentCounts((counts) =>
-        counts.map((count) => {
-          if (count.uuid === data.uuid) {
-            return data;
-          }
-          return count;
-        })
-      );
-      setRecentChats((chats) =>
-        chats.map((chat) => {
-          if (chat.uuid === data.uuid) {
-            return data;
-          }
-          return chat;
-        })
-      );
+      recentCountsRef.current = recentCountsRef.current.map((chat) => {
+        if (chat.uuid === data.uuid) {
+          return data;
+        }
+        return chat;
+      });
+      recentChatsRef.current = recentChatsRef.current.map((chat) => {
+        if (chat.uuid === data.uuid) {
+          return data;
+        }
+        return chat;
+      });
       setLatencyStateTest(`${data.uuid}-delete`);
       setNewChatsLoadedState(`${data.uuid}-delete`);
     }, [setRecentCounts]);
@@ -715,13 +617,13 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
       const countListMemo = useMemo(() => {
         return (          
-        <CountList thread={thread} recentCountsLoading={recentCountsLoading} throttle={throttle} setThrottle={setThrottle} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} refScroll={refScroll} setRecentChats={setRecentChats} newRecentPostLoaded={newRecentPostLoaded} user={user} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} setRecentCounts={setRecentCounts} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} socket={socket} counter={counter} loading={loading} recentCounts={recentCounts} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
+        <CountList thread={thread} recentCountsLoading={recentCountsLoading} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} refScroll={refScroll} newRecentPostLoaded={newRecentPostLoaded} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentCountsRef} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
         )
       }, [cachedCounts, thread, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, loading])
 
       const chatsMemo = useMemo(() => {
         return (      
-        <CountList thread={thread} isDesktop={isDesktop} throttle={throttle} setThrottle={setThrottle} chatsOnly={true} newRecentPostLoaded={undefined} user={user} loadedOldest={loadedOldestChats} loadedNewest={loadedNewestChats} loadedOldCount={loadedOldChat} loadedNewCount={loadedNewChat} setRecentCounts={setRecentChats} isScrolledToTheBottom={chatsIsScrolledToTheBottom} isScrolledToTheTop={chatsIsScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={chatsIsScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} socket={socket} counter={counter} loading={loading} recentCounts={recentChats} handleLatencyCheckChange={undefined} handleLatencyChange={undefined} handleSubmit={undefined}></CountList>
+        <CountList thread={thread} isDesktop={isDesktop} chatsOnly={true} newRecentPostLoaded={undefined} loadedOldest={loadedOldestChats} loadedNewest={loadedNewestChats} loadedOldCount={loadedOldChat} loadedNewCount={loadedNewChat} isScrolledToTheBottom={chatsIsScrolledToTheBottom} isScrolledToTheTop={chatsIsScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={chatsIsScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentChatsRef} handleLatencyCheckChange={undefined} handleLatencyChange={undefined} handleSubmit={undefined}></CountList>
         )
       }, [recentChatsLoading, newChatsLoadedState, loadedNewChat, loadedOldChat, deleteComments, loadedOldestChats, loadedNewestChats, chatsIsScrolledToNewest, loading])
 
@@ -757,10 +659,10 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.rules : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           {counter && thread && counter.roles.includes('admin') && <Button variant='contained' onClick={lockThread}>{thread.locked ? "Unlock Thread" : "Lock Thread"}</Button>}
           {thread ? <><Box sx={{mt: 2}}>
-            <Typography variant='body2'>Auto validated: {thread.autoValidated.toString()}</Typography>
-            <Typography variant='body2'>Double counting: {thread.allowDoublePosts.toString()}</Typography>
-            <Typography variant='body2'>Reset on mistakes: {thread.resetOnMistakes.toString()}</Typography>
-            <Typography variant='body2'>UUID: {thread.uuid}</Typography>
+            <Typography sx={{fontSize: 9}} variant='body2'>Auto validated: {thread.autoValidated.toString()}</Typography>
+            <Typography sx={{fontSize: 9}} variant='body2'>Double counting: {thread.allowDoublePosts.toString()}</Typography>
+            <Typography sx={{fontSize: 9}} variant='body2'>Reset on mistakes: {thread.resetOnMistakes.toString()}</Typography>
+            <Typography sx={{fontSize: 9}} variant='body2'>UUID: {thread.uuid}</Typography>
           </Box></> : <>Loading...</>}
         </TabPanel>
         <TabPanel value="tab_2" sx={{flexGrow: 1, p: 0}}>
@@ -770,7 +672,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           {/* </Box> */}
         </TabPanel>
         <TabPanel value="tab_3" sx={{flexGrow: 1}}>
-        {lastCount && <>
+        {lastCount && tabValueRef.current === "tab_3" && <>
         <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Last count: {lastCount.lastCount.rawCount} by {lastCount.lastCounter.name}</Typography>
         {thread && lastCount.lastCount && lastCount.lastCount.rawCount && ['main', 'slow', 'bars', 'parity', 'yoco', 'roulette', 'tslc', 'randomhour', '1inx', 'countdown', 'tugofwar'].includes(thread.validationType) && <LinearProgress variant="determinate" color='primary' title={`${parseInt(lastCount.lastCount.rawCount) % 1000}`} value={(parseInt(lastCount.lastCount.rawCount) % 1000) / 10} sx={{borderRadius: '10px'}} />}</>}
           <SplitsTable splits={splits}></SplitsTable>

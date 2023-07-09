@@ -1,5 +1,5 @@
 import { Box, TextField, Button, Zoom, Fab, useTheme, useMediaQuery, Typography, IconButton, alpha, Theme, Tooltip, Input } from "@mui/material";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { cachedCounters } from "../utils/helpers";
 import Count  from "./Count";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
@@ -10,9 +10,13 @@ import AcUnitIcon from '@mui/icons-material/AcUnit';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import { HourBar } from "./HourBar";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../utils/contexts/UserContext";
+import { SocketContext } from "../utils/contexts/SocketContext";
 
 const CountList = memo((props: any) => {
     
+    const { user, counter, loading } = useContext(UserContext);
+    const socket = useContext(SocketContext);
     const navigate = useNavigate();
     const boxRef = useRef<HTMLDivElement>(null);
     const theme = useTheme();
@@ -22,8 +26,8 @@ const CountList = memo((props: any) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const customInputRef = useRef<HTMLInputElement>(null);
     const [firstLoad, setFirstLoad] = useState(true);
-    const [isScrolledToBottom, setIsScrolledToBottom] = useState(props.user && props.user.pref_load_from_bottom ? true : false);
-    const [isScrolledToTop, setIsScrolledToTop] = useState(props.user && props.user.pref_load_from_bottom ? false : true);
+    const [isScrolledToBottom, setIsScrolledToBottom] = useState(user && user.pref_load_from_bottom ? true : false);
+    const [isScrolledToTop, setIsScrolledToTop] = useState(user && user.pref_load_from_bottom ? false : true);
     const [scrollThrottle, setScrollThrottle] = useState(false);
     const [isNewRecentCountAdded, setIsNewRecentCountAdded] = useState(false);
     const [keyboardType, setKeyboardType] = useState<"text" | "search" | "none" | "email" | "tel" | "url" | "numeric" | "decimal" | undefined>('search')
@@ -39,10 +43,11 @@ const CountList = memo((props: any) => {
       scrollDiagnostics.current = true;
     }
     const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
-    const [throttleCount, setThrottleCount] = useState(0);
+    const throttleCount = useRef(0);
     const [gotNewerUUIDs, setGotNewerUUIDs] = useState<string[]>([]);
     const [gotOlderUUIDs, setGotOlderUUIDs] = useState<string[]>([]);
-
+    const throttle = useRef(performance.now());
+    const isThrottled = useRef(false);
 
     //Add Ctrl+Enter submit shortcut
     useEffect(() => {
@@ -51,12 +56,12 @@ const CountList = memo((props: any) => {
           if ((event.ctrlKey || event.metaKey) && ((event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 96 && event.keyCode <= 105))) {
             event.preventDefault();
           }
-          if(inputRef.current && inputRef.current === document.activeElement && props.user && props.user.pref_submit_shortcut === 'Enter') {
+          if(inputRef.current && inputRef.current === document.activeElement && user && user.pref_submit_shortcut === 'Enter') {
             if (event.key === 'Enter' && !event.shiftKey && !event.altKey) {
               event.preventDefault();
               handlePosting();
             }
-          } else if(props.user && props.user.pref_submit_shortcut === 'Off') {
+          } else if(user && user.pref_submit_shortcut === 'Off') {
             return;
           } else if(inputRef.current && inputRef.current === document.activeElement) {
             if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
@@ -68,19 +73,19 @@ const CountList = memo((props: any) => {
         return () => {
           window.removeEventListener('keydown', handleKeyDown);
         };
-      }, [props.user, inputRef]);
+      }, [user, inputRef]);
 
     //Scroll to bottom upon isDesktop change
     useEffect(() => {
-      if(isScrolledToBottom && props.counter && props.user && props.user.pref_load_from_bottom) {
+      if(isScrolledToBottom && counter && user && user.pref_load_from_bottom) {
         scrollToBottomAuto();
         setTimeout(function () {scrollToBottomAuto()}, 100);
       }
-    }, [isDesktop, props.counter]);
+    }, [isDesktop, counter]);
 
     const changeScrolledToBottom = (isScrolled: boolean) => {
       setIsScrolledToBottom(isScrolled);
-      if(props.isScrolledToNewest.current !== undefined && props.user && props.user.pref_load_from_bottom) {
+      if(props.isScrolledToNewest.current !== undefined && user && user.pref_load_from_bottom) {
         props.isScrolledToNewest.current = isScrolled;
       }
       if(isScrolled) {
@@ -94,7 +99,7 @@ const CountList = memo((props: any) => {
 
     const changeScrolledToTop = (isScrolled: boolean) => {
       setIsScrolledToTop(isScrolled);
-      if(props.isScrolledToNewest.current !== undefined && (!props.user || (props.user.pref_load_from_bottom === false))) {
+      if(props.isScrolledToNewest.current !== undefined && (!user || (user.pref_load_from_bottom === false))) {
         props.isScrolledToNewest.current = isScrolled;
       }
       if(isScrolled) {
@@ -108,40 +113,51 @@ const CountList = memo((props: any) => {
 
     const handleUnfreeze = () => {
       if(props.cachedCounts && props.cachedCounts.length > 0) {
-        if(props.user && props.user.pref_load_from_bottom) {
-          props.setRecentCounts(prevCounts => {
-            const newCounts = [...prevCounts, ...props.cachedCounts];
-              if (newCounts.length > 50) {
-                return newCounts.slice(newCounts.length - 50);
-              } else {
-                return newCounts;
-              }
-          });
-          props.setRecentChats(prevChats => {
-            const newChats = [...prevChats,  ...props.cachedCounts.filter((count) => count.hasComment)];
-              if (newChats.length > 50) {
-                return newChats.slice(newChats.length - 50);
-              } else {
-                return newChats;
-              }
-          });
+        if(user && user.pref_load_from_bottom) {
+          
+            (!props.chatsOnly)
+            ?
+            props.recentCounts.current = (() => {
+            const newCounts = [...props.recentCounts.current, ...props.cachedCounts];
+            if (newCounts.length > 50) {
+              return newCounts.slice(newCounts.length - 50);
+            } else {
+              return newCounts;
+            }
+          }
+          )()
+          :
+          props.recentCounts.current = (() => {
+            const newChats = [...props.recentCounts.current, ...props.cachedCounts];
+            if (newChats.length > 50) {
+              return newChats.slice(newChats.length - 50);
+            } else {
+              return newChats;
+            }
+          }
+          )();   
         } else {
-          props.setRecentCounts(prevCounts => {
-            const newCounts = [...props.cachedCounts, ...prevCounts];
-              if (newCounts.length > 50) {
-                return newCounts.slice(0, 50);
-              } else {
-                return newCounts;
-              }
-          });
-          props.setRecentChats(prevChats => {
-            const newChats = [ ...props.cachedCounts.filter((count) => count.hasComment), ...prevChats];
-              if (newChats.length > 50) {
-                return newChats.slice(0, 50);
-              } else {
-                return newChats;
-              }
-          });
+          (!props.chatsOnly)
+          ?
+          props.recentCounts.current = (() => {
+            const newCounts = [...props.cachedCounts, ...props.recentCounts.current];
+            if (newCounts.length > 50) {
+              return newCounts.slice(0, 50);
+            } else {
+              return newCounts;
+            }
+          }
+          )()
+          :
+          props.recentCounts.current = (() => {
+            const newChats = [...props.cachedCounts, ...props.recentCounts.current];
+            if (newChats.length > 50) {
+              return newChats.slice(0, 50);
+            } else {
+              return newChats;
+            }
+          }
+          )();  
         }
       
         props.setCachedCounts([]);
@@ -150,6 +166,7 @@ const CountList = memo((props: any) => {
         }
         props.loadedNewestRef.current = true;
         props.setLoadedNewest(true);
+        setForceRerenderSubmit(Date.now().toString());
       } else if(props.cachedCounts && props.cachedCounts.length === 0 && props.loadedNewestRef.current !== undefined && props.loadedNewestRef.current === true) {
         props.loadedNewestRef.current = false; 
         setForceRerenderSubmit(Date.now().toString());
@@ -190,31 +207,43 @@ const CountList = memo((props: any) => {
       }
   }
 
+  const handleClear = async () => {
+    if(inputRef.current) {
+      if(!user || (user && user.pref_clear === 'Clear')) {
+        inputRef.current.value = '';
+      } else if(user && user.pref_clear === 'Clipboard') {
+        inputRef.current.value = await navigator.clipboard.readText();
+      } 
+      else if(user && user.pref_clear === 'Custom') {
+        inputRef.current.value = customInputRef.current ? customInputRef.current.value : '';
+      } 
+    }
+  }
+
     const handlePosting = async () => {
-      if(props.throttle.current) {
+      const throttleCheck = performance.now() - throttle.current;
+      if(throttleCheck < 100) {
         console.log("You are being throttled.");
-        setThrottleCount(prevThrottles => {return prevThrottles + 1})
+        throttleCount.current += 1;
+        isThrottled.current = true;
         setSubmitColor("error")
+        if(throttleCount.current > 100) {
+          theRock();
+        }
         return;
       }
         if(inputRef.current && inputRef.current.value.trim().length > 0) {
             props.handleLatencyChange(Date.now());
             props.handleLatencyCheckChange(inputRef.current.value.trim());
             props.handleSubmit(inputRef.current.value, props.refScroll.current);
-            props.setThrottle();
+            throttle.current = performance.now();
             props.refScroll.current = [];
-            setSubmitColor("primary")
-            if(!props.user || (props.user && props.user.pref_clear === 'Clear')) {
-              inputRef.current.value = '';
-            } else if(props.user && props.user.pref_clear === 'Clipboard') {
-              inputRef.current.value = await navigator.clipboard.readText();
-              // console.log(await navigator.clipboard.readText());
-              // console.log((await (new Clipboard)).readText());
-            } 
-            else if(props.user && props.user.pref_clear === 'Custom') {
-              inputRef.current.value = customInputRef.current ? customInputRef.current.value : '';
-            } 
-            if(props.counter && props.user.pref_load_from_bottom) {
+            if(isThrottled.current) {
+              isThrottled.current = false;
+              setSubmitColor("primary");
+            }
+            handleClear();
+            if(user && user.pref_load_from_bottom) {
               changeScrolledToBottom(true);
               if(isDesktop) {
                 scrollToBottomAuto();
@@ -222,14 +251,14 @@ const CountList = memo((props: any) => {
                   scrollToBottomAuto();
                 }, 100);
               }
-            } else {
+            } else if(isDesktop) {
                 scrollToTopAuto();
                 setTimeout(function() {
                   scrollToTopAuto();
                 }, 100);
                 changeScrolledToTop(true);
             }
-            inputRef.current.focus();            
+            inputRef.current.focus();        
         }
     }
 
@@ -245,25 +274,25 @@ const CountList = memo((props: any) => {
     }
 
     useEffect(() => {
-        if (((!isScrolledToBottom && props.user && props.user.pref_load_from_bottom) || (!isScrolledToTop)) && !firstLoad) {
+        if (((!isScrolledToBottom && user && user.pref_load_from_bottom) || (!isScrolledToTop)) && !firstLoad) {
           setIsNewRecentCountAdded(true);
         }
       }, [props.newRecentPostLoaded]);
 
       useEffect(() => {
-        if (((isScrolledToBottom && props.user && props.user.pref_load_from_bottom) || (isScrolledToTop)) && !firstLoad) {
+        if (((isScrolledToBottom && user && user.pref_load_from_bottom) || (isScrolledToTop)) && !firstLoad) {
           setIsNewRecentCountAdded(false);
         }
       }, [isScrolledToBottom, isScrolledToTop, props.newRecentPostLoaded]);
 
       useEffect(() => {
-        if (messagesEndRef.current && props.recentCounts && props.isMounted && (submitRef.current || props.chatsOnly)) {
+        if (messagesEndRef.current && props.recentCounts.current && props.isMounted && (submitRef.current || props.chatsOnly)) {
           if (firstLoad) {
             messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
             setFirstLoad(false);
             props.isScrolledToNewest.current = true;
           } else {
-            if (isScrolledToBottom && props.user && props.user.pref_load_from_bottom) {
+            if (isScrolledToBottom && user && user.pref_load_from_bottom) {
             if(!props.chatsOnly) {
               messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
               if(submitRef.current) {submitRef.current.scrollIntoView({ behavior: 'auto', block: 'end', });}
@@ -277,7 +306,7 @@ const CountList = memo((props: any) => {
             } 
           }
         }
-      }, [props.recentCounts, firstLoad, ]);
+      }, [props.recentCounts.current, firstLoad, ]);
 
       const loadPosts = (old: boolean) => {
         setScrollThrottle(true);
@@ -287,38 +316,38 @@ const CountList = memo((props: any) => {
         }, 1000);
         if(old) {
           if(props.chatsOnly) {
-            if(props.user && props.user.pref_load_from_bottom && !gotOlderUUIDs.includes(props.recentCounts[0].uuid)) {
-              setGotOlderUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
-              props.socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
-            } else if(!gotOlderUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
-              setGotOlderUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
-              props.socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
+            if(user && user.pref_load_from_bottom && !gotOlderUUIDs.includes(props.recentCounts.current[0].uuid)) {
+              setGotOlderUUIDs(old => {return [...old, props.recentCounts.current[0].uuid]})
+              socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts.current[0].uuid})
+            } else if(!gotOlderUUIDs.includes(props.recentCounts.current[props.recentCounts.current.length - 1].uuid)) {
+              setGotOlderUUIDs(old => {return [...old, props.recentCounts.current[props.recentCounts.current.length - 1].uuid]})
+              socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts.current[props.recentCounts.current.length - 1].uuid})
             }
           } else {
-            if(props.user && props.user.pref_load_from_bottom && !gotOlderUUIDs.includes(props.recentCounts[0].uuid)) {
-              setGotOlderUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
-              props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
-            } else if(!gotOlderUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
-              setGotOlderUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
-              props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
+            if(user && user.pref_load_from_bottom && !gotOlderUUIDs.includes(props.recentCounts.current[0].uuid)) {
+              setGotOlderUUIDs(old => {return [...old, props.recentCounts.current[0].uuid]})
+              socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts.current[0].uuid})
+            } else if(!gotOlderUUIDs.includes(props.recentCounts.current[props.recentCounts.current.length - 1].uuid)) {
+              setGotOlderUUIDs(old => {return [...old, props.recentCounts.current[props.recentCounts.current.length - 1].uuid]})
+              socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts.current[props.recentCounts.current.length - 1].uuid})
             }
           }
         } else {
           if(props.chatsOnly) {
-            if(props.user && props.user.pref_load_from_bottom && !gotNewerUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
-              setGotNewerUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
-              props.socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
-            } else if(!gotNewerUUIDs.includes(props.recentCounts[0].uuid)) {
-                setGotNewerUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
-                props.socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
+            if(user && user.pref_load_from_bottom && !gotNewerUUIDs.includes(props.recentCounts.current[props.recentCounts.current.length - 1].uuid)) {
+              setGotNewerUUIDs(old => {return [...old, props.recentCounts.current[props.recentCounts.current.length - 1].uuid]})
+              socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts.current[props.recentCounts.current.length - 1].uuid})
+            } else if(!gotNewerUUIDs.includes(props.recentCounts.current[0].uuid)) {
+                setGotNewerUUIDs(old => {return [...old, props.recentCounts.current[0].uuid]})
+                socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts.current[0].uuid})
             }
           } else {
-            if(props.user && props.user.pref_load_from_bottom && !gotNewerUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
-              setGotNewerUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
-              props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
-            } else if(!gotNewerUUIDs.includes(props.recentCounts[0].uuid)) {
-              setGotNewerUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
-              props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
+            if(user && user.pref_load_from_bottom && !gotNewerUUIDs.includes(props.recentCounts.current[props.recentCounts.current.length - 1].uuid)) {
+              setGotNewerUUIDs(old => {return [...old, props.recentCounts.current[props.recentCounts.current.length - 1].uuid]})
+              socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts.current[props.recentCounts.current.length - 1].uuid})
+            } else if(!gotNewerUUIDs.includes(props.recentCounts.current[0].uuid)) {
+              setGotNewerUUIDs(old => {return [...old, props.recentCounts.current[0].uuid]})
+              socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts.current[0].uuid})
             }
           }
         }
@@ -337,30 +366,14 @@ const CountList = memo((props: any) => {
         }
         if ((element.scrollHeight - element.scrollTop - 2 <= element.clientHeight) && !scrollThrottle) {
           changeScrolledToBottom(true);
-          if(props.recentCounts && props.recentCounts[0] && props.loadedNewest === false && props.user && props.user.pref_load_from_bottom) {
+          if(props.recentCounts.current && props.recentCounts.current[0] && props.loadedNewest === false && user && user.pref_load_from_bottom) {
             const distance_From_Top = element.scrollHeight;
             distanceFromTop.current = distance_From_Top;
             loadPosts(false);
-            // if(props.chatsOnly && !gotNewerUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
-            //   setGotNewerUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
-            //   props.socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
-            // } else if(!gotNewerUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
-            //   setGotNewerUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
-            //   props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
-            // }
-          } else if(props.recentCounts && props.recentCounts[0] && props.loadedOldest === false && props.loading === false && (!props.user || (props.user && !props.user.pref_load_from_bottom))) {
+          } else if(props.recentCounts.current && props.recentCounts.current[0] && props.loadedOldest === false && loading === false && (!user || (user && !user.pref_load_from_bottom))) {
             const distance_From_Top = element.scrollHeight;
             distanceFromTop.current = distance_From_Top;
             loadPosts(true);
-            // if(props.chatsOnly && !gotOlderUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)) {
-            //   setGotOlderUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
-            //   props.socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
-            // } else if(!gotOlderUUIDs.includes(props.recentCounts[props.recentCounts.length - 1].uuid)){
-            //   console.log("Ayo...");
-            //   console.log(gotOlderUUIDs);
-            //   setGotOlderUUIDs(old => {return [...old, props.recentCounts[props.recentCounts.length - 1].uuid]})
-            //   props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[props.recentCounts.length - 1].uuid})
-            // }
           }
         }
         if(element.scrollTop === 0) {
@@ -370,28 +383,14 @@ const CountList = memo((props: any) => {
         }
         if (element.scrollTop === 0 && !scrollThrottle) {
           changeScrolledToTop(true);
-          if(props.recentCounts && props.recentCounts[0] && props.loadedOldest === false && props.user && props.user.pref_load_from_bottom) {
+          if(props.recentCounts.current && props.recentCounts.current[0] && props.loadedOldest === false && user && user.pref_load_from_bottom) {
             const distance_From_Bottom = element.scrollHeight - element.scrollTop - element.clientHeight;
             distanceFromBottom.current = distance_From_Bottom;
             loadPosts(true);
-            // if(props.chatsOnly && !gotOlderUUIDs.includes(props.recentCounts[0].uuid)) {
-            //   setGotOlderUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
-            //   props.socket.emit(`getOlderChats`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
-            // } else if(!gotOlderUUIDs.includes(props.recentCounts[0].uuid)) {
-            //   setGotOlderUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
-            //   props.socket.emit(`getOlder`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
-            // }
-          } else if(props.recentCounts && props.recentCounts[0] && props.loadedNewest === false) {
+          } else if(props.recentCounts.current && props.recentCounts.current[0] && props.loadedNewest === false) {
             const distance_From_Bottom = element.scrollHeight - element.scrollTop - element.clientHeight;
             distanceFromBottom.current = distance_From_Bottom;
             loadPosts(false);
-            // if(props.chatsOnly && !gotNewerUUIDs.includes(props.recentCounts[0].uuid)) {
-            //   setGotNewerUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
-            //   props.socket.emit(`getNewerChats`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
-            // } else if(!gotNewerUUIDs.includes(props.recentCounts[0].uuid)) {
-            //   setGotNewerUUIDs(old => {return [...old, props.recentCounts[0].uuid]})
-            //   props.socket.emit(`getNewer`, {thread_name: props.thread_name, uuid: props.recentCounts[0].uuid})
-            // }
           }
         } else {
           if(isScrolledToTop) {
@@ -418,7 +417,7 @@ const CountList = memo((props: any) => {
         }
       };
       useEffect(() => {
-        if(props.user && props.user.pref_load_from_bottom) {
+        if(user && user.pref_load_from_bottom) {
         if(distanceFromBottom.current) {
           scrollToDistanceFromBottom(distanceFromBottom.current);
           setTimeout(function() {
@@ -438,7 +437,7 @@ const CountList = memo((props: any) => {
 
 
       useEffect(() => {
-        if(props.user && props.user.pref_load_from_bottom) {
+        if(user && user.pref_load_from_bottom) {
           if(distanceFromTop.current) {
           scrollToDistanceFromTop(distanceFromTop.current);
           setTimeout(function() {
@@ -458,15 +457,9 @@ const CountList = memo((props: any) => {
 
       useEffect(() => {
         setInterval(function() {
-          setThrottleCount(0);
+          throttleCount.current = 0;
         }, 30000);
       }, [])
-  
-      useEffect(() => {
-        if(throttleCount > 100) {
-          theRock();
-        }
-      }, [throttleCount])
   
       const theRock = () => {
         navigate(`/huh`);
@@ -478,13 +471,13 @@ const CountList = memo((props: any) => {
   
 
       const scrollDownMemo = useMemo(() => {
-        return (<>{isNewRecentCountAdded && !firstLoad && ((props.user && props.user.pref_load_from_bottom && !isScrolledToBottom) || !props.user || (props.user && props.user.pref_load_from_bottom === false && !isScrolledToTop) ) && (<>
+        return (<>{isNewRecentCountAdded && !firstLoad && ((user && user.pref_load_from_bottom && !isScrolledToBottom) || !user || (user && user.pref_load_from_bottom === false && !isScrolledToTop) ) && (<>
           {isDesktop ? (
               <Box sx={{ position: 'fixed', bottom: '130px', right: '10%' }}>
-            <Zoom in={(props.user && props.user.pref_load_from_bottom) ? !isScrolledToBottom : !isScrolledToTop}>
+            <Zoom in={(user && user.pref_load_from_bottom) ? !isScrolledToBottom : !isScrolledToTop}>
               <Box sx={{ display: 'flex', alignItems: 'center', borderRadius: '100px', bgcolor: 'primary.main' }}>
                 <Fab color="primary" variant="extended" size="medium" onClick={scrollToBottom}>
-                  {props.user && props.user.pref_load_from_bottom ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
+                  {user && user.pref_load_from_bottom ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
                   New Posts
                 </Fab>
               </Box>
@@ -492,28 +485,28 @@ const CountList = memo((props: any) => {
             </Box>
           ) : (
               <Box sx={{ position: 'fixed', bottom: '130px', right: '5%' }}>
-            <Zoom in={(props.user && props.user.pref_load_from_bottom) ? !isScrolledToBottom : !isScrolledToTop}>
+            <Zoom in={(user && user.pref_load_from_bottom) ? !isScrolledToBottom : !isScrolledToTop}>
               <Fab color="primary" size="medium" onClick={scrollToBottom}>
-                {props.user && props.user.pref_load_from_bottom ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
+                {user && user.pref_load_from_bottom ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
               </Fab>
             </Zoom>
             </Box>
           )}</>
         )}</>);
-      }, [isNewRecentCountAdded, firstLoad, isScrolledToTop, isScrolledToBottom, props.recentCounts, props.user])
+      }, [isNewRecentCountAdded, firstLoad, isScrolledToTop, isScrolledToBottom, props.recentCounts.current, user])
 
       const submitButtonMemo = useMemo(() => {
-        if(props.counter && props.counter.roles.includes('banned')) {
+        if(counter && counter.roles.includes('banned')) {
           return (
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
                 <Typography color="text.primary" variant="body1">You are banned. You can't post until you've been unbanned.</Typography>
             </Box>)
-        } else if(props.counter && props.thread && props.thread.postBans && props.thread.postBans.includes(props.counter.uuid)) {
+        } else if(counter && props.thread && props.thread.postBans && props.thread.postBans.includes(counter.uuid)) {
           return (
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
                 <Typography color="text.primary" variant="body1">You are banned from this thread.</Typography>
             </Box>)
-        } else if(isDesktop && props.counter && props.counter.roles.includes("counter") && props.thread && props.thread.locked === false) {
+        } else if(isDesktop && counter && counter.roles.includes("counter") && props.thread && props.thread.locked === false) {
         return (
           <Box ref={submitRef} sx={{maxWidth: '100%', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, padding: '0.5', background: alpha(theme.palette.background.paper, 0.9)}}>
           <Tooltip title={`${props.cachedCounts && props.cachedCounts.length} new`} placement="top" open={(props.cachedCounts && props.cachedCounts.length > 0) ? true : false} arrow >
@@ -526,12 +519,12 @@ const CountList = memo((props: any) => {
               fullWidth
               multiline
               maxRows={4}
-              style={{ borderRadius: '20px', padding: '10px', width: props.user && props.user.pref_clear === 'Custom' ? '50%' : '70%' }}
+              style={{ borderRadius: '20px', padding: '10px', width: user && user.pref_clear === 'Custom' ? '50%' : '70%' }}
               autoFocus
               inputRef={inputRef}
               inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: "off" }}
           />
-                    {props.user && props.user.pref_clear === 'Custom' && <Input
+                    {user && user.pref_clear === 'Custom' && <Input
               // variant="outlined"
               maxRows={1}
               style={{ borderRadius: '20px', padding: '10px', width: '20%' }}
@@ -554,24 +547,25 @@ const CountList = memo((props: any) => {
           </IconButton>
           </Tooltip>
       </Box>)
-        } else if(props.counter && props.counter.roles.includes("counter") && props.thread && props.thread.locked === false) {
+        } else if(counter && counter.roles.includes("counter") && props.thread && props.thread.locked === false) {
         // } else {
           return (<>
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, padding: '0.5', bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
+            <Tooltip title={`${props.cachedCounts && props.cachedCounts.length} new`} placement="top" open={(props.cachedCounts && props.cachedCounts.length > 0) ? true : false} arrow >
                 <IconButton onClick={() => handleUnfreeze()}>
                   <AcUnitIcon color={(props.loadedNewestRef !== undefined && props.loadedNewestRef.current === false && props.recentCountsLoading === false) ?  'primary' : 'disabled'} />
                 </IconButton>
+                </Tooltip>
                 <TextField
-                    variant="outlined"
                     fullWidth
                     multiline
                     maxRows={4}
-                    style={{ borderRadius: '20px', padding: '10px', width: props.user && props.user.pref_clear === 'Custom' ? '40%' : '70%' }}
+                    style={{ borderRadius: '20px', padding: '10px', width: user && user.pref_clear === 'Custom' ? '40%' : '70%' }}
                     autoFocus
                     inputRef={inputRef}
                     inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: "off", enterKeyHint: "send" }}
                 />
-                {props.user && props.user.pref_clear === 'Custom' && <Input
+                {user && user.pref_clear === 'Custom' && <Input
               // variant="outlined"
               maxRows={1}
               style={{ borderRadius: '20px', padding: '10px', width: '30%' }}
@@ -595,17 +589,17 @@ const CountList = memo((props: any) => {
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
                 <Typography color="text.primary" variant="body1">This thread has been locked. This may be temporary, check the "About" page.</Typography>
             </Box>)
-        } else if(props.counter && !props.counter.color) {
+        } else if(counter && !counter.color) {
           return (
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
                 <Typography color="text.primary" variant="body1">Your registration is not yet complete. Click the "Complete Registration" button at the top to join in!</Typography>
             </Box>)
-        } else if(props.counter) {
+        } else if(counter) {
           return (
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 2, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
                 <Typography color="text.primary" variant="body1">Your registration is pending verification. No further action from you is required. To avoid abuse, we are manually verifying accounts at the moment. Our apologies. Check back shortly, you'll be able to count soon!</Typography>
             </Box>)
-        } else if(!props.loading && !props.counter) {
+        } else if(!loading && !counter) {
           return (
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', maxHeight: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, p: 0, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
                 <Typography color="text.primary" variant="h6">Sign up to count. &nbsp;</Typography>
@@ -614,7 +608,7 @@ const CountList = memo((props: any) => {
               </Button>
             </Box>)
         }
-      }, [inputRef, props.thread, props.loading, submitColor, keyboardType, theme, isDesktop, props.counter, props.cachedCounts, props.loadedNewestRef, props.loadedNewest, forceRerenderSubmit, props.recentCountsLoading])
+      }, [submitColor, props.thread, loading, keyboardType, theme, isDesktop, counter, props.cachedCounts, props.loadedNewestRef, props.loadedNewest, forceRerenderSubmit, props.recentCountsLoading])
 
       const countsMemo = useMemo(() => {
           const countsByDayAndHour = {};
@@ -623,7 +617,7 @@ const CountList = memo((props: any) => {
           let prevHour;
           let prevKey;
 
-          props.recentCounts.forEach((count, index) => {
+          props.recentCounts.current && props.recentCounts.current.forEach((count, index) => {
             const date = new Date(parseInt(count.timestamp));
             const hour = date.getHours();
             const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${hour}`;
@@ -645,10 +639,10 @@ const CountList = memo((props: any) => {
               };
             }
 
-            if (prevKey !== key || !prevKey || ((index === props.recentCounts.length - 1) && countsByDayAndHour[key].showHourBar !== false)) {
-              if(props.user && props.user.pref_load_from_bottom && index === 0) {
+            if (prevKey !== key || !prevKey || ((index === props.recentCounts.current.length - 1) && countsByDayAndHour[key].showHourBar !== false)) {
+              if(user && user.pref_load_from_bottom && index === 0) {
                 countsByDayAndHour[key].showHourBar = false;
-              } else if(((!props.user || (props.user && !props.user.pref_load_from_bottom))) && index === props.recentCounts.length - 1) {
+              } else if(((!user || (user && !user.pref_load_from_bottom))) && index === props.recentCounts.current.length - 1) {
                 countsByDayAndHour[key].showHourBar = false;
               } else {
                 countsByDayAndHour[key].showHourBar = true;
@@ -660,36 +654,37 @@ const CountList = memo((props: any) => {
             prevHour = hour;
             prevKey = key;
           });
+          
           return Object.keys(countsByDayAndHour).map((key, index) => {
             const { day, counts, showHourBar } = countsByDayAndHour[key];
             const shouldShowHourBar = showHourBar
             return (
               <div key={key}>
-                {index === 0 && !props.loadedOldest && (props.user && props.user.pref_load_from_bottom) && <Box sx={{width: '100%', display: 'flex', justifyContent: 'center'}}><Button variant="contained" disabled={scrollThrottle} onClick={() => {loadPosts(true)}}>Load More</Button></Box>}
-                {props.user && props.user.pref_load_from_bottom && shouldShowHourBar && (
+                {index === 0 && !props.loadedOldest && (user && user.pref_load_from_bottom) && <Box sx={{width: '100%', display: 'flex', justifyContent: 'center'}}><Button variant="contained" disabled={scrollThrottle} onClick={() => {loadPosts(true)}}>Load More</Button></Box>}
+                {user && user.pref_load_from_bottom && shouldShowHourBar && (
                   <HourBar label={day} />
                 )}
-                {counts.map(count => {
+                {counts.map((count, index) => {
                   const contextMatch = props.context && props.context === count.uuid;
                   const ref = contextMatch ? contextRef : null;
-                  if(isDesktop && !(count.stricken && !count.hasComment && props.user && props.user.pref_hide_stricken === 'Hide')) {
+                  if(isDesktop && !(count.stricken && !count.hasComment && user && user.pref_hide_stricken === 'Hide')) {
                   return (
-                    <Count user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+                    <Count user={user} myCounter={counter} key={count.uuid} thread={props.thread} socket={socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
                   );
-                  } else if(!(count.stricken && props.user && props.user.pref_hide_stricken === 'Hide')) {
+                  } else if(!(count.stricken && user && user.pref_hide_stricken === 'Hide')) {
                     return (
-                      <CountMobile user={props.user} myCounter={props.counter} key={count.uuid} thread={props.thread} socket={props.socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+                      <CountMobile user={user} myCounter={counter} key={count.uuid} thread={props.thread} socket={socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
                     );
                   }
                 })}
-                {(!props.user || (props.user && !props.user.pref_load_from_bottom)) && shouldShowHourBar && (
+                {(!user || (user && !user.pref_load_from_bottom)) && shouldShowHourBar && (
                   <HourBar label={day} />
                 )}
-                {index + 1 === Object.keys(countsByDayAndHour).length && !props.loadedOldest && (!props.user || (props.user && !props.user.pref_load_from_bottom)) && <Box sx={{width: '100%', display: 'flex', justifyContent: 'center'}}><Button variant="contained" disabled={scrollThrottle} onClick={() => {loadPosts(true)}}>Load More</Button></Box>}
+                {index + 1 === Object.keys(countsByDayAndHour).length && !props.loadedOldest && (!user || (user && !user.pref_load_from_bottom)) && <Box sx={{width: '100%', display: 'flex', justifyContent: 'center'}}><Button variant="contained" disabled={scrollThrottle} onClick={() => {loadPosts(true)}}>Load More</Button></Box>}
               </div>
             );
           });
-      }, [props.recentCounts, cachedCounters, isDesktop, scrollThrottle]);
+      }, [props.recentCounts.current, cachedCounters, isDesktop, scrollThrottle]);
 
       const [submitHeight, setSubmitHeight] = useState(76);
 
@@ -712,7 +707,7 @@ const CountList = memo((props: any) => {
         };
       }, [submitRef.current]);
 
-      if(props.user && props.user.pref_load_from_bottom) {
+      if(user && user.pref_load_from_bottom) {
         return (<>
           <Box id="messages-box" ref={boxRef} onScroll={handleScroll} sx={{ height: submitRef.current ? `calc(100% - ${submitHeight}px)` : props.chatsOnly ? '100%' : 'calc(100% - 76px)', flexGrow: 1, bgcolor: 'background.paper', overflow: 'auto', position: 'relative' }}>
       

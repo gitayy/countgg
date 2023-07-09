@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { getRecentCounts } from '../api';
 import { UserContext } from '../contexts/UserContext';
 import { addCounterToCache } from '../helpers';
@@ -8,6 +8,7 @@ import { useIsMounted } from './useIsMounted';
 
 export function useFetchRecentChats(thread_name: string, context: string | (string | null)[] | null) {
       const [recentChats, setRecentChats] = useState<PostType[]>([]);
+      const recentChatsRef = useRef<PostType[]>([]);
       const [recentChatsLoading, setRecentChatsLoading] = useState<boolean>(true);
       const [loadedOldestChats, setLoadedOldestChats] = useState(false); 
       const [loadedNewestChats, setLoadedNewestChats] = useState(true);
@@ -20,8 +21,10 @@ export function useFetchRecentChats(thread_name: string, context: string | (stri
         if (isMounted.current && data.recentCounts) { 
           if(user && user.pref_load_from_bottom) {
             setRecentChats(data.recentCounts.reverse());
+            recentChatsRef.current = data.recentCounts.reverse();
           } else {
             setRecentChats(data.recentCounts);
+            recentChatsRef.current = data.recentCounts;
           } 
           for (const counter of data.counters) {
               addCounterToCache(counter)
@@ -38,5 +41,5 @@ export function useFetchRecentChats(thread_name: string, context: string | (stri
         })
     }, []);
     
-      return { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats };
+      return { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats, recentChatsRef };
     }
