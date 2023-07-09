@@ -67,7 +67,7 @@ const CountMobile = memo((props: any) => {
   
   const uncachedCounter: Counter = defaultCounter(props.post.authorUUID);
   
-  const renderedCounter = counter || uncachedCounter;
+  const renderedCounter = props.renderedCounter || uncachedCounter;
 
   // const teamEmoji = renderedCounter.roles.includes('blaze') ? '🔥' : renderedCounter.roles.includes('radiant') ? '⭐' : renderedCounter.roles.includes('wave') ? '🌊' : '';
 
@@ -167,7 +167,7 @@ const CountMobile = memo((props: any) => {
               </Box>
               {Object.entries(props.post.reactions).length > 0 && <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}>
               {props.post.reactions && Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {
-                if(props.myCounter && reaction[1] && (reaction[1] as string[]).includes(props.myCounter.uuid)) {
+                if(counter && reaction[1] && (reaction[1] as string[]).includes(counter.uuid)) {
                   return (
                     <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#6ab3ff82', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
                   )
@@ -184,13 +184,13 @@ const CountMobile = memo((props: any) => {
       </Grid>
       <Grid item xs={2}>
       <Box ref={anchorRef}></Box>
-      {props.myCounter && 
+      {counter && 
       <Box className="countActionsDesktop" sx={{ display: 'none', justifyContent: 'end' }}>
           <SentimentVerySatisfied sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Reaction" onClick={() => {setPickerOpen(!pickerOpen)}} />
-      {props.post.isCount && props.thread && props.thread.autoValidated === false && ((props.myCounter && props.myCounter.uuid == props.post.authorUUID) || (props.myCounter && props.myCounter.roles.includes("admin"))) &&
+      {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) &&
         <StrikethroughSIcon sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Strike" onClick={() => {setAction('strike'); setOpen(true)}} />
       }
-      {props.post.hasComment && ((props.myCounter && props.myCounter.uuid == props.post.authorUUID) || (props.myCounter && props.myCounter.roles.includes("admin"))) &&
+      {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) &&
         <DeleteIcon sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Delete" onClick={() => {setAction('delete'); setOpen(true)}} />}
   
       {pickerOpen && <Popover open={pickerOpen} anchorEl={anchorRef.current} anchorOrigin={{ vertical: 'top', horizontal: -250, }} onClose={() => setPickerOpen(false)}><Picker set={'twitter'} custom={custom_emojis} onEmojiSelect={handleEmojiSelect} /></Popover>}
@@ -255,21 +255,21 @@ return (
                           </Grid>
                           <Grid item xs={3} sx={{}}>
                           <Box ref={anchorRef}></Box>
-                          {props.myCounter && 
+                          {counter && 
                           <Box className="countActions" sx={{ display: 'flex', justifyContent: 'end', scale: '80%'}}>
-                                      {props.post.isCount && props.thread && props.thread.autoValidated === false && ((props.myCounter && props.myCounter.uuid == props.post.authorUUID) || (props.myCounter && props.myCounter.roles.includes("admin"))) && <IconButton
+                                      {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) && <IconButton
               aria-label="Strike"
               onClick={() => {setAction('strike'); setOpen(true)}}
             >
               <StrikethroughSIcon />
             </IconButton>}
-            {props.post.hasComment && ((props.myCounter && props.myCounter.uuid == props.post.authorUUID) || (props.myCounter && props.myCounter.roles.includes("admin"))) && <IconButton
+            {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) && <IconButton
               aria-label="Delete"
               onClick={() => {setAction('delete'); setOpen(true)}}
             >
               <DeleteIcon />
             </IconButton>}
-            {props.myCounter && props.myCounter.roles.includes("counter") && <IconButton
+            {counter && counter.roles.includes("counter") && <IconButton
               aria-label="Reaction"
               onClick={() => {setPickerOpen(!pickerOpen)}}
             >
@@ -321,7 +321,7 @@ return (
               {props.post.reactions && Object.entries(props.post.reactions).length > 0 &&
               <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}> 
               {Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {
-                if(props.myCounter && reaction[1] && (reaction[1] as string[]).includes(props.myCounter.uuid)) {
+                if(counter && reaction[1] && (reaction[1] as string[]).includes(counter.uuid)) {
                   return (
                     <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#6ab3ff82', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
                   )

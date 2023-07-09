@@ -669,11 +669,11 @@ const CountList = memo((props: any) => {
                   const ref = contextMatch ? contextRef : null;
                   if(isDesktop && !(count.stricken && !count.hasComment && user && user.pref_hide_stricken === 'Hide')) {
                   return (
-                    <Count user={user} myCounter={counter} key={count.uuid} thread={props.thread} socket={socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+                    <Count user={user} key={count.uuid} thread={props.thread} socket={socket} post={count} renderedCounter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
                   );
                   } else if(!(count.stricken && user && user.pref_hide_stricken === 'Hide')) {
                     return (
-                      <CountMobile user={user} myCounter={counter} key={count.uuid} thread={props.thread} socket={socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+                      <CountMobile user={user} key={count.uuid} thread={props.thread} socket={socket} post={count} renderedCounter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
                     );
                   }
                 })}

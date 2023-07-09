@@ -22,7 +22,7 @@ export function useFetchRecentCounts(thread_name: string, context: string | (str
           if (isMounted.current && data.recentCounts) { 
             if(user && !loading && user.pref_load_from_bottom) {
               setRecentCounts(data.recentCounts.reverse())
-              recentCountsRef.current = data.recentCounts.reverse();
+              recentCountsRef.current = data.recentCounts;
             } else {
               recentCountsRef.current = data.recentCounts;
               setRecentCounts(data.recentCounts)
