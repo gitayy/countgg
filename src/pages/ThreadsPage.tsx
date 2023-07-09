@@ -94,6 +94,9 @@ export const ThreadsPage = () => {
             <ThreadCard title={"Odds Double"} description={"Double counting, with odd numbers only!"} href={`/thread/odds_double`} color1={'#00c6ff'} color2={'#0072ff'}></ThreadCard>
             <ThreadCard title={"Evens Double"} description={"Double counting, with even numbers only!"} href={`/thread/evens_double`} color1={'#fd746c'} color2={'#ff9068'}></ThreadCard>
             <ThreadCard title={"Letters Double"} description={"Letters double counting..."} href={`/thread/letters_double`} color1={'#4facfe'} color2={'#00f2fe'}></ThreadCard>
+            <ThreadCard title={"Binary Double"} description={"Binary double counting..."} href={`/thread/binary_double`} color1={'#4facfe'} color2={'#00f2fe'}></ThreadCard>
+            <ThreadCard title={"Hex Double"} description={"Hex double counting..."} href={`/thread/hex_double`} color1={'#4facfe'} color2={'#00f2fe'}></ThreadCard>
+            <ThreadCard title={"Roman Double"} description={"Roman double counting..."} href={`/thread/roman_double`} color1={'#4facfe'} color2={'#00f2fe'}></ThreadCard>
             </Box>
      </TabPanel>
      <TabPanel value="tab_3" sx={{flexGrow: 1}}>
