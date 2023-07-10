@@ -212,6 +212,10 @@ function App() {
             name="description"
             content="Join the largest counting website for free. Make history. countGG is the best counting website for counting to 10, 100, or even counting to a million."
           />
+          <meta
+            property="og:description"
+            content="Join the largest counting website for free. Make history. countGG is the best counting website for counting to 10, 100, or even counting to a million."
+          />
           </Helmet>
           <Routes>
             <Route path="/*" element={<Sidebar />} />
