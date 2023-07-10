@@ -11,7 +11,7 @@ import Count from '../components/Count';
 import CountMobile from '../components/CountMobile';
 import { useFetchSpecificCount } from '../utils/hooks/useFetchSpecificCount';
 import { UserContext } from '../utils/contexts/UserContext';
-import { Helmet } from "react-helmet";
+import { Helmet } from 'react-helmet-async';
 
 export const IndividualCountPage = memo(() => {
     const params = useParams();

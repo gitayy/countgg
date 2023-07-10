@@ -42,9 +42,13 @@ import { TheRockPage } from './pages/TheRockPage';
 import LrwoedPage from './lrwoed/LrwoedPage';
 import { AdminSystemMessagePage } from './pages/AdminSystemMessagePage';
 import { SeasonPage } from './pages/SeasonPage';
+import { useFetchAllThreads } from './utils/hooks/useFetchAllThreads';
+import { ThreadsContext } from './utils/contexts/ThreadsContext';
+import { HelmetProvider, Helmet } from 'react-helmet-async';
 
 function App() {
   const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems } = useFetchUser();
+  const { allThreads, allThreadsLoading } = useFetchAllThreads();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light');
 
@@ -199,6 +203,16 @@ function App() {
       >
         <CookiesProvider>
         <SocketContext.Provider value={socket}>
+        <ThreadsContext.Provider
+      value={{allThreads, allThreadsLoading}}
+      >
+        <HelmetProvider>
+          <Helmet>
+                <meta
+            name="description"
+            content="Join the largest counting website for free. Make history. countGG is the best counting website for counting to 10, 100, or even counting to a million."
+          />
+          </Helmet>
           <Routes>
             <Route path="/*" element={<Sidebar />} />
           </Routes>
@@ -237,6 +251,8 @@ function App() {
             <Route path="/rewards" element={<SeasonPage />} />
             {user && counter && <Route path="/prefs" element={<PrefsPage />} />}
           </Routes>
+          </HelmetProvider>
+          </ThreadsContext.Provider>
           </SocketContext.Provider>
           </CookiesProvider>
           </UserContext.Provider>
