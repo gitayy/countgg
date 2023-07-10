@@ -251,7 +251,7 @@ const Count = memo((props: any) => {
                             <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastCount : msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography>
                               {/* &nbsp;| */}&nbsp;</>}
                               </Box>
-                              <Box sx={{ color: user && user.pref_night_mode_colors && user.pref_night_mode_colors !== 'Default' ? (user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
+                              <Box sx={{ color: user && user.pref_night_mode_colors && user.pref_night_mode_colors !== 'Default' ? (user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', textAlign: 'right', overflow: "hidden", bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
                               {hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{hoursSinceLastPost}<Typography component="span" variant="subtitle2">h</Typography></Typography>) : null}
                               {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{minutesSinceLastPost}<Typography component="span" variant="subtitle2">m</Typography></Typography>) : null}
                               {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{secondsSinceLastPost}<Typography component="span" variant="subtitle2">s</Typography></Typography>) : null}
@@ -273,7 +273,7 @@ const Count = memo((props: any) => {
                     <Typography variant="subtitle1" component="div">
                         <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${props.post.authorUUID}`);}} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.emoji ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}` : renderedCounter.name}</Link>&nbsp;
                       </Typography>
-                      <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}>
+                      <Box sx={{display: props.post.reactions && Object.entries(props.post.reactions).length > 0 ? 'inline-flex' : 'none', flexWrap: 'wrap'}}>
                       {props.post.reactions && Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {
                         if(counter && reaction[1] && (reaction[1] as string[]).includes(counter.uuid)) {
                           return (

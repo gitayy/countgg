@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import { Fragment, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AlertColor, alpha, Badge, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Grid, LinearProgress, Link, Snackbar, Tab, Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Alert, AlertColor, alpha, Badge, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Drawer, Grid, IconButton, LinearProgress, Link, Skeleton, Snackbar, Tab, Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
 import { addCounterToCache, cachedCounters } from '../utils/helpers';
 import { useFetchRecentCounts } from '../utils/hooks/useFetchRecentCounts';
@@ -27,6 +27,8 @@ import { InfoOutlined } from '@mui/icons-material';
 import moment from 'moment-timezone';
 import { TerminalController } from '../components/TerminalController';
 import { DailyRobTable } from '../components/DailyRobTable';
+import { ThreadsContext } from '../utils/contexts/ThreadsContext';
+import TagIcon from '@mui/icons-material/Tag';
 
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const location = useLocation();
@@ -45,9 +47,10 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [socketViewers, setSocketViewers] = useState(1);
 
     const { user, counter, loading } = useContext(UserContext);
+    const { allThreads, allThreadsLoading } = useContext(ThreadsContext);
     const { thread, threadLoading, setThread } = useFetchThread(thread_name);
-    const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest, recentCountsRef } = useFetchRecentCounts(thread_name, context);
-    const { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats, recentChatsRef } = useFetchRecentChats(thread_name, context);
+    const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest, recentCountsRef } = useFetchRecentCounts(thread_name, context, socketStatus);
+    const { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats, recentChatsRef } = useFetchRecentChats(thread_name, context, socketStatus);
     const loadedNewestRef = useRef(false);
     const loadedNewestChatRef = useRef(false);
     const [ cachedCounts, setCachedCounts ] = useState<PostType[]>([]);
@@ -58,6 +61,16 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [dailyRobs, setDailyRobs] = useState<{ counterUUID: string, id: number, moneyRobbed: string, postUUID: string, timestamp: string }[]|undefined>();
     const [newRecentPostLoaded, setNewRecentPostLoaded] = useState('');
     const [splits, setSplits] = useState<any>([]);
+
+    const [mobilePickerOpen, setMobilePickerOpen] = useState(false);
+    const [desktopPickerOpen, setDesktopPickerOpen] = useState(true);
+
+      const handleMobileDrawerToggle = () => {
+        setMobilePickerOpen(!mobilePickerOpen);
+      };
+      const handleDesktopDrawerToggle = () => {
+        setDesktopPickerOpen(!desktopPickerOpen);
+      };
 
     useEffect(() => {
       if(thread) {
@@ -251,11 +264,11 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               setSocketStatus("DISCONNECTED");
             });
           }
-          },[loading]);
+          },[loading, thread_name]);
 
           useEffect(() => {
 
-          if(isMounted.current && loading == false && socketStatus == 'LIVE') {
+          if(isMounted.current && loading == false && socketStatus === "LIVE") {
             socket.emit('watch', thread_name)
 
             socket.on(`watcher_count`, function(data) {
@@ -407,8 +420,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                   addCounterToCache(counter);
                 }
                 recentCountsRef.current = user && user.pref_load_from_bottom
-              ? [...recentCountsRef.current, ...data.recentCounts.filter(count => !recentCountsRef.current.some(prevCount => prevCount.uuid === count.uuid)).reverse()]
-              : [...data.recentCounts.filter(count => !recentCountsRef.current.some(prevCount => prevCount.uuid === count.uuid)), ...recentCountsRef.current];
+              ? [...recentCountsRef.current, ...data.recentCounts.filter(count => !recentCountsRef.current.some(prevCount => prevCount.uuid === count.uuid))]
+              : [...data.recentCounts.filter(count => !recentCountsRef.current.some(prevCount => prevCount.uuid === count.uuid)).reverse(), ...recentCountsRef.current];
                 if(data.recentCounts && data.recentCounts[0]) {
                   setLoadedNewCount(Date.now())
                 }
@@ -511,7 +524,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 setSocketStatus("DISCONNECTED");
             }
         }
-    },[socketStatus, loading]);
+    },[loading, thread_name, socketStatus]);
 
     const deleteComment = useCallback((data) => {
       recentCountsRef.current = recentCountsRef.current.map((chat) => {
@@ -594,6 +607,17 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       const headerMemo = useMemo(() => {
         if(thread) {return (
           <Box sx={{ display: 'flex', flexGrow: 0, p: 0.5, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
+            <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={() => isDesktop ? handleDesktopDrawerToggle() : handleMobileDrawerToggle()}
+            sx={{ mr: 2, ml: 2, 
+              // display: { lg: 'none' }
+             }}
+          >
+            <TagIcon />
+          </IconButton>
             <Typography sx={{p: 0.5}} variant="h6" color="text.primary">{thread.title}</Typography>
             {socketMemo}
           </Box>)
@@ -605,7 +629,62 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             </Box>
           )
         }
-      }, [thread, socketStatus, socketViewers, theme, lastCount])
+      }, [thread, socketStatus, socketViewers, theme, lastCount, mobilePickerOpen, desktopPickerOpen, isDesktop])
+
+      const threadPickerMemo = useMemo(() => {
+        if(allThreads && allThreads.length > 0) {
+          const picker = 
+          <Box sx={{minHeight: 500, height: {xs: '100vh', lg: 'calc(100vh - 65px)'}, width: "fit-content", flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', flexDirection: "column", overflowY: "scroll",}}>
+          {allThreads.map((thread, index) => {
+            return (<Button startIcon={<TagIcon />} sx={{width: "100%", opacity: thread_name === thread.name ? 1 : 0.75, textAlign: "left", '&:hover': {opacity: 1}, bgcolor: thread_name === thread.name ? alpha(theme.palette.primary.main, 0.5) : "background.paper", color: thread_name === thread.name ? 'text.primary' : 'text.secondary', justifyContent: 'flex-start'}} onClick={() => navigate(`/thread/${thread.name}`)}>{thread.title} 
+            {/* {thread.name !== thread_name && <Chip label="67,000" size="small" variant="filled" color='primary' sx={{ml: 0.5, cursor: "pointer", scale: "0.75"}} />} */}
+            </Button>)
+          })}
+          </Box>
+          return (
+            // picker
+          //   <Box
+          //   component="nav"
+          //   sx={{ width: { lg: "100%" }, flexShrink: { lg: 0 } }}
+          //   aria-label="Thread Picker"
+          // >
+          <>
+            <Drawer
+              variant="temporary"
+              open={mobilePickerOpen}
+              anchor='left'
+              onClose={handleMobileDrawerToggle}
+              ModalProps={{
+                keepMounted: true,
+              }}
+              sx={{
+                display: { xs: 'block', lg: 'none' },
+                boxSizing: 'border-box'
+                // '& .MuiDrawer-paper': { boxSizing: 'border-box', display: "contents" },
+              }}
+            >
+              {picker}
+            </Drawer>
+            <Drawer
+              variant="persistent"
+              sx={{
+                display: { xs: 'none', lg: 'block' },
+                '& .MuiDrawer-paper': { boxSizing: 'border-box', display: "contents" },
+              }}
+              open={desktopPickerOpen}
+            >
+              {picker}
+            </Drawer>
+            </>
+          // </Box>
+          )
+        } 
+        else {
+          return (
+            <Box sx={{flexGrow: 1, display: 'flex', justifyContent: 'center', bgcolor: 'background.paper', minHeight: 500, height: 'calc(100vh - 65px)' }}><Skeleton animation='wave' sx={{width: '50%', justifyContent: 'center'}} /></Box>
+          )
+        }
+      }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name])
 
       const robConfirmMemo = useMemo(() => {
         return <ConfirmDialog
@@ -616,16 +695,20 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       }, [robOpen])
 
       const countListMemo = useMemo(() => {
-        return (          
-        <CountList thread={thread} recentCountsLoading={recentCountsLoading} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} refScroll={refScroll} newRecentPostLoaded={newRecentPostLoaded} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentCountsRef} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
+        return (        
+        recentCountsLoading
+        ? <Box sx={{flexGrow: 1, display: 'flex', justifyContent: 'center', bgcolor: 'background.paper', minHeight: 500, height: 'calc(100vh - 65px)' }}><Skeleton animation='wave' sx={{width: '50%', justifyContent: 'center'}} /></Box>
+        : <CountList thread={thread} recentCountsLoading={recentCountsLoading} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} refScroll={refScroll} newRecentPostLoaded={newRecentPostLoaded} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentCountsRef} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
         )
-      }, [cachedCounts, thread, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, loading])
+      }, [cachedCounts, thread, thread_name, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, loading])
 
       const chatsMemo = useMemo(() => {
-        return (      
-        <CountList thread={thread} isDesktop={isDesktop} chatsOnly={true} newRecentPostLoaded={undefined} loadedOldest={loadedOldestChats} loadedNewest={loadedNewestChats} loadedOldCount={loadedOldChat} loadedNewCount={loadedNewChat} isScrolledToTheBottom={chatsIsScrolledToTheBottom} isScrolledToTheTop={chatsIsScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={chatsIsScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentChatsRef} handleLatencyCheckChange={undefined} handleLatencyChange={undefined} handleSubmit={undefined}></CountList>
+        return (   
+          recentChatsLoading 
+          ? <Box sx={{flexGrow: 1, display: 'flex', justifyContent: 'center', bgcolor: 'background.paper', minHeight: 500, height: 'calc(100vh - 65px)' }}><Skeleton animation='wave' sx={{width: '50%', justifyContent: 'center'}} /></Box> 
+          : <CountList thread={thread} isDesktop={isDesktop} chatsOnly={true} newRecentPostLoaded={undefined} loadedOldest={loadedOldestChats} loadedNewest={loadedNewestChats} loadedOldCount={loadedOldChat} loadedNewCount={loadedNewChat} isScrolledToTheBottom={chatsIsScrolledToTheBottom} isScrolledToTheTop={chatsIsScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={chatsIsScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentChatsRef} handleLatencyCheckChange={undefined} handleLatencyChange={undefined} handleSubmit={undefined}></CountList>
         )
-      }, [recentChatsLoading, newChatsLoadedState, loadedNewChat, loadedOldChat, deleteComments, loadedOldestChats, loadedNewestChats, chatsIsScrolledToNewest, loading])
+      }, [recentChatsLoading, newChatsLoadedState, thread_name, loadedNewChat, loadedOldChat, deleteComments, loadedOldestChats, loadedNewestChats, chatsIsScrolledToNewest, loading])
 
       const sidebarMemo = useMemo(() => {
         return (
@@ -690,7 +773,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         </Box>
         </TabContext>
         )
-      }, [tabValue, thread, newChatsLoadedState, lastCount, splits, dailyHOC, dailyRobs, bank, robOpen, loading])
+      }, [tabValue, thread, newChatsLoadedState, lastCount, splits, dailyHOC, dailyRobs, bank, robOpen, loading, recentChatsLoading])
       
 
       if(!loading && !threadLoading && thread) {
@@ -704,26 +787,37 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         
         {snackbarMemo}
         <Grid container> 
-        {user && user.pref_post_position === "Right" ? <>            <Grid item xs={12} lg={6}>
+        {user && user.pref_post_position === "Right" ? <> 
+        <Grid item xs={0} lg={2} sx={{height: 'auto', }}>
+            <Box sx={{minHeight: 500, height: 'calc(100vh - 65px)'}}>
+              {threadPickerMemo}
+              </Box>    
+        </Grid>       
+        <Grid item xs={12} lg={4}>
             <Box sx={{display: 'flex', flexDirection: 'column', minHeight: 500, height: 'calc(100vh - 65px)', overflowY: 'auto', bgcolor: 'background.paper'}}>
             {headerMemo}
               {sidebarMemo}
               {robConfirmMemo}
               </Box>
               </Grid>
-              <Grid item xs={12} lg={6} sx={{height: 'auto', }}>
+              <Grid item xs={12} lg={desktopPickerOpen ? 6 : 8} sx={{height: 'auto', }}>
             <Box sx={{minHeight: 500, height: 'calc(100vh - 65px)'}}>
               {countListMemo}
               </Box>
               </Grid></>
         
       : <>
-      <Grid item xs={12} lg={6} sx={{height: 'auto', }}>
+      <Grid item xs={0} lg={2} sx={{ height: 'auto', display: !desktopPickerOpen && isDesktop ? "none" : "initial" }}>
+            <Box sx={{minHeight: 500, height: 'calc(100vh - 65px)'}}>
+              {threadPickerMemo}
+              </Box>    
+        </Grid>  
+      <Grid item xs={12} lg={desktopPickerOpen ? 6 : 8} sx={{height: 'auto', }}>
             <Box sx={{minHeight: 500, height: 'calc(100vh - 65px)'}}>
               {countListMemo}
               </Box>
               </Grid>
-            <Grid item xs={12} lg={6}>
+            <Grid item xs={12} lg={4}>
             <Box sx={{display: 'flex', flexDirection: 'column', minHeight: 500, height: 'calc(100vh - 65px)', overflowY: 'auto', bgcolor: 'background.paper'}}>
             {headerMemo}
               {sidebarMemo}

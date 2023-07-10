@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { AllegianceType, Counter, Item, User } from '../types';
+import { Counter, Item, User } from '../types';
 
 type UserContextType = {
     user?: User;

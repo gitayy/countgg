@@ -6,7 +6,7 @@ import { PostType } from '../types';
 import { useIsMounted } from './useIsMounted';
 
 
-export function useFetchRecentCounts(thread_name: string, context: string | (string | null)[] | null) {
+export function useFetchRecentCounts(thread_name: string, context: string | (string | null)[] | null, socketStatus: string) {
       const [recentCounts, setRecentCounts] = useState<PostType[]>([]);
       const recentCountsRef = useRef<PostType[]>([]);
       const [recentCountsLoading, setRecentCountsLoading] = useState<boolean>(true);
@@ -16,7 +16,8 @@ export function useFetchRecentCounts(thread_name: string, context: string | (str
       const { user, loading } = useContext(UserContext);
     
       useEffect(() => {
-        if(!loading) {
+        if(!loading && socketStatus === "LIVE") {
+          setRecentCountsLoading(true);
           getRecentCounts(thread_name, context)
           .then(({ data }) => {
           if (isMounted.current && data.recentCounts) { 
@@ -41,7 +42,12 @@ export function useFetchRecentCounts(thread_name: string, context: string | (str
             console.log(err);
           })
         }
-    }, [loading]);
+    }, [loading, thread_name, socketStatus]);
+
+    // useEffect(() => {
+
+      
+    // }, [thread_name]);
     
       return { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest, recentCountsRef };
     }

@@ -18,7 +18,7 @@ export function useFetchThread(name: string) {
         .catch((err) => {
           console.log(err);
         })
-    }, []);
+    }, [name]);
     
       return { thread, threadLoading, setThread };
     }
