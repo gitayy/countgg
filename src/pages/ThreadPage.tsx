@@ -634,7 +634,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       const threadPickerMemo = useMemo(() => {
         if(allThreads && allThreads.length > 0) {
           const picker = 
-          <Box sx={{minHeight: 500, height: {xs: '100vh', lg: 'calc(100vh - 65px)'}, width: "fit-content", flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', flexDirection: "column", overflowY: "scroll",}}>
+          <Box sx={{minHeight: 500, height: {xs: '100vh', lg: 'calc(100vh - 65px)'}, width: "auto", flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', flexDirection: "column", overflowY: "scroll",}}>
           {allThreads.map((thread, index) => {
             return (<Button startIcon={<TagIcon />} sx={{width: "100%", opacity: thread_name === thread.name ? 1 : 0.75, textAlign: "left", '&:hover': {opacity: 1}, bgcolor: thread_name === thread.name ? alpha(theme.palette.primary.main, 0.5) : "background.paper", color: thread_name === thread.name ? 'text.primary' : 'text.secondary', justifyContent: 'flex-start'}} onClick={() => navigate(`/thread/${thread.name}`)}>{thread.title} 
             {/* {thread.name !== thread_name && <Chip label="67,000" size="small" variant="filled" color='primary' sx={{ml: 0.5, cursor: "pointer", scale: "0.75"}} />} */}
