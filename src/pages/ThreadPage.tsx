@@ -768,7 +768,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           </Button>}
           </>}
           {dailyHOC && <DailyHOCTable mini={false} dailyHOC={dailyHOC} name={'Daily Leaderboard'} countName={'Counts'}></DailyHOCTable>}
-          {dailyRobs && <DailyRobTable dailyRobs={dailyRobs}></DailyRobTable>}
+          {dailyRobs && thread_name === "main" && <DailyRobTable dailyRobs={dailyRobs}></DailyRobTable>}
         </TabPanel>
         </Box>
         </TabContext>

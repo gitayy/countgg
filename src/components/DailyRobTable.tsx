@@ -65,6 +65,7 @@ interface Props {
                   </TableHead>
                   <TableBody>
                     {dailyRobs && dailyRobs.map((rob, index) => (
+                      cachedCounters[rob.counterUUID] &&
                       <TableRow key={cachedCounters[rob.counterUUID].name}>
                         <PlaceCell place={index + 1} />
                         <TableCell component="th" scope="row" sx={{color: cachedCounters[rob.counterUUID].name}}>
