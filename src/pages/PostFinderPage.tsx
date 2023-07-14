@@ -125,7 +125,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
                   <MenuItem key={thread.uuid} value={thread.uuid}>{thread.name}</MenuItem>
                 ))}
               </Select>
-              {/* <FormControl variant="standard" sx={{}} >
+              <FormControl variant="standard" sx={{}} >
                 <Tooltip title="Finds the nth count in a thread. In letters, 676th count would return ZZ, for example." placement='top'>
                 <InputLabel htmlFor="countNumber" shrink>
                   Count Number
@@ -138,7 +138,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
                   type='number'
                   disabled={rawCount.length > 0}
                 />
-              </FormControl> */}
+              </FormControl>
               <FormControl variant="standard" sx={{mr: 2}} >
               <Tooltip title="Finds the raw count in a thread. In letters, you can search for ZZ here, for example." placement='top'>
                 <InputLabel htmlFor="rawCount" shrink>

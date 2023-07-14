@@ -1,7 +1,7 @@
 import { Box, CardMedia, CardContent, Typography, Grid,  IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link, Popover, useTheme, Table, Modal } from "@mui/material";
 import { memo, useContext, useRef, useState } from "react";
 import CountggLogo from '../assets/countgg-128.png'
-import { defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName } from "../utils/helpers";
+import { convertMsToFancyTime, defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName } from "../utils/helpers";
 import { Counter } from "../utils/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
@@ -45,10 +45,6 @@ const Count = memo((props: any) => {
       default:
         break;
     }
-  }
-
-  if(!user || (user && user.pref_time_since_last_count === false)) {
-    props.post.timeSinceLastCount = props.post.timeSinceLastPost;
   }
 
   const navigate = useNavigate();
@@ -134,15 +130,7 @@ const Count = memo((props: any) => {
                 <Grid container sx={{width: '95%'}}>
                   <Grid item xs={12} sx={{color: 'text.primary', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap'}}>
                   <Link fontSize={9} onClick={(e) => {e.preventDefault();navigate(url);}} href={url} underline={'hover'} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textAlign: 'right'}} variant="caption" color="textSecondary">{props.thread && props.thread.name === 'bars' ? formatDateWithMilliseconds(parseInt(props.post.timestamp)) : formatDate(parseInt(props.post.timestamp))} {props.post.latency && <> (<Typography component={'span'} fontSize={9} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography>)</>}</Link>
-                  <Box sx={{ textAlign: 'left', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', ...(hoursSinceLastPost > 9 && {scale: '0.75'})}}>
-                    {props.post.timeSinceLastCount != props.post.timeSinceLastPost && <>
-                  {hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{hoursSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">h</Typography></Typography>) : null}
-                  {minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{minutesSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">m</Typography></Typography>) : null}
-                  {secondsSinceLastCount > 0 || minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{secondsSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">s</Typography></Typography>) : null}
-                  <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastCount : msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography>
-                    &nbsp;</>}
-                    </Box>
-                    <Box sx={{ color: user && user.pref_night_mode_colors && user.pref_night_mode_colors !== 'Default' ? (user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
+                    <Box component={"div"} title={`${(convertMsToFancyTime(Math.round(props.post.timeSinceLastCount)))} since last count`} sx={{ color: user && user.pref_night_mode_colors && user.pref_night_mode_colors !== 'Default' ? (user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', textAlign: 'right', bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
                     {hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{hoursSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>h</Typography></Typography>) : null}
                     {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{minutesSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>m</Typography></Typography>) : null}
                     {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography fontFamily={'Verdana'} component="span" fontSize={12}>{secondsSinceLastPost}<Typography fontFamily={'Verdana'} component="span" fontSize={12}>s</Typography></Typography>) : null}
@@ -242,16 +230,8 @@ const Count = memo((props: any) => {
                         </Grid>
                         <Grid item xs={10}>
                           <Grid container sx={{width: '95%'}}>
-                            <Grid item xs={12} sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                            <Box sx={{ textAlign: 'left', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', ...(hoursSinceLastPost > 9 && {scale: '0.75'})}}>
-                              {props.post.timeSinceLastCount != props.post.timeSinceLastPost && <>
-                            {hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{hoursSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">h</Typography></Typography>) : null}
-                            {minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{minutesSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">m</Typography></Typography>) : null}
-                            {secondsSinceLastCount > 0 || minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{secondsSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">s</Typography></Typography>) : null}
-                            <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastCount : msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography>
-                              {/* &nbsp;| */}&nbsp;</>}
-                              </Box>
-                              <Box sx={{ color: user && user.pref_night_mode_colors && user.pref_night_mode_colors !== 'Default' ? (user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', textAlign: 'right', overflow: "hidden", bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
+                            <Grid item xs={12} sx={{display: 'flex', justifyContent: 'right', alignItems: 'center'}}>
+                              <Box component={"div"} title={`${(convertMsToFancyTime(Math.round(props.post.timeSinceLastCount)))} since last count`} sx={{ color: user && user.pref_night_mode_colors && user.pref_night_mode_colors !== 'Default' ? (user.pref_night_mode_colors === 'Light' ? '#000000de' : '#ffffffde') : 'text.primary', textAlign: 'right', overflow: "hidden", bgcolor: `${replyTimeColor}.${theme.palette.mode}` }}>
                               {hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{hoursSinceLastPost}<Typography component="span" variant="subtitle2">h</Typography></Typography>) : null}
                               {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{minutesSinceLastPost}<Typography component="span" variant="subtitle2">m</Typography></Typography>) : null}
                               {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" variant="h5">{secondsSinceLastPost}<Typography component="span" variant="subtitle2">s</Typography></Typography>) : null}

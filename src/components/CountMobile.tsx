@@ -48,10 +48,6 @@ const CountMobile = memo((props: any) => {
     }
   }
 
-  if(user && user.pref_time_since_last_count === false) {
-    props.post.timeSinceLastCount = props.post.timeSinceLastPost;
-  }
-
   // const isLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
   const theme = useTheme();
   const location = useLocation();
@@ -138,7 +134,7 @@ const CountMobile = memo((props: any) => {
                     <Box sx={{ textAlign: 'left', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', ...(hoursSinceLastPost > 9 && {scale: '0.75'})}}>
                     {/* {props.post.latency && <Box sx={{display: 'flex', justifyContent: 'center', width: '100%', textAlign: 'center'}}><Typography fontFamily={'Verdana'} fontSize={10} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography></Box>} */}
                     {/* {props.post.latency && <Box sx={{textAlign: 'left'}}><Typography fontFamily={'Verdana'} fontSize={10} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography></Box>} */}
-                      {props.post.timeSinceLastCount != props.post.timeSinceLastPost && <>
+                      {user && user.pref_time_since_last_count && <>
                     {hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{hoursSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">h</Typography></Typography>) : null}
                     {minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{minutesSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">m</Typography></Typography>) : null}
                     {secondsSinceLastCount > 0 || minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{secondsSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">s</Typography></Typography>) : null}
@@ -311,7 +307,7 @@ return (
               {minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" fontSize={12}>{minutesSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">m</Typography></Typography>) : null}
               {secondsSinceLastPost > 0 || minutesSinceLastPost > 0 || hoursSinceLastPost > 0 ? (<Typography component="span" fontSize={12}>{secondsSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">s</Typography></Typography>) : null}
               <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastPost : msSinceLastPost}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography></Box>
-              {props.post.timeSinceLastCount != props.post.timeSinceLastPost && <>&nbsp;|&nbsp;
+              {user && user.pref_time_since_last_count && <>&nbsp;|&nbsp;
               {hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{hoursSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">h</Typography></Typography>) : null}
               {minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{minutesSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">m</Typography></Typography>) : null}
               {secondsSinceLastCount > 0 || minutesSinceLastCount > 0 || hoursSinceLastCount > 0 ? (<Typography component="span" fontSize={12}>{secondsSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">s</Typography></Typography>) : null}
