@@ -22,7 +22,7 @@ export const SnackbarComponent = () => {
 
     useEffect(() => {
         socket.on(`achievement`, function(data) {
-            setSnack({ message: `Achievement unlocked: ${data.name}`, severity: 'success', open: true, url: `/counter/${counter?.uuid}`})
+            setSnack({ message: `Achievement unlocked: ${data.name}`, severity: 'success', open: true, url: `/counter/${counter?.username}`})
             setConfetti(true);
             setTimeout(() => {
                 setSnack({
@@ -64,7 +64,7 @@ export const SnackbarComponent = () => {
           });
 
           socket.on(`popupMessage`, function(data) {
-            setSnack({ message: data, severity: 'error', open: true, url: `/counter/${counter ? counter.uuid : ''}`})
+            setSnack({ message: data, severity: 'error', open: true, url: `/counter/${counter ? counter.username : ''}`})
             setTimeout(() => {
                 setSnack({
                     message: '',

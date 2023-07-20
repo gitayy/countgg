@@ -30,7 +30,7 @@ const leaderboardRows = Object.entries(leaderboard)
       <TableCell>
       {cachedCounters[author] ? (
                   <CardHeader sx={{p: 0}} avatar={cachedCounters[author] && cachedCounters[author].name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${cachedCounters[author].name}`} src={`${cachedCounters[author].avatar.length > 5 && `https://cdn.discordapp.com/avatars/${cachedCounters[author].discordId}/${cachedCounters[author].avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
-                  title={<Link color={cachedCounters[author].color} underline='hover' href={`/counter/${cachedCounters[author].uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[author].uuid}`);}}>
+                  title={<Link color={cachedCounters[author].color} underline='hover' href={`/counter/${cachedCounters[author].username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[author].username}`);}}>
                     {cachedCounters[author].name}
                     </Link>
                   }></CardHeader>

@@ -1,4 +1,4 @@
-import { Card, Box, CardMedia, CardContent, Typography, Grid, createTheme, responsiveFontSizes, ThemeProvider, Alert, Badge } from "@mui/material";
+import { Card, Box, CardMedia, CardContent, Typography, Grid, createTheme, responsiveFontSizes, ThemeProvider, Alert, Badge, Chip } from "@mui/material";
 import CountggLogo from '../assets/countgg-128.png'
 import CountggLogo2 from '../assets/emotes/gg.png'
 
@@ -23,7 +23,6 @@ export function CounterCard(props) {
   const xpToNext = calculateLevel(props.counter.xp).xpRequired;
 
     return (
-      <Badge title={`${props.counter.xp} / ${xpToNext}`} badgeContent={level} anchorOrigin={{"vertical": "bottom", "horizontal": "right"}} color={level === 50 ? "warning" : level > 40 ? "success" : level > 20 ? "secondary" : "primary"} sx={{display: "block"}} >
         <Card elevation={8} id={`card_${props.counter.uuid}`} sx={{}}>
           <Box className={`card_${props.counter.cardStyle}`}>
             <ThemeProvider theme={counterCardTheme}>
@@ -35,27 +34,20 @@ export function CounterCard(props) {
                   component="div"
                   className={`border_${props.counter.cardBorderStyle} pfp-image`}
                   sx={{ backgroundSize: 'contain', width: '100%', maxWidth: props.maxWidth, maxHeight: props.maxHeight, backgroundImage: props.counter.avatar.length > 5 ? `url(https://cdn.discordapp.com/avatars/${props.counter.discordId}/${props.counter.avatar})` : `url(${CountggLogo2})`}}
-                  // alt={`${props.counter.name}`}
                 />
-                {/* <CardMedia
-                  component="img"
-                  className={`${props.counter.cardBorderStyle}`}
-                  sx={{ width: '100%', maxWidth: props.maxWidth, maxHeight: props.maxHeight}}
-                  image={`${props.counter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${props.counter.discordId}/${props.counter.avatar}` || CountggLogo}`}
-                  alt={`${props.counter.name}`}
-                /> */}
             </Box>
             </Grid>
             <Grid item xs={10}>
               <Box sx={{ display: 'flex', flexDirection: 'row' }}>
                 <CardContent sx={{ flex: '1 0 auto', p: 0, '&:last-child':{pb: 0} }}>
                     {/* <Box sx={{}}> */}
-                        <Typography component="div" variant="h6" color={"text.primary"} sx={{}}>{props.counter.emoji ? `${props.counter.emoji} ${props.counter.name} ${props.counter.emoji}` : props.counter.name}
-                            {/* <View>
-                            <Text style={{fontSize: 20}} adjustFontSizeToFit={true} numberOfLines={1}>{props.counter.firstName} {props.counter.firstName} {props.counter.lastName}</Text>
-                            </View> */}
+                        <Typography component="div" variant="h6" color={"text.primary"} sx={{display: "flex", alignItems: 'center'}}>
+                        <Chip component={"span"} size="small" title={`${props.counter.xp} / ${xpToNext}`} label={level} color={level === 50 ? "warning" : level > 40 ? "success" : level > 20 ? "secondary" : "primary"} sx={{}}></Chip>
+                        &nbsp;
+                        {props.counter.emoji ? `${props.counter.emoji} ${props.counter.name} ${props.counter.emoji}` : props.counter.name}
+                        &nbsp;
+                        <Typography component="span" variant="body2" sx={{}}>@{props.counter.username}</Typography>
                         </Typography>
-                    {/* </Box> */}
                     <Typography className={titleInfo && titleInfo.style ? titleInfo.style : 'title-default'} variant="subtitle1" color={"text.secondary"} component="div">
                       {props.counter.title}&nbsp;
                       </Typography>
@@ -64,21 +56,13 @@ export function CounterCard(props) {
                       {props.team}
                       </Typography>}
                 </CardContent>
-                {/* <Box sx={{ flex: '1 0 auto', p: 0, pl: 2 }}>
-                  <Typography variant="subtitle1" color="text.secondary" component="div">
-                    {props.team}
-                  </Typography>
-                </Box> */}
               </Box>
               </Grid>
               </Grid>
               </Box>
               </ThemeProvider>
               </Box>
-            </Card>
-            </Badge>
-            
-            
+            </Card>            
     )
 
 }

@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import { Alert, Box, Button, Container, FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Snackbar, Switch, Typography, AlertColor, Tooltip, TextField } from '@mui/material';
 import { UserContext } from '../utils/contexts/UserContext';
-import { card_backgrounds, card_borders, clearOptions, customStrickenOptions, hideStrickenOptions, nightModeColorOptions, nightModeOptions, postPositionOptions, postStyleOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
+import { card_backgrounds, card_borders, clearOptions, customStrickenOptions, hideStrickenOptions, isValidHexColor, nightModeColorOptions, nightModeOptions, postPositionOptions, postStyleOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
 import { updateCounterPrefs } from '../utils/api';
 import { CounterCard } from '../components/CounterCard';
 import { Loading } from '../components/Loading';
@@ -51,6 +51,8 @@ import Count from '../components/Count';
     const [prefHideStricken, setPrefHideStricken] = useState(user?.pref_hide_stricken || 'Disabled')  
     const [cardStyle, setCardStyle] = useState(counter?.cardStyle || 'card_default');
     const [cardBorderStyle, setCardBorderStyle] = useState(counter?.cardBorderStyle || 'no_border_square');
+    const [displayName, setDisplayName] = useState(counter?.name || '');
+    const [color, setColor] = useState(counter?.color || '#cccccc');
     const [title, setTitle] = useState(counter?.title || 'COUNTER');
     const [emoji, setEmoji] = useState(counter?.emoji || "None");
 
@@ -66,6 +68,36 @@ import Count from '../components/Count';
 
     const savePrefs = async () => {
       if(user && counter) {
+        if(displayName.replace(/[\p{Letter}\p{Mark}\s_\d-]+/gu, '').length != 0) {
+            setSnackbarOpen(true)
+            setSnackbarMessage('Error: Illegal characters in name.')
+            return;
+          }
+          else if(color.trim().length != 7) {
+              setSnackbarOpen(true)
+              setSnackbarMessage('Error: Color must a # followed by a 6 character hex code. No transparency, try removing the final 2 characters if your hex code is 8 characters long?')
+              return;
+          }
+          else if(!isValidHexColor(color.trim().slice(1))) {
+              setSnackbarOpen(true)
+              setSnackbarMessage('Error: Illegal characters in color')
+              return;
+          }
+          else if(Array.from(color)[0] != '#') {
+              setSnackbarOpen(true)
+              setSnackbarMessage('Error: Color must start with #.')
+              return;
+          }
+          else if(displayName.trim().length < 1) {
+              setSnackbarOpen(true)
+              setSnackbarMessage('Error: Name has no length')
+              return;
+          }
+          else if(displayName.trim().length > 25) {
+              setSnackbarOpen(true)
+              setSnackbarMessage('Error: Name over 25 characters')
+              return;
+          }
           user.pref_discord_pings = prefDiscordPings; 
           user.pref_online = prefOnline;
           user.pref_load_from_bottom = prefLoadFromBottom;
@@ -81,6 +113,8 @@ import Count from '../components/Count';
           user.pref_night_mode_colors = prefNightModeColors;
           user.pref_post_position = prefPostPosition;
           user.pref_hide_stricken = prefHideStricken;
+          counter.name = displayName;
+          counter.color = color;
           counter.cardStyle = cardStyle;
           counter.cardBorderStyle = cardBorderStyle;
           counter.title = title;
@@ -122,6 +156,8 @@ import Count from '../components/Count';
           <Typography variant="h4">Preferences</Typography>
           <Box sx={{mt: 2, p: 1, borderRadius: '10px', bgcolor: 'background.paper', color: 'text.primary'}}>
             <Typography variant="h6">Profile Preferences</Typography>
+            <TextField sx={{m: 2}} id="DisplayName" onInput={e => setDisplayName((e.target as HTMLInputElement).value)} label={`Display Name`} InputLabelProps={{ shrink: true }} value={displayName}></TextField>
+            <TextField sx={{m: 2}} id={`Colo${maybeU}r`} onInput={e => setColor((e.target as HTMLInputElement).value)} label={`Colo${maybeU}r`} InputLabelProps={{ shrink: true }} value={color}></TextField>
             <FormControl sx={{m: 2}}>
                 <InputLabel id="card-style-label">Card Style</InputLabel>
                 <Select
@@ -197,16 +233,16 @@ import Count from '../components/Count';
             </FormControl>
             
             <Box sx={{margin: '5px'}}>
-              <CounterCard fullSize={false} maxHeight={32} maxWidth={32} boxPadding={2} counter={{...counter, cardStyle: cardStyle, cardBorderStyle: cardBorderStyle, title: title, emoji: emoji === 'None' ? undefined : emoji}}></CounterCard>
+              <CounterCard fullSize={false} maxHeight={32} maxWidth={32} boxPadding={2} counter={{...counter, cardStyle: cardStyle, cardBorderStyle: cardBorderStyle, title: title, name: displayName, emoji: emoji === 'None' ? undefined : emoji}}></CounterCard>
             </Box>
             <Box sx={{margin: '5px'}}>
-              <CounterCard sx={{p: 1}} fullSize={true} maxHeight={100} maxWidth={100} boxPadding={2} counter={{...counter, cardStyle: cardStyle, cardBorderStyle: cardBorderStyle, title: title, emoji: emoji === 'None' ? undefined : emoji}}></CounterCard>
+              <CounterCard sx={{p: 1}} fullSize={true} maxHeight={100} maxWidth={100} boxPadding={2} counter={{...counter, cardStyle: cardStyle, cardBorderStyle: cardBorderStyle, title: title, name: displayName, emoji: emoji === 'None' ? undefined : emoji}}></CounterCard>
             </Box>
             </Box>
             <Box sx={{mt: 2, p: 1, borderRadius: '10px', bgcolor: 'background.paper', color: 'text.primary'}}>
             <Typography variant="h6">Counting Preferences</Typography>
             {/* <Count user={user} myCounter={fakeCounter} key={`fakeCount_${Math.random()}`} thread={{}} socket={{}} post={fakePost(fakeCounter)} counter={fakeCounter} maxWidth={'32px'} maxHeight={'32px'} /> */}
-            <FormGroup sx={{m: 2, userSelect: 'none'}}>
+            <FormGroup sx={{m: 2, userSelect: 'none', flexDirection: "row"}}>
               {/* Uncomment these once complete */}
               {/* <FormControlLabel control={<Switch
                   checked={prefOnline}
@@ -222,6 +258,7 @@ import Count from '../components/Count';
                 onChange={() => {setPrefDiscordPings(!prefDiscordPings)}}
                 inputProps={{ 'aria-label': 'pref-discord-pings' }}
               />} label="Ping me on Discord on mentions (not yet implemented)" /> */}
+              <Box sx={{width: "100%"}}>
               <FormControlLabel control={<Switch
                   checked={prefLoadFromBottom}
                   onChange={() => {setPrefLoadFromBottom(!prefLoadFromBottom)}}
@@ -238,6 +275,7 @@ import Count from '../components/Count';
                 />} label={
                     <Typography variant="body1">Show time since last valid count</Typography>
                 } />
+                </Box>
                 <FormControl sx={{m: 2}}>
                 <InputLabel id="clear-label">Textbox Behavio{maybeU}r</InputLabel>
                 <Select
@@ -382,15 +420,15 @@ import Count from '../components/Count';
                 </Select>
             </FormControl>
                 {prefCustomStricken !== 'Disabled' && <>
-                <HexColorPicker color={prefStrikeColor} onChange={setPrefStrikeColor} />
                 <TextField sx={{m: 2}} id="StrikeColor" onInput={e => setPrefStrikeColor((e.target as HTMLInputElement).value)} label={`Strike Colo${maybeU}r`} InputLabelProps={{ shrink: true }} value={prefStrikeColor}></TextField>
+                <HexColorPicker color={prefStrikeColor} onChange={setPrefStrikeColor} />
                 </>}
 
             </FormGroup>
             
-            <FormGroup>
+            {/* <FormGroup> */}
             <TextField
-              sx={{ m: 2 }}
+              sx={{ m: 2, minWidth: 200}}
               id="ReplyTimeInterval"
               type="number"
               inputProps={{ min: "1", max: "10000", step: "1" }}
@@ -404,7 +442,7 @@ import Count from '../components/Count';
               InputLabelProps={{ shrink: true }}
               value={prefReplyTimeInterval}
             />
-            </FormGroup> 
+            {/* </FormGroup>  */}
             <Button sx={{m: 2}} color="success" variant="contained" onClick={() => {savePrefs()}}>Save</Button>
             </Box>
         </Container>

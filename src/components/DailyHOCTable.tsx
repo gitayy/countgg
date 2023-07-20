@@ -75,7 +75,7 @@ export const DailyHOCTable = ({ dailyHOC, name, countName, mini }: Props) => {
                       <PlaceCell place={index + 1} />
                       <TableCell component="th" scope="row" sx={{color: row.counter.color}}>
                       <CardHeader sx={{p: 0}} avatar={row.counter && row.counter.name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${row.counter.name}`} src={`${row.counter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${row.counter.discordId}/${row.counter.avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
-                      title={<Link color={'inherit'} underline='hover' href={`/counter/${row.counter.uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${row.counter.uuid}`);}}>
+                      title={<Link color={'inherit'} underline='hover' href={`/counter/${row.counter.username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${row.counter.username}`);}}>
                         {row.counter.name}
                         </Link>
                       }></CardHeader>

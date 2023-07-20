@@ -59,7 +59,7 @@ export const SpeedTable = ({ speed, thread }: Props) => {
                 <span key={index}>
                 {cachedCounters[author] ? (
                   <CardHeader sx={{p: 0}} avatar={cachedCounters[author] && cachedCounters[author].name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${cachedCounters[author].name}`} src={`${cachedCounters[author].avatar.length > 5 && `https://cdn.discordapp.com/avatars/${cachedCounters[author].discordId}/${cachedCounters[author].avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
-                  title={<Link color={cachedCounters[author].color} underline='hover' href={`/counter/${cachedCounters[author].uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[author].uuid}`);}}>
+                  title={<Link color={cachedCounters[author].color} underline='hover' href={`/counter/${cachedCounters[author].username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[author].username}`);}}>
                     {cachedCounters[author].name}
                     </Link>
                   }></CardHeader>
@@ -84,7 +84,7 @@ export const SpeedTable = ({ speed, thread }: Props) => {
           <TableCell>
           {cachedCounters[row.counter] ? (
                   <CardHeader sx={{p: 0}} avatar={cachedCounters[row.counter] && cachedCounters[row.counter].name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${cachedCounters[row.counter].name}`} src={`${cachedCounters[row.counter].avatar.length > 5 && `https://cdn.discordapp.com/avatars/${cachedCounters[row.counter].discordId}/${cachedCounters[row.counter].avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
-                  title={<Link color={cachedCounters[row.counter].color} underline='hover' href={`/counter/${cachedCounters[row.counter].uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[row.counter].uuid}`);}}>
+                  title={<Link color={cachedCounters[row.counter].color} underline='hover' href={`/counter/${cachedCounters[row.counter].username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[row.counter].username}`);}}>
                     {cachedCounters[row.counter].name}
                     </Link>
                   }></CardHeader>

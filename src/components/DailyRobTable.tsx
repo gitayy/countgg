@@ -71,7 +71,7 @@ interface Props {
                         <TableCell component="th" scope="row" sx={{color: cachedCounters[rob.counterUUID].name}}>
                         {cachedCounters[rob.counterUUID] ? (
                   <CardHeader sx={{p: 0}} avatar={cachedCounters[rob.counterUUID] && cachedCounters[rob.counterUUID].name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${cachedCounters[rob.counterUUID].name}`} src={`${cachedCounters[rob.counterUUID].avatar.length > 5 && `https://cdn.discordapp.com/avatars/${cachedCounters[rob.counterUUID].discordId}/${cachedCounters[rob.counterUUID].avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
-                  title={<Link color={cachedCounters[rob.counterUUID].color} underline='hover' href={`/counter/${cachedCounters[rob.counterUUID].uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[rob.counterUUID].uuid}`);}}>
+                  title={<Link color={cachedCounters[rob.counterUUID].color} underline='hover' href={`/counter/${cachedCounters[rob.counterUUID].username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[rob.counterUUID].username}`);}}>
                     {cachedCounters[rob.counterUUID].name}
                     </Link>
                   }></CardHeader>

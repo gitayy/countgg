@@ -1,6 +1,6 @@
 import {  Box, CardMedia, Typography, Grid, IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, useTheme, Link, Popover, CardContent } from "@mui/material";
 import { memo, useContext, useRef, useState } from "react";
-import { defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName } from "../utils/helpers";
+import { cachedCounters, defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName } from "../utils/helpers";
 import { Counter } from "../utils/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
@@ -158,7 +158,7 @@ const CountMobile = memo((props: any) => {
         <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end' }}>
                 <Typography component="span" variant="body1" fontFamily={'Verdana'} fontSize={14} color={"text.primary"} sx={{whiteSpace: 'pre-wrap', mr: 1}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment.startsWith('\n') ? `\u00A0${props.post.comment}` : props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography fontFamily={'Verdana'} fontSize={14} component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
             <Typography fontSize={13} fontFamily={'Verdana'} component="span">
-                <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${props.post.authorUUID}`);}} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.emoji ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}` : renderedCounter.name}</Link>&nbsp;
+                <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`);}} href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`}>{renderedCounter.emoji ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}` : renderedCounter.name}</Link>&nbsp;
               </Typography>
               </Box>
               {Object.entries(props.post.reactions).length > 0 && <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}>
@@ -226,7 +226,7 @@ return (
                     <Grid container sx={{display: 'flex'}}>
                       <Grid item xs={2} sx={{ margin: 'auto', justifyContent: 'center', display: 'grid', marginTop: 0}}>
                       <Box sx={{p: props.boxPadding}}>
-                        <Link href={`/counter/${props.post.authorUUID}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${props.post.authorUUID}`);}}>
+                        <Link href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`);}}>
                         <CardMedia
                             component="img"
                             className={renderedCounter.cardBorderStyle}
@@ -244,7 +244,7 @@ return (
                           </Grid>
                           <Grid item xs={12} sx={{}}>
                           <Typography fontSize={12} variant="subtitle1" color={renderedCounter.color} sx={{textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowX: 'hidden'}} component="div">
-                          <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${props.post.authorUUID}`);}} href={`/counter/${props.post.authorUUID}`}>{renderedCounter.emoji ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}` : renderedCounter.name}</Link>&nbsp;
+                          <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`);}} href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`}>{renderedCounter.emoji ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}` : renderedCounter.name}</Link>&nbsp;
                     </Typography>
                           </Grid>
                           </Grid>

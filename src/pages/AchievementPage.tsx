@@ -37,7 +37,7 @@ import { UserContext } from '../utils/contexts/UserContext';
             <AchievementSmall achievement={achievement} counterAchievement={counter_achievement} locked={false/*!achievements.some(userAchievement => userAchievement.achievementId === achievement.id && userAchievement.isComplete)*/}></AchievementSmall>
             {countersWhoEarnedAchievement && countersWhoEarnedAchievement.length > 0 && <>Earned by&nbsp;{countersWhoEarnedAchievement.map((counter, index) => {
                 if(index <= 199) {
-                    return <Typography component={'span'}><Link color={counter.color} underline='hover' href={`/counter/${counter.uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counter.uuid}`);}}>{counter.name}</Link>{index + 1 < countersWhoEarnedAchievement.length ? ', ' : ''}</Typography>
+                    return <Typography component={'span'}><Link color={counter.color} underline='hover' href={`/counter/${counter.username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counter.username}`);}}>{counter.name}</Link>{index + 1 < countersWhoEarnedAchievement.length ? ', ' : ''}</Typography>
                 } else if(index == 200) {
                     return <Typography component={'span'}>and {countersWhoEarnedAchievement.length - 200} more</Typography>
                 } else {

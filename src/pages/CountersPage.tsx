@@ -94,37 +94,14 @@ export const CountersPage = () => {
               "& ul": { display: "flex", justifyContent: "center" },
               "& ul li button": { fontSize: 18 },
             }}
-            // nextIconButtonProps={{ disabled: page === Math.ceil(count / 50) }}
-            // prevIconButtonProps={{ disabled: page === 1 }}
           />
         </Box>
         <Grid container spacing={2}>
           {counters.map((counter) => (
             <Grid key={counter.uuid} item xs={12} sm={6} md={4}>
-              <Link color={'inherit'} underline='none' href={`/counter/${counter.uuid}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counter.uuid}`);}}>
+              <Link color={'inherit'} underline='none' href={`/counter/${counter.username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counter.username}`);}}>
               <CounterCard fullSize={false} maxHeight={64} maxWidth={64} boxPadding={2} counter={counter}></CounterCard>
               </Link>
-              {/* <Card sx={{ height: "100%" }}>
-                <CardContent>
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <img
-                      src={`${counter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${counter.discordId}/${counter.avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}
-                      alt="avatar"
-                      style={{ width: 80, height: 80, borderRadius: "50%" }}
-                    />
-                    <Link
-                      href={`/counter/${counter.uuid}`}
-                      underline="hover"
-                    >
-                      <Typography variant="h5">{counter.name}</Typography>
-                    </Link>
-                  </Box>
-                </CardContent>
-              </Card> */}
             </Grid>
           ))}
         </Grid>
@@ -141,7 +118,6 @@ export const CountersPage = () => {
                 to={`/counters?page=${item.page}`}
                 {...item}
               />
-              // <div></div>
             )}
             siblingCount={2}
             showFirstButton
@@ -153,8 +129,6 @@ export const CountersPage = () => {
               "& ul": { display: "flex", justifyContent: "center" },
               "& ul li button": { fontSize: 18 },
             }}
-            // nextIconButtonProps={{ disabled: page === Math.ceil(count / 50) }}
-            // prevIconButtonProps={{ disabled: page === 1 }}
           />
         </Box>
       </Box>
