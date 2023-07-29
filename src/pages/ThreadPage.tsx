@@ -651,8 +651,26 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         return groupedThreads;
       }
 
-      const initialExpandedCategories = Object.keys(groupThreadsByCategory(allThreads));
+      const customSort = (a, b) => {
+        const specificOrder = ["Traditional", "Double Counting", "No Mistakes", "Miscellaneous"];
+    
+        if (specificOrder.includes(a) && specificOrder.includes(b)) {
+          return specificOrder.indexOf(a) - specificOrder.indexOf(b);
+        } else if (specificOrder.includes(a)) {
+          return -1;
+        } else if (specificOrder.includes(b)) {
+          return 1;
+        }
+    
+        return a.localeCompare(b); // Keep the rest in alphabetical order
+      };
+
+      const initialExpandedCategories = Object.keys(groupThreadsByCategory(allThreads)).sort(customSort);
       const [expandedCategories, setExpandedCategories] = useState(initialExpandedCategories);
+
+      useEffect(() => {
+        setExpandedCategories(Object.keys(groupThreadsByCategory(allThreads)).sort(customSort))
+      }, [allThreads])
 
       // Step 2: Update handleCategoryClick function to toggle the expanded state of each category
       const handleCategoryClick = (category) => {
@@ -669,7 +687,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         if(allThreads && allThreads.length > 0) {
           const picker = 
           <Box sx={{minHeight: 500, height: {xs: '100vh', lg: 'calc(100vh - 65px)'}, width: "auto", flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', flexDirection: "column", overflowY: "scroll",}}>
-          {Object.keys(groupedThreads).map((category) => (
+          {Object.keys(groupedThreads).sort(customSort).map((category) => (
         <div key={category}>
           <ListItemButton onClick={() => handleCategoryClick(category)}>
           <ListItemIcon sx={{ minWidth: 24, paddingRight: 1 }}>
