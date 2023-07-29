@@ -7,6 +7,7 @@ export function useFetchUser() {
   const [user, setUser] = useState<User>();
   const [loading, setLoading] = useState<boolean>(true);
   const [loadedSiteVer, setLoadedSiteVer] = useState<string>();
+  const [totalCounters, setTotalCounters] = useState<number>();
   const [counter, setCounter] = useState<Counter>();
   const [items, setItems] = useState<Item[]>();
   const isMounted = useIsMounted();
@@ -19,6 +20,7 @@ export function useFetchUser() {
           setLoadedSiteVer(data.site_version);
           setCounter(data.counter);
           setItems(data.items);
+          setTotalCounters(data.totalCounters)
         }
         setLoading(false);
       })
@@ -27,5 +29,5 @@ export function useFetchUser() {
       })
   }, []);
 
-  return { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems };
+  return { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, totalCounters, setTotalCounters };
 }

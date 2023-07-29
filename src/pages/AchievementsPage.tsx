@@ -18,7 +18,7 @@ import { AchievementSmall } from '../components/AchievementSmall';
 import { UserContext } from '../utils/contexts/UserContext';
 
   export const AchievementsPage = () => {
-    const { counter, loading } = useContext(UserContext);
+    const { counter, loading, totalCounters } = useContext(UserContext);
     const { achievements, achievementsLoading, setAchievements, allAchievements } = useFetchAchievements();
     const [unearnedAchievements, setUnearnedAchievements] = useState<AchievementType[]>([]);
     const [earnedAchievements, setEarnedAchievements] = useState<AchievementType[]>([]);
@@ -69,7 +69,7 @@ import { UserContext } from '../utils/contexts/UserContext';
                 return (
                 <Box sx={{mt: 1, mb: 1}}>
                     <Link color={'inherit'} underline='none' href={`/achievements/${achievement.id}`} onClick={(e) => {e.preventDefault();navigate(`/achievements/${achievement.id}`);}}>
-                        <AchievementSmall achievement={achievement} counterAchievement={counter_achievement} locked={!counter ? false : !achievements.some(userAchievement => userAchievement.achievementId === achievement.id && userAchievement.isComplete)}></AchievementSmall>
+                        <AchievementSmall ofall={totalCounters} achievement={achievement} counterAchievement={counter_achievement} locked={!counter ? false : !achievements.some(userAchievement => userAchievement.achievementId === achievement.id && userAchievement.isComplete)}></AchievementSmall>
                     </Link>
                 </Box>
                 )

@@ -45,9 +45,11 @@ import { SeasonPage } from './pages/SeasonPage';
 import { useFetchAllThreads } from './utils/hooks/useFetchAllThreads';
 import { ThreadsContext } from './utils/contexts/ThreadsContext';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
+import { RPSPage } from './pages/RPSPage';
+import { MentionsPage } from './pages/MentionsPage';
 
 function App() {
-  const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems } = useFetchUser();
+  const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, totalCounters, setTotalCounters } = useFetchUser();
   const { allThreads, allThreadsLoading } = useFetchAllThreads();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light');
@@ -199,7 +201,7 @@ function App() {
         <ThemeProvider theme={theme}>
         <CssBaseline />
         <UserContext.Provider
-      value={{user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems}}
+      value={{user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, totalCounters, setTotalCounters}}
       >
         <CookiesProvider>
         <SocketContext.Provider value={socket}>
@@ -251,9 +253,11 @@ function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact-us" element={<AboutPage />} />
             <Route path="/huh" element={<TheRockPage />} />
+            <Route path="/rps" element={<RPSPage />} />
             <Route path="/lrwoed" element={<LrwoedPage />} />
             <Route path="/rewards" element={<SeasonPage />} />
             {user && counter && <Route path="/prefs" element={<PrefsPage />} />}
+            {user && counter && <Route path="/mentions" element={<MentionsPage />} />}
           </Routes>
           </HelmetProvider>
           </ThreadsContext.Provider>

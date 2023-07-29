@@ -12,6 +12,8 @@ type UserContextType = {
     setCounter?: Function, 
     items?: Item[],
     setItems?: Function,
+    totalCounters?: number,
+    setTotalCounters?: Function
   };
   
   export const UserContext = createContext<UserContextType>({loading: true});

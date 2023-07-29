@@ -55,12 +55,12 @@ import { UserContext } from '../utils/contexts/UserContext';
         const sortedUnearnedPublicAchievements = publicAchievementsNotEarned.sort((a, b) => {
           return b.countersEarned - a.countersEarned;
         });
-        // const sortedAchievements = achievements.sort((a, b) => {
-        //   return a.countersEarned - b.countersEarned;
-        // });
+        const sortedEarnedAchievements = earned.sort((a, b) => {
+          return a.countersEarned - b.countersEarned;
+        });
         const sortedAchievements = achievements
         setUnearnedAchievements(sortedUnearnedPublicAchievements);
-        setEarnedAchievements(earned);
+        setEarnedAchievements(sortedEarnedAchievements);
         setAchievements(sortedAchievements);
         setUnearnedAchievementsLoading(false);
       }

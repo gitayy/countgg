@@ -16,7 +16,8 @@ export const getAuthStatus = () =>
     user: User,
     counter: Counter, 
     items: Item[], 
-    site_version: string
+    site_version: string,
+    totalCounters: number
   }>(`${API_URL}/auth/status`, CONFIG);
 
   export const logout = () =>
@@ -91,6 +92,16 @@ axios.post(
   `${API_URL}/thread/getOlder`,
   {thread_name: thread_name, uuid: uuid},
   CONFIG
+);
+
+export const getMentions = (from: number|undefined) =>
+axios.get(
+  `${API_URL}/counter/getMentions`,
+  {
+    params: {from: from},
+    ...CONFIG
+  },
+  
 );
 
 export const getCountByUuid = (uuid: string) =>

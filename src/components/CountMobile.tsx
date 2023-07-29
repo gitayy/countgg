@@ -125,7 +125,7 @@ const CountMobile = memo((props: any) => {
     <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{ display: expanded ? 'block' : 'none', pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && user && user.pref_custom_stricken != 'Disabled' ? user.pref_strike_color : 'initial'), filter: (props.post.stricken && user && user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
     <Box>
         <Grid container>
-            <Grid item xs={6}>
+            <Grid item xs={4}>
               <Grid container sx={{display: 'flex'}}>
                 <Grid item xs={12}>
                   <Grid container sx={{width: '95%'}}>
@@ -152,7 +152,7 @@ const CountMobile = memo((props: any) => {
                 </Grid>
               </Grid>
             </Grid>
-    <Grid item xs={4}>
+    <Grid item xs={6}>
       <Box sx={{ display: 'flex', flexDirection: 'row' }}>
         <CardContent sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, pb: 0, overflowWrap: 'anywhere', '&:last-child': {pb: '0px'} }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end' }}>

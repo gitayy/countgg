@@ -231,7 +231,7 @@ export const DefaultPage = () => {
         </Grid>
         </Paper></Link>
         </Grid>
-        {/* <Grid item xs={12} md={6}>
+        {/* <Grid item xs={12} md={12}>
             <Link color={'inherit'} underline='none' href={`/rps`} onClick={(e) => {e.preventDefault();navigate(`/rps`);}}>
               <Paper className="littlescale card" elevation={8} sx={{
                 background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
@@ -302,7 +302,7 @@ export const DefaultPage = () => {
 <Grid item xs={12} lg={6} sx={{padding: "6px"}}>
    {/* Smaller items */}
    <Grid container spacing={1.5}>
-   <Grid item xs={6} sx={{padding: "6px"}}>
+   <Grid item xs={12} sm={6} sx={{padding: "6px"}}>
           <Link color={'inherit'} underline='none' href={`/counters`} onClick={(e) => {e.preventDefault();navigate(`/counters`);}}>
             <Paper className="littlescale card" elevation={8} sx={{
               background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
@@ -318,7 +318,7 @@ export const DefaultPage = () => {
             </Paper>
             </Link>
           </Grid>
-          <Grid item xs={6} sx={{padding: "6px"}}>
+          <Grid item xs={12} sm={6} sx={{padding: "6px"}}>
           <Link color={'inherit'} underline='none' href={`/stats`} onClick={(e) => {e.preventDefault();navigate(`/stats`);}}>
             <Paper className="littlescale card" elevation={8} sx={{
               background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
@@ -366,11 +366,11 @@ export const DefaultPage = () => {
             </Paper>
             </Link>
           </Grid> */}
-          <Grid item xs={6} sx={{padding: "6px"}}>
+          <Grid item xs={12} sm={6} sx={{padding: "6px"}}>
             {unclaimedRewards > 0
             ?
             <Box className='littlescale'>
-            <Badge color="error" sx={{ "& .MuiBadge-badge": { fontSize: 24, minWidth: 30, minHeight: 30 } }} badgeContent={unclaimedRewards}>
+            <Badge color="error" sx={{display: "block", "& .MuiBadge-badge": { fontSize: 24, minWidth: 30, minHeight: 30 } }} badgeContent={unclaimedRewards}>
             <Link color={'inherit'} underline='none' href={`/rewards`} onClick={(e) => {e.preventDefault();navigate(`/rewards`);}}>
             <Paper className="card" elevation={8} sx={{
               background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 

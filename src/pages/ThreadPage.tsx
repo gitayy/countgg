@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import { Fragment, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AlertColor, alpha, Badge, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Drawer, Grid, IconButton, LinearProgress, Link, Skeleton, Snackbar, Tab, Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Alert, AlertColor, alpha, Badge, Box, Button, Chip, Collapse, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Drawer, Grid, IconButton, LinearProgress, Link, List, ListItemButton, ListItemIcon, ListItemText, Skeleton, Snackbar, Tab, Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
 import { addCounterToCache, cachedCounters } from '../utils/helpers';
 import { useFetchRecentCounts } from '../utils/hooks/useFetchRecentCounts';
@@ -29,6 +29,10 @@ import { TerminalController } from '../components/TerminalController';
 import { DailyRobTable } from '../components/DailyRobTable';
 import { ThreadsContext } from '../utils/contexts/ThreadsContext';
 import TagIcon from '@mui/icons-material/Tag';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+
+
 
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const location = useLocation();
@@ -631,15 +635,76 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         }
       }, [thread, socketStatus, socketViewers, theme, lastCount, mobilePickerOpen, desktopPickerOpen, isDesktop])
 
+      function groupThreadsByCategory(threads) {
+        const groupedThreads = {};
+      
+        threads.forEach((thread) => {
+          const category = thread.category || 'Uncategorized'; // If category is undefined or blank, consider it as "Uncategorized"
+      
+          if (!groupedThreads[category]) {
+            groupedThreads[category] = [];
+          }
+      
+          groupedThreads[category].push(thread);
+        });
+      
+        return groupedThreads;
+      }
+
+      const initialExpandedCategories = Object.keys(groupThreadsByCategory(allThreads));
+      const [expandedCategories, setExpandedCategories] = useState(initialExpandedCategories);
+
+      // Step 2: Update handleCategoryClick function to toggle the expanded state of each category
+      const handleCategoryClick = (category) => {
+        if (expandedCategories.includes(category)) {
+          setExpandedCategories(expandedCategories.filter((cat) => cat !== category));
+        } else {
+          setExpandedCategories([...expandedCategories, category]);
+        }
+      };
       const threadPickerMemo = useMemo(() => {
+
+        const groupedThreads = groupThreadsByCategory(allThreads);
+
         if(allThreads && allThreads.length > 0) {
           const picker = 
           <Box sx={{minHeight: 500, height: {xs: '100vh', lg: 'calc(100vh - 65px)'}, width: "auto", flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', flexDirection: "column", overflowY: "scroll",}}>
-          {allThreads.map((thread, index) => {
-            return (<Button startIcon={<TagIcon />} sx={{width: "100%", opacity: thread_name === thread.name ? 1 : 0.75, textAlign: "left", '&:hover': {opacity: 1}, bgcolor: thread_name === thread.name ? alpha(theme.palette.primary.main, 0.5) : "background.paper", color: thread_name === thread.name ? 'text.primary' : 'text.secondary', justifyContent: 'flex-start'}} onClick={() => navigate(`/thread/${thread.name}`)}>{thread.title} 
-            {/* {thread.name !== thread_name && <Chip label="67,000" size="small" variant="filled" color='primary' sx={{ml: 0.5, cursor: "pointer", scale: "0.75"}} />} */}
-            </Button>)
-          })}
+          {Object.keys(groupedThreads).map((category) => (
+        <div key={category}>
+          <ListItemButton onClick={() => handleCategoryClick(category)}>
+          <ListItemIcon sx={{ minWidth: 24, paddingRight: 1 }}>
+              {expandedCategories.includes(category) ? (
+                <KeyboardArrowDownIcon />
+              ) : (
+                <KeyboardArrowRightIcon />
+              )}
+            </ListItemIcon>
+            <ListItemText primary={category} />
+          </ListItemButton>
+          <Collapse in={expandedCategories.includes(category)}>
+            <List>
+              {groupedThreads[category].map((thread, index) => (
+                <Button
+                  key={thread.id}
+                  startIcon={<TagIcon />}
+                  sx={{
+                    width: '100%',
+                    opacity: thread_name === thread.name ? 1 : 0.75,
+                    textAlign: 'left',
+                    '&:hover': { opacity: 1 },
+                    bgcolor: thread_name === thread.name ? alpha(theme.palette.primary.main, 0.5) : 'background.paper',
+                    color: thread_name === thread.name ? 'text.primary' : 'text.secondary',
+                    justifyContent: 'flex-start',
+                  }}
+                  onClick={() => navigate(`/thread/${thread.name}`)}
+                >
+                  {thread.title}
+                </Button>
+              ))}
+            </List>
+          </Collapse>
+        </div>
+      ))}
           </Box>
           return (
             // picker
@@ -684,7 +749,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             <Box sx={{flexGrow: 1, display: 'flex', justifyContent: 'center', bgcolor: 'background.paper', minHeight: 500, height: 'calc(100vh - 65px)' }}><Skeleton animation='wave' sx={{width: '50%', justifyContent: 'center'}} /></Box>
           )
         }
-      }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name])
+      }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name, expandedCategories])
 
       const robConfirmMemo = useMemo(() => {
         return <ConfirmDialog
