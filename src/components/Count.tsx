@@ -1,6 +1,6 @@
-import { Box, CardMedia, CardContent, Typography, Grid,  IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link, Popover, useTheme, Table, Modal } from "@mui/material";
+import { Box, CardMedia, CardContent, Typography, Grid,  IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link, Popover, useTheme, Table, Modal, Avatar } from "@mui/material";
 import { memo, useContext, useRef, useState } from "react";
-import CountggLogo from '../assets/countgg-128.png'
+import CountggLogo2 from '../assets/emotes/gg.png'
 import { cachedCounters, convertMsToFancyTime, defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName } from "../utils/helpers";
 import { Counter } from "../utils/types";
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -214,14 +214,12 @@ const Count = memo((props: any) => {
                 <Grid container>
                     <Grid item xs={4}>
                       <Grid container sx={{display: 'flex'}}>
-                        <Grid item xs={2} sx={{margin: 'auto', justifyContent: 'center', display: 'grid', marginTop: 0}}>
+                        <Grid item xs={2} sx={{justifyContent: 'center', display: 'flex', alignItems: 'center', flexDirection: 'column'}}>
                         <Box sx={{p: props.boxPadding}}>
                           <Link href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`);}}>
-                          <CardMedia
-                              component="img"
+                            <Avatar
                               className={renderedCounter.cardBorderStyle}
-                              sx={{ width: '100%', maxWidth: '64px', maxHeight: '64px'}}
-                              image={`${renderedCounter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${renderedCounter.discordId}/${renderedCounter.avatar}` || CountggLogo}`}
+                              src={`${renderedCounter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${renderedCounter.discordId}/${renderedCounter.avatar}` || CountggLogo2}`}
                               alt={renderedCounter.name}
                             />
                             </Link>

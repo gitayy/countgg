@@ -169,12 +169,21 @@ const CountList = memo((props: any) => {
         setForceRerenderSubmit(Date.now().toString());
       } else if(props.cachedCounts && props.cachedCounts.length === 0 && props.loadedNewestRef.current !== undefined && props.loadedNewestRef.current === true) {
         props.loadedNewestRef.current = false; 
+        props.setLoadedNewest(false);
         setForceRerenderSubmit(Date.now().toString());
       } else if(props.cachedCounts && props.cachedCounts.length === 0 && props.loadedNewestRef.current !== undefined && props.loadedNewestRef.current === false) {
         props.loadedNewestRef.current = true; 
+        props.setLoadedNewest(true);
         setForceRerenderSubmit(Date.now().toString());
       }
     }
+
+    useEffect(() => {
+      props.loadedNewestRef.current = props.loadedNewest;
+      if(props.cachedCounts && props.cachedCounts.length > 0 && props.loadedNewestRef.current) {
+        handleUnfreeze();
+      }
+    }, [])
 
     useEffect(() => {
       setForceRerenderSubmit(Date.now().toString());
@@ -223,7 +232,7 @@ const CountList = memo((props: any) => {
     const handlePosting = async () => {
       const throttleCheck = performance.now() - throttle.current;
       if(throttleCheck < 100) {
-        console.log("You are being throttled.");
+        console.log(`You are being throttled. Start: ${throttle.current}, end: ${performance.now()} (${throttleCheck}ms difference)`);
         throttleCount.current += 1;
         isThrottled.current = true;
         setSubmitColor("error")
@@ -511,7 +520,7 @@ const CountList = memo((props: any) => {
           <Box ref={submitRef} sx={{maxWidth: '100%', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, padding: '0.5', background: alpha(theme.palette.background.paper, 0.9)}}>
           <Tooltip title={`${props.cachedCounts && props.cachedCounts.length} new`} placement="top" open={(props.cachedCounts && props.cachedCounts.length > 0) ? true : false} arrow >
           <IconButton onClick={() => handleUnfreeze()}>
-            <AcUnitIcon color={(props.loadedNewestRef !== undefined && props.loadedNewestRef.current === false && props.recentCountsLoading === false) ?  'primary' : 'disabled'} />
+            <AcUnitIcon color={(props.loadedNewestRef.current !== undefined && props.loadedNewestRef.current === false && props.recentCountsLoading === false) ?  'primary' : 'disabled'} />
           </IconButton>
             </Tooltip>
           <TextField
@@ -553,7 +562,7 @@ const CountList = memo((props: any) => {
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, padding: '0.5', bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
             <Tooltip title={`${props.cachedCounts && props.cachedCounts.length} new`} placement="top" open={(props.cachedCounts && props.cachedCounts.length > 0) ? true : false} arrow >
                 <IconButton onClick={() => handleUnfreeze()}>
-                  <AcUnitIcon color={(props.loadedNewestRef !== undefined && props.loadedNewestRef.current === false && props.recentCountsLoading === false) ?  'primary' : 'disabled'} />
+                  <AcUnitIcon color={(props.loadedNewestRef.current !== undefined && props.loadedNewestRef.current === false && props.recentCountsLoading === false) ?  'primary' : 'disabled'} />
                 </IconButton>
                 </Tooltip>
                 <TextField

@@ -237,11 +237,11 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       }
     })
 
-    useEffect(() => {
-      if(recentCountsLoading == false) {
-        loadedNewestRef.current = loadedNewest;
-      }
-    }, [recentCountsLoading])
+    // useEffect(() => {
+    //   if(recentCountsLoading == false) {
+    //     loadedNewestRef.current = loadedNewest;
+    //   }
+    // }, [recentCountsLoading])
 
     //Handle Socket data
     useEffect(() => {
@@ -686,7 +686,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
         if(allThreads && allThreads.length > 0) {
           const picker = 
-          <Box sx={{minHeight: 500, height: {xs: '100vh', lg: 'calc(100vh - 65px)'}, width: "auto", flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', flexDirection: "column", overflowY: "scroll",}}>
+          <Box sx={{minHeight: 500, height: {xs: '100vh', lg: 'calc(100vh - 65px)'}, width: "auto", ...(!isDesktop && {width: "min-content"}),  flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', flexDirection: "column", overflowY: "scroll",}}>
           {Object.keys(groupedThreads).sort(customSort).map((category) => (
         <div key={category}>
           <ListItemButton onClick={() => handleCategoryClick(category)}>
@@ -767,7 +767,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             <Box sx={{flexGrow: 1, display: 'flex', justifyContent: 'center', bgcolor: 'background.paper', minHeight: 500, height: 'calc(100vh - 65px)' }}><Skeleton animation='wave' sx={{width: '50%', justifyContent: 'center'}} /></Box>
           )
         }
-      }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name, expandedCategories])
+      }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name, expandedCategories, isDesktop])
 
       const robConfirmMemo = useMemo(() => {
         return <ConfirmDialog
@@ -781,7 +781,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         return (        
         recentCountsLoading
         ? <Box sx={{flexGrow: 1, display: 'flex', justifyContent: 'center', bgcolor: 'background.paper', minHeight: 500, height: 'calc(100vh - 65px)' }}><Skeleton animation='wave' sx={{width: '50%', justifyContent: 'center'}} /></Box>
-        : <CountList thread={thread} recentCountsLoading={recentCountsLoading} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} refScroll={refScroll} newRecentPostLoaded={newRecentPostLoaded} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentCountsRef} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
+        : <CountList thread={thread} recentCountsLoading={recentCountsLoading} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} refScroll={refScroll} newRecentPostLoaded={newRecentPostLoaded} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} setLoadedNewest={setLoadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentCountsRef} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
         )
       }, [cachedCounts, thread, thread_name, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, loading])
 
@@ -789,7 +789,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         return (   
           recentChatsLoading 
           ? <Box sx={{flexGrow: 1, display: 'flex', justifyContent: 'center', bgcolor: 'background.paper', minHeight: 500, height: 'calc(100vh - 65px)' }}><Skeleton animation='wave' sx={{width: '50%', justifyContent: 'center'}} /></Box> 
-          : <CountList thread={thread} isDesktop={isDesktop} chatsOnly={true} newRecentPostLoaded={undefined} loadedOldest={loadedOldestChats} loadedNewest={loadedNewestChats} loadedOldCount={loadedOldChat} loadedNewCount={loadedNewChat} isScrolledToTheBottom={chatsIsScrolledToTheBottom} isScrolledToTheTop={chatsIsScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={chatsIsScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentChatsRef} handleLatencyCheckChange={undefined} handleLatencyChange={undefined} handleSubmit={undefined}></CountList>
+          : <CountList thread={thread} isDesktop={isDesktop} chatsOnly={true} newRecentPostLoaded={undefined} loadedOldest={loadedOldestChats} loadedNewest={loadedNewestChats} setLoadedNewest={setLoadedNewestChats} loadedOldCount={loadedOldChat} loadedNewCount={loadedNewChat} isScrolledToTheBottom={chatsIsScrolledToTheBottom} isScrolledToTheTop={chatsIsScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={chatsIsScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentChatsRef} handleLatencyCheckChange={undefined} handleLatencyChange={undefined} handleSubmit={undefined}></CountList>
         )
       }, [recentChatsLoading, newChatsLoadedState, thread_name, loadedNewChat, loadedOldChat, deleteComments, loadedOldestChats, loadedNewestChats, chatsIsScrolledToNewest, loading])
 

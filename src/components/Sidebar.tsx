@@ -34,6 +34,7 @@ import PendingIcon from '@mui/icons-material/Pending';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import LinearProgress from '@mui/material/LinearProgress';
 import { XPDisplay } from './XPDisplay';
+import EmailIcon from '@mui/icons-material/Email';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -115,6 +116,15 @@ export const Sidebar = () => {
               <HomeIcon></HomeIcon>
             </ListItemIcon>
             <ListItemText primary={'Home'} />          
+          </ListItemButton>          
+        </ListItem></Link>
+        <Link color={'inherit'} underline='none' href={`/mentions`} onClick={(e) => {e.preventDefault();navigate(`/mentions`);}}>
+        <ListItem onClick={handleDrawerToggle} key={'home'}  disablePadding>
+          <ListItemButton>
+            <ListItemIcon>
+              <EmailIcon />
+            </ListItemIcon>
+            <ListItemText primary={'Mentions'} />          
           </ListItemButton>          
         </ListItem></Link>
         <Link color={'inherit'} underline='none' href={`/threads`} onClick={(e) => {e.preventDefault();navigate(`/threads`);}}>

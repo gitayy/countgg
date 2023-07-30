@@ -126,7 +126,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
                 ))}
               </Select>
               <FormControl variant="standard" sx={{}} >
-                <Tooltip title="Finds the nth count in a thread. In letters, 676th count would return ZZ, for example." placement='top'>
+                <Tooltip title="Finds the nth count in a thread. In letters, 26th count would return Z, for example." placement='top'>
                 <InputLabel htmlFor="countNumber" shrink>
                   Count Number
                 </InputLabel>

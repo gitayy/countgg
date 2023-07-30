@@ -1,4 +1,4 @@
-import {  Box, CardMedia, Typography, Grid, IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, useTheme, Link, Popover, CardContent } from "@mui/material";
+import {  Box, CardMedia, Typography, Grid, IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, useTheme, Link, Popover, CardContent, Avatar } from "@mui/material";
 import { memo, useContext, useRef, useState } from "react";
 import { cachedCounters, defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName } from "../utils/helpers";
 import { Counter } from "../utils/types";
@@ -8,7 +8,7 @@ import { SentimentVerySatisfied } from '@mui/icons-material';
 import { useLocation, useNavigate } from "react-router-dom";
 import { custom_emojis } from "../utils/custom_emojis";
 import Picker from '@emoji-mart/react';
-import CountggLogo from '../assets/countgg-128.png'
+import CountggLogo2 from '../assets/emotes/gg.png'
 import remarkGfm from "remark-gfm";
 import ReactMarkdown from "react-markdown";
 import data from '@emoji-mart/data/sets/14/twitter.json'
@@ -224,14 +224,12 @@ return (
               <Grid container>
                   <Grid item xs={12}>
                     <Grid container sx={{display: 'flex'}}>
-                      <Grid item xs={2} sx={{ margin: 'auto', justifyContent: 'center', display: 'grid', marginTop: 0}}>
+                      <Grid item xs={2} sx={{ justifyContent: 'center', display: 'flex', alignItems: 'center'}}>
                       <Box sx={{p: props.boxPadding}}>
                         <Link href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`);}}>
-                        <CardMedia
-                            component="img"
+                          <Avatar
                             className={renderedCounter.cardBorderStyle}
-                            sx={{ width: '100%', maxWidth: props.maxWidth, maxHeight: props.maxHeight}}
-                            image={`${renderedCounter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${renderedCounter.discordId}/${renderedCounter.avatar}` || CountggLogo}`}
+                            src={`${renderedCounter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${renderedCounter.discordId}/${renderedCounter.avatar}` || CountggLogo2}`}
                             alt={renderedCounter.name}
                           />
                           </Link>

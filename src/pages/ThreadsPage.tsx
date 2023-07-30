@@ -22,7 +22,7 @@ export const ThreadsPage = () => {
         })
       }, [location.pathname]);
 
-      const [tabValue, setTabValue] = useState('tab_1');
+      const [tabValue, setTabValue] = useState('tab_Traditional');
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
       setTabValue(newValue);
@@ -61,10 +61,115 @@ export const ThreadsPage = () => {
     setTabValue(newValue);
   };
 
+  function groupThreadsByCategory(threads) {
+    const groupedThreads = {};
+  
+    threads.forEach((thread) => {
+      const category = thread.category || 'Uncategorized'; // If category is undefined or blank, consider it as "Uncategorized"
+  
+      if (!groupedThreads[category]) {
+        groupedThreads[category] = [];
+      }
+  
+      groupedThreads[category].push(thread);
+    });
+  
+    return groupedThreads;
+  }
+
+  const customSort = (a, b) => {
+    const specificOrder = ["Traditional", "Double Counting", "No Mistakes", "Miscellaneous"];
+
+    if (specificOrder.includes(a) && specificOrder.includes(b)) {
+      return specificOrder.indexOf(a) - specificOrder.indexOf(b);
+    } else if (specificOrder.includes(a)) {
+      return -1;
+    } else if (specificOrder.includes(b)) {
+      return 1;
+    }
+
+    return a.localeCompare(b); // Keep the rest in alphabetical order
+  };
+
+  const groupedThreads = groupThreadsByCategory(allThreads);
+  
+  function renderThreadCards(threads) {
+    return (
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+        {threads.map((thread) => (
+          <ThreadCard
+            key={thread.id} // Assuming the thread object has a unique 'id' property
+            title={thread.title}
+            description={thread.shortDescription}
+            href={`/thread/${thread.name}`} // Assuming the thread object has a 'slug' property
+            color1={thread.color1}
+            color2={thread.color2}
+          />
+        ))}
+      </Box>
+    );
+  }
+  
+  function renderTabPanels() {
+    return Object.keys(groupedThreads)
+      .sort(customSort)
+      .map((category) => (
+        <TabPanel key={category} value={`tab_${category}`} sx={{ flexGrow: 1 }}>
+          {renderThreadCards(groupedThreads[category])}
+        </TabPanel>
+      ));
+  }
+  
+  function renderTabs() {
+    return (
+      <Tabs
+        value={tabValue}
+        variant="scrollable"
+        allowScrollButtonsMobile
+        onChange={handleChange}
+        sx={{ bgcolor: 'background.paper' }}
+        style={tabsStyle}
+      >
+        {Object.keys(groupedThreads)
+          .sort(customSort)
+          .map((category) => (
+            <Tab
+              key={`tab_${category}`}
+              label={category}
+              value={`tab_${category}`}
+              style={tabStyle}
+            />
+          ))}
+      </Tabs>
+    );
+  }
+
   if(!loading && allThreads ) {
+    
+    return (
+      <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
+        <Typography variant="h4">All Threads</Typography>
+        <Box sx={{ bgcolor: 'transparent' }}>
+          <TabContext value={tabValue}>
+            {renderTabs()}
+            {renderTabPanels()}
+          </TabContext>
+        </Box>
+      </Box>
+    );
+    
 
     return (
         <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
+          <>
+      {Object.keys(groupedThreads).sort(customSort).map((category) => {
+      console.log(category);
+      groupedThreads[category].map((thread) => {
+        console.log(thread);
+        return <>Hi</>
+      })
+    })}
+    </>
             <Typography variant="h4">All Threads</Typography>
             <Box sx={{bgcolor: 'transparent'}}>
             <TabContext value={tabValue}>
@@ -112,7 +217,6 @@ export const ThreadsPage = () => {
         <ThreadCard title={"Russian Roulette"} description={"Every count you make, you have a 0.01% chance of being permanently banned from this thread."} href={`/thread/russian_roulette`} color1={'#e0c3fc'} color2={'#8ec5fc'}></ThreadCard>
         <ThreadCard title={"Tug of War: Avoid 0"} description={"Tug of war, but if you post 0, you get permanently banned from this thread. Great sacrifices must be made."} href={`/thread/tug_of_war_avoid_0`} color1={'#20bf55'} color2={'#01baef'}></ThreadCard>
         <ThreadCard title={"Slow: TSLC"} description={"The time since the last count must be greater than the previous count's time since the last count."} href={`/thread/slow_tslc`} color1={'#ec008c'} color2={'#fc6767'}></ThreadCard>
-        {/* <ThreadCard title={"No Mistakes Or Ban"} description={"No mistakes. If you make a mistake, you get banned."} href={`/thread/no_mistakes_or_ban`} color1={'#d1913c'} color2={'#ffd194'}></ThreadCard> */}
         <ThreadCard title={"Random Hour"} description={"Counts are only valid for one random hour per day. The hour is kept secret."} href={`/thread/random_hour`} color1={'#7f00ff'} color2={'#e100ff'}></ThreadCard>
         <ThreadCard title={"1/x Valid"} description={"Each count has a 1/x chance of being valid."} href={`/thread/1inx`} color1={'#fc466b'} color2={'#3f5efb'}></ThreadCard>
         <ThreadCard title={"Countdown from 1 million"} description={"Start at a million. Count down until we reach 0."} href={`/thread/countdown`} color1={'#f12711'} color2={'#f5af19'}></ThreadCard>
