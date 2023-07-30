@@ -179,10 +179,12 @@ const CountList = memo((props: any) => {
     }
 
     useEffect(() => {
-      props.loadedNewestRef.current = props.loadedNewest;
-      if(props.cachedCounts && props.cachedCounts.length > 0 && props.loadedNewestRef.current) {
-        handleUnfreeze();
-      }
+      if(props.loadedNewestRef !== undefined) {
+        props.loadedNewestRef.current = props.loadedNewest;
+        if(props.cachedCounts && props.cachedCounts.length > 0 && props.loadedNewestRef.current) {
+          handleUnfreeze();
+        }
+    }
     }, [])
 
     useEffect(() => {
