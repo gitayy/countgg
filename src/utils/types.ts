@@ -87,6 +87,10 @@ export type ThreadType = {
   verifiers: string[];
   countBans: string[];
   postBans: string[];
+  shortDescription: string;
+  color1: string;
+  color2: string;
+  category: string;
 };
 
 export type AchievementType = {

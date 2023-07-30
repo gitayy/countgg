@@ -14,6 +14,10 @@ import { UserContext } from '../utils/contexts/UserContext';
     const [name, setName] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [shortDescription, setShortDescription] = useState('');
+    const [color1, setColor1] = useState('');
+    const [color2, setColor2] = useState('');
+    const [category, setCategory] = useState('');
     const [rules, setRules] = useState('');
     const [firstValidCount, setFirstValidCount] = useState('');
     const [validationType, setValidationType] = useState('');
@@ -50,6 +54,10 @@ import { UserContext } from '../utils/contexts/UserContext';
       setVerifiers(selectedThread.verifiers ? selectedThread.verifiers.join(',') : '');
       setCountBans(selectedThread.countBans ? selectedThread.countBans.join(',') : '');
       setPostBans(selectedThread.postBans ? selectedThread.postBans.join(',') : '');
+      setShortDescription(selectedThread.shortDescription);
+      setColor1(selectedThread.color1);
+      setColor2(selectedThread.color2);
+      setCategory(selectedThread.category);
     }, [selectedThread]);
 
     const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
@@ -62,7 +70,7 @@ import { UserContext } from '../utils/contexts/UserContext';
     const sendValues = async () => {
       if(name) {
         try {
-        const res = await adminCreateThread(name, title, description, rules, firstValidCount, validationType, visibleTo, updatableBy, locked, autoValidated, resetOnMistakes, allowDoublePosts, moderators, verifiers, countBans, postBans, uuid);
+        const res = await adminCreateThread(name, title, description, rules, firstValidCount, validationType, visibleTo, updatableBy, locked, autoValidated, resetOnMistakes, allowDoublePosts, moderators, verifiers, countBans, postBans, shortDescription, color1, color2, category, uuid);
           if(res.status == 201) {
             setSnackbarSeverity('success');
             setSnackbarOpen(true)
@@ -128,6 +136,50 @@ import { UserContext } from '../utils/contexts/UserContext';
                   defaultValue={title}
                   value={title}
                   id="title"
+                />
+              </FormControl>
+              <FormControl variant="standard" sx={{}} >
+                <InputLabel htmlFor="shortdescription" shrink>
+                  Short Description
+                </InputLabel>
+                <Input
+                  onInput={e => setShortDescription((e.target as HTMLInputElement).value)}
+                  defaultValue={shortDescription}
+                  value={shortDescription}
+                  id="shortdescription"
+                />
+              </FormControl>
+              <FormControl variant="standard" sx={{}} >
+                <InputLabel htmlFor="color1" shrink>
+                  Color 1
+                </InputLabel>
+                <Input
+                  onInput={e => setColor1((e.target as HTMLInputElement).value)}
+                  defaultValue={color1}
+                  value={color1}
+                  id="color1"
+                />
+              </FormControl>
+              <FormControl variant="standard" sx={{}} >
+                <InputLabel htmlFor="color2" shrink>
+                  Color 2
+                </InputLabel>
+                <Input
+                  onInput={e => setColor2((e.target as HTMLInputElement).value)}
+                  defaultValue={color2}
+                  value={color2}
+                  id="color2"
+                />
+              </FormControl>
+              <FormControl variant="standard" sx={{}} >
+                <InputLabel htmlFor="category" shrink>
+                  Category
+                </InputLabel>
+                <Input
+                  onInput={e => setCategory((e.target as HTMLInputElement).value)}
+                  defaultValue={category}
+                  value={category}
+                  id="category"
                 />
               </FormControl>
               <FormControl variant="standard" sx={{}} >
