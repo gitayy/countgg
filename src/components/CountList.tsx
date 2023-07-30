@@ -520,7 +520,7 @@ const CountList = memo((props: any) => {
           <Box ref={submitRef} sx={{maxWidth: '100%', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, padding: '0.5', background: alpha(theme.palette.background.paper, 0.9)}}>
           <Tooltip title={`${props.cachedCounts && props.cachedCounts.length} new`} placement="top" open={(props.cachedCounts && props.cachedCounts.length > 0) ? true : false} arrow >
           <IconButton onClick={() => handleUnfreeze()}>
-            <AcUnitIcon color={(props.loadedNewestRef.current !== undefined && props.loadedNewestRef.current === false && props.recentCountsLoading === false) ?  'primary' : 'disabled'} />
+            <AcUnitIcon color={(props.loadedNewestRef !== undefined && props.loadedNewestRef.current === false && props.recentCountsLoading === false) ?  'primary' : 'disabled'} />
           </IconButton>
             </Tooltip>
           <TextField
@@ -562,7 +562,7 @@ const CountList = memo((props: any) => {
             <Box ref={submitRef} sx={{maxWidth: '100%', height: '76px', display: 'flex', justifyContent: "center", alignItems: "center", bottom: 0, left: 0, right: 0, padding: '0.5', bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
             <Tooltip title={`${props.cachedCounts && props.cachedCounts.length} new`} placement="top" open={(props.cachedCounts && props.cachedCounts.length > 0) ? true : false} arrow >
                 <IconButton onClick={() => handleUnfreeze()}>
-                  <AcUnitIcon color={(props.loadedNewestRef.current !== undefined && props.loadedNewestRef.current === false && props.recentCountsLoading === false) ?  'primary' : 'disabled'} />
+                  <AcUnitIcon color={(props.loadedNewestRef !== undefined && props.loadedNewestRef.current === false && props.recentCountsLoading === false) ?  'primary' : 'disabled'} />
                 </IconButton>
                 </Tooltip>
                 <TextField
