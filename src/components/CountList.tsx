@@ -179,13 +179,20 @@ const CountList = memo((props: any) => {
     }
 
     useEffect(() => {
-      if(props.loadedNewestRef !== undefined) {
+      if(!loading && props.loadedNewestRef !== undefined) {
         props.loadedNewestRef.current = props.loadedNewest;
         if(props.cachedCounts && props.cachedCounts.length > 0 && props.loadedNewestRef.current) {
+          console.log("There should be a 'sticky' post or something messed up here.");
+          console.log("So here's some infos.");
+          console.log(props.cachedCounts);
+          console.log(user);
+          console.log([...props.recentCounts.current, ...props.cachedCounts]);
+          console.log([...props.recentCounts.current, ...props.cachedCounts].slice(([...props.recentCounts.current, ...props.cachedCounts]).length - 50));
+          console.log("Ok that's all! Thanks!");
           handleUnfreeze();
         }
     }
-    }, [])
+    }, [loading])
 
     useEffect(() => {
       setForceRerenderSubmit(Date.now().toString());
