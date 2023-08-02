@@ -268,13 +268,13 @@ import Count from '../components/Count';
                     <Typography variant="body1">Load new posts on bottom</Typography>
                   </Tooltip>
                 } />
-                <FormControlLabel control={<Switch
+                {/* <FormControlLabel control={<Switch
                   checked={prefTimeSinceLastCount}
                   onChange={() => {setPrefTimeSinceLastCount(!prefTimeSinceLastCount)}}
                   inputProps={{ 'aria-label': 'pref-time-since-last-count' }}
                 />} label={
                     <Typography variant="body1">Show time since last valid count</Typography>
-                } />
+                } /> */}
                 </Box>
                 <FormControl sx={{m: 2}}>
                 <InputLabel id="clear-label">Textbox Behavio{maybeU}r</InputLabel>
