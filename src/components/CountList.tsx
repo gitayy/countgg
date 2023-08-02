@@ -216,7 +216,7 @@ const CountList = memo((props: any) => {
     }
 
     const scrollToBottomAuto = () => {
-        if (messagesEndRef.current && isScrolledToBottom === false && submitRef.current) {
+        if (messagesEndRef.current && isScrolledToBottom === false && submitRef.current && isDesktop) {
             messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
             submitRef.current.scrollIntoView({ behavior: 'auto', block: 'start' });
             changeScrolledToBottom(true);
@@ -321,7 +321,7 @@ const CountList = memo((props: any) => {
             props.isScrolledToNewest.current = true;
           } else {
             if (isScrolledToBottom && user && user.pref_load_from_bottom) {
-            if(!props.chatsOnly) {
+            if(!props.chatsOnly && isDesktop) {
               messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
               if(submitRef.current) {submitRef.current.scrollIntoView({ behavior: 'auto', block: 'end', });}
             }
