@@ -189,7 +189,17 @@ const CountList = memo((props: any) => {
           console.log([...props.recentCounts.current, ...props.cachedCounts]);
           console.log([...props.recentCounts.current, ...props.cachedCounts].slice(([...props.recentCounts.current, ...props.cachedCounts]).length - 50));
           console.log("Ok that's all! Thanks!");
-          handleUnfreeze();
+
+          // handleUnfreeze();
+
+          console.log("Ok, let's probably do this. This may make contexts worse BUT overall worth. I can fix that later by checking for context i guess");
+          props.setCachedCounts([]);
+          // if(messagesEndRef.current) {
+          //   messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+          // }
+          props.loadedNewestRef.current = true;
+          props.setLoadedNewest(true);
+          setForceRerenderSubmit(Date.now().toString());
         }
     }
     }, [loading])
