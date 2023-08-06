@@ -121,7 +121,7 @@ const Count = memo((props: any) => {
   return (
     <>
     {user && user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && <Typography className="minimized-post-toggler" variant="body2" onClick={() => handleExpand()} sx={{cursor: 'pointer', userSelect: 'none', marginLeft: '5px'}}>{expanded ? `[-]` : `[+]`} Show Hidden Post</Typography>}
-  <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{display: expanded ? 'block' : 'none', pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && user && user.pref_custom_stricken != 'Disabled' ? user.pref_strike_color : 'initial'), filter: (props.post.stricken && user && user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
+  <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{display: expanded ? 'block' : 'none', pl: 2, pr: 2, boxSizing: 'border-box', wordWrap: 'break-word', filter: (props.post.stricken && user && user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : ''), opacity: (props.post.stricken && user ? user.pref_stricken_count_opacity : 1), border: (props.mostRecentCount && user && user.pref_highlight_last_count ? `1px solid ${user.pref_highlight_last_count_color}` : '1px solid transparent'), background: (props.mostRecentCount && user && user.pref_highlight_last_count ? `${user.pref_highlight_last_count_color}1c` : (props.post.stricken && user && user.pref_custom_stricken != 'Disabled' ? user.pref_strike_color : 'initial')) }}>
   <Box sx={{}}>
       <Grid container>
           <Grid item xs={4}>
@@ -209,7 +209,7 @@ const Count = memo((props: any) => {
     return (
       <>
     {user && user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && <Typography className="minimized-post-toggler" variant="body2" onClick={() => handleExpand()} sx={{cursor: 'pointer', userSelect: 'none', marginLeft: '5px'}}>{expanded ? `[-]` : `[+]`} Show Hidden Post</Typography>}
-          <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{display: expanded ? 'block' : 'none', pl: 2, pr: 2, boxSizing: 'border-box', border: '1px solid transparent', wordWrap: 'break-word', background: (props.post.stricken && user && user.pref_custom_stricken != 'Disabled' ? user.pref_strike_color : 'initial'), filter: (props.post.stricken && user && user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '') }}>
+          <Box ref={props.contextRef} className={`count countDesktop ${props.contextRef && "highlighted"}`} sx={{display: expanded ? 'block' : 'none', pl: 2, pr: 2, boxSizing: 'border-box', wordWrap: 'break-word', filter: (props.post.stricken && user && user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : ''), opacity: (props.post.stricken && user ? user.pref_stricken_count_opacity : 1), border: (props.mostRecentCount && user && user.pref_highlight_last_count ? `1px solid ${user.pref_highlight_last_count_color}` : '1px solid transparent'), background: (props.mostRecentCount && user && user.pref_highlight_last_count ? `${user.pref_highlight_last_count_color}1c` : (props.post.stricken && user && user.pref_custom_stricken != 'Disabled' ? user.pref_strike_color : 'initial')), }}>
             <Box>
                 <Grid container>
                     <Grid item xs={4}>

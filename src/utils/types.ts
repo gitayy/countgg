@@ -21,6 +21,11 @@ export type User = {
   pref_night_mode_colors: string;
   pref_post_position: string;
   pref_hide_stricken: string;
+  pref_highlight_last_count: boolean;
+  pref_highlight_last_count_color: string;
+  pref_sound_on_stricken: string;
+  pref_hide_thread_picker: boolean;
+  pref_stricken_count_opacity: number;
   titles: number[];
   card_borders: number[];
   card_backgrounds: number[];
@@ -65,7 +70,7 @@ export type PostType = {
   isDeleted: boolean;
   isCommentDeleted: boolean;
   reactions: object[];
-
+  validCountNumber: number;
   latency?: number;
 }
 

@@ -59,6 +59,14 @@ html,
   display: none!important;
 }
 
+.count {
+  transition: opacity 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+
+.count:hover {
+  opacity: 1;
+}
+
 .countDesktop:hover {
   border-right: 1px solid grey;
   box-shadow: inset 0em 0em 0em 100em rgb(207 213 255 / 15%);

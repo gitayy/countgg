@@ -645,7 +645,9 @@ const CountList = memo((props: any) => {
           let prevHour;
           let prevKey;
 
+          let highestValidCountId = 0;
           props.recentCounts.current && props.recentCounts.current.forEach((count, index) => {
+            if(count.isValidCount && count.id > highestValidCountId) {highestValidCountId = count.id}
             const date = new Date(parseInt(count.timestamp));
             const hour = date.getHours();
             const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${hour}`;
@@ -697,11 +699,11 @@ const CountList = memo((props: any) => {
                   const ref = contextMatch ? contextRef : null;
                   if(isDesktop && !(count.stricken && !count.hasComment && user && user.pref_hide_stricken === 'Hide')) {
                   return (
-                    <Count user={user} key={count.uuid} thread={props.thread} socket={socket} post={count} renderedCounter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+                    <Count mostRecentCount={count.id === highestValidCountId} user={user} key={count.uuid} thread={props.thread} socket={socket} post={count} renderedCounter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
                   );
                   } else if(!(count.stricken && user && user.pref_hide_stricken === 'Hide')) {
                     return (
-                      <CountMobile user={user} key={count.uuid} thread={props.thread} socket={socket} post={count} renderedCounter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
+                      <CountMobile mostRecentCount={count.id === highestValidCountId} user={user} key={count.uuid} thread={props.thread} socket={socket} post={count} renderedCounter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} contextRef={ref} />
                     );
                   }
                 })}

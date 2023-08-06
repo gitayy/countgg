@@ -135,7 +135,8 @@ export const fakePost = (counter?: Counter): PostType => {
     authorUUID: counter ? counter.uuid : "[SYSTEM]",
     isDeleted: false,
     isCommentDeleted: false,
-    isValidCount: true
+    isValidCount: true,
+    validCountNumber: 1234567,
   }
 }
 
@@ -367,6 +368,7 @@ export const standardizeFormatOptions = ['Disabled', 'No Separator', 'Commas', '
 export const nightModeOptions = ['System', 'On', 'Off'];
 export const submitShortcutOptions = ['CtrlEnter', 'Enter', 'Off'];
 export const customStrickenOptions = ['Disabled', 'Enabled', 'Inverse'];
+export const soundOnStrickenOptions = ['Disabled', 'All Stricken', 'Only My Counts'];
 export const postStyleOptions = ['Default', 'LC'];
 export const clearOptions = ['Clear', 'No Clear', 'Clipboard', 'Custom'];
 export const nightModeColorOptions = ['Default', 'Light', 'Dark'];

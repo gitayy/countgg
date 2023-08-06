@@ -31,6 +31,8 @@ import { ThreadsContext } from '../utils/contexts/ThreadsContext';
 import TagIcon from '@mui/icons-material/Tag';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import dingSfx from '../utils/sounds/ding.mp3'
+import useSound from "use-sound";
 
 
 
@@ -65,9 +67,18 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [dailyRobs, setDailyRobs] = useState<{ counterUUID: string, id: number, moneyRobbed: string, postUUID: string, timestamp: string }[]|undefined>();
     const [newRecentPostLoaded, setNewRecentPostLoaded] = useState('');
     const [splits, setSplits] = useState<any>([]);
+    const [playDing, {stop: stopDing, sound: dingSound}] = useSound(dingSfx, { interrupt: false });
 
     const [mobilePickerOpen, setMobilePickerOpen] = useState(false);
     const [desktopPickerOpen, setDesktopPickerOpen] = useState(true);
+
+    useEffect(() => {
+      if(!loading && user) {
+        if(user.pref_hide_thread_picker) {
+          setDesktopPickerOpen(false);
+        }
+      }
+    }, [loading]);
 
       const handleMobileDrawerToggle = () => {
         setMobilePickerOpen(!mobilePickerOpen);
@@ -272,7 +283,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
           useEffect(() => {
 
-          if(isMounted.current && loading == false && socketStatus === "LIVE") {
+          if(isMounted.current && loading == false && socketStatus === "LIVE" && dingSound !== null) {
+            console.log("Ok");
+            console.log(dingSound);
             socket.emit('watch', thread_name)
 
             socket.on(`watcher_count`, function(data) {
@@ -393,6 +406,13 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                   });
                   if(thread_name === 'main') {
                     setBank(prevBank => {return prevBank + 1;})
+                  }
+                }
+                if(data.post.stricken && user && user.pref_sound_on_stricken !== 'Disabled') {
+                  if(user.pref_sound_on_stricken === 'Only My Counts' && data.post.authorUUID === user.uuid) {
+                    playDing();
+                  } else if(user.pref_sound_on_stricken === 'All Stricken') {
+                    playDing();
                   }
                 }
                 if (document.hidden) {
@@ -528,7 +548,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 setSocketStatus("DISCONNECTED");
             }
         }
-    },[loading, thread_name, socketStatus]);
+    },[loading, thread_name, socketStatus, dingSound]);
 
     const deleteComment = useCallback((data) => {
       recentCountsRef.current = recentCountsRef.current.map((chat) => {
@@ -844,6 +864,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <SplitsTable splits={splits}></SplitsTable>
         </TabPanel>
         <TabPanel value="tab_4" sx={{flexGrow: 1}}>
+          {lastCount && <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">{lastCount.lastCount.validCountNumber.toLocaleString()} total counts</Typography>}
           {thread_name === 'main' && bank > -1 && <>
           <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Bank: ${bank}</Typography>
           {counter && (!counter.lastRob || (counter.lastRob && ((parseFloat(counter.lastRob) < moment().tz('America/New_York').startOf('day').unix() * 1000)))) && <Button variant="contained" onClick={() => openRobConfirm()}>

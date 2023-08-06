@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import { Alert, Box, Button, Container, FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Snackbar, Switch, Typography, AlertColor, Tooltip, TextField } from '@mui/material';
 import { UserContext } from '../utils/contexts/UserContext';
-import { card_backgrounds, card_borders, clearOptions, customStrickenOptions, hideStrickenOptions, isValidHexColor, nightModeColorOptions, nightModeOptions, postPositionOptions, postStyleOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
+import { card_backgrounds, card_borders, clearOptions, customStrickenOptions, hideStrickenOptions, isValidHexColor, nightModeColorOptions, nightModeOptions, postPositionOptions, postStyleOptions, soundOnStrickenOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
 import { updateCounterPrefs } from '../utils/api';
 import { CounterCard } from '../components/CounterCard';
 import { Loading } from '../components/Loading';
@@ -49,6 +49,11 @@ import Count from '../components/Count';
     const [prefNightModeColors, setPrefNightModeColors] = useState(user?.pref_night_mode_colors || 'Default')  
     const [prefPostPosition, setPrefPostPosition] = useState(user?.pref_post_position || 'Left')  
     const [prefHideStricken, setPrefHideStricken] = useState(user?.pref_hide_stricken || 'Disabled')  
+    const [prefHighlightLastCount, setPrefHighlightLastCount] = useState(user?.pref_highlight_last_count || false)
+    const [prefHighlightLastCountColor, setPrefHighlightLastCountColor] = useState(user?.pref_highlight_last_count_color || '#006b99')
+    const [prefSoundOnStricken, setPrefSoundOnStricken] = useState(user?.pref_sound_on_stricken || 'Disabled')
+    const [prefHideThreadPicker, setPrefHideThreadPicker] = useState(user?.pref_hide_thread_picker || false)
+    const [prefStrickenCountOpacity, setPrefStrickenCountOpacity] = useState(user?.pref_stricken_count_opacity || 1)
     const [cardStyle, setCardStyle] = useState(counter?.cardStyle || 'card_default');
     const [cardBorderStyle, setCardBorderStyle] = useState(counter?.cardBorderStyle || 'no_border_square');
     const [displayName, setDisplayName] = useState(counter?.name || '');
@@ -113,6 +118,11 @@ import Count from '../components/Count';
           user.pref_night_mode_colors = prefNightModeColors;
           user.pref_post_position = prefPostPosition;
           user.pref_hide_stricken = prefHideStricken;
+          user.pref_hide_thread_picker = prefHideThreadPicker;
+          user.pref_sound_on_stricken = prefSoundOnStricken;
+          user.pref_highlight_last_count = prefHighlightLastCount;
+          user.pref_highlight_last_count_color = prefHighlightLastCountColor;
+          user.pref_stricken_count_opacity = prefStrickenCountOpacity;
           counter.name = displayName;
           counter.color = color;
           counter.cardStyle = cardStyle;
@@ -153,9 +163,9 @@ import Count from '../components/Count';
         </Alert>
     </Snackbar>
         <Container maxWidth="xl" sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
-          <Typography variant="h4">Preferences</Typography>
+          <Typography variant="h4">Preferences <Button sx={{m: 2}} size='large' color="success" variant="contained" onClick={() => {savePrefs()}}>Save</Button></Typography>
           <Box sx={{mt: 2, p: 1, borderRadius: '10px', bgcolor: 'background.paper', color: 'text.primary'}}>
-            <Typography variant="h6">Profile Preferences</Typography>
+            <Typography variant="h6">Profile Preferences <Button sx={{m: 2}} size='large' color="success" variant="contained" onClick={() => {savePrefs()}}>Save</Button></Typography>
             <TextField sx={{m: 2}} id="DisplayName" onInput={e => setDisplayName((e.target as HTMLInputElement).value)} label={`Display Name`} InputLabelProps={{ shrink: true }} value={displayName}></TextField>
             <TextField sx={{m: 2}} id={`Colo${maybeU}r`} onInput={e => setColor((e.target as HTMLInputElement).value)} label={`Colo${maybeU}r`} InputLabelProps={{ shrink: true }} value={color}></TextField>
             <FormControl sx={{m: 2}}>
@@ -240,7 +250,7 @@ import Count from '../components/Count';
             </Box>
             </Box>
             <Box sx={{mt: 2, p: 1, borderRadius: '10px', bgcolor: 'background.paper', color: 'text.primary'}}>
-            <Typography variant="h6">Counting Preferences</Typography>
+            <Typography variant="h6">Counting Preferences <Button sx={{m: 2}} size='large' color="success" variant="contained" onClick={() => {savePrefs()}}>Save</Button></Typography>
             {/* <Count user={user} myCounter={fakeCounter} key={`fakeCount_${Math.random()}`} thread={{}} socket={{}} post={fakePost(fakeCounter)} counter={fakeCounter} maxWidth={'32px'} maxHeight={'32px'} /> */}
             <FormGroup sx={{m: 2, userSelect: 'none', flexDirection: "row"}}>
               {/* Uncomment these once complete */}
@@ -275,6 +285,20 @@ import Count from '../components/Count';
                 />} label={
                     <Typography variant="body1">Show time since last valid count</Typography>
                 } /> */}
+                <FormControlLabel control={<Switch
+                  checked={prefHighlightLastCount}
+                  onChange={() => {setPrefHighlightLastCount(!prefHighlightLastCount)}}
+                  inputProps={{ 'aria-label': 'pref-highlight-last-count' }}
+                />} label={
+                    <Typography variant="body1">Highlight last valid count</Typography>
+                } />
+                <FormControlLabel control={<Switch
+                  checked={prefHideThreadPicker}
+                  onChange={() => {setPrefHideThreadPicker(!prefHideThreadPicker)}}
+                  inputProps={{ 'aria-label': 'pref-hide-thread-picker' }}
+                />} label={
+                    <Typography variant="body1">Hide thread picker by default (on desktop)</Typography>
+                } />
                 </Box>
                 <FormControl sx={{m: 2}}>
                 <InputLabel id="clear-label">Textbox Behavio{maybeU}r</InputLabel>
@@ -419,9 +443,30 @@ import Count from '../components/Count';
                   })}
                 </Select>
             </FormControl>
+            <FormControl sx={{m: 2}}>
+                <InputLabel id="sound-on-stricken-label">Play Sound on Stricken</InputLabel>
+                <Select
+                    labelId="sound-on-stricken-label"
+                    id="sound-on-stricken"
+                    value={prefSoundOnStricken}
+                    label="Play Sound on Stricken"
+                    onChange={e => setPrefSoundOnStricken((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  {soundOnStrickenOptions.map((card) => {
+                    return (<MenuItem value={card}>{card}</MenuItem>)
+                  })}
+                </Select>
+            </FormControl>
+          </FormGroup>
+          <FormGroup sx={{m: 2, userSelect: 'none', flexDirection: "row"}}>
                 {prefCustomStricken !== 'Disabled' && <>
                 <TextField sx={{m: 2}} id="StrikeColor" onInput={e => setPrefStrikeColor((e.target as HTMLInputElement).value)} label={`Strike Colo${maybeU}r`} InputLabelProps={{ shrink: true }} value={prefStrikeColor}></TextField>
                 <HexColorPicker color={prefStrikeColor} onChange={setPrefStrikeColor} />
+                </>}
+                {prefHighlightLastCount && <>
+                <TextField sx={{m: 2}} id="HighlightLastCountColor" onInput={e => setPrefHighlightLastCountColor((e.target as HTMLInputElement).value)} label={`Highlight Last Count Colo${maybeU}r`} InputLabelProps={{ shrink: true }} value={prefHighlightLastCountColor}></TextField>
+                <HexColorPicker color={prefHighlightLastCountColor} onChange={setPrefHighlightLastCountColor} />
                 </>}
 
             </FormGroup>
@@ -442,8 +487,22 @@ import Count from '../components/Count';
               InputLabelProps={{ shrink: true }}
               value={prefReplyTimeInterval}
             />
+            <TextField
+              sx={{ m: 2, minWidth: 200}}
+              id="ReplyTimeOpacity"
+              type="number"
+              inputProps={{ min: "0", max: "1", step: 0.01 }}
+              onInput={(e) => {
+                const value = parseFloat((e.target as HTMLInputElement).value || "0");
+                if (value >= 0 && value <= 1) {
+                  setPrefStrickenCountOpacity(value);
+                }
+              }}
+              label="Stricken Count Opacity"
+              InputLabelProps={{ shrink: true }}
+              value={prefStrickenCountOpacity}
+            />
             {/* </FormGroup>  */}
-            <Button sx={{m: 2}} color="success" variant="contained" onClick={() => {savePrefs()}}>Save</Button>
             </Box>
         </Container>
         </>
