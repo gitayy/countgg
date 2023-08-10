@@ -13,6 +13,7 @@ import remarkGfm from "remark-gfm";
 import ReactMarkdown from "react-markdown";
 import data from '@emoji-mart/data/sets/14/twitter.json'
 import { UserContext } from "../utils/contexts/UserContext";
+import ErrorBoundary from "./ErrorBoundary";
 
 const CountMobile = memo((props: any) => {
 
@@ -150,7 +151,21 @@ const CountMobile = memo((props: any) => {
       <Box sx={{ display: 'flex', flexDirection: 'row' }}>
         <CardContent sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, pb: 0, overflowWrap: 'anywhere', '&:last-child': {pb: '0px'} }}>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end' }}>
-                <Typography component="span" variant="body1" fontFamily={'Verdana'} fontSize={14} color={"text.primary"} sx={{whiteSpace: 'pre-wrap', mr: 1}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment.startsWith('\n') ? `\u00A0${props.post.comment}` : props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography fontFamily={'Verdana'} fontSize={14} component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
+                <Typography component="span" variant="body1" fontFamily={'Verdana'} fontSize={14} color={"text.primary"} sx={{whiteSpace: 'pre-wrap', mr: 1}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}
+                {props.post.comment && (
+                <ErrorBoundary comment={props.post.comment}>
+                  <ReactMarkdown
+                          children={
+                            props.post.comment.startsWith('\n')
+                              ? `\u00A0${props.post.comment}`
+                              : props.post.comment
+                          }
+                          components={components}
+                          remarkPlugins={[remarkGfm]}
+                        />
+                </ErrorBoundary>
+                )}
+                {props.post.isCommentDeleted && <Typography fontFamily={'Verdana'} fontSize={14} component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
             <Typography fontSize={13} fontFamily={'Verdana'} component="span">
                 <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`);}} href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`}>{renderedCounter.emoji ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}` : renderedCounter.name}</Link>&nbsp;
               </Typography>
@@ -285,7 +300,21 @@ return (
           <Grid item xs={10} lg={7}>
             <Box sx={{ display: 'flex', flexDirection: 'row' }}>
               <Box sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, overflowWrap: 'anywhere' }}>
-                <Typography component="div" variant="body2" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}{props.post.comment && <ReactMarkdown children={props.post.comment.startsWith('\n') ? `\u00A0${props.post.comment}` : props.post.comment} components={components} remarkPlugins={[remarkGfm]} />}{props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }</Typography>
+                <Typography component="div" variant="body2" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}
+                {props.post.comment && (
+                <ErrorBoundary comment={props.post.comment}>
+                  <ReactMarkdown
+                          children={
+                            props.post.comment.startsWith('\n')
+                              ? `\u00A0${props.post.comment}`
+                              : props.post.comment
+                          }
+                          components={components}
+                          remarkPlugins={[remarkGfm]}
+                        />
+                </ErrorBoundary>
+                )}
+                {props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }</Typography>
               </Box>
             </Box>
             </Grid>
