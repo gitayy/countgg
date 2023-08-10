@@ -157,8 +157,8 @@ const CountMobile = memo((props: any) => {
                   <ReactMarkdown
                           children={
                             props.post.comment.startsWith('\n')
-                              ? `\u00A0${props.post.comment}`
-                              : props.post.comment
+                              ? `\u00A0${props.post.comment.replace(/>/g, '&gt;')}`
+                              : props.post.comment.replace(/>/g, '&gt;')
                           }
                           components={components}
                           remarkPlugins={[remarkGfm]}
@@ -306,8 +306,8 @@ return (
                   <ReactMarkdown
                           children={
                             props.post.comment.startsWith('\n')
-                              ? `\u00A0${props.post.comment}`
-                              : props.post.comment
+                              ? `\u00A0${props.post.comment.replace(/>/g, '&gt;')}`
+                              : props.post.comment.replace(/>/g, '&gt;')
                           }
                           components={components}
                           remarkPlugins={[remarkGfm]}

@@ -114,6 +114,7 @@ const Count = memo((props: any) => {
   
   const components = {
     p: ('span' as any),
+    // blockquote: ({ children }) => <>&gt;{children}</>,
     li: ({ children }) => <li style={{whiteSpace: 'initial'}}>{children}</li>,
     code: ({ children }) => { return (Object.keys(data.emojis).includes((children[0] as string).toLowerCase()) ? EmojiTest({id: (children[0] as string).toLowerCase(), size: 24, set: 'twitter'}) : <code>{children}</code>)}
   }
@@ -152,8 +153,8 @@ const Count = memo((props: any) => {
                   <ReactMarkdown
                           children={
                             props.post.comment.startsWith('\n')
-                              ? `\u00A0${props.post.comment}`
-                              : props.post.comment
+                              ? `\u00A0${props.post.comment.replace(/>/g, '&gt;')}`
+                              : props.post.comment.replace(/>/g, '&gt;')
                           }
                           components={components}
                           remarkPlugins={[remarkGfm]}
