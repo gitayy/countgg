@@ -718,24 +718,26 @@ const CountList = memo((props: any) => {
 
       const [submitHeight, setSubmitHeight] = useState(76);
 
-      useEffect(() => {
-        const submit = submitRef.current;
+      // useEffect(() => {
+      //   const submit = submitRef.current;
 
-        if(!submit) return;
+      //   if(!submit) return;
     
-        const resizeObserver = new ResizeObserver(() => {
-          // The size of the textbox has changed. 
-          if(submitRef.current) {
-            setSubmitHeight(submitRef.current.getBoundingClientRect().height);
-          } 
-        });
+      //   console.log("Making new resize observerer");
+      //   const resizeObserver = new ResizeObserver(() => {
+      //     console.log("Resize observerer!");
+      //     // The size of the textbox has changed. 
+      //     if(submitRef.current) {
+      //       setSubmitHeight(Math.floor(submitRef.current.getBoundingClientRect().height));
+      //     } 
+      //   });
     
-        resizeObserver.observe(submit);
+      //   resizeObserver.observe(submit);
     
-        return () => {
-          resizeObserver.unobserve(submit);
-        };
-      }, [submitRef.current]);
+      //   return () => {
+      //     resizeObserver.unobserve(submit);
+      //   };
+      // }, [submitRef.current]);
 
       if(user && user.pref_load_from_bottom) {
         return (<>

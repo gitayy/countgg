@@ -5,6 +5,7 @@ import {
   ThreadType,
   AllegianceType,
   Item,
+  PostType,
 } from './types';
 
 
@@ -94,6 +95,34 @@ axios.post(
   CONFIG
 );
 
+export const loadOlderCounts = (thread_name?: string, uuid?: string, limit?: number, commentsOnly?: boolean) =>
+axios.get<{counts: PostType[], loadedOldest: boolean, loadedNewest: boolean}>(
+  `${API_URL}/thread/loadOlderCounts`,
+  {
+    params: {
+      thread_name: thread_name,
+      uuid: uuid,
+      limit: limit,
+      commentsOnly: commentsOnly,
+    },
+    ...CONFIG
+  },
+);
+
+export const loadNewerCounts = (thread_name?: string, uuid?: string, limit?: number, commentsOnly?: boolean) =>
+axios.get<{counts: PostType[], loadedOldest: boolean, loadedNewest: boolean}>(
+  `${API_URL}/thread/loadNewerCounts`,
+  {
+    params: {
+      thread_name: thread_name,
+      uuid: uuid,
+      limit: limit,
+      commentsOnly: commentsOnly,
+    },
+    ...CONFIG
+  },
+);
+
 export const getMentions = (from: number|undefined) =>
 axios.get(
   `${API_URL}/counter/getMentions`,
@@ -101,7 +130,6 @@ axios.get(
     params: {from: from},
     ...CONFIG
   },
-  
 );
 
 export const getCountByUuid = (uuid: string) =>

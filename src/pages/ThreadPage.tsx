@@ -284,8 +284,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           useEffect(() => {
 
           if(isMounted.current && loading == false && socketStatus === "LIVE" && dingSound !== null) {
-            console.log("Ok");
-            console.log(dingSound);
             socket.emit('watch', thread_name)
 
             socket.on(`watcher_count`, function(data) {

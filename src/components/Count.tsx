@@ -149,17 +149,20 @@ const Count = memo((props: any) => {
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end' }}>
               <Typography component="span" variant="body1" fontFamily={'Verdana'} fontSize={14} color={"text.primary"} sx={{whiteSpace: 'pre-wrap', mr: 1}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}
               {props.post.comment && (
-                <ErrorBoundary comment={props.post.comment}>
-                  <ReactMarkdown
-                          children={
-                            props.post.comment.startsWith('\n')
-                              ? `\u00A0${props.post.comment.replace(/>/g, '&gt;')}`
-                              : props.post.comment.replace(/>/g, '&gt;')
-                          }
-                          components={components}
-                          remarkPlugins={[remarkGfm]}
-                        />
-                </ErrorBoundary>
+                <>{props.post.comment.startsWith('\n')
+                ? `\u00A0${props.post.comment}`
+                : props.post.comment}</>
+                // <ErrorBoundary comment={props.post.comment}>
+                //   <ReactMarkdown
+                //           children={
+                //             props.post.comment.startsWith('\n')
+                //               ? `\u00A0${props.post.comment.replace(/>/g, '&gt;')}`
+                //               : props.post.comment.replace(/>/g, '&gt;')
+                //           }
+                //           components={components}
+                //           remarkPlugins={[remarkGfm]}
+                //         />
+                // </ErrorBoundary>
                 )}
                 {props.post.isCommentDeleted && <Typography fontFamily={'Verdana'} fontSize={14} component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
           <Typography fontSize={13} fontFamily={'Verdana'} component="span">
@@ -265,17 +268,20 @@ const Count = memo((props: any) => {
                 <CardContent sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, pb: 0, overflowWrap: 'anywhere', '&:last-child': {pb: '2px'} }}>
                         <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}
                         {props.post.comment && (
-                          <ErrorBoundary comment={props.post.comment}>
-                            <ReactMarkdown
-                                    children={
-                                      props.post.comment.startsWith('\n')
-                                        ? `\u00A0${props.post.comment}`
-                                        : props.post.comment
-                                    }
-                                    components={components}
-                                    remarkPlugins={[remarkGfm]}
-                                  />
-                          </ErrorBoundary>
+                          <>{props.post.comment.startsWith('\n')
+                          ? `\u00A0${props.post.comment}`
+                          : props.post.comment}</>
+                          // <ErrorBoundary comment={props.post.comment}>
+                          //   <ReactMarkdown
+                          //           children={
+                          //             props.post.comment.startsWith('\n')
+                          //               ? `\u00A0${props.post.comment}`
+                          //               : props.post.comment
+                          //           }
+                          //           components={components}
+                          //           remarkPlugins={[remarkGfm]}
+                          //         />
+                          // </ErrorBoundary>
                           )}
                         {props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
                     <Typography variant="subtitle1" component="div">

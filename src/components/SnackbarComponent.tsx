@@ -49,6 +49,20 @@ export const SnackbarComponent = () => {
             }, 5000);
           });
 
+          socket.on(`celebration`, function(data) {
+            setSnack({ message: data.message, severity: 'success', open: true, url: `/`})
+            setConfetti(true);
+            setTimeout(() => {
+                setSnack({
+                    message: '',
+                    severity: '',
+                    open: false,
+                    url: ''
+                  });
+                  setConfetti(false);
+            }, 5000);
+          });
+
           socket.on(`item`, function(data) {
             setSnack({ message: `New ${data.item ? data.item.category : "item"} unlocked: ${data.item ? data.item.name : "???"}`, severity: 'success', open: true, url: `/prefs`})
             setConfetti(true);
