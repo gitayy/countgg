@@ -58,7 +58,7 @@ export const getFreeSecretAchievement = () =>
 axios.get<any>(`${API_URL}/counter/free_secret_achievement`, CONFIG);
 
 export const getThreadStats = (threadName: string, dateStr: string|undefined) =>
-axios.post<{stats: {gets: object[], assists: object[], palindromes: object[], repdigits: object[], speed: object[], leaderboard: object[], last_updated: string}, counters: Counter[]}>(`${API_URL}/thread/stats/threadStats`, {thread: threadName, dateStr: dateStr}, CONFIG);
+axios.post<{stats: {gets: object[], assists: object[], palindromes: object[], repdigits: object[], speed: object[], leaderboard: object[], last_updated: string, last_updated_uuid: string}[], counters: Counter[]}>(`${API_URL}/thread/stats/threadStats`, {thread: threadName, dateStr: dateStr}, CONFIG);
 
 export const updateCounter = (counter: Counter) =>
 axios.post(

@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from 'react';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useFetchLoadCounter } from '../utils/hooks/useFetchLoadCounter';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
-import { Box, Button, MenuItem, Select, Tab, Typography } from '@mui/material';
+import { Avatar, Box, Button, Card, CardContent, Chip, LinearProgress, MenuItem, Select, Tab, Typography } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -11,15 +11,20 @@ import { useFetchAchievements } from '../utils/hooks/useFetchAchievements';
 import { Achievements } from '../components/Achievements';
 import { Loading } from '../components/Loading';
 import { CounterCard } from '../components/CounterCard';
-import { convertToTimestamp, formatDateExact } from '../utils/helpers';
+import { calculateLevel, convertToTimestamp, formatDateExact, formatTimeDiff } from '../utils/helpers';
 import { adminToggleBan, adminToggleMute } from '../utils/api';
 import { AchievementType } from '../utils/types';
 import { UserContext } from '../utils/contexts/UserContext';
+import LeaderboardGraph from '../components/LeaderboardGraph';
+import { XPDisplay } from '../components/XPDisplay';
+import Spoiler from '../components/Spoiler';
+import CountggLogo2 from '../assets/emotes/gg.png'
+
 
   export const CounterPage = () => {
     const params = useParams();
     const counterId:string = params.counterId || '';
-    const { counter, loading } = useContext(UserContext);
+    const { counter, loading, user } = useContext(UserContext);
     const newSocket = useContext(SocketContext);
     const { loadedCounter, loadedCounterStats, loadedCounterLoading } = useFetchLoadCounter(counterId);
     // const { loadedCounterStats, loadedCounterStatsLoading } = useFetchLoadCounterStats(counterId);
@@ -112,16 +117,42 @@ import { UserContext } from '../utils/contexts/UserContext';
                 </TabList>
               </Box>
               <TabPanel value="1">
+                <Typography variant='h5'>Info for {loadedCounter.name}
+                <Chip
+                sx={{mx: 0.5}}
+                avatar={<Avatar src={loadedCounter.avatar.length > 5 ? `https://cdn.discordapp.com/avatars/${loadedCounter.discordId}/${loadedCounter.avatar}` : CountggLogo2} />}
+                label={`UUID: ${loadedCounter.uuid}`}
+                />
+                <Chip
+                sx={{mx: 0.5}}
+                avatar={<Avatar src={loadedCounter.avatar.length > 5 ? `https://cdn.discordapp.com/avatars/${loadedCounter.discordId}/${loadedCounter.avatar}` : CountggLogo2} />}
+                label={`ID: ${loadedCounter.id}`}
+                />
+                </Typography>
+                <Typography>{convertToTimestamp(loadedCounter.uuid) !== null ? `Joined: ${formatDateExact(convertToTimestamp(loadedCounter.uuid) as number)}` : `Error calculating join date.`}</Typography>
+                <Typography>{convertToTimestamp(loadedCounter.uuid) !== null ? `Member for: ${formatTimeDiff(convertToTimestamp(loadedCounter.uuid) as number, Date.now())}` : `Error calculating join date.`}</Typography>
+                <Card>
+                  <div style={{ backgroundColor: loadedCounter.color, height: 100 }} />
+                  <CardContent>
+                    <Typography variant="h5" color="text.primary">
+                      Color: {loadedCounter.color}
+                    </Typography>
+                  </CardContent>
+                </Card>
+                
+                <Card sx={{my: 2, p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                  <Typography variant="body1">LVL {calculateLevel(loadedCounter.xp).level}</Typography>
+                  <LinearProgress variant="determinate" color='secondary' title={`${loadedCounter.xp.toString()} / ${calculateLevel(loadedCounter.xp).xpRequired}`} value={((loadedCounter.xp - calculateLevel(loadedCounter.xp).minXP) / (calculateLevel(loadedCounter.xp).xpRequired - calculateLevel(loadedCounter.xp).minXP)) * 100} sx={{borderRadius: '10px', width: '100%'}} />
+                  <Typography sx={{fontSize: '9px', mt: 0.5}}>{`${parseInt(`${loadedCounter.xp}`).toLocaleString()} / ${calculateLevel(loadedCounter.xp).xpRequired.toLocaleString()}`}</Typography>
+                </Card>
+                {user && loadedCounter.uuid === user.uuid && <Spoiler title={`Time online`}><Typography>Time online (est.): {formatTimeDiff(0, parseFloat(user.timeOnline || '0'))}</Typography><Typography variant='body2'>This value is unreliable.</Typography></Spoiler>}
                 {counter && counter.roles.includes('admin') && <Button variant='contained' color='error' onClick={toggleBan}>{loadedCounter.roles.includes('banned') ? 'Unban User' : 'Ban User'}</Button>}
                 {counter && counter.roles.includes('admin') && <Button variant='contained' color='error' onClick={toggleMute}>{loadedCounter.roles.includes('muted') ? 'Unmute User' : 'Mute User'}</Button>}
-                <Typography variant='h5'>Info for {loadedCounter.name}</Typography>
-                <Typography>{convertToTimestamp(loadedCounter.uuid) !== null ? `Joined: ${formatDateExact(convertToTimestamp(loadedCounter.uuid) as number)}` : `Error calculating join date.`}</Typography>
-                <Typography>UUID: {loadedCounter.uuid}</Typography>
-                <Typography>Numeric ID: {loadedCounter.id}</Typography>
-                <Typography>Color: {loadedCounter.color}</Typography>
               </TabPanel>
               <TabPanel value="2">
-              <Select
+                In progress for a redesign.
+                {/* <LeaderboardGraph stats={loadedCounterStats} cum={true}></LeaderboardGraph> */}
+              {/* <Select
                 value={statThread}
                 onChange={(e) => setStatThread((e.target as HTMLSelectElement).value)}
               >
@@ -136,7 +167,7 @@ import { UserContext } from '../utils/contexts/UserContext';
                   <Typography sx={{mb: 2}} component={'div'}>Parity: {loadedCounterStats[statThread]['odds'].toLocaleString()} ({(loadedCounterStats[statThread]['odds'] / loadedCounterStats[statThread]['counts']).toLocaleString(undefined, {style: 'percent'})}) odds // {loadedCounterStats[statThread]['evens'].toLocaleString()} ({(loadedCounterStats[statThread]['evens'] / loadedCounterStats[statThread]['counts']).toLocaleString(undefined, {style: 'percent'})}) evens</Typography>
                   <Typography sx={{mb: 2}} component={'div'}>Avg. time since last post: {loadedCounterStats[statThread]['avg_post_reply'].toLocaleString()}ms</Typography>
                   <Typography sx={{mb: 2}} component={'div'}>Avg. time since last count: {loadedCounterStats[statThread]['avg_count_reply'].toLocaleString()}ms</Typography>
-                </>}
+                </>} */}
               </TabPanel>
               <TabPanel value="3">
                 <Typography variant='h5'>Unlocked</Typography>

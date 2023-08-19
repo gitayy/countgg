@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { createElement } from 'react';
 import { validate as uuid_validate } from 'uuid';
 
-export const site_version = "v1.3.2";
+export const site_version = "v1.3.3";
 export var loaded_site_version;
 export function updateSiteVer(siteVer: string) {
   loaded_site_version = siteVer;
@@ -208,6 +208,24 @@ export const uuidParseNano = (uuid) => {
   }
   return BigInt(ts);
 }
+
+export const uuidv1ToMs = (uuidv1) => {
+  try {
+    const uuid_arr = uuidv1.split( '-' );
+    const time_str = [
+      uuid_arr[ 2 ].substring( 1 ),
+      uuid_arr[ 1 ],
+      uuid_arr[ 0 ]
+    ].join( '' );
+    const int_time = parseInt( time_str, 16 ) - 122192928000000000;
+    const int_millisec = Math.floor( int_time / 10000 );
+    return int_millisec;
+  } catch(err) {
+    console.log(`Error converting uuidv1 to ms: ${uuidv1}`);
+    console.log(err);
+    return 0;
+  }  
+};
 
 export const formatTimeDiff = (time1, time2) => {
   const diff = Math.abs(time2 - time1);

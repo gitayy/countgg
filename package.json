@@ -47,6 +47,7 @@
     "react-scripts": "^5.0.1",
     "react-terminal-ui": "^1.0.3",
     "react-window": "^1.8.9",
+    "recharts": "^2.7.3",
     "remark-gfm": "^3.0.1",
     "seedrandom": "^3.0.5",
     "socket.io-client": "^4.5.1",

@@ -47,6 +47,7 @@ import { ThreadsContext } from './utils/contexts/ThreadsContext';
 import { HelmetProvider, Helmet } from 'react-helmet-async';
 import { RPSPage } from './pages/RPSPage';
 import { MentionsPage } from './pages/MentionsPage';
+import { LCPage } from './pages/LCPage';
 
 function App() {
   const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, totalCounters, setTotalCounters } = useFetchUser();
@@ -254,6 +255,7 @@ function App() {
             <Route path="/contact-us" element={<AboutPage />} />
             <Route path="/huh" element={<TheRockPage />} />
             <Route path="/rps" element={<RPSPage />} />
+            <Route path="/r/livecounting" element={<LCPage />} />
             <Route path="/lrwoed" element={<LrwoedPage />} />
             <Route path="/rewards" element={<SeasonPage />} />
             {user && counter && <Route path="/prefs" element={<PrefsPage />} />}

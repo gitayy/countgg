@@ -32,6 +32,10 @@ export type User = {
   money: number;
   inventory: any[];
   isUhh: boolean;
+  reddit: string;
+  redditAccess: string;
+  redditRefresh: string;
+  timeOnline?: string;
 };
 
 export type Counter = {
@@ -154,4 +158,18 @@ export type Item = {
   quantity: number;
   levelToUnlock: number;
   achievementId: number;
+}
+
+export type RedditPost = {
+  author: string;
+  body: string;
+  body_html: string;
+  created: number;
+  created_utc: number;
+  embeds: string[];
+  id: string;
+  mobile_embeds: string[];
+  name: string;
+  stricken: boolean;
+  latency?: number;
 }

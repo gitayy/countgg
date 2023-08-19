@@ -17,13 +17,15 @@ import { UserContext } from '../utils/contexts/UserContext';
 import { DatePicker } from '@mui/x-date-pickers';
 import moment from 'moment-timezone';
 import ClearIcon from "@mui/icons-material/Clear";
+import LeaderboardGraph from '../components/LeaderboardGraph';
 
 export const StatsPage = () => {
   const { counter, loading } = useContext(UserContext);
   const [page, setPage] = useState<number|undefined>();
   const [count, setCount] = useState(0);
   const [urlCheck, setUrlCheck] = useState(false);
-  const [stats, setStats] = useState<{gets: object[], assists: object[], palindromes: object[], repdigits: object[], speed: object[], leaderboard: object[], last_updated: string}>();
+  const [allStats, setAllStats] = useState<{gets: object[], assists: object[], palindromes: object[], repdigits: object[], speed: object[], leaderboard: object[], last_updated: string, last_updated_uuid: string}[]>();
+  const [stats, setStats] = useState<{gets: object[], assists: object[], palindromes: object[], repdigits: object[], speed: object[], leaderboard: object[], last_updated: string, last_updated_uuid: string}>();
   const [statsLoading, setStatsLoading] = useState(true);
   const isMounted = useIsMounted();
   const navigate = useNavigate();
@@ -42,6 +44,8 @@ export const StatsPage = () => {
     const maxDate = moment().tz('America/New_York').startOf('day').unix()
     return date.unix() < minDate || date.unix() >= maxDate;
   };
+
+  let currentStats;
 
   const location = useLocation();
     useEffect(() => {
@@ -80,14 +84,19 @@ export const StatsPage = () => {
         setStatsLoading(true);
         let dateStr;
         if(selectedDate && !disableDates(selectedDate)) {dateStr = selectedDate._d.toISOString().slice(0,10);}
-        // if(selectedDate && !disableDates(selectedDate)) {console.log("Heyo this date looks good:", selectedDate);} else if(selectedDate) {console.log("This date looks BAD:", selectedDate);}
-        getThreadStats(name, dateStr)
+        getThreadStats(name, undefined)
         .then(({ data }) => {
           if(isMounted.current) {
             for (const counter of data.counters) {
               addCounterToCache(counter)
             }
-            setStats(data.stats);
+            setAllStats(data.stats)
+            console.log("Ok");
+            console.log(data.stats);
+            console.log(dateStr);
+            console.log(data.stats && data.stats[dateStr]);
+            console.log(dateStr && data && data[dateStr] ? data[dateStr] : dateStr ? {} : data['all'] ? data['all'] : {});
+            setStats(dateStr && data && data.stats && data.stats[dateStr] ? data.stats[dateStr] : dateStr ? {} : data.stats && data.stats['all'] ? data.stats['all'] : {})
             setStatsLoading(false);
           }
           
@@ -98,7 +107,13 @@ export const StatsPage = () => {
       }
       }
     if(urlCheck && page && name) {fetchData();}
-  }, [urlCheck, page, name, selectedDate]);
+  }, [urlCheck, page, name]);
+
+  useEffect(() => {
+      let dateStr;
+      if(selectedDate && !disableDates(selectedDate)) {dateStr = selectedDate._d.toISOString().slice(0,10);}
+    setStats(dateStr && allStats &&  allStats[dateStr] ? allStats[dateStr] : dateStr ? {} : allStats && allStats['all'] ? allStats['all'] : {})
+  }, [selectedDate])
 
   const [tabValue, setTabValue] = useState('tab_0');
 
@@ -188,11 +203,12 @@ export const StatsPage = () => {
           )}
         />
       </Box>
-        {stats && selectedThread && <>
+        {stats && !statsLoading && selectedThread && <>
           <TabContext value={tabValue}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
         <TabList onChange={handleTabChange} variant={'scrollable'} allowScrollButtonsMobile aria-label="Live Game Tabs">
           <Tab label="Leaderboard" value="tab_0" />
+          <Tab label="Graphs" value="tab_01" />
           {stats['gets'] && Object.keys(stats['gets']).length > 0 && <Tab label="Gets" value="tab_1" />}
           {stats['assists'] && Object.keys(stats['assists']).length > 0 && <Tab label="Assists" value="tab_2" />}
           {stats['palindromes'] && Object.keys(stats['palindromes']).length > 0 && <Tab label="Palindromes" value="tab_3" />}
@@ -204,6 +220,11 @@ export const StatsPage = () => {
         <TabPanel value="tab_0" sx={{}}>
           <Typography variant='h6'>Leaderboard</Typography>
           <LeaderboardTable stat={stats.leaderboard} justLB={true}></LeaderboardTable>
+        </TabPanel>
+        <TabPanel value="tab_01" sx={{display: 'flex', justifyContent: 'center', flexDirection: 'column', alignItems: 'center'}}>
+          <Typography variant='h6'>Graphs</Typography>
+          <LeaderboardGraph stats={allStats} cum={true} />
+          <LeaderboardGraph stats={allStats} cum={false} />
         </TabPanel>
         <TabPanel value="tab_1" sx={{}}>
           <Typography variant='h6'>Gets</Typography>
@@ -229,7 +250,8 @@ export const StatsPage = () => {
         </TabContext>
 
         
-        <Typography variant='body2' sx={{mt: 1}}>Last updated: {formatDateExact(convertToTimestamp(stats.last_updated) || 0)} ({stats.last_updated})</Typography></>}
+        <Typography variant='body2' sx={{mt: 1}}>Last updated: {formatDateExact(convertToTimestamp(stats.last_updated_uuid) || 0)} ({stats.last_updated_uuid})</Typography></>}
+        {statsLoading && <Loading />}
       </Box>
     )
   } else {

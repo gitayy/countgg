@@ -72,6 +72,10 @@ html,
   box-shadow: inset 0em 0em 0em 100em rgb(207 213 255 / 15%);
 }
 
+.redditPost:hover {
+  box-shadow: inset 0em 0em 0em 100em rgb(207 213 255 / 15%);
+}
+
 .count:hover .countActionsDesktop {
   display: flex;
 }
