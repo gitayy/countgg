@@ -84,6 +84,7 @@
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
-    "@types/styled-components": "^5.1.19"
+    "@types/styled-components": "^5.1.19",
+    "@babel/plugin-proposal-private-property-in-object": "^7.16.0"
   }
 }

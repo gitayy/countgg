@@ -9,7 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
-import { Avatar, Badge, Button, CardMedia, Divider, Drawer, Link, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Modal, Skeleton, Step, StepLabel, Stepper, Tooltip, useTheme } from '@mui/material';
+import { Avatar, Badge, Button, CardMedia, Chip, Divider, Drawer, Link, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Modal, Skeleton, Step, StepLabel, Stepper, Theme, Tooltip, useMediaQuery, useTheme } from '@mui/material';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import HomeIcon from '@mui/icons-material/Home';
 import StadiumIcon from '@mui/icons-material/Stadium';
@@ -35,6 +35,7 @@ import { SocketContext } from '../utils/contexts/SocketContext';
 import LinearProgress from '@mui/material/LinearProgress';
 import { XPDisplay } from './XPDisplay';
 import EmailIcon from '@mui/icons-material/Email';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ export const Sidebar = () => {
 
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
-  const { loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter } = useContext(UserContext);
+  const { loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, user } = useContext(UserContext);
   const socket = useContext(SocketContext);
 
   useEffect(() => {
@@ -64,6 +65,8 @@ export const Sidebar = () => {
 
   const [modalOpen, setModalOpen] = useState<boolean>(((counter && !counter.color) && true) || false);
   const [registrationToggle, setRegistrationToggle] = useState(true);
+
+  const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -377,8 +380,22 @@ export const Sidebar = () => {
               <Skeleton variant="circular" width={40} height={40}></Skeleton>
             </Box>
           )}
-          {counter && (
+          {counter && user && (
             <div>
+              {isDesktop && <Chip
+              icon={<MonetizationOnIcon style={{color: theme.palette.mode == 'dark' ? 'gold' : 'black'}} />}
+              label={Number(user.money).toLocaleString()}
+              size='small'
+              onClick={() => {navigate(`/shop`)}}
+              sx={{backgroundColor: theme.palette.mode == 'dark' ?  'rgba(255, 215, 0, 0.5)' : 'gold',
+              cursor: 'pointer',
+              '& .MuiChip-label': {
+                height: '100%', 
+                lineHeight: '200%'
+              },
+              }}
+              // sx={{backgroundColor: '#937F13', color: 'white'}}
+               />}
               <IconButton
                 size="large"
                 aria-label="account of current user"

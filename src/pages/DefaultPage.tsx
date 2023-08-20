@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import { useContext, useEffect, useState } from 'react';
-import { Alert, AlertColor, Badge, Box, Button, CardMedia, Grid, Link, Modal, Paper, Snackbar, Typography, useTheme } from '@mui/material';
+import { Alert, AlertColor, Badge, Box, Button, CardMedia, Chip, Grid, Link, Modal, Paper, Snackbar, Typography, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
 import SwingBg from '../assets/swing2.png';
 import { calculateLevel, modalStyle } from '../utils/helpers';
@@ -151,10 +151,12 @@ export const DefaultPage = () => {
     </Snackbar>
       <Box sx={{ bgcolor: theme.palette.mode === 'light' ? 'primary.light' : 'background.paper', flexGrow: 1, p: 2, backgroundImage: isCat ? `url(https://placekitten.com/1500/1000?${new Date().getDay()})` : 'none', backgroundSize: `100% 100%`, backgroundRepeat: 'no-repeat'}}>
       <Typography variant="h1" sx={{ textAlign: 'center', m: 1 }}>
-     <Typography variant='h1' component={'span'} sx={{ textAlign: 'center', background: 'linear-gradient(to right, #FF8C00, #FFA500)', }}>&nbsp;{totalCounts.toLocaleString()}&nbsp;</Typography> Counts
+     <Typography variant='h1' component={'span'} sx={{ textAlign: 'center', borderRadius: '10px', background: 'linear-gradient(to right, #FF8C00, #FFA500)', }}>&nbsp;{totalCounts.toLocaleString()}&nbsp;</Typography> Counts
       </Typography>
       <Typography variant="body1" component={'div'} sx={{ textAlign: 'center', m: 1, }}>
-        <Box component='span' sx={{bgcolor: `success.light`, display: 'inline-block', width: 8, height: 8, borderRadius: '50%'}}></Box> {usersOnline.toLocaleString()} user{usersOnline === 1 ? `` : 's'} online | {sumCounts.toLocaleString()} counts today by {sumUsers} user{sumUsers === 1 ? `` : 's'}
+         <Chip variant='filled' color='success' 
+        //  icon={<Box component='span' sx={{ml: '9px!important', bgcolor: theme.palette.mode === 'dark' ? `#44b700` : `#7fff19`, display: 'inline-block', width: 8, height: 8, borderRadius: '50%'}}></Box>} 
+         label={`${usersOnline.toLocaleString()} user${usersOnline === 1 ? `` : 's'} online`} /> <Chip label={`${sumCounts.toLocaleString()} counts today`} />
       </Typography>
         {!counter && <Paper elevation={8} sx={{mb: 2, display: 'flex', alignItems: 'stretch', background: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),url(${SwingBg})`, minHeight: '33vh', p: 2, backgroundSize: 'cover', backgroundPosition: 'top right'}}>
           <Grid container direction={'row'}>
@@ -334,7 +336,7 @@ export const DefaultPage = () => {
             </Paper>
             </Link>
           </Grid>
-          {/* <Grid item xs={6}>
+          {user && counter && <Grid item xs={6}>
           <Link color={'inherit'} underline='none' href={`/shop`} onClick={(e) => {e.preventDefault();navigate(`/shop`);}}>
             <Paper className="littlescale card" elevation={8} sx={{
               background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
@@ -349,7 +351,7 @@ export const DefaultPage = () => {
             </Grid>
             </Paper>
             </Link>
-          </Grid> */}
+          </Grid>}
           {/* <Grid item xs={6} md={3}>
           <Link color={'inherit'} underline='none' href={`/blog`} onClick={(e) => {e.preventDefault();navigate(`/blog`);}}>
             <Paper className="littlescale card" elevation={8} sx={{
@@ -366,7 +368,7 @@ export const DefaultPage = () => {
             </Paper>
             </Link>
           </Grid> */}
-          <Grid item xs={12} sm={6} sx={{padding: "6px"}}>
+          {user && counter && <Grid item xs={12} sm={6} sx={{padding: "6px"}}>
             {unclaimedRewards > 0
             ?
             <Box className='littlescale'>
@@ -403,7 +405,7 @@ export const DefaultPage = () => {
             </Paper>
             </Link>
           }
-          </Grid>
+          </Grid>}
           {/* <Grid item xs={6}>
           <Link color={'inherit'} underline='none' href={`/servers`} onClick={(e) => {e.preventDefault();navigate(`/servers`);}}>
             <Paper className="littlescale card" elevation={8} sx={{

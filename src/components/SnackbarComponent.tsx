@@ -91,19 +91,33 @@ export const SnackbarComponent = () => {
 
           socket.on(`setCounter`, function(data) {
             if(setCounter) {
+              console.log("Setting counter");
+              console.log(data);
               setCounter(data);
             }
           });
 
           socket.on(`setItems`, function(data) {
             if(setItems) {
+              console.log("Setting items");
+              console.log(data);
               setItems(data);
             }
           });
 
           socket.on(`setUser`, function(data) {
             if(setUser) {
+              console.log("Setting user");
+              console.log(data);
               setUser(data);
+            }
+          });
+          
+          socket.on(`setUserItems`, function(data) {
+            if(setItems) {
+              console.log("Setting user items");
+              console.log(data);
+              setItems(data);
             }
           });
 

@@ -48,6 +48,7 @@ import { HelmetProvider, Helmet } from 'react-helmet-async';
 import { RPSPage } from './pages/RPSPage';
 import { MentionsPage } from './pages/MentionsPage';
 import { LCPage } from './pages/LCPage';
+import { ShopPage } from './pages/ShopPage';
 
 function App() {
   const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, totalCounters, setTotalCounters } = useFetchUser();
@@ -260,6 +261,7 @@ function App() {
             <Route path="/rewards" element={<SeasonPage />} />
             {user && counter && <Route path="/prefs" element={<PrefsPage />} />}
             {user && counter && <Route path="/mentions" element={<MentionsPage />} />}
+            {user && counter && <Route path="/shop" element={<ShopPage />} />}
           </Routes>
           </HelmetProvider>
           </ThreadsContext.Provider>
