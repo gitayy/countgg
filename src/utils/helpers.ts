@@ -115,6 +115,7 @@ export const cachedCounters = {'[SYSTEM]': {
   cardBorderStyle: 'no_border_circle', 
   xp: 0,
   color: '#222222', 
+  emoji: "🤖",
 }} as { [key: string]: Counter };
 
 export const fakePost = (counter?: Counter): PostType => {
