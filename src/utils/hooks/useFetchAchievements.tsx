@@ -13,8 +13,6 @@ export function useFetchAchievements(uuid?: string) {
           getAchievements(uuid)
           .then(({ data }) => {
             if (isMounted.current) { 
-              console.log("HOHOOHOH");
-              console.log(data);
               setAchievements(data.user_achievements); 
               setAllAchievements(data.all_achievements);
             }
