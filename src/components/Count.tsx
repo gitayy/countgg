@@ -1,7 +1,7 @@
 import { Box, CardMedia, CardContent, Typography, Grid,  IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Link, Popover, useTheme, Table, Modal, Avatar } from "@mui/material";
 import { Component, ErrorInfo, ReactNode, memo, useContext, useRef, useState } from "react";
 import CountggLogo2 from '../assets/emotes/gg.png'
-import { cachedCounters, convertMsToFancyTime, defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName } from "../utils/helpers";
+import { cachedCounters, convertMsToFancyTime, customBlockquotePlugin, defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName, transformMarkdown } from "../utils/helpers";
 import { Counter } from "../utils/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
@@ -149,19 +149,19 @@ const Count = memo((props: any) => {
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end' }}>
               <Typography component="span" variant="body1" fontFamily={'Verdana'} fontSize={14} color={"text.primary"} sx={{whiteSpace: 'pre-wrap', mr: 1}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}
               {props.post.comment && (
-                <>{props.post.comment.startsWith('\n')
-                ? `\u00A0${props.post.comment}`
-                : props.post.comment}</>
+                // <>{props.post.comment.startsWith('\n')
+                // ? `\u00A0${props.post.comment}`
+                // : props.post.comment}</>
                 // <ErrorBoundary comment={props.post.comment}>
-                //   <ReactMarkdown
-                //           children={
-                //             props.post.comment.startsWith('\n')
-                //               ? `\u00A0${props.post.comment.replace(/>/g, '&gt;')}`
-                //               : props.post.comment.replace(/>/g, '&gt;')
-                //           }
-                //           components={components}
-                //           remarkPlugins={[remarkGfm]}
-                //         />
+                  <ReactMarkdown
+                          children={
+                            props.post.comment.startsWith('\n')
+                              ? `\u00A0${transformMarkdown(props.post.comment)}`
+                              : transformMarkdown(props.post.comment)
+                          }
+                          components={components}
+                          remarkPlugins={[remarkGfm]}
+                        />
                 // </ErrorBoundary>
                 )}
                 {props.post.isCommentDeleted && <Typography fontFamily={'Verdana'} fontSize={14} component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
@@ -190,10 +190,10 @@ const Count = memo((props: any) => {
     {counter && 
     <Box className="countActionsDesktop" sx={{ display: 'none', justifyContent: 'end' }}>
         <SentimentVerySatisfied sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Reaction" onClick={() => {setPickerOpen(!pickerOpen)}} />
-    {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) &&
+    {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) &&
       <StrikethroughSIcon sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Strike" onClick={() => {setAction('strike'); setOpen(true)}} />
     }
-    {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) &&
+    {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) &&
       <DeleteIcon sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Delete" onClick={() => {setAction('delete'); setOpen(true)}} />}
 
     {pickerOpen && <Popover open={pickerOpen} anchorEl={anchorRef.current} anchorOrigin={{ vertical: 'top', horizontal: -250, }} onClose={() => setPickerOpen(false)}><Picker set={'twitter'} custom={custom_emojis} onEmojiSelect={handleEmojiSelect} /></Popover>}
@@ -315,13 +315,13 @@ const Count = memo((props: any) => {
                 >
                   <SentimentVerySatisfied />
                 </IconButton>
-              {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) && <IconButton
+              {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) && <IconButton
                 aria-label="Strike"
                 onClick={() => {setAction('strike'); setOpen(true)}}
               >
                 <StrikethroughSIcon />
               </IconButton>}
-              {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) && <IconButton
+              {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) && <IconButton
                 aria-label="Delete"
                 onClick={() => {setAction('delete'); setOpen(true)}}
               >

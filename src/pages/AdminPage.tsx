@@ -37,6 +37,11 @@ import { Box, Container, List, ListItem, ListItemButton, ListItemText } from '@m
               <ListItemText primary="Send System Message" />
             </ListItemButton>
           </ListItem>
+          <ListItem disablePadding>
+            <ListItemButton component="a" href="/admin/new_item">
+              <ListItemText primary="New Item" />
+            </ListItemButton>
+          </ListItem>
         </List>
       </Box>
     </Container>

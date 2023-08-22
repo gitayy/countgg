@@ -12,7 +12,7 @@ import { Achievements } from '../components/Achievements';
 import { Loading } from '../components/Loading';
 import { CounterCard } from '../components/CounterCard';
 import { calculateLevel, convertToTimestamp, formatDateExact, formatTimeDiff } from '../utils/helpers';
-import { adminToggleBan, adminToggleMute } from '../utils/api';
+import { modToggleBan, modToggleMute } from '../utils/api';
 import { AchievementType } from '../utils/types';
 import { UserContext } from '../utils/contexts/UserContext';
 import LeaderboardGraph from '../components/LeaderboardGraph';
@@ -80,7 +80,7 @@ import CountggLogo2 from '../assets/emotes/gg.png'
     const toggleBan = async () => {
       if(loadedCounter) {
         try {
-        const res = await adminToggleBan(loadedCounter.uuid);
+        const res = await modToggleBan(loadedCounter.uuid);
         }
         catch(err) {
           console.log("Did not work");
@@ -93,7 +93,7 @@ import CountggLogo2 from '../assets/emotes/gg.png'
     const toggleMute = async () => {
       if(loadedCounter) {
         try {
-        const res = await adminToggleMute(loadedCounter.uuid);
+        const res = await modToggleMute(loadedCounter.uuid);
         }
         catch(err) {
           console.log("Did not work");
@@ -146,8 +146,8 @@ import CountggLogo2 from '../assets/emotes/gg.png'
                   <Typography sx={{fontSize: '9px', mt: 0.5}}>{`${parseInt(`${loadedCounter.xp}`).toLocaleString()} / ${calculateLevel(loadedCounter.xp).xpRequired.toLocaleString()}`}</Typography>
                 </Card>
                 {user && loadedCounter.uuid === user.uuid && <Spoiler title={`Time online`}><Typography>Time online (est.): {formatTimeDiff(0, parseFloat(user.timeOnline || '0'))}</Typography><Typography variant='body2'>This value is unreliable.</Typography></Spoiler>}
-                {counter && counter.roles.includes('admin') && <Button variant='contained' color='error' onClick={toggleBan}>{loadedCounter.roles.includes('banned') ? 'Unban User' : 'Ban User'}</Button>}
-                {counter && counter.roles.includes('admin') && <Button variant='contained' color='error' onClick={toggleMute}>{loadedCounter.roles.includes('muted') ? 'Unmute User' : 'Mute User'}</Button>}
+                {counter && counter.roles.includes('mod') && <Button variant='contained' color='error' onClick={toggleBan}>{loadedCounter.roles.includes('banned') ? 'Unban User' : 'Ban User'}</Button>}
+                {counter && counter.roles.includes('mod') && <Button variant='contained' color='error' onClick={toggleMute}>{loadedCounter.roles.includes('muted') ? 'Unmute User' : 'Mute User'}</Button>}
               </TabPanel>
               <TabPanel value="2">
                 In progress for a redesign.

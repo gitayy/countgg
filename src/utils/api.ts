@@ -240,6 +240,36 @@ axios.post(
   CONFIG
 );
 
+export const adminCreateNewItem = (
+  name: string,
+  internalName: string,
+  description: string,
+  category: string,
+  unlockMethod: string,
+  unlockDescription: string,
+  price: number,
+  quantity: number,
+  levelToUnlock: number,
+  achievementId: number,
+) => {
+  return axios.post(
+    `${API_URL}/counter/createItem`,
+    {
+      name,
+      internal_name: internalName,
+      description,
+      category,
+      unlockMethod,
+      unlockDescription,
+      price,
+      quantity,
+      levelToUnlock,
+      achievementId,
+    },
+    CONFIG
+  );
+};
+
 export const adminAwardAchievement = (counter_uuid: string, achievement_id: number) =>
 axios.post(
   `${API_URL}/counter/awardAchievement`,
@@ -249,23 +279,30 @@ axios.post(
   CONFIG
 );
 
-export const adminToggleThreadLock = (thread_uuid: string) =>
+export const modToggleThreadLock = (thread_uuid: string) =>
 axios.post(
-  `${API_URL}/thread/adminToggleThreadLock`,
+  `${API_URL}/thread/modToggleThreadLock`,
   {thread_uuid: thread_uuid},
   CONFIG
 );
 
-export const adminToggleBan = (uuid: string) =>
+export const modToggleSilentThreadLock = (thread_uuid: string) =>
 axios.post(
-  `${API_URL}/counter/adminToggleBan`,
+  `${API_URL}/thread/modToggleSilentThreadLock`,
+  {thread_uuid: thread_uuid},
+  CONFIG
+);
+
+export const modToggleBan = (uuid: string) =>
+axios.post(
+  `${API_URL}/counter/modToggleBan`,
   {uuid: uuid},
   CONFIG
 );
 
-export const adminToggleMute = (uuid: string) =>
+export const modToggleMute = (uuid: string) =>
 axios.post(
-  `${API_URL}/counter/adminToggleMute`,
+  `${API_URL}/counter/modToggleMute`,
   {uuid: uuid},
   CONFIG
 );

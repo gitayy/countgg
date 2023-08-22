@@ -49,7 +49,7 @@ export function CounterCard(props) {
                         <Typography component="span" variant="body2" sx={{}}>@{props.counter.username}</Typography>
                         </Typography>
                     <Typography className={titleInfo && titleInfo.style ? titleInfo.style : 'title-default'} variant="subtitle1" color={"text.secondary"} component="div">
-                      {props.counter.title}&nbsp;
+                    {props.counter.roles.includes('admin') ? <Chip component={"span"} size="small" label={"Admin"} sx={{mr: 1, bgcolor: "gold", color: "black"}} /> : props.counter.roles.includes('mod') ? <Chip component={"span"} size="small" label={"Moderator"} sx={{mr: 1, bgcolor: "lightgreen", color: "black"}} /> : null}{props.counter.title}&nbsp;
                       </Typography>
 
                       {props.fullSize && <Typography variant="subtitle2" color={"text.secondary"} component="div">

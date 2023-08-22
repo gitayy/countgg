@@ -17,7 +17,7 @@ import TabPanel from '@mui/lab/TabPanel';
 import { useFetchRecentChats } from '../utils/hooks/useFetchRecentChats';
 import remarkGfm from 'remark-gfm';
 import ReactMarkdown from 'react-markdown';
-import { adminToggleThreadLock } from '../utils/api';
+import { modToggleSilentThreadLock, modToggleThreadLock } from '../utils/api';
 import { DailyHOCTable } from '../components/DailyHOCTable';
 import { SplitsTable } from '../components/SplitsTable';
 import { useFavicon } from '../utils/hooks/useFavicon';
@@ -582,11 +582,31 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       const lockThread = async () => {
         if(thread) {
           try {
-          const res = await adminToggleThreadLock(thread.uuid);
+          const res = await modToggleThreadLock(thread.uuid);
             if(res.status == 201) {
               setSnackbarSeverity('success');
               setSnackbarOpen(true)
               setSnackbarMessage('Thread lock toggled')
+            }
+          }
+          catch(err) {
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true)
+            setSnackbarMessage('Error: Submission rejected. If this comes as a surprise, please reach out to discord mods via DM!')
+          }
+        } else {
+          console.log("Thread not loaded yet.");
+        }
+      };
+
+      const silentLock = async () => {
+        if(thread) {
+          try {
+          const res = await modToggleSilentThreadLock(thread.uuid);
+            if(res.status == 201) {
+              setSnackbarSeverity('success');
+              setSnackbarOpen(true)
+              setSnackbarMessage('Thread lock (silent) toggled')
             }
           }
           catch(err) {
@@ -743,12 +763,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       ))}
           </Box>
           return (
-            // picker
-          //   <Box
-          //   component="nav"
-          //   sx={{ width: { lg: "100%" }, flexShrink: { lg: 0 } }}
-          //   aria-label="Thread Picker"
-          // >
           <>
             <Drawer
               variant="temporary"
@@ -799,7 +813,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         return (        
         recentCountsLoading
         ? <Box sx={{flexGrow: 1, display: 'flex', justifyContent: 'center', bgcolor: 'background.paper', minHeight: 500, height: 'calc(100vh - 65px)' }}><Skeleton animation='wave' sx={{width: '50%', justifyContent: 'center'}} /></Box>
-        : <CountList thread={thread} recentCountsLoading={recentCountsLoading} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} refScroll={refScroll} newRecentPostLoaded={newRecentPostLoaded} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} setLoadedNewest={setLoadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentCountsRef} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
+        : <CountList thread={thread} recentCountsLoading={recentCountsLoading} chatsOnly={false} setCachedCounts={setCachedCounts} loadedNewestRef={loadedNewestRef} refScroll={refScroll} newRecentPostLoaded={newRecentPostLoaded} loadedOldest={loadedOldest} cachedCounts={cachedCounts} loadedNewest={loadedNewest} setLoadedNewest={setLoadedNewest} loadedOldCount={loadedOldCount} loadedNewCount={loadedNewCount} isScrolledToTheBottom={isScrolledToTheBottom} isScrolledToTheTop={isScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={isScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} blud={JSON.stringify(recentCountsRef.current)} recentCounts={recentCountsRef} handleLatencyCheckChange={handleLatencyCheckChange} handleLatencyChange={handleLatencyChange} handleSubmit={handleSubmit}></CountList>
         )
       }, [cachedCounts, thread, thread_name, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, loading])
 
@@ -807,7 +821,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         return (   
           recentChatsLoading 
           ? <Box sx={{flexGrow: 1, display: 'flex', justifyContent: 'center', bgcolor: 'background.paper', minHeight: 500, height: 'calc(100vh - 65px)' }}><Skeleton animation='wave' sx={{width: '50%', justifyContent: 'center'}} /></Box> 
-          : <CountList thread={thread} isDesktop={isDesktop} chatsOnly={true} newRecentPostLoaded={undefined} loadedOldest={loadedOldestChats} loadedNewest={loadedNewestChats} setLoadedNewest={setLoadedNewestChats} loadedOldCount={loadedOldChat} loadedNewCount={loadedNewChat} isScrolledToTheBottom={chatsIsScrolledToTheBottom} isScrolledToTheTop={chatsIsScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={chatsIsScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} recentCounts={recentChatsRef} handleLatencyCheckChange={undefined} handleLatencyChange={undefined} handleSubmit={undefined}></CountList>
+          : <CountList thread={thread} isDesktop={isDesktop} chatsOnly={true} newRecentPostLoaded={undefined} loadedOldest={loadedOldestChats} loadedNewest={loadedNewestChats} setLoadedNewest={setLoadedNewestChats} loadedOldCount={loadedOldChat} loadedNewCount={loadedNewChat} isScrolledToTheBottom={chatsIsScrolledToTheBottom} isScrolledToTheTop={chatsIsScrolledToTheTop} thread_name={thread_name} isScrolledToNewest={chatsIsScrolledToNewest} cachedCounters={cachedCounters} isMounted={isMounted} context={context} blud={JSON.stringify(recentChatsRef.current)} recentCounts={recentChatsRef} handleLatencyCheckChange={undefined} handleLatencyChange={undefined} handleSubmit={undefined}></CountList>
         )
       }, [recentChatsLoading, newChatsLoadedState, thread_name, loadedNewChat, loadedOldChat, deleteComments, loadedOldestChats, loadedNewestChats, chatsIsScrolledToNewest, loading])
 
@@ -841,7 +855,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.description : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           <Typography variant="h5" sx={{mt: 2, mb: 1}}>Rules</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.rules : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
-          {counter && thread && counter.roles.includes('admin') && <Button variant='contained' onClick={lockThread}>{thread.locked ? "Unlock Thread" : "Lock Thread"}</Button>}
+          {counter && thread && counter.roles.includes('mod') && <Button variant='contained' onClick={lockThread}>{thread.locked ? "Unlock Thread" : "Lock Thread"}</Button>}
+          {counter && thread && counter.roles.includes('mod') && <Button variant='contained' onClick={silentLock}>Silent Lock Toggle</Button>}
           {thread ? <><Box sx={{mt: 2}}>
             <Typography sx={{fontSize: 9}} variant='body2'>Auto validated: {thread.autoValidated.toString()}</Typography>
             <Typography sx={{fontSize: 9}} variant='body2'>Double counting: {thread.allowDoublePosts.toString()}</Typography>

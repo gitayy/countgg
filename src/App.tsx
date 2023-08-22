@@ -10,7 +10,7 @@ import { AdminApprovePage } from './pages/AdminApprovePage';
 import { CookiesProvider, useCookies } from 'react-cookie';
 import { socket, SocketContext } from './utils/contexts/SocketContext';
 import { CounterPage } from './pages/CounterPage';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { SnackbarComponent } from './components/SnackbarComponent';
 import { PrefsPage } from './pages/PrefsPage';
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
@@ -37,7 +37,6 @@ import BlogPage from './pages/BlogPage';
 import { AchievementsPage } from './pages/AchievementsPage';
 import { AchievementPage } from './pages/AchievementPage';
 import { ContestPage } from './pages/ContestPage';
-import { AdminAchievementPage } from './pages/AdminAchievementPage';
 import { TheRockPage } from './pages/TheRockPage';
 import LrwoedPage from './lrwoed/LrwoedPage';
 import { AdminSystemMessagePage } from './pages/AdminSystemMessagePage';
@@ -49,8 +48,12 @@ import { RPSPage } from './pages/RPSPage';
 import { MentionsPage } from './pages/MentionsPage';
 import { LCPage } from './pages/LCPage';
 import { ShopPage } from './pages/ShopPage';
+import { Loading } from './components/Loading';
+import AdminAchievementPage from './pages/AdminAchievementPage';
+import AdminNewItemPage from './pages/AdminNewItemPage';
 
 function App() {
+
   const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, totalCounters, setTotalCounters } = useFetchUser();
   const { allThreads, allThreadsLoading } = useFetchAllThreads();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
@@ -231,6 +234,7 @@ function App() {
             {counter && counter.roles.includes('admin') && <Route path="/admin/threads" element={<AdminThreadPage />} />}
             {counter && counter.roles.includes('admin') && <Route path="/admin/approve" element={<AdminApprovePage />} />}
             {counter && counter.roles.includes('admin') && <Route path="/admin/achievements" element={<AdminAchievementPage />} />}
+            {counter && counter.roles.includes('admin') && <Route path="/admin/new_item" element={<AdminNewItemPage />} />}
             {counter && counter.roles.includes('admin') && <Route path="/admin/system_message" element={<AdminSystemMessagePage />} />}
             {counter && counter.roles.includes('discord_verified') && <Route path="/register" element={<RegisterPage />} />}
             <Route path="/" element={<DefaultPage />} />

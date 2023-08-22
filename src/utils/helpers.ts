@@ -1,6 +1,7 @@
 import { Counter, PostType } from './types';
 import { format } from 'date-fns';
 import { createElement } from 'react';
+import { visit } from 'unist-util-visit';
 import { validate as uuid_validate } from 'uuid';
 
 export const site_version = "v1.3.3";
@@ -139,6 +140,57 @@ export const fakePost = (counter?: Counter): PostType => {
     isValidCount: true,
     validCountNumber: 1234567,
   }
+}
+
+export function transformMarkdown(markdownContent) {
+  // Replace blockquotes
+  const transformedContent = markdownContent.replace(/^>/gm, '&gt;');
+
+  // Replace nested lists
+  const simplifiedContent = transformedContent.replace(/^[\*-]\ ([\*-]\s)+/gm, '* ');
+  // const simplifiedContent = transformedContent.replace(/^([*-]) \1+/gm, '$1 ');
+  // const simplifiedContent = transformedContent.replace(/([*-])\s\1+/g, '$1 ');
+
+
+  return simplifiedContent;
+}
+
+export function customBlockquotePlugin() {
+  return (tree) => {
+    const newChildren: any = [];
+
+    tree.children.forEach((node) => {
+      if (node.type !== 'blockquote') {
+        newChildren.push(node);
+      }
+    });
+
+    tree.children = newChildren;
+  };
+  // return (tree) => {
+  //   visit(tree, 'blockquote', (node) => {
+  //     let content = '';
+  //     let blockquoteNode = node;
+
+  //     // Collect the content from nested blockquotes
+  //     while (blockquoteNode.children.length === 1 && blockquoteNode.children[0].type === 'blockquote') {
+  //       blockquoteNode = blockquoteNode.children[0];
+  //       content = blockquoteNode.children[0].value + '\n' + content;
+  //     }
+
+  //     // Remove the nested blockquotes
+  //     blockquoteNode.children = [];
+
+  //     // Create a custom component node
+  //     const customComponentNode = {
+  //       type: 'jsx',
+  //       value: `>yep`,
+  //     };
+
+  //     // Replace the original blockquote node with the custom component node
+  //     node.children = [customComponentNode];
+  //   });
+  // };
 }
 
 export const addCounterToCache = (counter: Counter) => {

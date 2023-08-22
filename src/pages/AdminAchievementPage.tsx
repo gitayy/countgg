@@ -5,7 +5,7 @@ import { adminAwardAchievement, adminCreateThread } from '../utils/api';
 import { ThreadType } from '../utils/types';
 import { UserContext } from '../utils/contexts/UserContext';
   
-  export const AdminAchievementPage = () => {
+  const AdminAchievementPage = () => {
     const { counter, loading } = useContext(UserContext);
     const { allThreads, allThreadsLoading } = useFetchAllThreads();
     const [selectedThread, setSelectedThread] = useState<ThreadType>();
@@ -86,3 +86,4 @@ import { UserContext } from '../utils/contexts/UserContext';
       )}
   };
   
+  export default AdminAchievementPage;

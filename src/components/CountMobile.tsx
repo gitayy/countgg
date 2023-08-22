@@ -195,10 +195,10 @@ const CountMobile = memo((props: any) => {
       {counter && 
       <Box className="countActionsDesktop" sx={{ display: 'none', justifyContent: 'end' }}>
           <SentimentVerySatisfied sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Reaction" onClick={() => {setPickerOpen(!pickerOpen)}} />
-      {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) &&
+      {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) &&
         <StrikethroughSIcon sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Strike" onClick={() => {setAction('strike'); setOpen(true)}} />
       }
-      {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) &&
+      {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) &&
         <DeleteIcon sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Delete" onClick={() => {setAction('delete'); setOpen(true)}} />}
   
       {pickerOpen && <Popover open={pickerOpen} anchorEl={anchorRef.current} anchorOrigin={{ vertical: 'top', horizontal: -250, }} onClose={() => setPickerOpen(false)}><Picker set={'twitter'} custom={custom_emojis} onEmojiSelect={handleEmojiSelect} /></Popover>}
@@ -263,13 +263,13 @@ return (
                           <Box ref={anchorRef}></Box>
                           {counter && 
                           <Box className="countActions" sx={{ display: 'flex', justifyContent: 'end', scale: '80%'}}>
-                                      {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) && <IconButton
+                                      {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) && <IconButton
               aria-label="Strike"
               onClick={() => {setAction('strike'); setOpen(true)}}
             >
               <StrikethroughSIcon />
             </IconButton>}
-            {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("admin"))) && <IconButton
+            {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) && <IconButton
               aria-label="Delete"
               onClick={() => {setAction('delete'); setOpen(true)}}
             >
