@@ -1,6 +1,6 @@
 import {  Box, CardMedia, Typography, Grid, IconButton, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, useTheme, Link, Popover, CardContent, Avatar } from "@mui/material";
 import { memo, useContext, useRef, useState } from "react";
-import { cachedCounters, defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName } from "../utils/helpers";
+import { cachedCounters, defaultCounter, EmojiTest, formatDate, formatDateWithMilliseconds, getReplyColorName, transformMarkdown } from "../utils/helpers";
 import { Counter } from "../utils/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
@@ -153,19 +153,19 @@ const CountMobile = memo((props: any) => {
         <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end' }}>
                 <Typography component="span" variant="body1" fontFamily={'Verdana'} fontSize={14} color={"text.primary"} sx={{whiteSpace: 'pre-wrap', mr: 1}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}
                 {props.post.comment && (
-                  <>{props.post.comment.startsWith('\n')
-                  ? `\u00A0${props.post.comment}`
-                  : props.post.comment}</>
+                  // <>{props.post.comment.startsWith('\n')
+                  // ? `\u00A0${props.post.comment}`
+                  // : props.post.comment}</>
                 // <ErrorBoundary comment={props.post.comment}>
-                //   <ReactMarkdown
-                //           children={
-                //             props.post.comment.startsWith('\n')
-                //               ? `\u00A0${props.post.comment.replace(/>/g, '&gt;')}`
-                //               : props.post.comment.replace(/>/g, '&gt;')
-                //           }
-                //           components={components}
-                //           remarkPlugins={[remarkGfm]}
-                //         />
+                  <ReactMarkdown
+                          children={
+                            props.post.comment.startsWith('\n')
+                              ? `\u00A0${transformMarkdown(props.post.comment)}`
+                              : transformMarkdown(props.post.comment)
+                          }
+                          components={components}
+                          remarkPlugins={[remarkGfm]}
+                        />
                 // </ErrorBoundary>
                 )}
                 {props.post.isCommentDeleted && <Typography fontFamily={'Verdana'} fontSize={14} component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
@@ -305,19 +305,19 @@ return (
               <Box sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, overflowWrap: 'anywhere' }}>
                 <Typography component="div" variant="body2" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}
                 {props.post.comment && (
-                  <>{props.post.comment.startsWith('\n')
-                  ? `\u00A0${props.post.comment}`
-                  : props.post.comment}</>
+                  // <>{props.post.comment.startsWith('\n')
+                  // ? `\u00A0${props.post.comment}`
+                  // : props.post.comment}</>
                 // <ErrorBoundary comment={props.post.comment}>
-                //   <ReactMarkdown
-                //           children={
-                //             props.post.comment.startsWith('\n')
-                //               ? `\u00A0${props.post.comment.replace(/>/g, '&gt;')}`
-                //               : props.post.comment.replace(/>/g, '&gt;')
-                //           }
-                //           components={components}
-                //           remarkPlugins={[remarkGfm]}
-                //         />
+                      <ReactMarkdown
+                          children={
+                            props.post.comment.startsWith('\n')
+                              ? `\u00A0${transformMarkdown(props.post.comment)}`
+                              : transformMarkdown(props.post.comment)
+                          }
+                          components={components}
+                          remarkPlugins={[remarkGfm]}
+                        />
                 // </ErrorBoundary>
                 )}
                 {props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography> }</Typography>

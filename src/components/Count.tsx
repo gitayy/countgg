@@ -268,9 +268,19 @@ const Count = memo((props: any) => {
                 <CardContent sx={{ maxWidth: 'fit-content', flex: '1 0 auto', p: 0, pb: 0, overflowWrap: 'anywhere', '&:last-child': {pb: '2px'} }}>
                         <Typography component="div" variant="body1" color={"text.primary"} sx={{whiteSpace: 'pre-wrap'}}><span style={{textDecoration: props.post.stricken ? "line-through" : "none"}}>{countContentCopy}</span>{maybeSpace}
                         {props.post.comment && (
-                          <>{props.post.comment.startsWith('\n')
-                          ? `\u00A0${props.post.comment}`
-                          : props.post.comment}</>
+                          // <>{props.post.comment.startsWith('\n')
+                          // ? `\u00A0${props.post.comment}`
+                          // : props.post.comment}</> 
+                          <ReactMarkdown
+                          children={
+                            props.post.comment.startsWith('\n')
+                              ? `\u00A0${transformMarkdown(props.post.comment)}`
+                              : transformMarkdown(props.post.comment)
+                          }
+                          components={components}
+                          remarkPlugins={[remarkGfm]}
+                          />
+
                           // <ErrorBoundary comment={props.post.comment}>
                           //   <ReactMarkdown
                           //           children={
@@ -282,7 +292,7 @@ const Count = memo((props: any) => {
                           //           remarkPlugins={[remarkGfm]}
                           //         />
                           // </ErrorBoundary>
-                          )}
+                        )}
                         {props.post.isCommentDeleted && <Typography component={'span'} sx={{width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black'}}>[deleted]</Typography>}</Typography>
                     <Typography variant="subtitle1" component="div">
                         <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`);}} href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`}>{renderedCounter.emoji ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}` : renderedCounter.name}</Link>&nbsp;
