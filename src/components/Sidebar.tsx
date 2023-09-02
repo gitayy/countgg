@@ -36,6 +36,8 @@ import LinearProgress from '@mui/material/LinearProgress';
 import { XPDisplay } from './XPDisplay';
 import EmailIcon from '@mui/icons-material/Email';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import StarsIcon from '@mui/icons-material/Stars';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -121,7 +123,7 @@ export const Sidebar = () => {
             <ListItemText primary={'Home'} />          
           </ListItemButton>          
         </ListItem></Link>
-        <Link color={'inherit'} underline='none' href={`/mentions`} onClick={(e) => {e.preventDefault();navigate(`/mentions`);}}>
+        {/* <Link color={'inherit'} underline='none' href={`/mentions`} onClick={(e) => {e.preventDefault();navigate(`/mentions`);}}>
         <ListItem onClick={handleDrawerToggle} key={'home'}  disablePadding>
           <ListItemButton>
             <ListItemIcon>
@@ -129,7 +131,7 @@ export const Sidebar = () => {
             </ListItemIcon>
             <ListItemText primary={'Mentions'} />          
           </ListItemButton>          
-        </ListItem></Link>
+        </ListItem></Link> */}
         <Link color={'inherit'} underline='none' href={`/threads`} onClick={(e) => {e.preventDefault();navigate(`/threads`);}}>
         <ListItem onClick={handleDrawerToggle} key={'threads'} disablePadding>
           <ListItemButton>
@@ -204,6 +206,24 @@ export const Sidebar = () => {
             <ListItemText primary={'Post Finder'} />
           </ListItemButton>
         </ListItem></Link>
+        {counter && counter.roles.includes('counter') && <Link color={'inherit'} underline='none' href={`/rewards`} onClick={(e) => {e.preventDefault();navigate(`/rewards`);}}>
+        <ListItem onClick={handleDrawerToggle} key={'rewards'}  disablePadding>
+          <ListItemButton>
+            <ListItemIcon>
+              <StarsIcon />
+            </ListItemIcon>
+            <ListItemText primary={'Rewards'} />          
+          </ListItemButton>          
+        </ListItem></Link>}
+        {counter && counter.roles.includes('counter') && <Link color={'inherit'} underline='none' href={`/shop`} onClick={(e) => {e.preventDefault();navigate(`/shop`);}}>
+        <ListItem onClick={handleDrawerToggle} key={'shop'}  disablePadding>
+          <ListItemButton>
+            <ListItemIcon>
+              <ShoppingCartIcon />
+            </ListItemIcon>
+            <ListItemText primary={'Shop'} />          
+          </ListItemButton>          
+        </ListItem></Link>}
       </List>
       <Divider />
       {counter && counter.roles.includes("admin") && <><List><Link color={'inherit'} underline='none' href={`/admin`} onClick={(e) => {e.preventDefault();navigate(`/admin`);}}><ListItem onClick={handleDrawerToggle} key={'admin'} disablePadding>

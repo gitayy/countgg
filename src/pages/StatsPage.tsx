@@ -30,17 +30,13 @@ export const StatsPage = () => {
   const isMounted = useIsMounted();
   const navigate = useNavigate();
   const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
+  const [blud, setBlud] = useState(Math.random())
 
-  const [selectedDate, setSelectedDate] = useState<any | null>(null);
+  const [selectedStartDate, setSelectedStartDate] = useState<any | null>(null);
+  const [selectedEndDate, setSelectedEndDate] = useState<any | null>(null);
 
   const disableDates = (date: any) => {
     const minDate = moment('2023-02-22').tz('America/New_York').startOf('day').unix()
-    const maxDate = moment().tz('America/New_York').startOf('day').unix()
-    return date.unix() < minDate || date.unix() >= maxDate;
-  };
-
-  const disableYears = (date: any) => {
-    const minDate = moment('2023-01-01').tz('America/New_York').startOf('day').unix()
     const maxDate = moment().tz('America/New_York').startOf('day').unix()
     return date.unix() < minDate || date.unix() >= maxDate;
   };
@@ -82,8 +78,11 @@ export const StatsPage = () => {
     async function fetchData() {
       if(page) {
         setStatsLoading(true);
-        let dateStr;
-        if(selectedDate && !disableDates(selectedDate)) {dateStr = selectedDate._d.toISOString().slice(0,10);}
+        let startdateStr;
+        let enddateStr;
+        // if(selectedDate && !disableDates(selectedDate)) {dateStr = selectedDate._d.toISOString().slice(0,10);}
+        if(selectedStartDate && !disableDates(selectedStartDate)) {startdateStr = selectedStartDate._d.toISOString().slice(0,10);}
+        if(selectedEndDate && !disableDates(selectedEndDate)) {enddateStr = selectedEndDate._d.toISOString().slice(0,10);}
         getThreadStats(name, undefined)
         .then(({ data }) => {
           if(isMounted.current) {
@@ -91,12 +90,15 @@ export const StatsPage = () => {
               addCounterToCache(counter)
             }
             setAllStats(data.stats)
-            console.log("Ok");
-            console.log(data.stats);
-            console.log(dateStr);
-            console.log(data.stats && data.stats[dateStr]);
-            console.log(dateStr && data && data[dateStr] ? data[dateStr] : dateStr ? {} : data['all'] ? data['all'] : {});
-            setStats(dateStr && data && data.stats && data.stats[dateStr] ? data.stats[dateStr] : dateStr ? {} : data.stats && data.stats['all'] ? data.stats['all'] : {})
+            // console.log("Pog? Allstats set to ");
+            // console.log(data.stats);
+            // console.log("Ok");
+            // console.log(data.stats);
+            // console.log(dateStr);
+            // console.log(data.stats && data.stats[dateStr]);
+            // console.log(dateStr && data && data[dateStr] ? data[dateStr] : dateStr ? {} : data['all'] ? data['all'] : {});
+            setStats(getStatsBetween(startdateStr, enddateStr));
+            // setStats(dateStr && data && data.stats && data.stats[dateStr] ? data.stats[dateStr] : dateStr ? {} : data.stats && data.stats['all'] ? data.stats['all'] : {})
             setStatsLoading(false);
           }
           
@@ -109,11 +111,120 @@ export const StatsPage = () => {
     if(urlCheck && page && name) {fetchData();}
   }, [urlCheck, page, name]);
 
+  // useEffect(() => {
+  //     let dateStr;
+  //     if(selectedDate && !disableDates(selectedDate)) {dateStr = selectedDate._d.toISOString().slice(0,10);}
+  //   setStats(dateStr && allStats &&  allStats[dateStr] ? allStats[dateStr] : dateStr ? {} : allStats && allStats['all'] ? allStats['all'] : {})
+  // }, [selectedStartDate, selectedEndDate])
+
+  function getFirstDate(stats) {
+    let firstDate: string | null = null;
+  
+    for (const dateStr in stats) {
+      if (stats.hasOwnProperty(dateStr)) {
+        if (!firstDate || dateStr < firstDate) {
+          firstDate = dateStr;
+        }
+      }
+    }
+  
+    return firstDate;
+  }
+  function getNextDate(dateStr) {
+    // const currentDate = new Date(dateStr);
+    // currentDate.setDate(currentDate.getDate() + 1);
+    const currentDate = moment(dateStr).tz('America/New_York')
+    // .startOf('day').unix() * 1000
+    currentDate.add(1, 'days')
+    return currentDate.toISOString().slice(0, 10);
+  }
+  function mergeStats(stats1: any, stats2: any): any {
+    if (!stats1) return stats2;
+    if (!stats2) return stats1;
+    // console.log("Merging stats...");
+  
+    // Merge the last_updated and last_updated_uuid
+    const latestStats = {
+      last_updated: Math.max(stats1.last_updated, stats2.last_updated),
+      last_updated_uuid:
+        stats1.last_updated > stats2.last_updated
+          ? stats1.last_updated_uuid
+          : stats2.last_updated_uuid,
+    };
+  
+    // Merge the other objects by adding values for each key
+    const keysToMerge = ['gets', 'assists', 'palindromes', 'repdigits', 'leaderboard'];
+  
+    keysToMerge.forEach((key) => {
+      latestStats[key] = {};
+  
+      if (stats1[key]) {
+        for (const id in stats1[key]) {
+          if (stats1[key].hasOwnProperty(id)) {
+            latestStats[key][id] = (latestStats[key][id] || 0) + stats1[key][id];
+          }
+        }
+      }
+  
+      if (stats2[key]) {
+        for (const id in stats2[key]) {
+          if (stats2[key].hasOwnProperty(id)) {
+            latestStats[key][id] = (latestStats[key][id] || 0) + stats2[key][id];
+          }
+        }
+      }
+    });
+
+    latestStats['speed'] = (stats1.speed || []).concat(stats2.speed || []);
+  
+    return latestStats;
+  }
+
+  function getStatsBetween(startDateStr:string | undefined =undefined, endDateStr:string | undefined=undefined) {
+    console.log(`Get stats between ${startDateStr} and ${endDateStr}`);
+    if(!allStats) {console.error("No allStats... this is bad");console.log(allStats);return undefined;}
+    if (startDateStr && endDateStr) {
+      let stats = allStats[startDateStr];
+      for (let date = getNextDate(startDateStr); date <= endDateStr; date = getNextDate(date)) {
+        // console.log("ayo: ", date);
+        stats = mergeStats(stats, allStats[date])
+        // console.log(stats);
+      }
+      // setStats(stats);
+      return stats;
+    } else if (endDateStr) {
+      // Only end date is defined, merge stats from the first day up to end date
+      let firstDate = getFirstDate(allStats);
+      if(firstDate === null) {console.error("No first date... this is bad");return undefined;}
+      let stats = allStats[firstDate];
+      for (let date = getNextDate(firstDate); date <= endDateStr; date = getNextDate(date)) {
+        stats = mergeStats(stats, allStats[date])
+      }
+      // setStats(stats);
+      return stats;
+    } else if (startDateStr) {
+      // Only start date is defined, get stats for just that start date
+      // setStats(allStats[startDateStr]);
+      return allStats[startDateStr];
+    } else {
+      // Neither start nor end date is defined, use the 'all' stats
+      console.log("Setting to all");
+      console.log(allStats['all']);
+      // setStats(allStats['all']);
+      return allStats['all']
+    }
+  }
+
+
+
   useEffect(() => {
-      let dateStr;
-      if(selectedDate && !disableDates(selectedDate)) {dateStr = selectedDate._d.toISOString().slice(0,10);}
-    setStats(dateStr && allStats &&  allStats[dateStr] ? allStats[dateStr] : dateStr ? {} : allStats && allStats['all'] ? allStats['all'] : {})
-  }, [selectedDate])
+    let startDateStr = selectedStartDate && !disableDates(selectedStartDate) ? selectedStartDate._d.toISOString().slice(0, 10) : null;
+    let endDateStr = selectedEndDate && !disableDates(selectedEndDate) ? selectedEndDate._d.toISOString().slice(0, 10) : null;
+  
+    setStats(getStatsBetween(startDateStr, endDateStr));
+    setBlud(Math.random())
+  }, [selectedStartDate, selectedEndDate, allStats]); // Include selectedStartDate and selectedEndDate as dependencies
+  
 
   const [tabValue, setTabValue] = useState('tab_0');
 
@@ -131,9 +242,16 @@ export const StatsPage = () => {
       
     };
 
-    const handleClearDate = () => {
-      setSelectedDate(null);
+    const handleClearStartDate = () => {
+      setSelectedStartDate(null);
     };
+
+    const handleClearEndDate = () => {
+      setSelectedEndDate(null);
+    };
+
+    console.log("Hmm");
+    console.log(stats, !statsLoading, selectedThread);
 
   if(!loading && !allThreadsLoading) {
 
@@ -148,38 +266,41 @@ export const StatsPage = () => {
         >
           <MenuItem key={'all'} value={'all'}>all</MenuItem>
           {allThreads.map(thread => (
-            <MenuItem key={thread.uuid} value={thread.uuid}>{thread.name}</MenuItem>
+            <MenuItem key={thread.uuid} value={thread.uuid}>{thread.title}</MenuItem>
           ))}
         </Select>
       </FormControl>
-      {/* <Autocomplete
-      options={allThreads}
-      getOptionLabel={(option) => option.name}
-      onChange={(event, value) => {
-        console.log(event.target);
-        console.log(event.currentTarget);
-        if(value && value.uuid) {
-          if(event. == 'all') {
-            setSelectedThread({name: 'all', uuid: 'all'});
-          } else {
-            setSelectedThread(value);
-          }
-        }
-        // const selectedOption = allThreads.find((thread) => thread.name === value.na);
-        // if (selectedOption) {
-        //   console.log('Selected UUID:', selectedOption.uuid);
-        // }
-      }}
-      renderInput={(params) => (
-        <TextField {...params} label="Select an option" variant="outlined" />
-      )}
-    /> */}
         <DatePicker
-          label="Select a Date"
-          value={selectedDate}
-          onChange={(date) => setSelectedDate(date)}
-          // shouldDisableDate={disableDates}
-          // shouldDisableYear={disableYears}
+          label="Start Date"
+          value={selectedStartDate}
+          onChange={(date) => setSelectedStartDate(date)}
+          minDate={new Date(moment('2023-02-23').tz('America/New_York').startOf('day').unix() * 1000 - 10000)}
+          maxDate={new Date(moment().tz('America/New_York').startOf('day').unix() * 1000)}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              sx={{mr: 4}}
+              InputProps={{
+                endAdornment: (
+                  <>
+                    {params?.InputProps?.endAdornment}
+                    {selectedStartDate && (
+                      <InputAdornment position="end">
+                        <IconButton onClick={handleClearStartDate}>
+                          <ClearIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    )}
+                  </>
+                ),
+              }}
+            />
+          )}
+        />
+        <DatePicker
+          label="End Date"
+          value={selectedEndDate}
+          onChange={(date) => setSelectedEndDate(date)}
           minDate={new Date(moment('2023-02-23').tz('America/New_York').startOf('day').unix() * 1000 - 10000)}
           maxDate={new Date(moment().tz('America/New_York').startOf('day').unix() * 1000)}
           renderInput={(params) => (
@@ -189,9 +310,9 @@ export const StatsPage = () => {
                 endAdornment: (
                   <>
                     {params?.InputProps?.endAdornment}
-                    {selectedDate && (
+                    {selectedEndDate && (
                       <InputAdornment position="end">
-                        <IconButton onClick={handleClearDate}>
+                        <IconButton onClick={handleClearEndDate}>
                           <ClearIcon />
                         </IconButton>
                       </InputAdornment>
@@ -219,7 +340,7 @@ export const StatsPage = () => {
         <Box sx={{flexGrow: 1, p: 2, bgcolor: 'background.paper', color: 'text.primary'}}>
         <TabPanel value="tab_0" sx={{}}>
           <Typography variant='h6'>Leaderboard</Typography>
-          <LeaderboardTable stat={stats.leaderboard} justLB={true}></LeaderboardTable>
+          <LeaderboardTable stat={stats.leaderboard} blud={blud} justLB={true}></LeaderboardTable>
         </TabPanel>
         <TabPanel value="tab_01" sx={{display: 'flex', justifyContent: 'center', flexDirection: 'column', alignItems: 'center'}}>
           <Typography variant='h6'>Graphs</Typography>
@@ -228,19 +349,19 @@ export const StatsPage = () => {
         </TabPanel>
         <TabPanel value="tab_1" sx={{}}>
           <Typography variant='h6'>Gets</Typography>
-          <LeaderboardTable stat={stats.gets} justLB={true}></LeaderboardTable>
+          <LeaderboardTable stat={stats.gets} blud={blud} justLB={true}></LeaderboardTable>
         </TabPanel>
         <TabPanel value="tab_2" sx={{}}>
           <Typography variant='h6'>Assists</Typography>
-          <LeaderboardTable stat={stats.assists} justLB={true}></LeaderboardTable>
+          <LeaderboardTable stat={stats.assists} blud={blud} justLB={true}></LeaderboardTable>
         </TabPanel>
         <TabPanel value="tab_3" sx={{}}>
           <Typography variant='h6'>Palindromes</Typography>
-          <LeaderboardTable stat={stats.palindromes} justLB={true}></LeaderboardTable>
+          <LeaderboardTable stat={stats.palindromes} blud={blud} justLB={true}></LeaderboardTable>
         </TabPanel>
         <TabPanel value="tab_4" sx={{}}>
           <Typography variant='h6'>Repdigits</Typography>
-          <LeaderboardTable stat={stats.repdigits} justLB={true}></LeaderboardTable>
+          <LeaderboardTable stat={stats.repdigits} blud={blud} justLB={true}></LeaderboardTable>
         </TabPanel>
         <TabPanel value="tab_5" sx={{}}>
           <Typography variant='h6'>Speed</Typography>

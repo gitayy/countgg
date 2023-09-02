@@ -34,6 +34,7 @@ export const SpeedTable = ({ speed, thread }: Props) => {
         obj.timeFancy = formatTimeDiff(timestamp1, timestamp2)
         for (const counter of obj.qualifiedCounters) {
             const time = obj.time || Infinity;
+            if(cachedCounters[counter] && (cachedCounters[counter].roles.includes('banned'))) {continue;}
             if (!bestTimes[counter] || time < bestTimes[counter]['time']) {
                 bestTimes[counter] = obj;
             }
@@ -83,6 +84,7 @@ export const SpeedTable = ({ speed, thread }: Props) => {
           <TableCell>{index + 1}</TableCell>
           <TableCell>
           {cachedCounters[row.counter] ? (
+            cachedCounters[row.counter].roles.includes('banned') ? <>Banned User {cachedCounters[row.counter].uuid}</> :
                   <CardHeader sx={{p: 0}} avatar={cachedCounters[row.counter] && cachedCounters[row.counter].name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${cachedCounters[row.counter].name}`} src={`${cachedCounters[row.counter].avatar.length > 5 && `https://cdn.discordapp.com/avatars/${cachedCounters[row.counter].discordId}/${cachedCounters[row.counter].avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
                   title={<Link color={cachedCounters[row.counter].color} underline='hover' href={`/counter/${cachedCounters[row.counter].username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[row.counter].username}`);}}>
                     {cachedCounters[row.counter].name}
@@ -96,6 +98,14 @@ export const SpeedTable = ({ speed, thread }: Props) => {
           <TableCell>{formatTimeDiff(0, row.obj.time)}</TableCell>
           <TableCell><Link underline="hover" href={`/thread/${thread.name}/${row.obj.start}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}/${row.obj.start}`);}}>{parseInt(row.obj.startCount).toLocaleString()}</Link></TableCell>
           <TableCell><Link underline="hover" href={`/thread/${thread.name}/${row.obj.end}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}/${row.obj.end}`);}}>{parseInt(row.obj.endCount).toLocaleString()}</Link></TableCell>
+          <TableCell>{row.obj.qualifiedCounters.filter(ct => {return ct !== row.counter}).map(ct => {return cachedCounters[ct] 
+          ? <><CardHeader sx={{p: 0}} avatar={cachedCounters[ct] && cachedCounters[ct].name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${cachedCounters[ct].name}`} src={`${cachedCounters[ct].avatar.length > 5 && `https://cdn.discordapp.com/avatars/${cachedCounters[ct].discordId}/${cachedCounters[ct].avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
+          title={<Link color={cachedCounters[ct].color} underline='hover' href={`/counter/${cachedCounters[ct].username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[ct].username}`);}}>
+            {cachedCounters[ct].name}
+            </Link>
+          }></CardHeader></>
+          : <>{ct}</>
+        })}</TableCell>
         </TableRow>
       ));
 
@@ -112,6 +122,7 @@ return (
           <TableCell>Time</TableCell>
           <TableCell>Start</TableCell>
           <TableCell>End</TableCell>
+          <TableCell>Partners</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>{pbLeaderboardRows}</TableBody>

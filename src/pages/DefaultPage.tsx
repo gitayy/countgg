@@ -336,7 +336,7 @@ export const DefaultPage = () => {
             </Paper>
             </Link>
           </Grid>
-          {user && counter && <Grid item xs={6}>
+          {user && counter && <Grid item xs={12} sm={6}>
           <Link color={'inherit'} underline='none' href={`/shop`} onClick={(e) => {e.preventDefault();navigate(`/shop`);}}>
             <Paper className="littlescale card" elevation={8} sx={{
               background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
@@ -406,7 +406,7 @@ export const DefaultPage = () => {
             </Link>
           }
           </Grid>}
-          {/* <Grid item xs={6}>
+          {/* <Grid item xs={12} sm={6}>
           <Link color={'inherit'} underline='none' href={`/servers`} onClick={(e) => {e.preventDefault();navigate(`/servers`);}}>
             <Paper className="littlescale card" elevation={8} sx={{
               background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 

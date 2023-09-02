@@ -16,8 +16,8 @@ let cumulativeSum = 0;
 const {loading, counter} = useContext(UserContext);
 
 const allUserUUIDs = stats && stats['all'] && stats['all']['leaderboard'] ? Object.keys(stats['all']['leaderboard']) : [];
-console.log("AYYYO");
-console.log(allUserUUIDs);
+// console.log("AYYYO");
+// console.log(allUserUUIDs);
 
 
 const [selectedCounters, setSelectedCounters] = useState<Counter[]>([]);

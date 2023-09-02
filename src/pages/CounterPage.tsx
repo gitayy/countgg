@@ -103,7 +103,7 @@ import CountggLogo2 from '../assets/emotes/gg.png'
       }
     };
     
-    if(loadedCounter && !loadedCounterLoading && !achievementsLoading && !unearnedAchievementsLoading && isMounted.current) {
+    if(loadedCounter && !loadedCounterLoading && !achievementsLoading && !unearnedAchievementsLoading && isMounted.current && !loadedCounter.roles.includes('banned')) {
 
       return (
         <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
@@ -179,6 +179,10 @@ import CountggLogo2 from '../assets/emotes/gg.png'
             
         </Box>
         )
+    } else if(loadedCounter && loadedCounter.roles.includes('banned')) {
+      return (
+        <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>This user ({loadedCounter.uuid}) is banned.</Box>
+      )
     } else if(loadedCounterLoading) {
       return (<Loading />
       );

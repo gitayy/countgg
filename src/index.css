@@ -53,6 +53,9 @@ html,
   transform: scale(1.03);
 }
 
+.recharts-surface {
+  overflow: visible!important;
+}
 
 
 .hidden {
@@ -97,7 +100,12 @@ html,
 }
 
 .card_wavypurple {
-  background: linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b) fixed;
+  /* background: linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b) fixed; */
+  /* background: linear-gradient(135deg, #ac255e, #ffb56b) fixed; */
+  /* background: green; */
+  /* background-image: url("https://i.imgur.com/m9Whb1K.png"); */
+  background-image: url("https://i.imgur.com/eLTLUHG.png");
+  background-size: cover;
   color: white;
 }
 
