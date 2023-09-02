@@ -5,7 +5,8 @@ import { cachedCounters, convertMsToFancyTime, customBlockquotePlugin, defaultCo
 import { Counter } from "../utils/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import StrikethroughSIcon from '@mui/icons-material/StrikethroughS';
-import { SentimentVerySatisfied } from '@mui/icons-material';
+// import { SentimentVerySatisfied } from '@mui/icons-material';
+import SentimentVerySatisfied from '@mui/icons-material/SentimentVerySatisfied';
 import { useLocation, useNavigate } from "react-router-dom";
 import Picker from '@emoji-mart/react'; // works in @latest
 import { custom_emojis } from "../utils/custom_emojis";

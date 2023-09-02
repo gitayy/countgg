@@ -1,4 +1,3 @@
-import { LensTwoTone } from "@mui/icons-material";
 import React, { useContext, useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { cachedCounters } from "../utils/helpers";

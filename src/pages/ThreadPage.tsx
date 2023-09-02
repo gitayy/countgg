@@ -23,7 +23,8 @@ import { SplitsTable } from '../components/SplitsTable';
 import { useFavicon } from '../utils/hooks/useFavicon';
 import Timer from '../components/Timer';
 import { ContestPage } from './ContestPage';
-import { InfoOutlined } from '@mui/icons-material';
+// import { InfoOutlined } from '@mui/icons-material';
+import InfoIcon from '@mui/icons-material/Info';
 import moment from 'moment-timezone';
 import { TerminalController } from '../components/TerminalController';
 import { DailyRobTable } from '../components/DailyRobTable';
@@ -840,13 +841,13 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         <TabPanel value="tab_1" sx={{flexGrow: 1, p: 4}}>
           {thread && counter && thread.countBans && thread.countBans.includes(counter.uuid) && 
           <Box display="flex" alignItems="center" sx={{p: 2, border: '1px solid', borderColor: 'warning.main'}}>
-          <Box component={InfoOutlined} sx={{ fontSize: 24, color: 'info.main', mr: 1 }} />
+          <Box component={InfoIcon} sx={{ fontSize: 24, color: 'info.main', mr: 1 }} />
           <Typography variant="body1">
             You can no longer count in this thread. You can still post, but any count attempts will be stricken.
           </Typography>
         </Box>}
         {thread && context && <Box display="flex" alignItems="center" sx={{p: 2, mb: 2, border: '1px solid', borderColor: 'warning.main'}}>
-            <Box component={InfoOutlined} sx={{ fontSize: 24, color: 'info.main', mr: 1 }} />
+            <Box component={InfoIcon} sx={{ fontSize: 24, color: 'info.main', mr: 1 }} />
             <Typography variant="body1">
               You're viewing the context of an old post. For live updates, click <Link href={`/thread/${thread.name}`}>here</Link>.
             </Typography>
