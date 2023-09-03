@@ -19,6 +19,7 @@ import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
 import ChatIcon from '@mui/icons-material/Chat';
 import { DailyHOCTable } from '../components/DailyHOCTable';
 import { Counter, PostType } from '../utils/types';
+import RedditIcon from '@mui/icons-material/Reddit';
 
 export const DefaultPage = () => {
   const navigate = useNavigate();
@@ -275,6 +276,22 @@ export const DefaultPage = () => {
                   <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
                   }}>
                   <AbcIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> LRWOED
+                  </Typography>
+                </Grid>
+              </Grid>
+              </Paper>
+            </Link>
+          </Grid>
+          <Grid item xs={12} sx={{padding: "6px"}}>
+            <Link color={'inherit'} underline='none' href={`/r/livecounting`} onClick={(e) => {e.preventDefault();navigate(`/r/livecounting`);}}>
+              <Paper className="littlescale card" elevation={8} sx={{
+                background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
+                cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={12}>
+                  <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                  }}>
+                  <RedditIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> /r/livecounting
                   </Typography>
                 </Grid>
               </Grid>

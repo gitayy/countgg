@@ -103,7 +103,7 @@ import CountggLogo2 from '../assets/emotes/gg.png'
       }
     };
     
-    if(loadedCounter && !loadedCounterLoading && !achievementsLoading && !unearnedAchievementsLoading && isMounted.current && !loadedCounter.roles.includes('banned')) {
+    if(loadedCounter && !loadedCounterLoading && !achievementsLoading && !unearnedAchievementsLoading && isMounted.current && (!loadedCounter.roles.includes('banned') || (counter && (counter.roles.includes('mod') || counter.roles.includes('admin'))))) {
 
       return (
         <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>

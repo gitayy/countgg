@@ -172,4 +172,10 @@ export type RedditPost = {
   name: string;
   stricken: boolean;
   latency?: number;
+  timestamp: number;
+  real_timestamp?: number;
+  timestamp_prediction_error?: number;
+  fakePost: boolean;
+  counter?: Counter;
+  replyTime?: number;
 }
