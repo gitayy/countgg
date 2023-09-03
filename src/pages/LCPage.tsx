@@ -29,9 +29,9 @@ export const LCPage = () => {
       const [webSocketUrl, setWebSocketUrl] = useState('');
       const [threadDetails, setThreadDetails] = useState();
 
-      const threadId = '1837f3b1zi3xt';
+      const threadId = 'ta535s1hq2je';
       useEffect(() => {
-        const threadId = '1837f3b1zi3xt';
+        const threadId = 'ta535s1hq2je';
         const aboutUrl = `https://www.reddit.com/live/${threadId}/about.json`;
 
         axios.get(aboutUrl)
@@ -140,7 +140,7 @@ export const LCPage = () => {
       useEffect(() => {
 
         if(user && user.redditAccess) {
-        const threadId = '1837f3b1zi3xt';
+        const threadId = 'ta535s1hq2je';
         const aboutUrl = `https://oauth.reddit.com/live/${threadId}`;
 
         axios.get(`${aboutUrl}?limit=25`, {headers: headers})
@@ -315,7 +315,7 @@ useEffect(() => {
     }
   }
 
-  const thread = '1837f3b1zi3xt';
+  const thread = 'ta535s1hq2je';
   const apiUrl = `https://oauth.reddit.com/api/live/${thread}/update`;
   const latency = useRef({});
   const latencyReddit1 = useRef({});
