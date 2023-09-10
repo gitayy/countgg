@@ -7,7 +7,7 @@ import { UserContext } from './utils/contexts/UserContext';
 import { RegisterPage } from './pages/RegisterPage';
 import { Sidebar } from './components/Sidebar';
 import { AdminApprovePage } from './pages/AdminApprovePage';
-// import { CookiesProvider, useCookies } from 'react-cookie';
+import { CookiesProvider, useCookies } from 'react-cookie';
 import { socket, SocketContext } from './utils/contexts/SocketContext';
 import { CounterPage } from './pages/CounterPage';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
@@ -209,7 +209,7 @@ function App() {
         <UserContext.Provider
       value={{user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, totalCounters, setTotalCounters}}
       >
-        {/* <CookiesProvider> */}
+        <CookiesProvider>
         <SocketContext.Provider value={socket}>
         <ThreadsContext.Provider
       value={{allThreads, allThreadsLoading}}
@@ -262,7 +262,7 @@ function App() {
           </Routes>
           </ThreadsContext.Provider>
           </SocketContext.Provider>
-          {/* </CookiesProvider> */}
+          </CookiesProvider>
           </UserContext.Provider>
           </ThemeProvider>
           </ColorModeContext.Provider>
