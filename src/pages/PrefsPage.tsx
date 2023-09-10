@@ -20,9 +20,9 @@ import Count from '../components/Count';
 
     const location = useLocation();
     useEffect(() => {
-        document.title = `Preferences | countGG`;
+        document.title = `Preferences | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
     
@@ -45,6 +45,7 @@ import Count from '../components/Count';
     const [prefTimeSinceLastCount, setPrefTimeSinceLastCount] = useState(user?.pref_time_since_last_count || false)
     const [prefCustomStricken, setPrefCustomStricken] = useState(user?.pref_custom_stricken || 'Disabled')  
     const [prefPostStyle, setPrefPostStyle] = useState(user?.pref_post_style || 'Default')  
+    const [prefPostStyleMobile, setPrefPostStyleMobile] = useState(user?.pref_post_style_mobile || 'Default')  
     const [prefReplyTimeInterval, setPrefReplyTimeInterval] = useState(user?.pref_reply_time_interval || 100);
     const [prefNightModeColors, setPrefNightModeColors] = useState(user?.pref_night_mode_colors || 'Default')  
     const [prefPostPosition, setPrefPostPosition] = useState(user?.pref_post_position || 'Left')  
@@ -114,6 +115,7 @@ import Count from '../components/Count';
           user.pref_strike_color = prefStrikeColor;
           user.pref_clear = prefClear;
           user.pref_post_style = prefPostStyle;
+          user.pref_post_style_mobile = prefPostStyleMobile;
           user.pref_reply_time_interval = prefReplyTimeInterval;
           user.pref_night_mode_colors = prefNightModeColors;
           user.pref_post_position = prefPostPosition;
@@ -365,14 +367,30 @@ import Count from '../components/Count';
                 </Select>
             </FormControl>
             <FormControl sx={{m: 2}}>
-                <InputLabel id="post-style-label">Post Style</InputLabel>
+                <InputLabel id="post-style-label">Desktop Post Style</InputLabel>
                 <Select
                     labelId="post-style-label"
                     id="post-style"
                     value={prefPostStyle}
                     defaultValue={prefPostStyle}
-                    label="Post Style"
+                    label="Desktop Post Style"
                     onChange={e => setPrefPostStyle((e.target as HTMLInputElement).value)}
+                    sx={{width: 200}}
+                >
+                  {postStyleOptions.map((card) => {
+                      return (<MenuItem value={card}>{card}</MenuItem>)
+                  })}
+                </Select>
+            </FormControl>
+            <FormControl sx={{m: 2}}>
+                <InputLabel id="post-style-mobile-label">Mobile Post Style</InputLabel>
+                <Select
+                    labelId="post-style-mobile-label"
+                    id="post-style-mobile"
+                    value={prefPostStyleMobile}
+                    defaultValue={prefPostStyleMobile}
+                    label="Mobile Post Style"
+                    onChange={e => setPrefPostStyleMobile((e.target as HTMLInputElement).value)}
                     sx={{width: 200}}
                 >
                   {postStyleOptions.map((card) => {

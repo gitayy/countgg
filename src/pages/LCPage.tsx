@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Button, TextField, Typography } from '@mui/material';
+import { Box, Button, Link, TextField, Typography } from '@mui/material';
 import { convertToTimestamp, formatDate, formatDateExact, formatTimeDiff, uuidParseNano, uuidv1ToMs} from '../utils/helpers';
 import { useLocation, useNavigate } from 'react-router-dom';
 // import Snoowrap from 'snoowrap';
@@ -16,13 +16,13 @@ import { Loading } from '../components/Loading';
 
 export const LCPage = () => {
     const location = useLocation();
-    const { user, counter, loading } = useContext(UserContext);
+    const { user, counter, loading, setUser } = useContext(UserContext);
     const [redditLoading, setRedditLoading] = useState(true);
     const replyTimeRef = useRef(0);
     useEffect(() => {
-        document.title = `/r/livecounting | countGG`;
+        document.title = `/r/livecounting | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
 
@@ -36,6 +36,8 @@ export const LCPage = () => {
 
         axios.get(aboutUrl)
         .then(response => {
+          // console.log("OKKK");
+          // console.log(response);
             const initialWebSocketUrl = response.data.data.websocket_url;
             setWebSocketUrl(initialWebSocketUrl);
             setThreadDetails(response.data.data);
@@ -143,23 +145,37 @@ export const LCPage = () => {
         const threadId = 'ta535s1hq2je';
         const aboutUrl = `https://oauth.reddit.com/live/${threadId}`;
 
+        try {
         axios.get(`${aboutUrl}?limit=25`, {headers: headers})
         .then(response => {
-            // console.log("Fifi");
-            // console.log(response.data.data.children);
+          
             for(const post of response.data.data.children) {
-                if(redditMessages.current && !redditMessages.current.some(
-                    (message) => message.id === post.data.id
-                  )) {
-                    redditMessages.current.push(post.data);
-                    // console.log(redditMessages.current);
-                    setRender(`${Date.now()}`);
-                }
+              if(redditMessages.current && !redditMessages.current.some(
+                  (message) => message.id === post.data.id
+                )) {
+                  redditMessages.current.push(post.data);
+                  setRender(`${Date.now()}`);
+              }
             }
-            setRedditMessages(redditMessages.current);
-            setRedditLoading(false);
-        });
-    }
+          setRedditMessages(redditMessages.current);
+          setRedditLoading(false);
+          })
+          .catch((err) => {
+            if(user && setUser) {
+              setUser(prevUser => {
+                return {
+                  ...prevUser,
+                  reddit: undefined,
+                  redditAccess: undefined,
+                  redditRefresh: undefined,
+                }
+              });
+            }
+          })
+        } catch(err) {
+            console.log(err);
+          } 
+        }
       }, [loading]);
 
       useEffect(() => {
@@ -172,11 +188,6 @@ export const LCPage = () => {
                 console.log('Connected to WebSocket server');
               });
         
-            //   socket.addEventListener('update', (event) => {
-            //     // const data = JSON.parse(event.data);
-            //     console.log('Received message:', event);
-            //   });
-
             socket.addEventListener('message', (event) => {
 
                 const data = JSON.parse(event.data);
@@ -537,6 +548,7 @@ useEffect(() => {
         <Typography variant="h4" component="h1" align="center">
           {threadDetails ? threadDetails['title'] : `Loading...`} {user && !user.reddit ? <Button variant="contained" href={loginRedirect}>Login</Button> : <Button variant="contained" href={logoutRedirect}>Logout</Button>}
         </Typography>
+        <Link variant="body2" href="https://www.counting.acorn.ignorelist.com/project/joinlivecounting/authorize?thread=ta535s1hq2je">Join</Link>
 
         <TextField 
             multiline

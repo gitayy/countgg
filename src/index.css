@@ -28,11 +28,11 @@ html,
   box-shadow: inset 0em 0em 0em 100em rgb(207 213 255 / 15%);
 }
 
-.countgg-logo {
+.cgg-logo {
   transition: all .2s ease-in-out;
 }
 
-.countgg-logo:hover {
+.cgg-logo:hover {
   transform: scale(1.1);
 }
 

@@ -1,10 +1,7 @@
 import { Card, Box, CardMedia, CardContent, Typography, Grid, createTheme, responsiveFontSizes, ThemeProvider, Alert, Badge, Chip } from "@mui/material";
-import CountggLogo from '../assets/countgg-128.png'
-import CountggLogo2 from '../assets/emotes/gg.png'
+import CggLogo2 from '../assets/emotes/gg.png'
 
 import { calculateLevel, card_backgrounds, titles } from "../utils/helpers";
-import StarBadge from "./StarBadge";
-
 
 export function CounterCard(props) {
 
@@ -33,7 +30,7 @@ export function CounterCard(props) {
               <CardMedia
                   component="div"
                   className={`border_${props.counter.cardBorderStyle} pfp-image`}
-                  sx={{ backgroundSize: 'contain', width: '100%', maxWidth: props.maxWidth, maxHeight: props.maxHeight, backgroundImage: props.counter.avatar.length > 5 ? `url(https://cdn.discordapp.com/avatars/${props.counter.discordId}/${props.counter.avatar})` : `url(${CountggLogo2})`}}
+                  sx={{ backgroundSize: 'contain', width: '100%', maxWidth: props.maxWidth, maxHeight: props.maxHeight, backgroundImage: props.counter.avatar.length > 5 ? `url(https://cdn.discordapp.com/avatars/${props.counter.discordId}/${props.counter.avatar})` : `url(${CggLogo2})`}}
                 />
             </Box>
             </Grid>

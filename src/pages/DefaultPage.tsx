@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import { useContext, useEffect, useState } from 'react';
-import { Alert, AlertColor, Badge, Box, Button, CardMedia, Chip, Grid, Link, Modal, Paper, Snackbar, Typography, useTheme } from '@mui/material';
+import { Alert, AlertColor, Badge, Box, Button, CardMedia, Chip, Grid, Link, Modal, Paper, Skeleton, Snackbar, Typography, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
 import SwingBg from '../assets/swing2.png';
 import { calculateLevel, modalStyle } from '../utils/helpers';
@@ -20,6 +20,8 @@ import ChatIcon from '@mui/icons-material/Chat';
 import { DailyHOCTable } from '../components/DailyHOCTable';
 import { Counter, PostType } from '../utils/types';
 import RedditIcon from '@mui/icons-material/Reddit';
+import { TopThreadsTable } from '../components/TopThreadsTable';
+import { ThreadsContext } from '../utils/contexts/ThreadsContext';
 
 export const DefaultPage = () => {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ export const DefaultPage = () => {
   const sumCounts = dailyLeaderboard ? Object.values(dailyLeaderboard).reduce((acc, { counts }) => acc + counts, 0) : 0;
   const sumUsers = dailyLeaderboard ? Object.values(dailyLeaderboard).length : 0;
   const [ modalOpen, setModalOpen ] = useState(false);
+  const [threadLeaderboards, setThreadLeaderboards] = useState<{[threadUUID: string]: {[counterUUID: string]: {counter: Counter, counts: number}}}>();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>('error');
@@ -42,6 +45,44 @@ export const DefaultPage = () => {
   };
   const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
+  const {allThreads, allThreadsLoading} = useContext(ThreadsContext)
+  const [sums, setSums] = useState<{[thread_uuid: string]: number}>({});
+
+  // Calculate the sum of counts for each thread
+const sumCountsForThreads = () => {
+  let sums: { [threadUUID: string]: number } = {};
+  let sortedSums: any = [];
+  // Check if threadLeaderboards is defined and not empty
+  if (threadLeaderboards) {
+    Object.keys(threadLeaderboards).forEach((threadUUID) => {
+      if(['all', 'last_updated', 'total_counts'].includes(threadUUID)) return;
+      const threadData = threadLeaderboards[threadUUID];
+      const sum = Object.values(threadData).reduce((acc, { counts }) => acc + counts, 0);
+      sums[threadUUID] = sum;
+    });
+    // sortedSums = Object.entries(sums).sort(([, countA], [, countB]) => countB - countA);
+  }
+
+  // console.log(sortedSums);
+
+  // return sortedSums;
+  return sums;
+};
+
+useEffect(() => {
+  if(!allThreadsLoading && allThreads && threadLeaderboards) {
+    const summy = sumCountsForThreads();
+    console.log("lol");
+    console.log(summy);
+    setSums(summy);
+  }
+}, [allThreadsLoading, allThreads, threadLeaderboards])
+
+
+  // Call the function to get the sum of counts for each thread
+  const summy = sumCountsForThreads();
+  console.log(summy);
+
   const isMounted = useIsMounted();
   useEffect(() => {
 
@@ -50,11 +91,14 @@ export const DefaultPage = () => {
     // }
 
     socket.on('defaultPage', function(data) {
-      const {users_online, total_counts, daily_leaderboard } = data;
+      const {users_online, total_counts, daily_leaderboard, all_leaderboards } = data;
       setTotalCounts(total_counts);
       setUsersOnline(users_online);
       setDailyLeaderboard(daily_leaderboard);
+      setThreadLeaderboards(all_leaderboards);
     });
+    
+
     socket.on('post', function(data) {
       const { post, counter, thread, total_counts } = data;
       // console.log(data);
@@ -71,6 +115,13 @@ export const DefaultPage = () => {
             }
           };
           return updatedHOC;
+      });
+      setSums(prevSums => {
+        const updatedSums = {
+          ...prevSums,
+          [thread.uuid]: (prevSums[thread.uuid] ?? 0) + 1,
+        };
+        return updatedSums;
       });
       }
     });
@@ -120,26 +171,26 @@ export const DefaultPage = () => {
     };
   }, [count]);
 
-  const bigButtonStyles = {
-    padding: '24px',
-    fontSize: '1.5rem',
-    // fontWeight: 'bold',
-    borderRadius: '8px',
-    border: '1px solid #1976d2',
-    color: '#ffffff',
-    '&:hover': {
-      border: '1px solid #1565c0',
-    },
-  };
-
   let unclaimedRewards = 0;
   if(counter && items) {
     const xpItemsClaimed = items.filter(item => {return item.unlockMethod === 'xp'}).length;
     unclaimedRewards = parseInt(calculateLevel(counter.xp).level) - xpItemsClaimed;
   }
 
-  if(!loading && totalCounts > -1) {
+    const [registerModalOpen, setRegisterModalOpen] = useState(false);
 
+  const handleRegisterModalOpen = () => {
+    setRegisterModalOpen(true);
+  };
+
+  const handleRegisterModalClose = () => {
+    setRegisterModalOpen(false);
+  };
+
+  const isRegistered = user && counter;
+  const isCounter = counter && counter.roles.includes('counter');
+
+  if(!loading && totalCounts > -1 && !allThreadsLoading) {
     return (<>
     <Snackbar
     open={snackbarOpen}
@@ -152,7 +203,7 @@ export const DefaultPage = () => {
     </Snackbar>
       <Box sx={{ bgcolor: theme.palette.mode === 'light' ? 'primary.light' : 'background.paper', flexGrow: 1, p: 2, backgroundImage: isCat ? `url(https://placekitten.com/1500/1000?${new Date().getDay()})` : 'none', backgroundSize: `100% 100%`, backgroundRepeat: 'no-repeat'}}>
       <Typography variant="h1" sx={{ textAlign: 'center', m: 1 }}>
-     <Typography variant='h1' component={'span'} sx={{ textAlign: 'center', borderRadius: '10px', background: 'linear-gradient(to right, #FF8C00, #FFA500)', }}>&nbsp;{totalCounts.toLocaleString()}&nbsp;</Typography> Counts
+     <Typography variant='h1' component={'span'} sx={{ textAlign: 'center', borderRadius: '10px', background: 'linear-gradient(to right, #FF8C00, #FFA500)', }}>&nbsp;{totalCounts > -1 ? totalCounts.toLocaleString() : ''}&nbsp;</Typography> Counts
       </Typography>
       <Typography variant="body1" component={'div'} sx={{ textAlign: 'center', m: 1, }}>
          <Chip variant='filled' color='success' 
@@ -162,10 +213,10 @@ export const DefaultPage = () => {
         {!counter && <Paper elevation={8} sx={{mb: 2, display: 'flex', alignItems: 'stretch', background: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),url(${SwingBg})`, minHeight: '33vh', p: 2, backgroundSize: 'cover', backgroundPosition: 'top right'}}>
           <Grid container direction={'row'}>
             <Grid item xs={12}>
-              <Typography color="white" variant='h4' sx={{textShadow: '1px 1px black'}}>Welcome to countGG!</Typography>
+              <Typography color="white" variant='h4' sx={{textShadow: '1px 1px black'}}>Welcome to counting.gg!</Typography>
             </Grid>
             <Grid item xs={12}>
-              <Typography color="white" variant='body1' sx={{m: 2, textShadow: '1px 1px black'}}>countGG is the largest counting website ever, averaging over a million posts per month!</Typography>
+              <Typography color="white" variant='body1' sx={{m: 2, textShadow: '1px 1px black'}}>counting.gg is the largest counting website ever, averaging over a million posts per month!</Typography>
               <Typography color="white" variant='h6' sx={{m: 2, textShadow: '1px 1px black'}}>Sign up for free. Drop a count. Make history.</Typography>
             </Grid>
             <Grid item xs={12} sx={{flexGrow: 1}}>
@@ -205,9 +256,7 @@ export const DefaultPage = () => {
             </Box>
           </Modal>
 
-          {/* <Grid container> */}
-
-          <Grid container spacing={1.5} sx={{background: '#cccccc63', border: '1px solid gray', mt: 0}}>
+          <Grid container spacing={1.5} sx={{mt: 0}}>
 
 <Grid item xs={12} lg={6} sx={{padding: "6px"}}>
  {/* Bigger items */}
@@ -216,17 +265,12 @@ export const DefaultPage = () => {
 
  <Grid item xs={12} sx={{padding: "6px"}}>
           <Link color={'inherit'} underline='none' href={`/threads`} onClick={(e) => {e.preventDefault();navigate(`/threads`);}}>
-          {/* <Button style={bigButtonStyles} startIcon={<PlusOneIcon style={{fontSize: '1.5rem'}} />}>
-      Counting
-    </Button> */}
         <Paper className="littlescale card" elevation={8} sx={{
-          // background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
           background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
           cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
         <Grid container spacing={2}>
           <Grid item xs={12} md={12}>
             <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
-            // '&:hover': {textDecoration: 'underline'} 
             }}>
             <PlusOneIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> Counting
             </Typography>
@@ -283,7 +327,7 @@ export const DefaultPage = () => {
             </Link>
           </Grid>
           <Grid item xs={12} sx={{padding: "6px"}}>
-            <Link color={'inherit'} underline='none' href={`/r/livecounting`} onClick={(e) => {e.preventDefault();navigate(`/r/livecounting`);}}>
+            <Link color={'inherit'} underline='none' href={isCounter ? `/r/livecounting` : undefined} onClick={isCounter ? (e) => {e.preventDefault();navigate(`/r/livecounting`);} : handleRegisterModalOpen}>
               <Paper className="littlescale card" elevation={8} sx={{
                 background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
                 cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
@@ -291,7 +335,7 @@ export const DefaultPage = () => {
                 <Grid item xs={12} md={12}>
                   <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
                   }}>
-                  <RedditIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> /r/livecounting
+                  <RedditIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> Reddit Live
                   </Typography>
                 </Grid>
               </Grid>
@@ -353,8 +397,8 @@ export const DefaultPage = () => {
             </Paper>
             </Link>
           </Grid>
-          {user && counter && <Grid item xs={12} sm={6}>
-          <Link color={'inherit'} underline='none' href={`/shop`} onClick={(e) => {e.preventDefault();navigate(`/shop`);}}>
+          <Grid item xs={12} sm={6}>
+          <Link color={'inherit'} underline='none' href={isCounter ? `/shop` : undefined} onClick={isCounter ? (e) => {e.preventDefault();navigate(`/shop`);} : handleRegisterModalOpen}>
             <Paper className="littlescale card" elevation={8} sx={{
               background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
               cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
@@ -368,7 +412,7 @@ export const DefaultPage = () => {
             </Grid>
             </Paper>
             </Link>
-          </Grid>}
+          </Grid>
           {/* <Grid item xs={6} md={3}>
           <Link color={'inherit'} underline='none' href={`/blog`} onClick={(e) => {e.preventDefault();navigate(`/blog`);}}>
             <Paper className="littlescale card" elevation={8} sx={{
@@ -385,8 +429,8 @@ export const DefaultPage = () => {
             </Paper>
             </Link>
           </Grid> */}
-          {user && counter && <Grid item xs={12} sm={6} sx={{padding: "6px"}}>
-            {unclaimedRewards > 0
+          <Grid item xs={12} sm={6} sx={{padding: "6px"}}>
+            {isCounter && unclaimedRewards > 0
             ?
             <Box className='littlescale'>
             <Badge color="error" sx={{display: "block", "& .MuiBadge-badge": { fontSize: 24, minWidth: 30, minHeight: 30 } }} badgeContent={unclaimedRewards}>
@@ -407,7 +451,7 @@ export const DefaultPage = () => {
             </Badge>
             </Box>
             :
-            <Link color={'inherit'} underline='none' href={`/rewards`} onClick={(e) => {e.preventDefault();navigate(`/rewards`);}}>
+            <Link color={'inherit'} underline='none' href={isCounter ? `/rewards` : undefined} onClick={isCounter ? (e) => {e.preventDefault();navigate(`/rewards`);} : handleRegisterModalOpen}>
             <Paper className="littlescale card" elevation={8} sx={{
               background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
               cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
@@ -422,7 +466,7 @@ export const DefaultPage = () => {
             </Paper>
             </Link>
           }
-          </Grid>}
+          </Grid>
           {/* <Grid item xs={12} sm={6}>
           <Link color={'inherit'} underline='none' href={`/servers`} onClick={(e) => {e.preventDefault();navigate(`/servers`);}}>
             <Paper className="littlescale card" elevation={8} sx={{
@@ -439,20 +483,65 @@ export const DefaultPage = () => {
             </Paper>
             </Link>
           </Grid> */}
+          {/* <Grid item xs={12} sm={6}>
+          <Link color={'inherit'} underline='none' href={`/blogs`} onClick={(e) => {e.preventDefault();navigate(`/blogs`);}}>
+            <Paper className="littlescale card" elevation={8} sx={{
+              background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
+              cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={12}>
+                <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                }}>
+                <ChatIcon style={{fontSize: 'inherit', marginRight: '30px'}} /> Blogs
+                </Typography>
+              </Grid>
+            </Grid>
+            </Paper>
+            </Link>
+          </Grid> */}
           </Grid>
 </Grid>
 
 </Grid>
 
+<Modal
+        open={registerModalOpen}
+        onClose={handleRegisterModalClose}
+        aria-labelledby="register-modal"
+        aria-describedby="register-to-counting.gg"
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            bgcolor: 'background.paper',
+            border: '2px solid #000',
+            boxShadow: 24,
+            p: 4,
+            maxHeight: '500px',
+            width: '70vw',
+            overflowY: 'scroll',
+          }}
+        >
+          <h2 id="modal-title">Join counting.gg</h2>
+          <p id="modal-description">
+            <>This is only available to logged in users, join now!</>
+            </p>
+          <Button onClick={() => {handleRegisterModalClose()}}>Close</Button>
+        </Box>
+      </Modal> 
          
         {/* </Grid> */}
 
 <Grid container>
-  <Grid item xs={12} lg={6}>
+  <Grid item xs={12} lg={6} sx={{p: 2}}>
   {dailyLeaderboard && <DailyHOCTable mini={true} dailyHOC={dailyLeaderboard} name={'Sitewide Daily Leaders'} countName={'Counts'}></DailyHOCTable>}
   </Grid>
-  <Grid item xs={12} lg={6}>
+  <Grid item xs={12} lg={6} sx={{p: 2}}>
     {/* Top Threads Today */}
+    {threadLeaderboards && <TopThreadsTable mini={true} sums={sums} name={'Top Threads Today'} countName={'Counts'}></TopThreadsTable>}
   </Grid>
 </Grid>
 
@@ -462,13 +551,12 @@ export const DefaultPage = () => {
           <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/about`} onClick={(e) => {e.preventDefault();navigate(`/about`);}}>About</Link> — &nbsp;
           <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/privacy-policy`} onClick={(e) => {e.preventDefault();navigate(`/privacy-policy`);}}>Privacy Policy</Link> — &nbsp;
           <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/contact-us`} onClick={(e) => {e.preventDefault();navigate(`/contact-us`);}}>Contact Us</Link> — &nbsp;
-          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/`} onClick={(e) => {e.preventDefault();navigate(`/`);}}>countGG.com</Link>
+          <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} href={`/`} onClick={(e) => {e.preventDefault();navigate(`/`);}}>counting.gg</Link>
         </Typography>
       </Box>      
       </>
     )
-  } else {
-    return(<Loading />);
-  }
-
+        } else {
+          return <Loading />
+        }
 };

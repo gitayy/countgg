@@ -1,7 +1,6 @@
 import { Card, Box, CardMedia, CardContent, Typography, Tooltip, CardActions, LinearProgress, useTheme } from "@mui/material";
 import { AchievementType, CounterAchievementType } from "../utils/types";
 import HelpIcon from '@mui/icons-material/Help';
-import CountggLogo from '../assets/countgg-128.png'
 import { LinearProgressWithLabel } from "../utils/styles";
 
 interface Props {

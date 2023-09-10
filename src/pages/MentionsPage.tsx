@@ -30,9 +30,9 @@ import { useFetchMentions } from '../utils/hooks/useFetchMentions';
 
     const location = useLocation();
     useEffect(() => {
-        document.title = `Mentions | countGG`;
+        document.title = `Mentions | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
 

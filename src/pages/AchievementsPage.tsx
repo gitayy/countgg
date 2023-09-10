@@ -19,9 +19,9 @@ import { UserContext } from '../utils/contexts/UserContext';
 
     const location = useLocation();
     useEffect(() => {
-        document.title = `Achievements | countGG`;
+        document.title = `Achievements | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
 

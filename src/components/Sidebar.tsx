@@ -23,7 +23,7 @@ import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import { logout } from '../utils/api';
 import { ColorModeContext } from '../utils/contexts/ColorModeContext';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
-import CountggLogo from '../assets/countgg-128.png'
+import CggLogo from '../assets/cgg-128.png'
 import GavelIcon from '@mui/icons-material/Gavel';
 import SearchIcon from '@mui/icons-material/Search';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
@@ -111,7 +111,7 @@ export const Sidebar = () => {
   const drawer = (
     <div>
       {/* <Toolbar /> */}
-      <Typography variant='body2' sx={{m: 2, display: 'flex', alignItems: 'end'}}>countGG {site_version}&nbsp;{loadedSiteVer ? (site_version === loadedSiteVer ? <Tooltip title="Up to date"><VerifiedIcon color='success' /></Tooltip> : <Tooltip placement='right' title="Not up to date. Try to refresh, or clear your cache."><ErrorIcon color='error' /></Tooltip>) : <PendingIcon color="disabled" />}</Typography>
+      <Typography variant='body2' sx={{m: 2, display: 'flex', alignItems: 'end'}}>counting.gg {site_version}&nbsp;{loadedSiteVer ? (site_version === loadedSiteVer ? <Tooltip title="Up to date"><VerifiedIcon color='success' /></Tooltip> : <Tooltip placement='right' title="Not up to date. Try to refresh, or clear your cache."><ErrorIcon color='error' /></Tooltip>) : <PendingIcon color="disabled" />}</Typography>
       <Divider />
       <List>
         <Link color={'inherit'} underline='none' href={`/`} onClick={(e) => {e.preventDefault();navigate(`/`);}}>
@@ -293,17 +293,15 @@ export const Sidebar = () => {
           {drawer}
         </Drawer>
           <Typography variant="h6" component="div" sx={{ display: 'flex', justifyContent: 'center', flexGrow: 1 }}>
-            {/* insert text here */}
-            {/* <CountggLogo></CountggLogo> */}
             <Link href={`/`} onClick={(e) => {
               e.preventDefault();
               navigate("/");
             }}>
             <CardMedia
                   component="img"
-                  className={`countgg-logo`}
+                  className={`cgg-logo`}
                   sx={{ maxHeight: '48px', width: 'auto'}}
-                  image={CountggLogo}
+                  image={CggLogo}
                   alt={`logo`}
                 />
               </Link>
@@ -334,7 +332,7 @@ export const Sidebar = () => {
                 Join the Discord to continue!
               </Typography>
               <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                Welcome to countGG, we hope you have a great time! You'll need to join our Discord server using the link below to complete your profile registration.
+                Welcome to counting.gg, we hope you have a great time! You'll need to join our Discord server using the link below to complete your profile registration.
               </Typography>
               <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                 Follow the instructions in the server to connect your discord account, and refresh this page when you're complete! 

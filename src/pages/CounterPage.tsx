@@ -18,7 +18,7 @@ import { UserContext } from '../utils/contexts/UserContext';
 import LeaderboardGraph from '../components/LeaderboardGraph';
 import { XPDisplay } from '../components/XPDisplay';
 import Spoiler from '../components/Spoiler';
-import CountggLogo2 from '../assets/emotes/gg.png'
+import CggLogo2 from '../assets/emotes/gg.png'
 
 
   export const CounterPage = () => {
@@ -39,10 +39,10 @@ import CountggLogo2 from '../assets/emotes/gg.png'
     const location = useLocation();
     useEffect(() => {
       if(loadedCounter) {
-        document.title = `${loadedCounter.name}'s Profile | countGG`;
+        document.title = `${loadedCounter.name}'s Profile | Counting!`;
       }
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname, loadedCounter]);
 
@@ -120,12 +120,12 @@ import CountggLogo2 from '../assets/emotes/gg.png'
                 <Typography variant='h5'>Info for {loadedCounter.name}
                 <Chip
                 sx={{mx: 0.5}}
-                avatar={<Avatar src={loadedCounter.avatar.length > 5 ? `https://cdn.discordapp.com/avatars/${loadedCounter.discordId}/${loadedCounter.avatar}` : CountggLogo2} />}
+                avatar={<Avatar src={loadedCounter.avatar.length > 5 ? `https://cdn.discordapp.com/avatars/${loadedCounter.discordId}/${loadedCounter.avatar}` : CggLogo2} />}
                 label={`UUID: ${loadedCounter.uuid}`}
                 />
                 <Chip
                 sx={{mx: 0.5}}
-                avatar={<Avatar src={loadedCounter.avatar.length > 5 ? `https://cdn.discordapp.com/avatars/${loadedCounter.discordId}/${loadedCounter.avatar}` : CountggLogo2} />}
+                avatar={<Avatar src={loadedCounter.avatar.length > 5 ? `https://cdn.discordapp.com/avatars/${loadedCounter.discordId}/${loadedCounter.avatar}` : CggLogo2} />}
                 label={`ID: ${loadedCounter.id}`}
                 />
                 </Typography>

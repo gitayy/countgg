@@ -252,7 +252,7 @@ const CountList = memo((props: any) => {
 
     const handlePosting = async () => {
       const throttleCheck = performance.now() - throttle.current;
-      if(throttleCheck < 100) {
+      if(props.thread && props.thread.validationType === 'bars' ? throttleCheck < 1000 : throttleCheck < 100) {
         console.log(`You are being throttled. Start: ${throttle.current}, end: ${performance.now()} (${throttleCheck}ms difference)`);
         throttleCount.current += 1;
         isThrottled.current = true;

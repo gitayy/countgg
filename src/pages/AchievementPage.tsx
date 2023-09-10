@@ -18,10 +18,10 @@ import { UserContext } from '../utils/contexts/UserContext';
     const location = useLocation();
     useEffect(() => {
         if(achievement) {
-            document.title = `${achievement.name} achievement | countGG`;
+            document.title = `${achievement.name} achievement | Counting!`;
         }
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [achievement]);
     

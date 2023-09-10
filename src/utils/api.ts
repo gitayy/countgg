@@ -6,6 +6,7 @@ import {
   AllegianceType,
   Item,
   PostType,
+  Blog,
 } from './types';
 
 
@@ -51,8 +52,18 @@ axios.post(
   CONFIG
 );
 
+export const saveBlog = (title: string, body: string, tags: string[]|undefined) =>
+axios.post(
+  `${API_URL}/api/createBlogPost`,
+  {title: title, body: body, tags: tags},
+  CONFIG
+);
+
 export const getCountersPage = (page: number) =>
 axios.get<{counters: Counter[], pageCount: number}>(`${API_URL}/counter/counters/${page}`, CONFIG);
+
+export const getBlogs = (page: number) =>
+axios.get<{blogs: Blog[], pageCount: number}>(`${API_URL}/thread/blogs/${page}`, CONFIG);
 
 export const getFreeSecretAchievement = () =>
 axios.get<any>(`${API_URL}/counter/free_secret_achievement`, CONFIG);

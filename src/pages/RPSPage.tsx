@@ -6,9 +6,9 @@ import { useLocation } from 'react-router-dom';
 export const RPSPage = () => {
     const location = useLocation();
     useEffect(() => {
-        document.title = `RPS | countGG`;
+        document.title = `RPS | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
   

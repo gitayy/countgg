@@ -4,7 +4,6 @@ import Game from "./Game";
 import { useEffect, useState } from "react";
 import { About } from "./About";
 import { Box, useTheme } from "@mui/material";
-import { Helmet } from "react-helmet-async";
 
 function useSetting<T>(
   key: string,
@@ -78,9 +77,6 @@ function LrwoedPage() {
 
   return (
     <Box sx={{bgcolor: "primary.light", display: 'flex', flexGrow: 1}}>
-      <Helmet>
-        <meta name="description" content={`lrwoed - the ${goodOrBad} wordle variant ever`} />
-      </Helmet>
     <Box sx={{bgcolor: "background.paper", pl: 2, pr: 2, maxWidth: '750px'}} className={"App-container" + (colorBlind ? " color-blind" : "")}>
       <h1>
         <span

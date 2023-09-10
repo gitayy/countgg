@@ -14,9 +14,9 @@ import ShopItemCard from '../components/ShopItemCard';
     const {user, counter, loading, items, setItems} = useContext(UserContext);
     const theme = useTheme();
     useEffect(() => {
-        document.title = `Shop | countGG`;
+        document.title = `Shop | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
       console.log("Shop Items");

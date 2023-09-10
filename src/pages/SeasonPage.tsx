@@ -6,9 +6,9 @@ import ScrollableStepper from '../components/ScrollableStepper';
 export const SeasonPage = () => {
     const location = useLocation();
     useEffect(() => {
-        document.title = `XP Rewards | countGG`;
+        document.title = `XP Rewards | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
   

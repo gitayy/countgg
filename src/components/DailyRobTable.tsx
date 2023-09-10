@@ -52,13 +52,13 @@ interface Props {
           
             return (
             <>
-               <Typography variant='h6'>Robs</Typography>
+               <Typography variant='h6' sx={{textAlign: 'center'}}>Robs</Typography>
               <Typography sx={{mb: 1}} variant='body2'>{dailyRobs && dailyRobs.length} {dailyRobs && dailyRobs.length != 1 ? "robs" : "rob"}</Typography>
               <TableContainer component={Paper}>
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                    <TableCell>Rank</TableCell>
+                    <TableCell sx={{textAlign: 'center'}}>Rank</TableCell>
                       <TableCell>Name</TableCell>
                       <TableCell>Money</TableCell>
                     </TableRow>

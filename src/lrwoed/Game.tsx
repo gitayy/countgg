@@ -445,7 +445,7 @@ const daysDiff = currentDate.diff(targetDate, 'days');
                         .join("")
                     )
                     .join("\n") 
-                  + `\nhttps://countgg.com/lrwoed`
+                  + `\nhttps://counting.gg/lrwoed`
               );
             }}
           >

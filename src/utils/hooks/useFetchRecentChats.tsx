@@ -6,7 +6,7 @@ import { PostType} from '../types';
 import { useIsMounted } from './useIsMounted';
 
 
-export function useFetchRecentChats(thread_name: string, context: string | (string | null)[] | null, socketStatus: string) {
+export function useFetchRecentChats(thread_name: string, context: string | (string | null)[] | null, socketStatus: string, thread_ref: React.MutableRefObject<string|null>) {
       const [recentChats, setRecentChats] = useState<PostType[]>([]);
       const recentChatsRef = useRef<PostType[]>([]);
       const [recentChatsLoading, setRecentChatsLoading] = useState<boolean>(true);
@@ -20,7 +20,7 @@ export function useFetchRecentChats(thread_name: string, context: string | (stri
           setRecentChatsLoading(true);
           getRecentCounts(thread_name, context, true)
           .then(({ data }) => {
-          if (isMounted.current && data.recentCounts) { 
+          if (isMounted.current && data.recentCounts && thread_ref.current === thread_name) { 
             if(user && !loading && user.pref_load_from_bottom) {
               setRecentChats(data.recentCounts.reverse());
               recentChatsRef.current = data.recentCounts;

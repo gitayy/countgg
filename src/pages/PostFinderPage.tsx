@@ -29,9 +29,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
     const location = useLocation();
     useEffect(() => {
-        document.title = `Post Finder | countGG`;
+        document.title = `Post Finder | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
 

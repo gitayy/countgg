@@ -7,16 +7,16 @@ import { EmojiTest } from '../utils/helpers';
 
     const location = useLocation();
     useEffect(() => {
-        document.title = `About | countGG`;
+        document.title = `About | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
       
       return (
         <Box sx={{ bgcolor: 'background.paper', color: 'text.primary', flexGrow: 1, p: 2}}>
-            <Typography sx={{mb: 1.5}} variant='h4'>About countGG</Typography>   
-            <Typography sx={{mb: 1.5}}>countGG is a free community-driven counting website. The community is centered around our Discord server, and a Discord account is required to join.</Typography>
+            <Typography sx={{mb: 1.5}} variant='h4'>About counting.gg</Typography>   
+            <Typography sx={{mb: 1.5}}>counting.gg is a free community-driven counting website. The community is centered around our Discord server, and a Discord account is required to join.</Typography>
             <Typography sx={{mb: 1.5}}>After signing up, you'll need to create your profile. To avoid abuse, profiles are manually approved at the moment. If your account is not approved in a reasonable amount of time, please message the moderators.</Typography>
             <Typography sx={{mb: 1.5}}>Once your profile is approved, you'll be ready to count!</Typography>
             <Typography sx={{mb: 1.5}} variant='h4'>Why? Why would people waste their time on this?</Typography>
@@ -27,7 +27,7 @@ import { EmojiTest } from '../utils/helpers';
             <Typography sx={{mb: 1.5}}>The site is divided into several "threads," each having their own unique rules. The main thread is the simplest—count up 1 at a time. No double counting, and mistakes are allowed.</Typography>
             <Typography sx={{mb: 1.5}}>Other threads have different rules. Some threads may reset on a mistake. Other threads may not count by numbers—the "letters" thread counts from A to Z, then AA, AB, and so on...</Typography>
             <Typography sx={{mb: 1.5}}>You can access a list of threads from the left-hand sidebar, under "Threads." Once you open a thread, there is an about page with more information.</Typography>
-            <Typography sx={{mb: 1.5}} variant='h4'>Is countGG free?</Typography>
+            <Typography sx={{mb: 1.5}} variant='h4'>Is counting.gg free?</Typography>
             <Typography sx={{mb: 1.5}}>Yes.</Typography>
             <Typography sx={{mb: 1.5}} variant='h4'>How can I contact you?</Typography>
             <Typography sx={{mb: 1.5}}>Message me over Discord! Press the "login" to receive a discord invite.</Typography>

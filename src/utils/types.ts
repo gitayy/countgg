@@ -17,6 +17,7 @@ export type User = {
   pref_time_since_last_count: boolean;
   pref_custom_stricken: string;
   pref_post_style: string;
+  pref_post_style_mobile: string;
   pref_reply_time_interval: number;
   pref_night_mode_colors: string;
   pref_post_position: string;
@@ -178,4 +179,48 @@ export type RedditPost = {
   fakePost: boolean;
   counter?: Counter;
   replyTime?: number;
+}
+
+// id: number;
+
+// @PrimaryColumn()
+// uuid: string;
+
+// @Index()
+// @Column()
+// timestamp: string;
+
+// @Column({nullable: true})
+// edited_timestamp: string;
+
+// @Column()
+// title: string;
+
+// @Column({type: "text", length: 100000})
+// body: string;
+
+// @Index()
+// @Column()
+// author: string;
+    
+// @Column("json")
+// tags: object;
+
+// @Column({default: 1})
+// views: number;
+
+// @OneToMany(() => BlogLike, (bloglike) => bloglike.blog)
+// likes: BlogLike[]; 
+
+export type Blog = {
+  id: number;
+  uuid: string;
+  timestamp: string;
+  edited_timestamp: string;
+  title: string;
+  body: string;
+  author: Counter;
+  tags: string[];
+  views: number;
+  likes: number;
 }

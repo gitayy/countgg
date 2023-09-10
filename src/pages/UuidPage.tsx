@@ -13,9 +13,9 @@ export const UuidPage = () => {
 
     const location = useLocation();
     useEffect(() => {
-        document.title = `UUID Calculator | countGG`;
+        document.title = `UUID Calculator | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
   

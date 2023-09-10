@@ -45,9 +45,9 @@ export const StatsPage = () => {
 
   const location = useLocation();
     useEffect(() => {
-        document.title = `Stats | countGG`;
+        document.title = `Stats | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
 
@@ -81,8 +81,8 @@ export const StatsPage = () => {
         let startdateStr;
         let enddateStr;
         // if(selectedDate && !disableDates(selectedDate)) {dateStr = selectedDate._d.toISOString().slice(0,10);}
-        if(selectedStartDate && !disableDates(selectedStartDate)) {startdateStr = selectedStartDate._d.toISOString().slice(0,10);}
-        if(selectedEndDate && !disableDates(selectedEndDate)) {enddateStr = selectedEndDate._d.toISOString().slice(0,10);}
+        if(selectedStartDate && !disableDates(selectedStartDate)) {startdateStr = selectedStartDate.toISOString().slice(0,10);}
+        if(selectedEndDate && !disableDates(selectedEndDate)) {enddateStr = selectedEndDate.toISOString().slice(0,10);}
         getThreadStats(name, undefined)
         .then(({ data }) => {
           if(isMounted.current) {

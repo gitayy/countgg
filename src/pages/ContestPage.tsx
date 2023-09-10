@@ -12,9 +12,9 @@ interface Props {
 
     const location = useLocation();
     useEffect(() => {
-        document.title = `Contest Guidelines | countGG`;
+        document.title = `Contest Guidelines | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
 

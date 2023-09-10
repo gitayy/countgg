@@ -30,9 +30,9 @@ export const RegisterPage = () => {
 
     const location = useLocation();
     useEffect(() => {
-        document.title = `Register | countGG`;
+        document.title = `Register | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
 

@@ -12,9 +12,9 @@ interface Props {
 
     const location = useLocation();
     useEffect(() => {
-        document.title = `Rules | countGG`;
+        document.title = `Rules | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
 
@@ -22,7 +22,7 @@ interface Props {
         {
             title: "Treat others kindly.",
             description: [
-                `At countGG, we value kindness and respect towards all members of our community. We encourage all users to treat each other with empathy, compassion, and understanding. This means refraining from any behavior that could be interpreted as harassment, discrimination, or intolerance. In order to create a safe and welcoming environment, we expect all users to engage in civil and respectful communication at all times.`,
+                `At counting.gg, we value kindness and respect towards all members of our community. We encourage all users to treat each other with empathy, compassion, and understanding. This means refraining from any behavior that could be interpreted as harassment, discrimination, or intolerance. In order to create a safe and welcoming environment, we expect all users to engage in civil and respectful communication at all times.`,
                 `We understand that disagreements may arise, but we ask that all users handle them in a constructive and respectful manner. We believe that treating others with kindness is key to fostering a positive and productive community, and we encourage all users to embody this value in their interactions on our website.`
             ],
         },
@@ -45,7 +45,7 @@ interface Props {
         {
             title: "No unnecessary spam.",
             description: [
-                `countGG has a very generous rate limit, but spamming off-topic posts will risk a mute or a ban.`,
+                `counting.gg has a very generous rate limit, but spamming off-topic posts will risk a mute or a ban.`,
             ],
         },
         {

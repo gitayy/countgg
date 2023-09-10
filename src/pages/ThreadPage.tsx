@@ -36,12 +36,15 @@ import dingSfx from '../utils/sounds/ding.mp3'
 import useSound from "use-sound";
 
 
-
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const location = useLocation();
     const params = useParams();
     const { context } = queryString.parse(window.location.search);
     const thread_name:string = params.thread_name || "main";
+    const thread_ref = useRef(thread_name);
+    useEffect(() => {
+      thread_ref.current = thread_name;
+    }, [thread_name]);
     const navigate = useNavigate();
     const setFaviconCount = useFavicon();
 
@@ -56,8 +59,16 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const { user, counter, loading } = useContext(UserContext);
     const { allThreads, allThreadsLoading } = useContext(ThreadsContext);
     const { thread, threadLoading, setThread } = useFetchThread(thread_name);
-    const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest, recentCountsRef } = useFetchRecentCounts(thread_name, context, socketStatus);
-    const { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats, recentChatsRef } = useFetchRecentChats(thread_name, context, socketStatus);
+    const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest, recentCountsRef } = useFetchRecentCounts(thread_name, context, socketStatus, thread_ref);
+    const { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats, recentChatsRef } = useFetchRecentChats(thread_name, context, socketStatus, thread_ref);
+//     const debouncedFetchThread = debounce(useFetchThread, 500); // Adjust the debounce delay (500ms in this example)
+// const debouncedFetchRecentCounts = debounce(useFetchRecentCounts, 500);
+// const debouncedFetchRecentChats = debounce(useFetchRecentChats, 500);
+
+// // Usage examples:
+// const { thread, threadLoading, setThread } = debouncedFetchThread(thread_name);
+// const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest, recentCountsRef } = debouncedFetchRecentCounts(thread_name, context, socketStatus, thread_ref);
+// const { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats, recentChatsRef } = debouncedFetchRecentChats(thread_name, context, socketStatus, thread_ref);
     const loadedNewestRef = useRef(false);
     const loadedNewestChatRef = useRef(false);
     const [ cachedCounts, setCachedCounts ] = useState<PostType[]>([]);
@@ -90,14 +101,14 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
     useEffect(() => {
       if(thread) {
-        document.title = `${thread.title} | countGG`;
+        document.title = `${thread.title} | Counting!`;
       } else if(threadLoading) {
         document.title = `Loading...`;
       } else if(!thread && !threadLoading) {
         document.title = `No thread found`;
       }
       return (() => {
-        document.title = 'countGG';
+        document.title = 'Counting!';
       })
     }, [thread]);
     
@@ -690,9 +701,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         return groupedThreads;
       }
 
-      const customSort = (a, b) => {
-        const specificOrder = ["Traditional", "Double Counting", "No Mistakes", "Miscellaneous"];
-    
+      const specificOrder = ["Traditional", "Double Counting", "No Mistakes", "Miscellaneous"];
+      const customSort = (a, b) => {    
         if (specificOrder.includes(a) && specificOrder.includes(b)) {
           return specificOrder.indexOf(a) - specificOrder.indexOf(b);
         } else if (specificOrder.includes(a)) {
@@ -719,6 +729,91 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           setExpandedCategories([...expandedCategories, category]);
         }
       };
+
+      useEffect(() => {
+        function navigateThread(direction) {
+          console.log("Navigating thread", direction);
+          const groupedThreads = groupThreadsByCategory(allThreads);
+          const currentCategory = allThreads.find((thread) => thread.name === thread_name)?.category || "Uncategorized"
+          console.log("Current category:", currentCategory);
+          if (!currentCategory || !groupedThreads[currentCategory]) {
+            return;
+          }
+      
+          const threadsInCategory = groupedThreads[currentCategory];
+          const currentIndex = threadsInCategory.findIndex((thread) => thread.name === thread_name);
+      
+          if (currentIndex === -1) {
+            return;
+          }
+      
+          let newIndex;
+          if (direction === "up") {
+            newIndex = currentIndex - 1;
+          } else if (direction === "down") {
+            newIndex = currentIndex + 1;
+          }
+      
+          if (newIndex >= 0 && newIndex < threadsInCategory.length) {
+            const newThread = threadsInCategory[newIndex];
+            navigate(`/thread/${newThread.name}`);
+            // Perform any desired action with the new thread (e.g., console.log)
+            // console.log("Navigated to thread:", newThread);
+          } else {
+            // Handle navigating to a different category or the last thread in the last category
+            // const categoryKeys = Object.keys(groupedThreads);
+            // console.log(categoryKeys);
+            const categoryIndex = specificOrder.indexOf(currentCategory);
+            // console.log(categoryIndex);
+      
+            if (direction === "up" && categoryIndex > 0) {
+              // Navigate to the last thread in the category above
+              const previousCategory = specificOrder[categoryIndex - 1];
+              const previousThreads = groupedThreads[previousCategory];
+              // console.log(previousCategory);
+              if (previousThreads.length > 0) {
+                const lastThreadInPreviousCategory = previousThreads[previousThreads.length - 1];
+                navigate(`/thread/${lastThreadInPreviousCategory.name}`);
+                // console.log("Navigated to last thread in the category above:", lastThreadInPreviousCategory);
+              }
+            } else if (direction === "down" && categoryIndex < specificOrder.length - 1) {
+              // Navigate to the last thread in the last category
+              const nextCategory = specificOrder[categoryIndex + 1];
+              const nextThreads = groupedThreads[nextCategory];
+              if (nextThreads.length > 0) {
+                const firstThreadInNextCategory = nextThreads[0];
+                navigate(`/thread/${firstThreadInNextCategory.name}`)
+                // console.log("Navigated to first thread in the next category:", firstThreadInNextCategory);
+              }
+            }
+          }
+        }
+
+        // Add an event listener for keydown events
+        const handleKeyDown = (event) => {
+          if (event.altKey) {
+            switch (event.key) {
+              case "ArrowUp":
+                navigateThread("up");
+                break;
+              case "ArrowDown":
+                navigateThread("down");
+                break;
+            }
+          }
+        };
+    
+        document.addEventListener("keydown", handleKeyDown);
+    
+        return () => {
+          // Remove the event listener when the component unmounts
+          document.removeEventListener("keydown", handleKeyDown);
+        };
+      }, [thread_name]); // Empty dependency array to run this effect only once
+    
+      
+
+
       const threadPickerMemo = useMemo(() => {
 
         const groupedThreads = groupThreadsByCategory(allThreads);

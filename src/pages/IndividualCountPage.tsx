@@ -11,7 +11,6 @@ import Count from '../components/Count';
 import CountMobile from '../components/CountMobile';
 import { useFetchSpecificCount } from '../utils/hooks/useFetchSpecificCount';
 import { UserContext } from '../utils/contexts/UserContext';
-import { Helmet } from 'react-helmet-async';
 
 export const IndividualCountPage = memo(() => {
     const params = useParams();
@@ -22,9 +21,9 @@ export const IndividualCountPage = memo(() => {
 
     const location = useLocation();
     useEffect(() => {
-        document.title = `View Post | countGG`;
+        document.title = `View Post | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
 
@@ -108,9 +107,6 @@ export const IndividualCountPage = memo(() => {
 
         return (
             <Box sx={{ bgcolor: 'background.paper', display: 'flex', justifyContent: 'center', flexGrow: 1, p: 2 }}>
-              <Helmet>
-                <meta name="description" content={`${specificCount[0].rawText}`} />
-              </Helmet>
               {isDesktop ? (
                 <>
                 <Stack direction="column" alignItems="center" sx={{width: '50%'}}>

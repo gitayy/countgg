@@ -117,7 +117,7 @@ export const custom_emojis = [
         {
           id: 'gg',
           name: 'GG',
-          keywords: ['count', 'countgg', 'gg', 'good'],
+          keywords: ['count', 'counting', 'gg', 'good'],
           skins: [{ src: Gg }],
         },
         {

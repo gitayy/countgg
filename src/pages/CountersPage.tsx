@@ -21,9 +21,9 @@ export const CountersPage = () => {
 
   const location = useLocation();
     useEffect(() => {
-        document.title = `Counters | countGG`;
+        document.title = `Counters | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
 

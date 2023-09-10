@@ -7,7 +7,7 @@ import { UserContext } from './utils/contexts/UserContext';
 import { RegisterPage } from './pages/RegisterPage';
 import { Sidebar } from './components/Sidebar';
 import { AdminApprovePage } from './pages/AdminApprovePage';
-import { CookiesProvider, useCookies } from 'react-cookie';
+// import { CookiesProvider, useCookies } from 'react-cookie';
 import { socket, SocketContext } from './utils/contexts/SocketContext';
 import { CounterPage } from './pages/CounterPage';
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
@@ -43,7 +43,6 @@ import { AdminSystemMessagePage } from './pages/AdminSystemMessagePage';
 import { SeasonPage } from './pages/SeasonPage';
 import { useFetchAllThreads } from './utils/hooks/useFetchAllThreads';
 import { ThreadsContext } from './utils/contexts/ThreadsContext';
-import { HelmetProvider, Helmet } from 'react-helmet-async';
 import { RPSPage } from './pages/RPSPage';
 import { MentionsPage } from './pages/MentionsPage';
 import { LCPage } from './pages/LCPage';
@@ -51,6 +50,8 @@ import { ShopPage } from './pages/ShopPage';
 import { Loading } from './components/Loading';
 import AdminAchievementPage from './pages/AdminAchievementPage';
 import AdminNewItemPage from './pages/AdminNewItemPage';
+import BlogsPage from './pages/BlogsPage';
+import BlogCreatePage from './pages/BlogCreatePage';
 
 function App() {
 
@@ -208,22 +209,11 @@ function App() {
         <UserContext.Provider
       value={{user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, totalCounters, setTotalCounters}}
       >
-        <CookiesProvider>
+        {/* <CookiesProvider> */}
         <SocketContext.Provider value={socket}>
         <ThreadsContext.Provider
       value={{allThreads, allThreadsLoading}}
       >
-        <HelmetProvider>
-          <Helmet>
-                <meta
-            name="description"
-            content="Join the largest counting website for free. Make history. countGG is the best counting website for counting to 10, 100, or even counting to a million."
-          />
-          <meta
-            property="og:description"
-            content="Join the largest counting website for free. Make history. countGG is the best counting website for counting to 10, 100, or even counting to a million."
-          />
-          </Helmet>
           <Routes>
             <Route path="/*" element={<Sidebar />} />
           </Routes>
@@ -263,14 +253,16 @@ function App() {
             <Route path="/r/livecounting" element={<LCPage />} />
             <Route path="/lrwoed" element={<LrwoedPage />} />
             <Route path="/rewards" element={<SeasonPage />} />
+            <Route path="/blogs" element={<BlogsPage />} />
+            <Route path="/blog/create" element={<BlogCreatePage />} />
+            <Route path="/blog/:blogId" element={<BlogPage />} />
             {user && counter && <Route path="/prefs" element={<PrefsPage />} />}
             {user && counter && <Route path="/mentions" element={<MentionsPage />} />}
             {user && counter && <Route path="/shop" element={<ShopPage />} />}
           </Routes>
-          </HelmetProvider>
           </ThreadsContext.Provider>
           </SocketContext.Provider>
-          </CookiesProvider>
+          {/* </CookiesProvider> */}
           </UserContext.Provider>
           </ThemeProvider>
           </ColorModeContext.Provider>

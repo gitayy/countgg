@@ -7,9 +7,9 @@ import { EmojiTest } from '../utils/helpers';
 
     const location = useLocation();
     useEffect(() => {
-        document.title = `Contest Info | countGG`;
+        document.title = `Contest Info | Counting!`;
         return (() => {
-          document.title = 'countGG';
+          document.title = 'Counting!';
         })
       }, [location.pathname]);
       
