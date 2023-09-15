@@ -77,6 +77,7 @@ export type PostType = {
   reactions: object[];
   validCountNumber: number;
   latency?: number;
+  post_hash?: string;
 }
 
 export type ThreadType = {

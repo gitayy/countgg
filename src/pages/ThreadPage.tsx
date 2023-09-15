@@ -153,7 +153,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
     const userAsRef = useRef<User>();
 
-    const latency = useRef(0);
+    const latency = useRef({});
     const latencyCheck = useRef('');
     const myUUIDCheck = useRef('');
     const [deleteComments, setDeleteComments] = useState("");
@@ -209,8 +209,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const chatsIsScrolledToNewest = useRef(true); // different default state
 
     // Needed to calculate server latency.
-    const handleLatencyChange = (value) => {
-        latency.current = value;
+    const handleLatencyChange = (value: number, post_hash: string) => {
+        latency.current[post_hash] = value;
     }
     const handleLatencyCheckChange = (value) => {
         latencyCheck.current = value;
@@ -343,8 +343,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 startRenderRef.current = Date.now(); // Needed for render latency test 2
                 postTextRef.current = data.post.rawText;
               }             
-                if(latencyCheck.current == data.post.rawText && data.post.authorUUID == myUUIDCheck.current) {
-                    data.post.latency = Date.now() - latency.current;
+                if(data.post.post_hash && latency.current && data.post.post_hash in latency.current && data.post.authorUUID == myUUIDCheck.current) {
+                    data.post.latency = Date.now() - latency.current[data.post.post_hash];
+                    delete latency.current[data.post.post_hash];
                 }
                 addCounterToCache(data.counter);
                 cache_counts(data.post);
@@ -584,10 +585,10 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       };
     }, [deleteComment]);
 
-    const handleSubmit = (text: string, refScroll: any) => {
+    const handleSubmit = (text: string, refScroll: any, post_hash: string) => {
         const submitText = text;
         if(thread_name && counter) {
-          socket.emit('post', {thread_name: thread_name, text: submitText, refScroll: refScroll, latency: renderLatencyEnabled.current});
+          socket.emit('post', {thread_name: thread_name, text: submitText, post_hash: post_hash, refScroll: refScroll, latency: renderLatencyEnabled.current});
         }
       };
 
@@ -721,7 +722,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         setExpandedCategories(Object.keys(groupThreadsByCategory(allThreads)).sort(customSort))
       }, [allThreads])
 
-      // Step 2: Update handleCategoryClick function to toggle the expanded state of each category
       const handleCategoryClick = (category) => {
         if (expandedCategories.includes(category)) {
           setExpandedCategories(expandedCategories.filter((cat) => cat !== category));
@@ -757,39 +757,26 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           if (newIndex >= 0 && newIndex < threadsInCategory.length) {
             const newThread = threadsInCategory[newIndex];
             navigate(`/thread/${newThread.name}`);
-            // Perform any desired action with the new thread (e.g., console.log)
-            // console.log("Navigated to thread:", newThread);
           } else {
-            // Handle navigating to a different category or the last thread in the last category
-            // const categoryKeys = Object.keys(groupedThreads);
-            // console.log(categoryKeys);
             const categoryIndex = specificOrder.indexOf(currentCategory);
-            // console.log(categoryIndex);
-      
             if (direction === "up" && categoryIndex > 0) {
-              // Navigate to the last thread in the category above
               const previousCategory = specificOrder[categoryIndex - 1];
               const previousThreads = groupedThreads[previousCategory];
-              // console.log(previousCategory);
               if (previousThreads.length > 0) {
                 const lastThreadInPreviousCategory = previousThreads[previousThreads.length - 1];
                 navigate(`/thread/${lastThreadInPreviousCategory.name}`);
-                // console.log("Navigated to last thread in the category above:", lastThreadInPreviousCategory);
               }
             } else if (direction === "down" && categoryIndex < specificOrder.length - 1) {
-              // Navigate to the last thread in the last category
               const nextCategory = specificOrder[categoryIndex + 1];
               const nextThreads = groupedThreads[nextCategory];
               if (nextThreads.length > 0) {
                 const firstThreadInNextCategory = nextThreads[0];
                 navigate(`/thread/${firstThreadInNextCategory.name}`)
-                // console.log("Navigated to first thread in the next category:", firstThreadInNextCategory);
               }
             }
           }
         }
 
-        // Add an event listener for keydown events
         const handleKeyDown = (event) => {
           if (event.altKey) {
             switch (event.key) {
@@ -809,7 +796,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           // Remove the event listener when the component unmounts
           document.removeEventListener("keydown", handleKeyDown);
         };
-      }, [thread_name]); // Empty dependency array to run this effect only once
+      }, [thread_name, allThreadsLoading]); // Empty dependency array to run this effect only once
     
       
 

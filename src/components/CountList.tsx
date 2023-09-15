@@ -263,9 +263,10 @@ const CountList = memo((props: any) => {
         return;
       }
         if(inputRef.current && inputRef.current.value.trim().length > 0) {
-            props.handleLatencyChange(Date.now());
+            const post_hash = (Math.random() * 100000000000000000).toString(36);
+            props.handleLatencyChange(Date.now(), post_hash);
             props.handleLatencyCheckChange(inputRef.current.value.trim());
-            props.handleSubmit(inputRef.current.value, props.refScroll.current);
+            props.handleSubmit(inputRef.current.value, props.refScroll.current, post_hash);
             throttle.current = performance.now();
             props.refScroll.current = [];
             if(isThrottled.current) {
