@@ -105,7 +105,11 @@ const Count = memo((props: any) => {
     setExpanded(!expanded);
   };
 
-  // const teamEmoji = renderedCounter.roles.includes('blaze') ? '🔥' : renderedCounter.roles.includes('radiant') ? '⭐' : renderedCounter.roles.includes('wave') ? '🌊' : '';
+  const [pickerOpen, setPickerOpen] = useState(false);
+  function handleEmojiSelect(emoji) {
+    props.socket.emit(`updateReactions`, {id: emoji.id, post_uuid: props.post.uuid})
+    setPickerOpen(false);
+  }
   
   const components = {
     p: ('span' as any),
@@ -178,6 +182,19 @@ const Count = memo((props: any) => {
               <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`);}} href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`}>{renderedCounter.emoji ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}` : renderedCounter.name}</Link>&nbsp;
             </Typography>
             </Box>
+            {Object.entries(props.post.reactions).length > 0 && <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}>
+            {props.post.reactions && Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {
+              if(counter && reaction[1] && (reaction[1] as string[]).includes(counter.uuid)) {
+                return (
+                  <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#6ab3ff82', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
+                )
+              } else {
+                return (
+                  <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#afafaf21', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
+                )
+              }
+              })}
+            </Box>}
       </CardContent>
     </Box>
     </Grid>
@@ -185,11 +202,14 @@ const Count = memo((props: any) => {
     <Box ref={anchorRef}></Box>
     {counter && 
     <Box className="countActionsDesktop" sx={{ display: 'none', justifyContent: 'end' }}>
+      <SentimentVerySatisfied sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Reaction" onClick={() => {setPickerOpen(!pickerOpen)}} />
     {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) &&
       <StrikethroughSIcon sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Strike" onClick={() => {setAction('strike'); setOpen(true)}} />
     }
     {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) &&
       <DeleteIcon sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Delete" onClick={() => {setAction('delete'); setOpen(true)}} />}
+
+{pickerOpen && <Popover open={pickerOpen} anchorEl={anchorRef.current} anchorOrigin={{ vertical: 'top', horizontal: -250, }} onClose={() => setPickerOpen(false)}><Picker set={'twitter'} custom={custom_emojis} onEmojiSelect={handleEmojiSelect} /></Popover>}
 
     <Dialog open={open} onClose={() => setOpen(false)}>
       <DialogTitle>Confirm action</DialogTitle>
@@ -290,6 +310,20 @@ const Count = memo((props: any) => {
                     <Typography variant="subtitle1" component="div">
                         <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`);}} href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`}>{renderedCounter.emoji ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}` : renderedCounter.name}</Link>&nbsp;
                       </Typography>
+                      <Box sx={{display: props.post.reactions && Object.entries(props.post.reactions).length > 0 ? 'inline-flex' : 'none', flexWrap: 'wrap'}}>
+                      {props.post.reactions && Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {
+                        if(counter && reaction[1] && (reaction[1] as string[]).includes(counter.uuid)) {
+                          return (
+                            <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#6ab3ff82', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
+                          )
+                        } else {
+                          return (
+                            <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#afafaf21', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
+                          )
+                        }
+                        })}
+                        {/* {props.post.reactions && Object.keys(props.post.reactions).length > 0 && <IconButton sx={{height: '20px', width: '20px'}} onClick={handleOpenReax}><HelpOutline /></IconButton>} */}
+                      </Box>
                 </CardContent>
               </Box>
               </Grid>
@@ -297,6 +331,13 @@ const Count = memo((props: any) => {
               <Box ref={anchorRef}></Box>
               {counter && 
               <Box className="countActionsDesktop" sx={{ display: 'none', justifyContent: 'end' }}>
+                <IconButton
+                  // ref={anchorRef}
+                  aria-label="Reaction"
+                  onClick={() => {setPickerOpen(!pickerOpen)}}
+                >
+                  <SentimentVerySatisfied />
+                </IconButton>
               {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) && <IconButton
                 aria-label="Strike"
                 onClick={() => {setAction('strike'); setOpen(true)}}
@@ -309,6 +350,8 @@ const Count = memo((props: any) => {
               >
                 <DeleteIcon />
               </IconButton>}
+
+              {pickerOpen && <Popover open={pickerOpen} anchorEl={anchorRef.current} anchorOrigin={{ vertical: 'top', horizontal: -250, }} onClose={() => setPickerOpen(false)}><Picker set={'twitter'} custom={custom_emojis} onEmojiSelect={handleEmojiSelect} /></Popover>}
 
               <Dialog open={open} onClose={() => setOpen(false)}>
                 <DialogTitle>Confirm action</DialogTitle>

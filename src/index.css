@@ -772,3 +772,7 @@ background-size: 1800% 1800%;
 .count > * img {
   max-width: 100%;
 }
+
+.MuiTabs-scrollButtons.Mui-disabled {
+  opacity: 0.25!important;
+}

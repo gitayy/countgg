@@ -10,7 +10,7 @@ export const ListButton = (props) => {
     }}> {props.children} </ListItemButton>
 }
 
-export function LinearProgressWithLabel(props: LinearProgressProps & { color: string, progress: number, max: number }) {
+export function LinearProgressWithLabel(props: LinearProgressProps & { color: string, progress: number, max: number, dontUseComplete?: boolean } = {color: 'primary', progress: 0, max: 100, dontUseComplete: false}) {
     const normalise = ((props.progress) * 100) / (props.max);
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', filter: 'none' }}>
@@ -19,7 +19,7 @@ export function LinearProgressWithLabel(props: LinearProgressProps & { color: st
           <LinearProgress sx={{borderRadius: '5px', height: 10}} variant="determinate" color={props.color} value={normalise} />
         </Box>
         <Box sx={{ minWidth: 35 }}>
-        <Typography variant="body2" color="text.secondary">{normalise >= 100 ? `Complete` : `${props.progress.toLocaleString()}/${props.max.toLocaleString()}`}</Typography>
+        <Typography variant="body2" color="text.secondary">{normalise >= 100 ? (!props.dontUseComplete ? `Complete` : `${props.max.toLocaleString()}/${props.max.toLocaleString()}`) : `${props.progress.toLocaleString()}/${props.max.toLocaleString()}`}</Typography>
           {/* <Typography variant="body2" color="text.secondary">{`${Math.round(
             props.progress,
           )}%`}</Typography> */}

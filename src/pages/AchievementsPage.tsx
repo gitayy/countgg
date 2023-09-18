@@ -77,7 +77,7 @@ import { UserContext } from '../utils/contexts/UserContext';
                 )
             })}
             </Grid>    
-            <Typography sx={{mb: 1}} variant="h5">Secret Achievements</Typography>
+            {!counter || (counter && counter.username !== 'Relipaso') && <><Typography sx={{mb: 1}} variant="h5">Secret Achievements</Typography>
             <Grid container>
             {nonPublicAchievements.map((achievement) => {
               const counter_achievement = achievements && counter ? achievements.find((counterachievement) => {return counterachievement.achievementId === achievement.id && counterachievement.counterUUID === counter.uuid }) : undefined
@@ -91,7 +91,8 @@ import { UserContext } from '../utils/contexts/UserContext';
                 </Grid>
                 )
             })}
-            </Grid>           
+            </Grid>   
+            </>}        
         </Box>
         )
     } else {

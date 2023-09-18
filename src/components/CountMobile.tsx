@@ -104,6 +104,12 @@ const CountMobile = memo((props: any) => {
     setExpanded(!expanded);
   };
 
+  const [pickerOpen, setPickerOpen] = useState(false);
+  function handleEmojiSelect(emoji) {
+    props.socket.emit(`updateReactions`, {id: emoji.id, post_uuid: props.post.uuid})
+    setPickerOpen(false);
+  }
+
   const components = {
     p: ('span' as any),
     li: ({ children }) => <li style={{whiteSpace: 'initial'}}>{children}</li>,
@@ -138,7 +144,7 @@ const CountMobile = memo((props: any) => {
                 <Grid item xs={12}>
                   <Grid container sx={{width: '95%'}}>
                     <Grid item xs={12} sx={{color: 'text.primary', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap'}}>
-                    <Link fontSize={9} onClick={(e) => {e.preventDefault();navigate(url);}} href={url} underline={'hover'} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textAlign: 'right'}} variant="caption" color="textSecondary">{props.thread && props.thread.name === 'bars' ? formatDateWithMilliseconds(parseInt(props.post.timestamp)) : formatDate(parseInt(props.post.timestamp))} {props.post.latency && <> (<Typography component={'span'} fontSize={9} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography>)</>}</Link>
+                    <Link fontSize={9} onClick={(e) => {e.preventDefault();navigate(url);}} href={url} underline={'hover'} sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textAlign: 'right'}} variant="caption" color="textSecondary">{props.thread && props.thread.name === 'bars' ? formatDateWithMilliseconds(parseInt(props.post.timestamp)) : formatDate(parseInt(props.post.timestamp), true)} {props.post.latency && <> (<Typography component={'span'} fontSize={9} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography>)</>}</Link>
                     <Box sx={{ textAlign: 'left', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', ...(hoursSinceLastPost > 9 && {scale: '0.75'})}}>
                     {/* {props.post.latency && <Box sx={{display: 'flex', justifyContent: 'center', width: '100%', textAlign: 'center'}}><Typography fontFamily={'Verdana'} fontSize={10} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography></Box>} */}
                     {/* {props.post.latency && <Box sx={{textAlign: 'left'}}><Typography fontFamily={'Verdana'} fontSize={10} sx={{width: 'fit-content', color: 'text.secondary'}} title="Time it took, from sending, for this post to be received from the server." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.latency}ms</Typography></Box>} */}
@@ -180,6 +186,20 @@ const CountMobile = memo((props: any) => {
                 <Link underline="hover" sx={{textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none', fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal'}} color={renderedCounter.color} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`);}} href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`}>{renderedCounter.emoji ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}` : renderedCounter.name}</Link>&nbsp;
               </Typography>
               </Box>
+              {Object.entries(props.post.reactions).length > 0 && <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}>
+              {props.post.reactions && Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {
+                if(counter && reaction[1] && (reaction[1] as string[]).includes(counter.uuid)) {
+                  return (
+                    <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#6ab3ff82', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
+                  )
+                } else {
+                  return (
+                    <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#afafaf21', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
+                  )
+                }
+                })}
+                {/* {props.post.reactions && Object.keys(props.post.reactions).length > 0 && <IconButton sx={{height: '20px', width: '20px'}} onClick={handleOpenReax}><HelpOutline /></IconButton>} */}
+              </Box>}
         </CardContent>
       </Box>
       </Grid>
@@ -187,12 +207,15 @@ const CountMobile = memo((props: any) => {
       <Box ref={anchorRef}></Box>
       {counter && 
       <Box className="countActionsDesktop" sx={{ display: 'none', justifyContent: 'end' }}>
+        <SentimentVerySatisfied sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Reaction" onClick={() => {setPickerOpen(!pickerOpen)}} />
       {props.post.isCount && props.thread && props.thread.autoValidated === false && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) &&
         <StrikethroughSIcon sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Strike" onClick={() => {setAction('strike'); setOpen(true)}} />
       }
       {props.post.hasComment && ((counter && counter.uuid == props.post.authorUUID) || (counter && counter.roles.includes("mod"))) &&
         <DeleteIcon sx={{cursor: 'pointer', mr: 1}} color="action" fontSize="small" aria-label="Delete" onClick={() => {setAction('delete'); setOpen(true)}} />}
   
+  {pickerOpen && <Popover open={pickerOpen} anchorEl={anchorRef.current} anchorOrigin={{ vertical: 'top', horizontal: -250, }} onClose={() => setPickerOpen(false)}><Picker set={'twitter'} custom={custom_emojis} onEmojiSelect={handleEmojiSelect} /></Popover>}
+
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>Confirm action</DialogTitle>
         <DialogContent>
@@ -265,6 +288,14 @@ return (
               <DeleteIcon />
             </IconButton>}
 
+            {counter && counter.roles.includes("counter") && <IconButton
+              aria-label="Reaction"
+              onClick={() => {setPickerOpen(!pickerOpen)}}
+            >
+              <SentimentVerySatisfied  />
+            </IconButton>}
+            {pickerOpen && <Popover open={pickerOpen} anchorEl={anchorRef.current} anchorOrigin={{ vertical: 'top', horizontal: -250, }} onClose={() => setPickerOpen(false)}><Picker set={'twitter'} custom={custom_emojis} onEmojiSelect={handleEmojiSelect} /></Popover>}
+
             <Dialog open={open} onClose={() => setOpen(false)}>
               <DialogTitle>Confirm action</DialogTitle>
               <DialogContent>
@@ -323,6 +354,20 @@ return (
               <Typography component="span" fontSize={12}>{props.post.timeSinceLastCount > 999 ? paddedMsSinceLastCount : msSinceLastCount}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography></>}
               {props.post.latency && <>&nbsp;|&nbsp;<Typography component="span" fontSize={12}>{props.post.latency}<Typography component="span" fontSize={9} variant="subtitle2">ms</Typography></Typography></>}
               </Box>
+              {props.post.reactions && Object.entries(props.post.reactions).length > 0 &&
+              <Box sx={{display: 'inline-flex', flexWrap: 'wrap'}}> 
+              {Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {
+                if(counter && reaction[1] && (reaction[1] as string[]).includes(counter.uuid)) {
+                  return (
+                    <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#6ab3ff82', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
+                  )
+                } else {
+                  return (
+                    <Box key={reaction[0]} onClick={() => {props.socket.emit(`updateReactions`, {id: reaction[0], post_uuid: props.post.uuid})}} component={'div'} sx={{background: '#afafaf21', cursor: 'pointer', paddingTop: '6px', marginRight: '5px', paddingLeft: '5px', paddingRight: '5px', gap: '8px', alignItems: 'center', height: '30px', display: 'inline-flex', border: '1px solid #3c3cff82', borderRadius: '10px'}}>{EmojiTest({id: reaction[0], size: 24, set: 'twitter'})} {(reaction[1] as string[]).length}</Box>
+                  )
+                }
+                })}
+                </Box>}
             </Grid>
             {props.post.chance && <Grid item xs={12}>
             <Box sx={{display: 'flex', justifyContent: 'left', width: '100%', textAlign: 'center'}}><Typography fontSize={9} sx={{width: 'fit-content', color: 'text.secondary'}} title="RNG roll versus the odds of it happening. These aren't stored permanently." style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}>{props.post.roll} {props.post.roll > props.post.chance ? `>` : `<` } {props.post.chance}</Typography></Box>

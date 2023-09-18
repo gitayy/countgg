@@ -201,7 +201,7 @@ export const addCounterToCache = (counter: Counter) => {
   }
 }
 
-export const formatDate = (timestamp: number) => {
+export const formatDate = (timestamp: number, dontSayToday: boolean = false) => {
   const date = new Date(timestamp);
   const now = new Date();
   const yesterday = new Date();
@@ -209,7 +209,7 @@ export const formatDate = (timestamp: number) => {
 
   // check if date is today or yesterday
   if(date.toDateString() === now.toDateString()) {
-    return `Today at ${date.toLocaleTimeString()}`;
+    return `${dontSayToday ? `` : `Today at `}${date.toLocaleTimeString()}`;
   } else if(date.toDateString() === yesterday.toDateString()) {
     return `Yesterday at ${date.toLocaleTimeString()}`;
   }
@@ -218,7 +218,7 @@ export const formatDate = (timestamp: number) => {
   return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
 }
 
-export const formatDateWithMilliseconds = (timestamp: number) => {
+export const formatDateWithMilliseconds = (timestamp: number, dontSayToday: boolean = false) => {
   const date = new Date(timestamp);
   const now = new Date();
   const yesterday = new Date();
@@ -226,7 +226,7 @@ export const formatDateWithMilliseconds = (timestamp: number) => {
 
   // check if date is today or yesterday
   if(date.toDateString() === now.toDateString()) {
-    return `Today at ${date.toLocaleTimeString(undefined, {hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3})}`;
+    return `${dontSayToday ? `` : `Today at `}${date.toLocaleTimeString(undefined, {hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3})}`;
   } else if(date.toDateString() === yesterday.toDateString()) {
     return `Yesterday at ${date.toLocaleTimeString(undefined, {hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3})}`;
   }

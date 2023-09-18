@@ -52,6 +52,7 @@ import AdminAchievementPage from './pages/AdminAchievementPage';
 import AdminNewItemPage from './pages/AdminNewItemPage';
 import BlogsPage from './pages/BlogsPage';
 import BlogCreatePage from './pages/BlogCreatePage';
+import { ThreadProvider } from './utils/contexts/ThreadContext';
 
 function App() {
 
@@ -214,6 +215,7 @@ function App() {
         <ThreadsContext.Provider
       value={{allThreads, allThreadsLoading}}
       >
+        <ThreadProvider>
           <Routes>
             <Route path="/*" element={<Sidebar />} />
           </Routes>
@@ -260,6 +262,7 @@ function App() {
             {user && counter && <Route path="/mentions" element={<MentionsPage />} />}
             {user && counter && <Route path="/shop" element={<ShopPage />} />}
           </Routes>
+          </ThreadProvider>
           </ThreadsContext.Provider>
           </SocketContext.Provider>
           </CookiesProvider>

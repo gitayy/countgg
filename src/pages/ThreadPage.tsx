@@ -34,6 +34,9 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import dingSfx from '../utils/sounds/ding.mp3'
 import useSound from "use-sound";
+import { LinearProgressWithLabel } from '../utils/styles';
+import Spoiler from '../components/Spoiler';
+import { ThreadProvider, useThread } from '../utils/contexts/ThreadContext';
 
 
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
@@ -41,10 +44,19 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const params = useParams();
     const { context } = queryString.parse(window.location.search);
     const thread_name:string = params.thread_name || "main";
+    const {threadName, setThreadName} = useThread();
     const thread_ref = useRef(thread_name);
     useEffect(() => {
       thread_ref.current = thread_name;
-    }, [thread_name]);
+      if(setThreadName) {
+        setThreadName(thread_name);
+      }
+      return (() => {
+        if(setThreadName) {
+          setThreadName(undefined);
+        }
+      })
+    }, [thread_name, setThreadName]);
     const navigate = useNavigate();
     const setFaviconCount = useFavicon();
 
@@ -216,8 +228,15 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         latencyCheck.current = value;
     }
 
-    const [tabValue, setTabValue] = useState('tab_1');
+    const [tabValue, setTabValue] = useState('tab_0');
     const tabValueRef = useRef('tab_1')
+
+    useEffect(() => {
+      if(isDesktop && tabValue === 'tab_0') {
+        setTabValue('tab_1');
+        tabValueRef.current = 'tab_1';
+      }
+    }, [isDesktop]);
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
       setTabValue(newValue);
@@ -653,26 +672,16 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         } else if (socketStatus == 'LIVE') {
           color = 'success';
         }
-        return (<Box sx={{ml: 5, p: 0.5, display: 'flex', alignItems: 'center'}}>
-        <Box sx={{bgcolor: `${color}.light`, width: 8, height: 8, borderRadius: '50%'}}></Box>
-        &nbsp;<Typography color={"text.primary"} variant="body1">{socketStatus}</Typography> &nbsp; <Typography color={"text.secondary"} variant="body2">{socketViewers} {socketViewers === 1 ? 'viewer' : 'viewers'}</Typography>
+        return (<Box sx={{p: 0.5, display: 'flex', alignItems: 'center'}}>
+          <Chip size='small' sx={{ backgroundColor: 'transparent', border: '1px solid', borderColor: `${color}.light`}} label={socketStatus == 'LIVE' ? `${socketViewers} viewer${socketViewers === 1 ? `` : `s`}` : socketStatus} />
+        {/* <Box sx={{bgcolor: `${color}.light`, width: 8, height: 8, borderRadius: '50%'}}></Box> */}
+        {/* &nbsp;<Typography color={"text.primary"} variant="body1">{socketStatus}</Typography> &nbsp; <Typography color={"text.secondary"} variant="body2">{socketViewers} {socketViewers === 1 ? 'viewer' : 'viewers'}</Typography> */}
           </Box>)
       }, [socketStatus, socketViewers]);
 
       const headerMemo = useMemo(() => {
         if(thread) {return (
           <Box sx={{ display: 'flex', flexGrow: 0, p: 0.5, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
-            <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={() => isDesktop ? handleDesktopDrawerToggle() : handleMobileDrawerToggle()}
-            sx={{ mr: 2, ml: 2, 
-              // display: { lg: 'none' }
-             }}
-          >
-            <TagIcon />
-          </IconButton>
             <Typography sx={{p: 0.5}} variant="h6" color="text.primary">{thread.title}</Typography>
             {socketMemo}
           </Box>)
@@ -810,7 +819,10 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <Box sx={{minHeight: 500, height: {xs: '100vh', lg: 'calc(100vh - 65px)'}, width: "auto", ...(!isDesktop && {width: "min-content"}),  flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', flexDirection: "column", overflowY: "scroll",}}>
           {Object.keys(groupedThreads).sort(customSort).map((category) => (
         <div key={category}>
-          <ListItemButton onClick={() => handleCategoryClick(category)}>
+          <ListItemButton onClick={() => handleCategoryClick(category)}
+          sx={{
+            py: 0
+          }}>
           <ListItemIcon sx={{ minWidth: 24, paddingRight: 1 }}>
               {expandedCategories.includes(category) ? (
                 <KeyboardArrowDownIcon />
@@ -828,9 +840,15 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                   startIcon={<TagIcon />}
                   sx={{
                     width: '100%',
+                    py: isDesktop ? 0 : 0.5,
                     opacity: thread_name === thread.name ? 1 : 0.75,
                     textAlign: 'left',
-                    '&:hover': { opacity: 1 },
+                    border: '1px solid transparent',
+                    '&:hover': { 
+                      opacity: 1,
+                      border: '1px solid',
+                      borderColor: theme.palette.primary.main,
+                     },
                     bgcolor: thread_name === thread.name ? alpha(theme.palette.primary.main, 0.5) : 'background.paper',
                     color: thread_name === thread.name ? 'text.primary' : 'text.secondary',
                     justifyContent: 'flex-start',
@@ -912,7 +930,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         return (
           <TabContext value={tabValue}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-        <TabList onChange={handleTabChange} variant={'scrollable'} allowScrollButtonsMobile aria-label="Counting Tabs">
+        <TabList onChange={handleTabChange} variant={'scrollable'} allowScrollButtonsMobile scrollButtons aria-label="Counting Tabs">
+          {!isDesktop && <Tab label="Posts" value="tab_0" />}
           <Tab label="About" value="tab_1" />
           <Tab label="Chats" value="tab_2" />
           <Tab label="Splits" value="tab_3" />
@@ -920,6 +939,9 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         </TabList>
       </Box>
         <Box sx={{flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', overflowY: 'scroll'}}>
+        {!isDesktop && <TabPanel value="tab_0" sx={{flexGrow: 1, p: 0}}>
+          {countListMemo}
+        </TabPanel>}
         <TabPanel value="tab_1" sx={{flexGrow: 1, p: 4}}>
           {thread && counter && thread.countBans && thread.countBans.includes(counter.uuid) && 
           <Box display="flex" alignItems="center" sx={{p: 2, border: '1px solid', borderColor: 'warning.main'}}>
@@ -934,6 +956,36 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               You're viewing the context of an old post. For live updates, click <Link href={`/thread/${thread.name}`}>here</Link>.
             </Typography>
           </Box>}
+          {counter && <>
+          <Typography variant="h5" sx={{mb: 1}}>Challenges</Typography>
+          <Typography variant="body1" sx={{whiteSpace: 'pre-wrap', mb: 2}}>
+            Daily challenges will be here soon, suggest daily challenges in #feature-request on Discord!
+            <Typography variant='body2'>
+                <Chip size='small' variant='filled' 
+                 sx={{
+                  backgroundColor: '#CD7F32', 
+                  color: 'black',
+                  mr: 1,
+                }}
+                 label='100XP' />Suggest a challenge</Typography>
+              <LinearProgressWithLabel color='primary' progress={0} max={1} dontUseComplete={true} />
+            {/* <Typography variant='body2'>Daily Counts: Bronze</Typography>
+            <LinearProgressWithLabel color='primary' progress={1} max={1} dontUseComplete={true} /> */}
+          </Typography>
+          {/* <Box sx={{mt: 2, mb: 2}}>
+            <Spoiler title="Completed Challenges">
+              <Typography variant='body2'>
+                <Chip size='small' variant='filled' 
+                 sx={{
+                  backgroundColor: '#CD7F32', 
+                  color: 'black',
+                  mr: 1,
+                }}
+                 label='100XP' />Daily Participation</Typography>
+              <LinearProgressWithLabel color='primary' progress={1} max={1} dontUseComplete={true} />
+            </Spoiler>
+          </Box> */}
+          </>}
           <Typography variant="h5" sx={{mb: 1}}>About</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.description : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           <Typography variant="h5" sx={{mt: 2, mb: 1}}>Rules</Typography>
@@ -973,7 +1025,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         </Box>
         </TabContext>
         )
-      }, [tabValue, thread, newChatsLoadedState, lastCount, splits, dailyHOC, dailyRobs, bank, robOpen, loading, recentChatsLoading])
+      }, [tabValue, thread, isDesktop, newChatsLoadedState, lastCount, splits, dailyHOC, dailyRobs, bank, robOpen, loading, recentChatsLoading,
+        cachedCounts, thread, thread_name, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, loading])
       
 
       if(!loading && !threadLoading && thread) {
@@ -1000,11 +1053,14 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               {robConfirmMemo}
               </Box>
               </Grid>
+              {isDesktop &&
               <Grid item xs={12} lg={desktopPickerOpen ? 6 : 8} sx={{height: 'auto', }}>
-            <Box sx={{minHeight: 500, height: 'calc(100vh - 65px)'}}>
-              {countListMemo}
-              </Box>
-              </Grid></>
+              <Box sx={{minHeight: 500, height: 'calc(100vh - 65px)'}}>
+                {countListMemo}
+                </Box>
+                </Grid>
+              }
+              </>
         
       : <>
       <Grid item xs={0} lg={2} sx={{ height: 'auto', display: !desktopPickerOpen && isDesktop ? "none" : "initial" }}>
@@ -1012,11 +1068,13 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               {threadPickerMemo}
               </Box>    
         </Grid>  
-      <Grid item xs={12} lg={desktopPickerOpen ? 6 : 8} sx={{height: 'auto', }}>
+        {isDesktop &&
+          <Grid item xs={12} lg={desktopPickerOpen ? 6 : 8} sx={{height: 'auto', }}>
             <Box sx={{minHeight: 500, height: 'calc(100vh - 65px)'}}>
               {countListMemo}
               </Box>
-              </Grid>
+          </Grid>
+          }
             <Grid item xs={12} lg={4}>
             <Box sx={{display: 'flex', flexDirection: 'column', minHeight: 500, height: 'calc(100vh - 65px)', overflowY: 'auto', bgcolor: 'background.paper'}}>
             {headerMemo}

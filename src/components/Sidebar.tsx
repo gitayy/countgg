@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import AppBar from '@mui/material/AppBar';
@@ -9,7 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
-import { Avatar, Badge, Button, CardMedia, Chip, Divider, Drawer, Link, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Modal, Skeleton, Step, StepLabel, Stepper, Theme, Tooltip, useMediaQuery, useTheme } from '@mui/material';
+import { Avatar, Badge, Button, CardMedia, Chip, Collapse, Divider, Drawer, Link, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Modal, Skeleton, Step, StepLabel, Stepper, Theme, Tooltip, alpha, useMediaQuery, useTheme } from '@mui/material';
 import QueryStatsIcon from '@mui/icons-material/QueryStats';
 import HomeIcon from '@mui/icons-material/Home';
 import StadiumIcon from '@mui/icons-material/Stadium';
@@ -38,6 +38,11 @@ import EmailIcon from '@mui/icons-material/Email';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import StarsIcon from '@mui/icons-material/Stars';
+import TagIcon from '@mui/icons-material/Tag';
+import { ThreadsContext } from '../utils/contexts/ThreadsContext';
+import { useThread } from '../utils/contexts/ThreadContext';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -64,6 +69,7 @@ export const Sidebar = () => {
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [threadPickerOpen, setThreadPickerOpen] = useState(false);
 
   const [modalOpen, setModalOpen] = useState<boolean>(((counter && !counter.color) && true) || false);
   const [registrationToggle, setRegistrationToggle] = useState(true);
@@ -80,6 +86,12 @@ export const Sidebar = () => {
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
+  };
+
+  const { allThreads, allThreadsLoading } = useContext(ThreadsContext);
+
+  const handleThreadPickerToggle = () => {
+    setThreadPickerOpen(!threadPickerOpen);
   };
 
   const logoutFunc = async () => {
@@ -108,6 +120,250 @@ export const Sidebar = () => {
     overflowY: 'scroll',
   };
 
+  const [mobilePickerOpen, setMobilePickerOpen] = useState(false);
+  const [desktopPickerOpen, setDesktopPickerOpen] = useState(false);
+
+  useEffect(() => {
+    if(!loading && user) {
+      if(user.pref_hide_thread_picker) {
+        setDesktopPickerOpen(false);
+      }
+    }
+  }, [loading]);
+
+    const handleMobileDrawerToggle = () => {
+      setMobilePickerOpen(!mobilePickerOpen);
+    };
+    const handleDesktopDrawerToggle = () => {
+      setDesktopPickerOpen(!desktopPickerOpen);
+    };
+
+    function groupThreadsByCategory(threads) {
+      const groupedThreads = {};
+    
+      threads.forEach((thread) => {
+        const category = thread.category || 'Uncategorized'; // If category is undefined or blank, consider it as "Uncategorized"
+    
+        if (!groupedThreads[category]) {
+          groupedThreads[category] = [];
+        }
+    
+        groupedThreads[category].push(thread);
+      });
+    
+      return groupedThreads;
+    }
+
+    const specificOrder = ["Traditional", "Double Counting", "No Mistakes", "Miscellaneous"];
+    const customSort = (a, b) => {    
+      if (specificOrder.includes(a) && specificOrder.includes(b)) {
+        return specificOrder.indexOf(a) - specificOrder.indexOf(b);
+      } else if (specificOrder.includes(a)) {
+        return -1;
+      } else if (specificOrder.includes(b)) {
+        return 1;
+      }
+  
+      return a.localeCompare(b); // Keep the rest in alphabetical order
+    };
+
+    const initialExpandedCategories = Object.keys(groupThreadsByCategory(allThreads)).sort(customSort);
+    const [expandedCategories, setExpandedCategories] = useState(initialExpandedCategories);
+
+    useEffect(() => {
+      setExpandedCategories(Object.keys(groupThreadsByCategory(allThreads)).sort(customSort))
+    }, [allThreads])
+
+    const handleCategoryClick = (category) => {
+      if (expandedCategories.includes(category)) {
+        setExpandedCategories(expandedCategories.filter((cat) => cat !== category));
+      } else {
+        setExpandedCategories([...expandedCategories, category]);
+      }
+    };
+
+    const { threadName } = useThread();
+
+    useEffect(() => {
+      function navigateThread(direction) {
+        console.log("Navigating thread", direction);
+        const groupedThreads = groupThreadsByCategory(allThreads);
+        const currentCategory = allThreads.find((thread) => thread.name === threadName)?.category || "Uncategorized"
+        console.log("Current category:", currentCategory);
+        if (!currentCategory || !groupedThreads[currentCategory]) {
+          return;
+        }
+    
+        const threadsInCategory = groupedThreads[currentCategory];
+        const currentIndex = threadsInCategory.findIndex((thread) => thread.name === threadName);
+    
+        if (currentIndex === -1) {
+          return;
+        }
+    
+        let newIndex;
+        if (direction === "up") {
+          newIndex = currentIndex - 1;
+        } else if (direction === "down") {
+          newIndex = currentIndex + 1;
+        }
+    
+        if (newIndex >= 0 && newIndex < threadsInCategory.length) {
+          const newThread = threadsInCategory[newIndex];
+          navigate(`/thread/${newThread.name}`);
+        } else {
+          const categoryIndex = specificOrder.indexOf(currentCategory);
+          if (direction === "up" && categoryIndex > 0) {
+            const previousCategory = specificOrder[categoryIndex - 1];
+            const previousThreads = groupedThreads[previousCategory];
+            if (previousThreads.length > 0) {
+              const lastThreadInPreviousCategory = previousThreads[previousThreads.length - 1];
+              navigate(`/thread/${lastThreadInPreviousCategory.name}`);
+            }
+          } else if (direction === "down" && categoryIndex < specificOrder.length - 1) {
+            const nextCategory = specificOrder[categoryIndex + 1];
+            const nextThreads = groupedThreads[nextCategory];
+            if (nextThreads.length > 0) {
+              const firstThreadInNextCategory = nextThreads[0];
+              navigate(`/thread/${firstThreadInNextCategory.name}`)
+            }
+          }
+        }
+      }
+
+      const handleKeyDown = (event) => {
+        if (event.altKey) {
+          switch (event.key) {
+            case "ArrowUp":
+              navigateThread("up");
+              break;
+            case "ArrowDown":
+              navigateThread("down");
+              break;
+          }
+        }
+      };
+  
+      document.addEventListener("keydown", handleKeyDown);
+  
+      return () => {
+        // Remove the event listener when the component unmounts
+        document.removeEventListener("keydown", handleKeyDown);
+      };
+    }, [threadName, allThreadsLoading]); // Empty dependency array to run this effect only once
+
+  const threadPickerMemo = useMemo(() => {
+
+    const groupedThreads = groupThreadsByCategory(allThreads);
+
+    if(allThreads && allThreads.length > 0) {
+      const picker = 
+      <Box sx={{minHeight: 500, height: {
+        xs: '100vh', 
+        // lg: 'calc(100vh - 65px)'
+        }, width: "min-content", bgcolor: 'background.paper', color: 'text.primary', flexDirection: "column", overflowY: "scroll",}}>
+      {Object.keys(groupedThreads).sort(customSort).map((category) => (
+    <div key={category}>
+      <ListItemButton onClick={() => handleCategoryClick(category)}
+      sx={{
+        py: 0
+      }}>
+      <ListItemIcon sx={{ minWidth: 24, paddingRight: 1 }}>
+          {expandedCategories.includes(category) ? (
+            <KeyboardArrowDownIcon />
+          ) : (
+            <KeyboardArrowRightIcon />
+          )}
+        </ListItemIcon>
+        <ListItemText primary={category} />
+      </ListItemButton>
+      <Collapse in={expandedCategories.includes(category)}>
+        <List>
+          {groupedThreads[category].map((thread, index) => (
+            <Button
+              key={thread.id}
+              startIcon={<TagIcon />}
+              sx={{
+                width: '100%',
+                py: isDesktop ? 0 : 0.5,
+                opacity: threadName === thread.name ? 1 : 0.75,
+                textAlign: 'left',
+                border: '1px solid transparent',
+                '&:hover': { 
+                  opacity: 1,
+                  border: '1px solid',
+                  borderColor: theme.palette.primary.main,
+                 },
+                bgcolor: threadName === thread.name ? alpha(theme.palette.primary.main, 0.5) : 'background.paper',
+                color: threadName === thread.name ? 'text.primary' : 'text.secondary',
+                justifyContent: 'flex-start',
+              }}
+              onClick={() => navigate(`/thread/${thread.name}`)}
+            >
+              {thread.title}
+            </Button>
+          ))}
+        </List>
+      </Collapse>
+    </div>
+  ))}
+      </Box>
+
+      console.log("Threads");
+      console.log(allThreads);
+      return (
+        !isDesktop ?
+        <Drawer
+          variant="temporary"
+          open={mobilePickerOpen}
+          anchor='left'
+          onClose={handleMobileDrawerToggle}
+          ModalProps={{
+            keepMounted: true,
+          }}
+          sx={{
+            display: { xs: 'block', lg: 'none' },
+            boxSizing: 'border-box'
+          }}
+        >
+          {picker}
+        </Drawer>
+        :
+        // <Drawer
+        //   variant="persistent"
+        //   sx={{
+        //     display: { xs: 'none', lg: 'block' },
+        //     '& .MuiDrawer-paper': { boxSizing: 'border-box', display: "contents" },
+        //   }}
+        //   open={desktopPickerOpen}
+        // >
+        <Drawer
+          anchor="left"
+          open={desktopPickerOpen}
+          onClose={handleDesktopDrawerToggle}
+          variant="temporary"
+          sx={{
+            display: 'block',
+            boxSizing: 'border-box',
+            width: 'min-content',
+            // position: 'relative!important',
+          }}
+          ModalProps={{
+            keepMounted: true,
+          }}
+        >
+          {picker}
+        </Drawer>
+      )
+    } 
+    else {
+      // console.log("No threads");
+      return (
+        <Box sx={{display: 'none'}}></Box>
+      )
+    }
+  }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, threadName, expandedCategories, isDesktop])
+
   const drawer = (
     <div>
       {/* <Toolbar /> */}
@@ -123,15 +379,6 @@ export const Sidebar = () => {
             <ListItemText primary={'Home'} />          
           </ListItemButton>          
         </ListItem></Link>
-        {/* <Link color={'inherit'} underline='none' href={`/mentions`} onClick={(e) => {e.preventDefault();navigate(`/mentions`);}}>
-        <ListItem onClick={handleDrawerToggle} key={'home'}  disablePadding>
-          <ListItemButton>
-            <ListItemIcon>
-              <EmailIcon />
-            </ListItemIcon>
-            <ListItemText primary={'Mentions'} />          
-          </ListItemButton>          
-        </ListItem></Link> */}
         <Link color={'inherit'} underline='none' href={`/threads`} onClick={(e) => {e.preventDefault();navigate(`/threads`);}}>
         <ListItem onClick={handleDrawerToggle} key={'threads'} disablePadding>
           <ListItemButton>
@@ -268,8 +515,7 @@ export const Sidebar = () => {
 
   return (
     <Box sx={{ flexGrow: 1, minHeight: 65, maxHeight: 65 }}>
-      {/* {loaded_site_version && site_version !== loaded_site_version && <Box><Typography variant='body2' sx={{m: 2, bgcolor: 'red', display: 'flex', alignItems: 'end'}}>Not updated</Typography></Box>} */}
-      <AppBar position="static" color={'primary'} sx={{bgcolor: loadedSiteVer && site_version !== loadedSiteVer ? 'red' : '', borderBottom: '1px solid', borderColor: 'rgba(194, 224, 255, 0.30)' }}>
+      <AppBar position="static" color={'primary'} sx={{minHeight: 65, maxHeight: 65, bgcolor: loadedSiteVer && site_version !== loadedSiteVer ? 'red' : '', borderBottom: '1px solid', borderColor: 'rgba(194, 224, 255, 0.30)' }}>
         <Toolbar sx={{ minHeight: 65, maxHeight: 65 }}>
           <IconButton
             size="large"
@@ -292,6 +538,16 @@ export const Sidebar = () => {
         >
           {drawer}
         </Drawer>
+        <IconButton
+            size="large"
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            sx={{ mr: 2 }}
+            onClick={isDesktop ? handleDesktopDrawerToggle : handleMobileDrawerToggle}
+          >
+            <TagIcon />
+          </IconButton>
           <Typography variant="h6" component="div" sx={{ display: 'flex', justifyContent: 'center', flexGrow: 1 }}>
             <Link href={`/`} onClick={(e) => {
               e.preventDefault();
@@ -451,6 +707,7 @@ export const Sidebar = () => {
           )}
         </Toolbar>
       </AppBar>
+      {threadPickerMemo}
     </Box>
   );
 };
