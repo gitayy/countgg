@@ -545,6 +545,10 @@ useEffect(() => {
   </Grid>
 </Grid>
 
+<Box sx={{justifyContent: 'center', width: '100%', display: 'flex'}}>
+<iframe src="https://discord.com/widget?id=1074858682141126676&theme=dark" width="350" height="300" allowTransparency={true} frameBorder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+</Box>
+
         <Typography variant="body2" component={'div'} sx={{ textAlign: 'center', m: 1 }}>
           since February 27, 2023 — &nbsp;
           <Link sx={{cursor: 'pointer', color: 'inherit'}} underline={'hover'} onClick={(e) => {e.preventDefault();catify()}}>Cat</Link> — &nbsp;
