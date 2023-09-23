@@ -1015,7 +1015,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           {lastCount && <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">{lastCount.lastCount.validCountNumber.toLocaleString()} total counts</Typography>}
           {thread_name === 'main' && bank > -1 && <>
           <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Bank: ${bank}</Typography>
-          {counter && (!counter.lastRob || (counter.lastRob && ((parseFloat(counter.lastRob) < moment().tz('America/New_York').startOf('day').unix() * 1000)))) && <Button variant="contained" onClick={() => openRobConfirm()}>
+          {counter && !counter.roles.includes('banned') && (!counter.lastRob || (counter.lastRob && ((parseFloat(counter.lastRob) < moment().tz('America/New_York').startOf('day').unix() * 1000)))) && <Button variant="contained" onClick={() => openRobConfirm()}>
             Rob
           </Button>}
           </>}
