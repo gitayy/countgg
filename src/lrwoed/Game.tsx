@@ -100,6 +100,37 @@ const todaySeed =
   return word;
 }
 
+function useLocalStorage<T>(
+  key: string,
+  initial: T
+): [T, (value: T | ((t: T) => T)) => void] {
+  const [current, setCurrent] = useState<T>(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initial;
+    } catch (e) {
+      return initial;
+    }
+  });
+  const setSetting = (value: T | ((t: T) => T)) => {
+    try {
+      const v = value instanceof Function ? value(current) : value;
+      setCurrent(v);
+	  for (var i = 0; i < localStorage.length; i++){
+		if(+localStorage.key(i).split("-")[2] != (+key.split("-")[2])){
+			localStorage.removeItem(localStorage.key(i));
+			i--;
+		}
+	  }
+	  if(key.includes("lrwoed-hint")) {
+		  if(v.includes("Too short") || v.includes("valid words") || v.includes("copied to clipboard")) return [current, setSetting];
+	  }
+      window.localStorage.setItem(key, JSON.stringify(v));
+    } catch (e) {}
+  };
+  return [current, setSetting];
+}
+
 function getChallengeUrl(target: string): string {
   return (
     window.location.origin +
@@ -134,56 +165,6 @@ function parseUrlGameNumber(): number {
   const gameNumber = Number(gameParam);
   return gameNumber >= 1 && gameNumber <= 1000 ? gameNumber : 1;
 }
-
-function Game(props: GameProps) {
-  const [gameState, setGameState] = useState(GameState.Playing);
-  const [guesses, setGuesses] = useState<string[]>([]);
-  const [currentGuess, setCurrentGuess] = useState<string>("");
-  const [challenge, setChallenge] = useState<string>(initChallenge);
-  const [wordLength, setWordLength] = useState(
-    challenge ? challenge.length : parseUrlLength()
-  );
-  const [gameNumber, setGameNumber] = useState(parseUrlGameNumber());
-  const [target, setTarget] = useState(() => {
-    return getRandomNonDictionaryWord(seed)
-    // resetRng();
-    // // Skip RNG ahead to the parsed initial game number:
-    // for (let i = 1; i < gameNumber; i++) randomTarget(wordLength);
-    // return challenge || randomTarget(wordLength);
-  });
-  const [hint, setHint] = useState<string>(
-    challengeError
-      ? `Invalid challenge string, playing random game.`
-      : `Make your first guess!`
-  );
-  const currentSeedParams = () =>
-    `?seed=${seed}&length=${wordLength}&game=${gameNumber}`;
-  useEffect(() => {
-    if (seed) {
-      window.history.replaceState(
-        {},
-        document.title,
-        window.location.pathname + currentSeedParams()
-      );
-    }
-  }, [wordLength, gameNumber]);
-  const tableRef = useRef<HTMLTableElement>(null);
-  const startNextGame = () => {
-    if (challenge) {
-      // Clear the URL parameters:
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    setChallenge("");
-    const newWordLength = limitLength(wordLength);
-    setWordLength(newWordLength);
-    // setTarget(randomTarget(newWordLength));
-    setTarget(getRandomNonDictionaryWord(seed));
-    setHint("");
-    setGuesses([]);
-    setCurrentGuess("");
-    setGameState(GameState.Playing);
-    setGameNumber((x) => x + 1);
-  };
 
   // Specify the target date (5-30-2023)
 // const targetDate = new Date('2023-05-30');
@@ -222,6 +203,59 @@ const targetDate = moment.tz('2023-05-30', moment.tz.guess());
 const currentDate = moment();
 
 const daysDiff = currentDate.diff(targetDate, 'days');
+
+function Game(props: GameProps) {
+  let stateStorageKey = ("lrwoed-result-" +daysDiff);
+  let guessesStorageKey = ("lrwoed-guesses-" +daysDiff);
+  let hintStorageKey = ("lrwoed-hint-" +daysDiff);
+  const [gameState, setGameState] = useLocalStorage<GameState>(stateStorageKey, GameState.Playing);
+  const [guesses, setGuesses] = useLocalStorage<string[]>(guessesStorageKey, new Array(0));
+  const [currentGuess, setCurrentGuess] = useState<string>("");
+  const [challenge, setChallenge] = useState<string>(initChallenge);
+  const [wordLength, setWordLength] = useState(
+    challenge ? challenge.length : parseUrlLength()
+  );
+  const [gameNumber, setGameNumber] = useState(parseUrlGameNumber());
+  const [target, setTarget] = useState(() => {
+    return getRandomNonDictionaryWord(seed)
+    // resetRng();
+    // // Skip RNG ahead to the parsed initial game number:
+    // for (let i = 1; i < gameNumber; i++) randomTarget(wordLength);
+    // return challenge || randomTarget(wordLength);
+  });
+  const [hint, setHint] = useLocalStorage<string>(hintStorageKey,
+    challengeError
+      ? `Invalid challenge string, playing random game.`
+      : `Make your first guess!`
+  );
+  const currentSeedParams = () =>
+    `?seed=${seed}&length=${wordLength}&game=${gameNumber}`;
+  useEffect(() => {
+    if (seed) {
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname + currentSeedParams()
+      );
+    }
+  }, [wordLength, gameNumber]);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const startNextGame = () => {
+    if (challenge) {
+      // Clear the URL parameters:
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    setChallenge("");
+    const newWordLength = limitLength(wordLength);
+    setWordLength(newWordLength);
+    // setTarget(randomTarget(newWordLength));
+    setTarget(getRandomNonDictionaryWord(seed));
+    setHint("");
+    setGuesses([]);
+    setCurrentGuess("");
+    setGameState(GameState.Playing);
+    setGameNumber((x) => x + 1);
+  };
 
   async function share(copiedHint: string, text?: string) {
     const url = seed
