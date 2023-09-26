@@ -117,9 +117,11 @@ function useLocalStorage<T>(
       const v = value instanceof Function ? value(current) : value;
       setCurrent(v);
 	  for (var i = 0; i < localStorage.length; i++){
-		if(+localStorage.key(i).split("-")[2] != (+key.split("-")[2])){
-			localStorage.removeItem(localStorage.key(i));
-			i--;
+		if(localStorage.key(i).includes("lrwoed")){
+			if(+localStorage.key(i).split("-")[2] != (+key.split("-")[2])){
+				localStorage.removeItem(localStorage.key(i));
+				i--;
+			}
 		}
 	  }
 	  if(key.includes("lrwoed-hint")) {
