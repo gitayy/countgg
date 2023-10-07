@@ -4,7 +4,7 @@ import { createElement } from 'react';
 import { visit } from 'unist-util-visit';
 import { validate as uuid_validate } from 'uuid';
 
-export const site_version = "v1.3.3";
+export const site_version = "v1.3.4";
 export var loaded_site_version;
 export function updateSiteVer(siteVer: string) {
   loaded_site_version = siteVer;
@@ -279,6 +279,43 @@ export const uuidv1ToMs = (uuidv1) => {
     return 0;
   }  
 };
+
+export function findPossibleIndicesForNextMove(moves: number[], newNumber: number): number[] {
+  const possibleIndices: number[] = [];
+
+  // Iterate through the moves array
+  for (let i = 0; i < moves.length; i++) {
+    if (moves[i] === 0) {
+      // Check if newNumber can replace the 0 while maintaining order
+      let isValid = true;
+      
+      // Check if there are higher or lower non-zero values
+      for (let j = i - 1; j >= 0; j--) {
+        if (moves[j] !== 0) {
+          if (newNumber < moves[j]) {
+            isValid = false;
+            break;
+          }
+        }
+      }
+
+      for (let k = i + 1; k < moves.length; k++) {
+        if (moves[k] !== 0) {
+          if (newNumber > moves[k]) {
+            isValid = false;
+            break;
+          }
+        }
+      }
+
+      if (isValid) {
+        possibleIndices.push(i);
+      }
+    }
+  }
+
+  return possibleIndices;
+}
 
 export const formatTimeDiff = (time1, time2) => {
   const diff = Math.abs(time2 - time1);

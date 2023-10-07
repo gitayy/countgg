@@ -37,6 +37,7 @@ import useSound from "use-sound";
 import { LinearProgressWithLabel } from '../utils/styles';
 import Spoiler from '../components/Spoiler';
 import { ThreadProvider, useThread } from '../utils/contexts/ThreadContext';
+import Lever from '../components/Lever';
 
 
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
@@ -68,7 +69,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [socketStatus, setSocketStatus] = useState("CONNECTING...");
     const [socketViewers, setSocketViewers] = useState(1);
 
-    const { user, counter, loading } = useContext(UserContext);
+    const { user, counter, loading, challenges, setChallenges } = useContext(UserContext);
     const { allThreads, allThreadsLoading } = useContext(ThreadsContext);
     const { thread, threadLoading, setThread } = useFetchThread(thread_name);
     const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest, recentCountsRef } = useFetchRecentCounts(thread_name, context, socketStatus, thread_ref);
@@ -196,6 +197,13 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const endRenderRef = useRef(0);
     const postTextRef = useRef('');
     const [renderTime, setRenderTime] = useState<number>();
+
+    const generateChallenges = () => {
+      if(!challenges || challenges.length < 7) {
+        console.log("Generating challenges");
+        socket.emit('generate_challenge');
+      }
+    }
 
     useEffect(() => {  
       if(renderLatencyEnabled.current) {
@@ -956,7 +964,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               You're viewing the context of an old post. For live updates, click <Link href={`/thread/${thread.name}`}>here</Link>.
             </Typography>
           </Box>}
-          {counter && <>
+          {/* {counter && <>
           <Typography variant="h5" sx={{mb: 1}}>Challenges</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap', mb: 2}}>
             Daily challenges will be here soon, suggest daily challenges in #feature-request on Discord!
@@ -969,10 +977,10 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 }}
                  label='100XP' />Suggest a challenge</Typography>
               <LinearProgressWithLabel color='primary' progress={0} max={1} dontUseComplete={true} />
-            {/* <Typography variant='body2'>Daily Counts: Bronze</Typography>
-            <LinearProgressWithLabel color='primary' progress={1} max={1} dontUseComplete={true} /> */}
+            <Typography variant='body2'>Daily Counts: Bronze</Typography>
+            <LinearProgressWithLabel color='primary' progress={1} max={1} dontUseComplete={true} />
           </Typography>
-          {/* <Box sx={{mt: 2, mb: 2}}>
+          <Box sx={{mt: 2, mb: 2}}>
             <Spoiler title="Completed Challenges">
               <Typography variant='body2'>
                 <Chip size='small' variant='filled' 
@@ -984,8 +992,10 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                  label='100XP' />Daily Participation</Typography>
               <LinearProgressWithLabel color='primary' progress={1} max={1} dontUseComplete={true} />
             </Spoiler>
-          </Box> */}
-          </>}
+          </Box>
+          </>} */}
+          {/* {user && counter && !counter.roles.includes("banned") && (!challenges || challenges.length <= 7) &&
+          <Box onClick={() => generateChallenges()}><Lever /></Box>} */}
           <Typography variant="h5" sx={{mb: 1}}>About</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap'}}><ReactMarkdown children={thread ? thread.description : "Loading..."} components={{p: 'span'}} remarkPlugins={[remarkGfm]} /></Typography>
           <Typography variant="h5" sx={{mt: 2, mb: 1}}>Rules</Typography>

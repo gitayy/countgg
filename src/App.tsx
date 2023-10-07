@@ -53,10 +53,11 @@ import AdminNewItemPage from './pages/AdminNewItemPage';
 import BlogsPage from './pages/BlogsPage';
 import BlogCreatePage from './pages/BlogCreatePage';
 import { ThreadProvider } from './utils/contexts/ThreadContext';
+import { NumberShufflePage } from './pages/NumberShufflePage';
 
 function App() {
 
-  const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, totalCounters, setTotalCounters } = useFetchUser();
+  const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, challenges, setChallenges, totalCounters, setTotalCounters } = useFetchUser();
   const { allThreads, allThreadsLoading } = useFetchAllThreads();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light');
@@ -208,7 +209,7 @@ function App() {
         <ThemeProvider theme={theme}>
         <CssBaseline />
         <UserContext.Provider
-      value={{user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, totalCounters, setTotalCounters}}
+      value={{user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, challenges, setChallenges, totalCounters, setTotalCounters}}
       >
         <CookiesProvider>
         <SocketContext.Provider value={socket}>
@@ -252,6 +253,7 @@ function App() {
             <Route path="/contact-us" element={<AboutPage />} />
             <Route path="/huh" element={<TheRockPage />} />
             <Route path="/rps" element={<RPSPage />} />
+            <Route path="/shuffle" element={<NumberShufflePage />} />
             <Route path="/r/livecounting" element={<LCPage />} />
             <Route path="/lrwoed" element={<LrwoedPage />} />
             <Route path="/rewards" element={<SeasonPage />} />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getAuthStatus } from '../api';
-import { Counter, Item, User } from '../types';
+import { Challenge, Counter, Item, User } from '../types';
 import { useIsMounted } from './useIsMounted';
 
 export function useFetchUser() {
@@ -10,6 +10,7 @@ export function useFetchUser() {
   const [totalCounters, setTotalCounters] = useState<number>();
   const [counter, setCounter] = useState<Counter>();
   const [items, setItems] = useState<Item[]>();
+  const [challenges, setChallenges] = useState<Challenge[]>();
   const isMounted = useIsMounted();
 
   useEffect(() => {
@@ -29,5 +30,5 @@ export function useFetchUser() {
       })
   }, []);
 
-  return { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, totalCounters, setTotalCounters };
+  return { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, challenges, setChallenges, totalCounters, setTotalCounters };
 }

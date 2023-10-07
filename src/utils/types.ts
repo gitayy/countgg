@@ -182,6 +182,24 @@ export type RedditPost = {
   replyTime?: number;
 }
 
+export type Challenge = {
+  id: number;
+  day: string;
+  timestamp: string;
+  thread: string;
+  progress: number;
+  maxProgress: number;
+  reward: number;
+  rewardType: string;
+  difficulty: string;
+  status: string;
+  category: string;
+  challengeNumber: number;
+  title: string;
+  description: string;
+  misc: string[];
+}
+
 // id: number;
 
 // @PrimaryColumn()

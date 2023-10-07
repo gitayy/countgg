@@ -308,9 +308,6 @@ export const Sidebar = () => {
     </div>
   ))}
       </Box>
-
-      console.log("Threads");
-      console.log(allThreads);
       return (
         !isDesktop ?
         <Drawer

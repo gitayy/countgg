@@ -114,12 +114,14 @@ function useLocalStorage<T>(
   });
   const setSetting = (value: T | ((t: T) => T)) => {
     try {
-      const v = value instanceof Function ? value(current) : value;
+      const v: any = value instanceof Function ? value(current) : value;
       setCurrent(v);
 	  for (var i = 0; i < localStorage.length; i++){
-		if(localStorage.key(i).includes("lrwoed")){
-			if(+localStorage.key(i).split("-")[2] != (+key.split("-")[2])){
-				localStorage.removeItem(localStorage.key(i));
+      const bum = localStorage.key(i);
+      if(bum == null) continue;
+		if(bum.includes("lrwoed")){
+			if(+bum.split("-")[2] != (+key.split("-")[2])){
+				localStorage.removeItem(bum);
 				i--;
 			}
 		}
@@ -282,13 +284,13 @@ function Game(props: GameProps) {
     } catch (e) {
       console.warn("navigator.clipboard.writeText failed:", e);
     }
-    setHint(url);
+    setHint(copiedHint);
   }
 
   const onKey = (key: string) => {
     if (gameState !== GameState.Playing) {
       if (key === "Enter") {
-        startNextGame();
+        // startNextGame();
       }
       return;
     }
@@ -322,10 +324,7 @@ function Game(props: GameProps) {
       setGuesses((guesses) => guesses.concat([currentGuess]));
       setCurrentGuess((guess) => "");
 
-      const gameOver = (verbed: string) =>
-        `You ${verbed}! The answer was ${target.toUpperCase()}. (Enter to ${
-          challenge ? "play a random game" : "play again"
-        })`;
+      const gameOver = (verbed: string) => {return `You ${verbed}! The answer was ${target.toUpperCase()}. `;}
 
       if (currentGuess === target) {
         setHint(gameOver("won"));
@@ -413,7 +412,7 @@ function Game(props: GameProps) {
             setHint(`${length} letters`);
           }}
         ></input> */}
-        <button
+        {/* <button
           style={{ flex: "0 0 auto" }}
           disabled={gameState !== GameState.Playing || guesses.length === 0}
           onClick={() => {
@@ -425,7 +424,7 @@ function Game(props: GameProps) {
           }}
         >
           Give up
-        </button>
+        </button> */}
       </div>
       <table
         className="Game-rows"
@@ -474,6 +473,7 @@ function Game(props: GameProps) {
               share(
                 "Result copied to clipboard!",
                 `${gameName} ${daysDiff} ${score}/${props.maxGuesses}\n` +
+                // `${gameName} ${daysDiff}${props.difficulty === Difficulty.Hard ? '*' : props.difficulty === Difficulty.UltraHard ? '**' : ''} ${score}/${props.maxGuesses}\n` +
                   guesses
                     .map((guess) =>
                       clue(guess, target)

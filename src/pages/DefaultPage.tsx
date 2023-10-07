@@ -3,7 +3,6 @@ import { UserContext } from '../utils/contexts/UserContext';
 import { useContext, useEffect, useState } from 'react';
 import { Alert, AlertColor, Badge, Box, Button, CardMedia, Chip, Grid, Link, Modal, Paper, Skeleton, Snackbar, Typography, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
-import SwingBg from '../assets/swing2.png';
 import { calculateLevel, modalStyle } from '../utils/helpers';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
@@ -17,6 +16,7 @@ import StarsIcon from '@mui/icons-material/Stars';
 import AbcIcon from '@mui/icons-material/Abc';
 import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
 import ChatIcon from '@mui/icons-material/Chat';
+import ReorderIcon from '@mui/icons-material/Reorder';
 import { DailyHOCTable } from '../components/DailyHOCTable';
 import { Counter, PostType } from '../utils/types';
 import RedditIcon from '@mui/icons-material/Reddit';
@@ -119,7 +119,7 @@ useEffect(() => {
       setSums(prevSums => {
         const updatedSums = {
           ...prevSums,
-          [thread.uuid]: (prevSums[thread.uuid] ?? 0) + 1,
+          [thread.uuid]: thread && thread.uuid ? (prevSums[thread.uuid] ?? 0) + 1 : 1,
         };
         return updatedSums;
       });
@@ -210,7 +210,7 @@ useEffect(() => {
         //  icon={<Box component='span' sx={{ml: '9px!important', bgcolor: theme.palette.mode === 'dark' ? `#44b700` : `#7fff19`, display: 'inline-block', width: 8, height: 8, borderRadius: '50%'}}></Box>} 
          label={`${usersOnline.toLocaleString()} user${usersOnline === 1 ? `` : 's'} online`} /> <Chip label={`${sumCounts.toLocaleString()} counts today`} />
       </Typography>
-        {!counter && <Paper elevation={8} sx={{mb: 2, display: 'flex', alignItems: 'stretch', background: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),url(${SwingBg})`, minHeight: '33vh', p: 2, backgroundSize: 'cover', backgroundPosition: 'top right'}}>
+        {!counter && <Paper elevation={8} sx={{mb: 2, display: 'flex', alignItems: 'stretch', background: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),url(https://i.imgur.com/IOj9OZI.png)`, minHeight: '33vh', p: 2, backgroundSize: 'cover', backgroundPosition: 'top right'}}>
           <Grid container direction={'row'}>
             <Grid item xs={12}>
               <Typography color="white" variant='h4' sx={{textShadow: '1px 1px black'}}>Welcome to counting.gg!</Typography>
@@ -320,6 +320,22 @@ useEffect(() => {
                   <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
                   }}>
                   <AbcIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> LRWOED
+                  </Typography>
+                </Grid>
+              </Grid>
+              </Paper>
+            </Link>
+          </Grid>
+          <Grid item xs={12} sx={{padding: "6px"}}>
+            <Link color={'inherit'} underline='none' href={`/shuffle`} onClick={(e) => {e.preventDefault();navigate(`/shuffle`);}}>
+              <Paper className="littlescale card" elevation={8} sx={{
+                background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
+                cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={12}>
+                  <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                  }}>
+                  <ReorderIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> Number Shuffle
                   </Typography>
                 </Grid>
               </Grid>

@@ -6,6 +6,24 @@ export enum Difficulty {
   UltraHard,
 }
 
+export const day1Date = new Date('May 31 2023');
+export const todayDate = new Date();
+
+export function dateToNumber(date: Date) : number {
+  return Math.floor((date.getTime() - day1Date.getTime())/(1000*60*60*24));
+}
+
+const todayNumber = dateToNumber(todayDate);
+export const day1Number = dateToNumber(day1Date);
+
+const paramDay = urlParam("x") ?? undefined;
+export const allowPractice = true;
+export const practice = allowPractice && urlParam("unlimited") !== null;
+export const cheat = urlParam("cheat") !== null;
+export const dayNum : number = paramDay ? parseInt(paramDay) : 1 + todayNumber - day1Number;
+export const todayDayNum : number = 1 + todayNumber - day1Number;
+export const bonusPuzzle = urlParam("bonus") ?? "";
+
 export const gameName = "lrwoed";
 export const maxGuesses = 8;
 
