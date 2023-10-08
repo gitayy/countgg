@@ -106,23 +106,27 @@ useEffect(() => {
       setTotalCounts(total_counts);
       if(post.isValidCount) {
         setLastCount({lastCount: post, lastCounter: counter});
-        setDailyLeaderboard(prevDailyHOC => {
-          const updatedHOC = {
-            ...prevDailyHOC,
-            [counter.uuid]: {
-              counter: counter,
-              counts: prevDailyHOC !== undefined ? ((prevDailyHOC[counter.uuid]?.counts || 0) + 1) : 1,
-            }
-          };
-          return updatedHOC;
-      });
-      setSums(prevSums => {
-        const updatedSums = {
-          ...prevSums,
-          [thread.uuid]: thread && thread.uuid ? (prevSums[thread.uuid] ?? 0) + 1 : 1,
-        };
-        return updatedSums;
-      });
+        if(counter && counter.uuid) {
+          setDailyLeaderboard(prevDailyHOC => {
+            const updatedHOC = {
+              ...prevDailyHOC,
+              [counter.uuid]: {
+                counter: counter,
+                counts: prevDailyHOC !== undefined ? ((prevDailyHOC[counter.uuid]?.counts || 0) + 1) : 1,
+              }
+            };
+            return updatedHOC;
+        });
+        }
+        if(thread && thread.uuid) {
+          setSums(prevSums => {
+            const updatedSums = {
+              ...prevSums,
+              [thread.uuid]: thread && thread.uuid ? (prevSums[thread.uuid] ?? 0) + 1 : 1,
+            };
+            return updatedSums;
+          });
+        }
       }
     });
 
