@@ -107,25 +107,41 @@ useEffect(() => {
       if(post.isValidCount) {
         setLastCount({lastCount: post, lastCounter: counter});
         if(counter && counter.uuid) {
-          setDailyLeaderboard(prevDailyHOC => {
-            const updatedHOC = {
-              ...prevDailyHOC,
-              [counter.uuid]: {
-                counter: counter,
-                counts: prevDailyHOC !== undefined ? ((prevDailyHOC[counter.uuid]?.counts || 0) + 1) : 1,
-              }
-            };
-            return updatedHOC;
-        });
+          try {
+            setDailyLeaderboard(prevDailyHOC => {
+              const updatedHOC = {
+                ...prevDailyHOC,
+                [counter.uuid]: {
+                  counter: counter,
+                  counts: prevDailyHOC !== undefined ? ((prevDailyHOC[counter.uuid]?.counts || 0) + 1) : 1,
+                }
+              };
+              return updatedHOC;
+          });
+          }
+          catch(err) {
+            console.log("I don't know why this keeps happening.");
+            console.log(err);
+            console.log(counter);
+            console.log(thread);
+          }          
         }
         if(thread && thread.uuid) {
+          try {
           setSums(prevSums => {
-            const updatedSums = {
-              ...prevSums,
-              [thread.uuid]: thread && thread.uuid ? (prevSums[thread.uuid] ?? 0) + 1 : 1,
-            };
-            return updatedSums;
-          });
+                      const updatedSums = {
+                        ...prevSums,
+                        [thread.uuid]: thread && thread.uuid ? (prevSums[thread.uuid] ?? 0) + 1 : 1,
+                      };
+                      return updatedSums;
+                    });
+          }
+          catch(err) {
+            console.log("I don't know why this keeps happening.");
+            console.log(err);
+            console.log(counter);
+            console.log(thread);
+          }
         }
       }
     });

@@ -1,10 +1,10 @@
 import { areArraysEqual } from "@mui/base";
-import { Alert, Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, Snackbar, Step, StepLabel, Stepper, TextField, ThemeProvider, Typography, createTheme } from "@mui/material";
+import { Alert, AlertColor, Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, Snackbar, Step, StepLabel, Stepper, TextField, ThemeProvider, Typography, createTheme } from "@mui/material";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Loading } from "../components/Loading";
 import { registerCounter } from "../utils/api";
-import { fakePost, isValidHexColor, pronouns } from "../utils/helpers"
+import { fakePost, isColorSuitableForBackground, isValidHexColor, pronouns } from "../utils/helpers"
 import { HexColorPicker } from "react-colorful";
 import { RulesPage } from "./RulesPage";
 import { UserContext } from "../utils/contexts/UserContext";
@@ -38,6 +38,7 @@ export const RegisterPage = () => {
 
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>('error');
     const handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
         if (reason === 'clickaway') {
           return;
@@ -50,6 +51,11 @@ export const RegisterPage = () => {
     }
 
     const namesNext = async () => {
+
+        const isSuitableForLightMode = isColorSuitableForBackground(color, '#ffffff', 1.25);
+        const isSuitableForDarkMode = isColorSuitableForBackground(color, '#000000', 1.25);
+        setSnackbarSeverity('error');
+        
         if(name.replace(/[\p{Letter}\p{Mark}\s_\d-]+/gu, '').length != 0) {
             setSnackbarOpen(true)
             setSnackbarMessage('Error: Illegal characters in name.')
@@ -70,6 +76,15 @@ export const RegisterPage = () => {
             setSnackbarOpen(true)
             setSnackbarMessage('Error: Color must start with #.')
         }
+        else if (!isSuitableForLightMode) {
+            setSnackbarOpen(true)
+            setSnackbarMessage('Error: Color is too close to white, and is hard to read on light mode, please try a different color.')
+            return;
+          } else if (!isSuitableForDarkMode) {
+            setSnackbarOpen(true)
+            setSnackbarMessage('Error: Color is too close to black, and is hard to read on dark mode, please try a different color.')
+            return;
+          }
         else if(name.trim().length < 1) {
             setSnackbarOpen(true)
             setSnackbarMessage('Error: Name has no length')
@@ -101,6 +116,7 @@ export const RegisterPage = () => {
             try {
                 const res = await registerCounter(updateInfo);
                 if(res.status == 201) {
+                setSnackbarSeverity('success');
                     navigate(`/#registration`);
                     window.location.reload();
                 }
@@ -150,7 +166,7 @@ export const RegisterPage = () => {
     autoHideDuration={6000}
     onClose={handleClose}
     >
-        <Alert severity="error" onClose={handleClose}>
+        <Alert severity={snackbarSeverity} onClose={handleClose}>
             {snackbarMessage}
         </Alert>
     </Snackbar>

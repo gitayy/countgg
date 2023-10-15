@@ -71,6 +71,34 @@ export const defaultCounter = (uuid: string) => ({
   xp: 100
 });
 
+export function isColorSuitableForBackground(textColor: string, backgroundColor: string, minContrastRatio: number = 4.5): boolean {
+  const getLuminance = (color: string) => {
+      const hex = color.slice(1); // Remove the '#' character
+      const r = parseInt(hex.substr(0, 2), 16) / 255;
+      const g = parseInt(hex.substr(2, 2), 16) / 255;
+      const b = parseInt(hex.substr(4, 2), 16) / 255;
+      const sRGB = [r, g, b].map(value => {
+          if (value <= 0.03928) {
+              return value / 12.92;
+          } else {
+              return Math.pow((value + 0.055) / 1.055, 2.4);
+          }
+      });
+      return sRGB[0] * 0.2126 + sRGB[1] * 0.7152 + sRGB[2] * 0.0722;
+  };
+
+  const textColorLuminance = getLuminance(textColor);
+  const backgroundColorLuminance = getLuminance(backgroundColor);
+
+  const lightest = Math.max(textColorLuminance, backgroundColorLuminance);
+  const darkest = Math.min(textColorLuminance, backgroundColorLuminance);
+
+  const contrastRatio = (lightest + 0.05) / (darkest + 0.05);
+
+  return contrastRatio >= minContrastRatio;
+}
+
+
 export function EmojiTest(props) {  
   return createElement('em-emoji', props, "" )
 }

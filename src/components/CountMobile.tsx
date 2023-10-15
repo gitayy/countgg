@@ -29,7 +29,7 @@ const CountMobile = memo((props: any) => {
 
   let countContentCopy = props.post.countContent;
 
-  if(user && user.pref_standardize_format != 'Disabled' && props.thread && !['binary', 'ternary', 'quaternary', 'hexadecimal', 'alphanumerics'].includes(props.thread.validationType) && props.post.countContent && props.post.rawCount) {
+  if(user && user.pref_standardize_format != 'Disabled' && props.thread && !['binary', 'ternary', 'quaternary', 'quinary', 'senary', 'septenary', 'octonary', 'nonary', 'hexadecimal', 'alphanumerics'].includes(props.thread.validationType) && props.post.countContent && props.post.rawCount) {
     const format = user.pref_standardize_format;
     switch (format) {
       case 'No Separator':
