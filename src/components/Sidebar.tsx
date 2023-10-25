@@ -694,8 +694,8 @@ export const Sidebar = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
-                <Link color={'inherit'} underline='none' href={`/counter/${counter.username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counter.username}`);handleClose()}}><MenuItem>Profile</MenuItem></Link>
-                <Link color={'inherit'} underline='none' href={`/prefs`} onClick={(e) => {e.preventDefault();navigate(`/prefs`);handleClose()}}><MenuItem>Preferences</MenuItem></Link>
+                {counter && counter.color && <><Link color={'inherit'} underline='none' href={`/counter/${counter.username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${counter.username}`);handleClose()}}><MenuItem>Profile</MenuItem></Link>
+                <Link color={'inherit'} underline='none' href={`/prefs`} onClick={(e) => {e.preventDefault();navigate(`/prefs`);handleClose()}}><MenuItem>Preferences</MenuItem></Link></>}
                 <Link onClick={handleClose} target={'_blank'} color='inherit' underline='none' href='https://discord.gg/bfS9RQht6M'><MenuItem>Discord Server</MenuItem></Link>
                 <MenuItem onClick={() => {colorMode.toggleColorMode()}}>Theme: {theme.palette.mode.charAt(0).toUpperCase() + theme.palette.mode.slice(1)}</MenuItem>
                 <MenuItem onClick={() => {logoutFunc(); handleClose()}}>Log Out</MenuItem>
