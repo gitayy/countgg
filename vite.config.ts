@@ -83,7 +83,7 @@ function devServerPlugin(): Plugin {
 			const https = HTTPS === "true";
 			return {
 				server: {
-					host: HOST || "10.0.0.119",
+					host: HOST || "localhost",
 					port: parseInt(PORT || "3000", 10),
 					open: true,
 					https:
