@@ -63,7 +63,6 @@ const sumCountsForThreads = () => {
     // sortedSums = Object.entries(sums).sort(([, countA], [, countB]) => countB - countA);
   }
 
-  // console.log(sortedSums);
 
   // return sortedSums;
   return sums;
@@ -72,8 +71,6 @@ const sumCountsForThreads = () => {
 useEffect(() => {
   if(!allThreadsLoading && allThreads && threadLeaderboards) {
     const summy = sumCountsForThreads();
-    console.log("lol");
-    console.log(summy);
     setSums(summy);
   }
 }, [allThreadsLoading, allThreads, threadLeaderboards])
@@ -81,7 +78,6 @@ useEffect(() => {
 
   // Call the function to get the sum of counts for each thread
   const summy = sumCountsForThreads();
-  console.log(summy);
 
   const isMounted = useIsMounted();
   useEffect(() => {
@@ -101,8 +97,6 @@ useEffect(() => {
 
     socket.on('post', function(data) {
       const { post, counter, thread, total_counts } = data;
-      // console.log(data);
-      // console.log(post, counter, thread, total_counts);
       setTotalCounts(total_counts);
       if(post.isValidCount) {
         setLastCount({lastCount: post, lastCounter: counter});

@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { defineConfig, loadEnv, Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths"
-
+import mkcert from'vite-plugin-mkcert'
 
 
 // https://vitejs.dev/config/
@@ -21,6 +21,9 @@ export default defineConfig(({ mode }) => {
     //   basePlugin(),
     //   importPrefixPlugin(),
       htmlPlugin(mode),
+	//   basicSsl(),
+	// mkcert(),
+
       
       
     ],
@@ -86,8 +89,8 @@ function devServerPlugin(): Plugin {
 					host: HOST || "localhost",
 					port: parseInt(PORT || "3000", 10),
 					open: true,
-					https:
-						https && SSL_CRT_FILE && SSL_KEY_FILE
+					// https: true,
+					https: https && SSL_CRT_FILE && SSL_KEY_FILE
 							? {
 									cert: readFileSync(resolve(SSL_CRT_FILE)),
 									key: readFileSync(resolve(SSL_KEY_FILE)),

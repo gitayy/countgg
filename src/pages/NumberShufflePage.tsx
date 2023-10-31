@@ -1,12 +1,15 @@
 import { useContext, useEffect, useRef, useState } from 'react';
-import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Dialog, Grid, Modal, Paper, TextField, Theme, Typography, useMediaQuery } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Dialog, Grid, IconButton, Modal, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, TextField, Theme, Typography, useMediaQuery } from '@mui/material';
 import { convertToTimestamp, findPossibleIndicesForNextMove, formatDate, formatDateExact, formatTimeDiff} from '../utils/helpers';
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import moment from 'moment-timezone';
 import { MUIBarGraph } from '../components/MUIBarGraph';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { UserContext } from '../utils/contexts/UserContext';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+
 
 
 export const NumberShufflePage = () => {
@@ -18,6 +21,9 @@ export const NumberShufflePage = () => {
         })
       }, [location.pathname]);
       const params = new URLSearchParams(location.search);
+    const { counter } = useContext(UserContext);
+    const navigate = useNavigate()
+
 
   // Access optional parameters
   const a = params.get('seed');
@@ -52,6 +58,21 @@ export const NumberShufflePage = () => {
       const [dateStr, setDateStr] = useState('');
       const [gameStatus, setGameStatus] = useState('Loading...');
       const [scoreData, setScoreData] = useState([]);
+      const [highScore, setHighScore] = useState(0);
+      const [highScoreSeed, setHighScoreSeed] = useState('');
+      const [searchParams, setSearchParams] = useSearchParams();
+      const [gameHistory, setGameHistory] = useState<{seed: string, gameStatus: string, size: number, score: number}[]>([])
+      const [page, setPage] = useState(0);
+      const [rowsPerPage, setRowsPerPage] = useState(10);
+    
+      const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+      };
+    
+      const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+      };
 
       const startGame = (isDaily: boolean, gameSize?: number, seed_id?: string) => {
         socket.emit('number_shuffle', {isDaily: isDaily, size: preferredGameSize, seed_id: seed_id});
@@ -59,8 +80,11 @@ export const NumberShufflePage = () => {
 
       useEffect(() => {
         console.log('number_shuffle on');
+        socket.on('number_shuffle_games', (data) => {
+          console.log(data);
+          setGameHistory(data);
+        })
         socket.on('number_shuffle', (data) => {
-          // console.log('number_shuffle');
           // console.log(data);
           const movesCopy = [...data.moves];
           setNumbers(movesCopy);
@@ -72,20 +96,17 @@ export const NumberShufflePage = () => {
           }, 1000)
           : setGameStatus(data.gameStatus);
           setSeed_id(data.seed_id);
+          !data.day && setSearchParams({"seed": data.seed_id})
+          data.highScore !== undefined && setHighScore(data.highScore)
+          data.highScoreSeed !== undefined && setHighScoreSeed(data.highScoreSeed)
           setDateStr(data.day);
           setGameSize(data.size);
           setScore(data.score);
           setScoreData(data.all_scores);
           currentSelectedIndex.current = -1;
           setSelectedIndex(-1);
-          // setGameSize(data.gameSize);
-          // setNumbers(Array(data.gameSize).fill(0));
-          // setNumbersCopy(Array(data.gameSize).fill(0));
-          // setCurrentNumber(data.currentNumber);
         });
-        // setTimeout(() => {
           socket.emit('number_shuffle', {isDaily: seed_id === undefined, size: gameSize, seed_id: seed_id});
-        // }, 1000);
         return (() => {
           console.log('number_shuffle off');
           socket.off('number_shuffle');
@@ -109,24 +130,9 @@ export const NumberShufflePage = () => {
     socket.emit('number_shuffle', {newMoveSpot: index, seed_id: seed_id});
   }
 
-  // const progressGameLogic = (nextNumber: number) => {
-  //   const movesCopy = [...numbers];
-  //   console.log(`progressGameLogic: ${currentNumber}, ${movesCopy}, nextNumber: ${nextNumber}, findSpotForNextMove: ${findPossibleIndicesForNextMove(movesCopy, nextNumber)}`);
-  //   if (findPossibleIndicesForNextMove(movesCopy, currentNumber).length > 0) {
-  //       movesCopy[index] = currentNumber;
-  //     setNumbers(movesCopy);
-  //     // Set current number to random between 1 and 1000
-  //       setCurrentNumber(nextNumber);
-  //       if(findPossibleIndicesForNextMove(movesCopy, nextNumber).length === 0) {
-  //           setDialogOpen(true);
-  //       } else {
-  //         currentSelectedIndex.current = -1;
-  //       }
-  //   }
-  // };
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const [optionsDialogOpen, setOptionsDialogOpen] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(true);
     const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'));
 
@@ -183,9 +189,6 @@ useEffect(() => {
 
 
       const inputRef = useRef<HTMLInputElement>(null);
-
-
-
 
   useEffect(() => {
     // Focus and select the text when the component mounts
@@ -313,6 +316,12 @@ const copyToClipboard = async () => {
     }
   }
 
+  useEffect(() => {
+    if(counter) {
+      socket.emit('number_shuffle_games');
+    }
+  }, [counter])
+
   const modalStyle = {
     position: 'absolute' as 'absolute',
     top: '50%',
@@ -393,6 +402,19 @@ const copyToClipboard = async () => {
                 </Box> : <Box>
                   <Typography variant="h3" component="h1" align="center" m={1}>
                   You lost! You scored {numbers.filter(number => {return number !== 0}).length} points!
+                </Typography>
+                </Box>
+                }
+              </Grid>
+              <Grid item xs={12}>
+              {counter ? <Box>
+                <Typography variant="h6" component="h1" align="center" m={1} onClick={() => startGame(false, undefined, highScoreSeed)
+                   } sx={{cursor: 'pointer'}}>
+                  High score: {highScore}/{gameSize}
+                </Typography>
+                </Box> : <Box>
+                  <Typography variant="h6" component="h1" align="center" m={1}>
+                  Sign in to track your high score! 
                 </Typography>
                 </Box>
                 }
@@ -485,6 +507,68 @@ const copyToClipboard = async () => {
               </Grid>
           </Modal>
           <Modal
+            open={historyDialogOpen}
+            onClose={() => {setHistoryDialogOpen(false)}}
+            aria-labelledby="modal-history-modal-title"
+            aria-describedby="modal-history-modal-description"
+          >
+            <Grid container sx={modalStyle}>
+              <Grid item xs={12}>
+              <Box>
+                  <Typography variant="h3" component="h1" align="center" m={1}>
+                  History
+                </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={12} lg={12}>
+              <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Game Status</TableCell>
+              <TableCell>Size</TableCell>
+              <TableCell>Score</TableCell>
+              <TableCell>Start Game</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {gameHistory
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((game, index) => (
+                <TableRow key={index}>
+                  <TableCell>{game.gameStatus}</TableCell>
+                  <TableCell>{game.size}</TableCell>
+                  <TableCell>{game.score}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      color="primary"
+                      onClick={() => {startGame(false, undefined, game.seed); setHistoryDialogOpen(false)}}
+                    >
+                      <PlayCircleOutlineIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TablePagination
+        component="div"
+        count={gameHistory.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+      />
+              </Grid>
+              <Grid item xs={12}>
+                <Button onClick={() => {setHistoryDialogOpen(false)}} color="primary" size="small" style={{ marginTop: '1vh', width: '95%', height: '5vh', marginLeft: '10px' }}>
+                  Close
+                </Button>
+                </Grid>
+              </Grid>
+          </Modal>
+          <Modal
             open={newGameModalOpen}
             onClose={() => {setNewGameModalOpen(false)}}
             aria-labelledby="modal-new-game-modal-title"
@@ -528,12 +612,8 @@ const copyToClipboard = async () => {
             variant="contained"
             color="primary"
             size="small"
-            // className='rainbow'
             disabled = {selectedIndex === -1}
-            sx={{ width: '95%', height: '5vh', mb: 2 }}
-          //   style={{ marginTop: '1vh', width: '95%', height: '5vh', 
-          //   marginLeft: '10px'
-          //  }}
+            sx={{ width: '95%', height: '5vh', mb: 2, flexGrow: 1, fontSize: '5rem' }}
           >
             Shuffle
           </Button>
@@ -546,9 +626,6 @@ const copyToClipboard = async () => {
         color="primary"
         size="small"
         sx={{ width: '95%', height: '5vh', mb: 2 }}
-      //   style={{ marginTop: '1vh', width: '95%', height: '5vh', 
-      //   marginLeft: '10px'
-      //  }}
       >
         View Results
       </Button>}
@@ -579,9 +656,18 @@ const copyToClipboard = async () => {
         <Button onClick={() => {setDialogOpen(false); newGameCheck()}} variant="contained" color="primary" size="small" sx={{ width: '95%', height: '5vh', mb: 2 }}>
         New Game
       </Button>}
-        <Button onClick={() => {setOptionsDialogOpen(true)}} variant="contained" color="secondary" size="small" sx={{ width: '95%', height: '5vh', mb: 2 }}>
+      <Grid container spacing={1} sx={{width: '95%'}}>
+        <Grid item xs={6}>
+        <Button onClick={() => {setOptionsDialogOpen(true)}} variant="contained" color="secondary" size="small" sx={{ width: '100%', height: '5vh', mb: 2 }}>
         Options
       </Button>
+        </Grid>
+        <Grid item xs={6}>
+        <Button onClick={() => {setHistoryDialogOpen(true)}} variant="contained" color="secondary" size="small" sx={{ width: '100%', height: '5vh', mb: 2 }}>
+        History
+      </Button>
+        </Grid>
+      </Grid>
       {dateStr && <Paper sx={{width: '100%'}}>
           <Typography fontSize={'1rem'} align="center" m={1}>
             Daily Challenge {dateStr}

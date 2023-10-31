@@ -5,8 +5,6 @@ import { BarChart } from '@mui/x-charts';
 
 export function MUIBarGraph({ scores }) {
     if(scores && scores.length > 0) {
-
-        console.log(scores);
         return (
             <BarChart
       xAxis={[
