@@ -613,7 +613,7 @@ const copyToClipboard = async () => {
             color="primary"
             size="small"
             disabled = {selectedIndex === -1}
-            sx={{ width: '95%', height: '5vh', mb: 2, flexGrow: 1, fontSize: '5rem' }}
+            sx={{ width: '95%', height: '5vh', mb: 2, flexGrow: 1, fontSize: '3rem' }}
           >
             Shuffle
           </Button>
