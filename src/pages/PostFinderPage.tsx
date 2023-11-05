@@ -8,6 +8,7 @@ import CountMobile from '../components/CountMobile';
 import { addCounterToCache, cachedCounters } from '../utils/helpers';
 import { UserContext } from '../utils/contexts/UserContext';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { UuidPage } from './UuidPage';
   
   export const PostFinderPage = () => {
     const { user, counter } = useContext(UserContext);
@@ -183,7 +184,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
               )}
             </Box>}
             </>}
-
+            <UuidPage />
           </Container>
           </>);
       } else {

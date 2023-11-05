@@ -568,9 +568,10 @@ useEffect(() => {
   } else if(loading) {
     return <Loading />
   } else if(user && !user.reddit) {
-    return <>You need to link your reddit account to use this. It is scuffed. Be warned.
+    return         <Box sx={{ bgcolor: 'background.paper', flexGrow: 1, p: 2, color: 'text.primary'}}>
+    You need to link your reddit account to use this. It is scuffed. Be warned.
     
-    <Button variant="contained" href={loginRedirect}>Login</Button></>
+    <Button variant="contained" href={loginRedirect}>Login</Button></Box>
   } else if(counter && (counter.roles.includes('banned') || counter.roles.includes('muted'))) {
     return <>No</>
   } else {

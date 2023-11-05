@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from 'react';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useFetchLoadCounter } from '../utils/hooks/useFetchLoadCounter';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
-import { Avatar, Box, Button, Card, CardContent, Chip, LinearProgress, MenuItem, Select, Tab, Typography } from '@mui/material';
+import { Avatar, Box, Button, Card, CardContent, Chip, Grid, LinearProgress, MenuItem, Select, Tab, Typography } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -19,6 +19,7 @@ import LeaderboardGraph from '../components/LeaderboardGraph';
 import { XPDisplay } from '../components/XPDisplay';
 import Spoiler from '../components/Spoiler';
 import CggLogo2 from '../assets/emotes/gg.png'
+import ThreadStatsCard from '../components/ThreadStatsCard';
 
 
   export const CounterPage = () => {
@@ -33,8 +34,17 @@ import CggLogo2 from '../assets/emotes/gg.png'
     const [earnedAchievements, setEarnedAchievements] = useState<AchievementType[]>([]);
     const [unearnedAchievementsLoading, setUnearnedAchievementsLoading] = useState(true);
     const isMounted = useIsMounted();
+    const [sortedStats, setSortedStats] = useState<any[]>([]);
 
     const [ statThread, setStatThread ] = useState('all'); 
+
+    useEffect(() => {
+      if(loadedCounterStats) {
+        setSortedStats(Object.entries(loadedCounterStats).sort(([ok, dataA]: [string, any], [_, dataB]: [string, any]) => dataB.posts - dataA.posts));
+        console.log(sortedStats);
+      }
+
+    }, [loadedCounterStats])
 
     const location = useLocation();
     useEffect(() => {
@@ -102,6 +112,18 @@ import CggLogo2 from '../assets/emotes/gg.png'
         console.log("Counter not loaded yet");
       }
     };
+
+    const getColorByIndex = (index: number) => {
+      if (index === 1) {
+        return "#FFD700";
+      } else if (index === 2) {
+        return "#C0C0C0";
+      } else if (index === 3) {
+        return "#CD7F32";
+      } else {
+        return;
+      }
+    };
     
     if(loadedCounter && !loadedCounterLoading && !achievementsLoading && !unearnedAchievementsLoading && isMounted.current && (!loadedCounter.roles.includes('banned') || (counter && (counter.roles.includes('mod') || counter.roles.includes('admin'))))) {
 
@@ -150,7 +172,13 @@ import CggLogo2 from '../assets/emotes/gg.png'
                 {counter && counter.roles.includes('mod') && <Button variant='contained' color='error' onClick={toggleMute}>{loadedCounter.roles.includes('muted') ? 'Unmute User' : 'Mute User'}</Button>}
               </TabPanel>
               <TabPanel value="2">
-                In progress for a redesign.
+              <Grid container spacing={1}>
+        {sortedStats.map(([threadTitle, threadData]: [string, any], index) => ( 
+          <Grid item xs={6} sm={4} md={3} key={threadTitle}>
+            <ThreadStatsCard threadTitle={threadTitle} threadData={threadData} color={getColorByIndex(index)} />
+            </Grid>
+        ))}
+        </Grid>
                 {/* <LeaderboardGraph stats={loadedCounterStats} cum={true}></LeaderboardGraph> */}
               {/* <Select
                 value={statThread}
