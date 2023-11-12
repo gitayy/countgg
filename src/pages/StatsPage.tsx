@@ -18,6 +18,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import moment from 'moment-timezone';
 import ClearIcon from "@mui/icons-material/Clear";
 import LeaderboardGraph from '../components/LeaderboardGraph';
+import { StatsQuery } from '../components/StatsQuery';
 
 export const StatsPage = () => {
   const { counter, loading } = useContext(UserContext);
@@ -324,23 +325,24 @@ export const StatsPage = () => {
           )}
         />
       </Box>
-        {stats && !statsLoading && selectedThread && <>
+      {selectedThread && <>
           <TabContext value={tabValue}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-        <TabList onChange={handleTabChange} variant={'scrollable'} allowScrollButtonsMobile aria-label="Live Game Tabs">
+        <TabList onChange={handleTabChange} variant={'scrollable'} allowScrollButtonsMobile aria-label="Stats">
           <Tab label="Leaderboard" value="tab_0" />
-          <Tab label="Graphs" value="tab_01" />
-          {stats['gets'] && Object.keys(stats['gets']).length > 0 && <Tab label="Gets" value="tab_1" />}
-          {stats['assists'] && Object.keys(stats['assists']).length > 0 && <Tab label="Assists" value="tab_2" />}
-          {stats['palindromes'] && Object.keys(stats['palindromes']).length > 0 && <Tab label="Palindromes" value="tab_3" />}
-          {stats['repdigits'] && Object.keys(stats['repdigits']).length > 0 && <Tab label="Repdigits" value="tab_4" />}
-          {stats['speed'] && stats['speed'].length > 0 && <Tab label="Speed" value="tab_5" />}
+          {stats && <Tab label="Graphs" value="tab_01" />}
+          {stats && stats['gets'] && Object.keys(stats['gets']).length > 0 && <Tab label="Gets" value="tab_1" />}
+          {stats && stats['assists'] && Object.keys(stats['assists']).length > 0 && <Tab label="Assists" value="tab_2" />}
+          {stats && stats['palindromes'] && Object.keys(stats['palindromes']).length > 0 && <Tab label="Palindromes" value="tab_3" />}
+          {stats && stats['repdigits'] && Object.keys(stats['repdigits']).length > 0 && <Tab label="Repdigits" value="tab_4" />}
+          {stats && stats['speed'] && stats['speed'].length > 0 && <Tab label="Speed" value="tab_5" />}
+          <Tab label="Query" value="tab_6" />
         </TabList>
       </Box>
         <Box sx={{flexGrow: 1, p: 2, bgcolor: 'background.paper', color: 'text.primary'}}>
         <TabPanel value="tab_0" sx={{}}>
           <Typography variant='h6'>Leaderboard</Typography>
-          <LeaderboardTable stat={stats.leaderboard} blud={blud} justLB={true}></LeaderboardTable>
+          <LeaderboardTable stat={stats && stats.leaderboard} blud={blud} justLB={true}></LeaderboardTable>
         </TabPanel>
         <TabPanel value="tab_01" sx={{display: 'flex', justifyContent: 'center', flexDirection: 'column', alignItems: 'center'}}>
           <Typography variant='h6'>Graphs</Typography>
@@ -349,30 +351,33 @@ export const StatsPage = () => {
         </TabPanel>
         <TabPanel value="tab_1" sx={{}}>
           <Typography variant='h6'>Gets</Typography>
-          <LeaderboardTable stat={stats.gets} blud={blud} justLB={true}></LeaderboardTable>
+          <LeaderboardTable stat={stats && stats.gets} blud={blud} justLB={true}></LeaderboardTable>
         </TabPanel>
         <TabPanel value="tab_2" sx={{}}>
           <Typography variant='h6'>Assists</Typography>
-          <LeaderboardTable stat={stats.assists} blud={blud} justLB={true}></LeaderboardTable>
+          <LeaderboardTable stat={stats && stats.assists} blud={blud} justLB={true}></LeaderboardTable>
         </TabPanel>
         <TabPanel value="tab_3" sx={{}}>
           <Typography variant='h6'>Palindromes</Typography>
-          <LeaderboardTable stat={stats.palindromes} blud={blud} justLB={true}></LeaderboardTable>
+          <LeaderboardTable stat={stats && stats.palindromes} blud={blud} justLB={true}></LeaderboardTable>
         </TabPanel>
         <TabPanel value="tab_4" sx={{}}>
           <Typography variant='h6'>Repdigits</Typography>
-          <LeaderboardTable stat={stats.repdigits} blud={blud} justLB={true}></LeaderboardTable>
+          <LeaderboardTable stat={stats && stats.repdigits} blud={blud} justLB={true}></LeaderboardTable>
         </TabPanel>
         <TabPanel value="tab_5" sx={{}}>
           <Typography variant='h6'>Speed</Typography>
-          <SpeedTable speed={stats.speed} thread={selectedThread}></SpeedTable>
+          <SpeedTable speed={stats && stats.speed} thread={selectedThread}></SpeedTable>
         </TabPanel>
+        <TabPanel value="tab_6" sx={{}}>
+          <Typography variant='h6'>Query</Typography>
+          <StatsQuery thread={selectedThread}></StatsQuery>
+        </TabPanel>
+        {statsLoading && <Loading mini={true} />}
         </Box>
-        </TabContext>
-
-        
-        <Typography variant='body2' sx={{mt: 1}}>Last updated: {formatDateExact(convertToTimestamp(stats.last_updated_uuid) || 0)} ({stats.last_updated_uuid})</Typography></>}
-        {statsLoading && <Loading />}
+        </TabContext>        
+        <Typography variant='body2' sx={{mt: 1}}>Last updated: {formatDateExact(convertToTimestamp(stats && stats.last_updated_uuid) || 0)} ({stats && stats.last_updated_uuid})</Typography>
+        </>}
       </Box>
     )
   } else {

@@ -32,6 +32,7 @@ import ThreadStatsCard from '../components/ThreadStatsCard';
     const { achievements, achievementsLoading, setAchievements, allAchievements } = useFetchAchievements(counterId);
     const [unearnedAchievements, setUnearnedAchievements] = useState<AchievementType[]>([]);
     const [earnedAchievements, setEarnedAchievements] = useState<AchievementType[]>([]);
+    const [earnedPublicAchievements, setEarnedPublicAchievements] = useState<AchievementType[]>([]);
     const [unearnedAchievementsLoading, setUnearnedAchievementsLoading] = useState(true);
     const isMounted = useIsMounted();
     const [sortedStats, setSortedStats] = useState<any[]>([]);
@@ -67,6 +68,9 @@ import ThreadStatsCard from '../components/ThreadStatsCard';
         const publicAchievementsNotEarned = allAchievements.filter(achievement => {
           return achievement.isPublic && !achievements.some(userAchievement => userAchievement.achievementId === achievement.id && userAchievement.isComplete);;
         });
+        const publicAchievementsEarned = allAchievements.filter(achievement => {
+          return achievement.isPublic && achievements.some(userAchievement => userAchievement.achievementId === achievement.id && userAchievement.isComplete);;
+        });
         const sortedUnearnedPublicAchievements = publicAchievementsNotEarned.sort((a, b) => {
           return b.countersEarned - a.countersEarned;
         });
@@ -76,6 +80,7 @@ import ThreadStatsCard from '../components/ThreadStatsCard';
         const sortedAchievements = achievements
         setUnearnedAchievements(sortedUnearnedPublicAchievements);
         setEarnedAchievements(sortedEarnedAchievements);
+        setEarnedPublicAchievements(publicAchievementsEarned);
         setAchievements(sortedAchievements);
         setUnearnedAchievementsLoading(false);
       }
@@ -198,9 +203,9 @@ import ThreadStatsCard from '../components/ThreadStatsCard';
                 </>} */}
               </TabPanel>
               <TabPanel value="3">
-                <Typography variant='h5'>Unlocked</Typography>
+                <Typography variant='h5'>Unlocked ({earnedPublicAchievements.length}/{(earnedPublicAchievements.length + unearnedAchievements.length)} + {earnedAchievements.length - earnedPublicAchievements.length} secret)</Typography>
                 <Achievements achievements={earnedAchievements} locked={false} counter={loadedCounter} counterAchievements={achievements}></Achievements>
-                <Typography variant='h5'>Locked</Typography>
+                <Typography variant='h5'>Locked ({unearnedAchievements.length}/{(earnedPublicAchievements.length + unearnedAchievements.length)})</Typography>
                 <Achievements achievements={unearnedAchievements} locked={true} counter={loadedCounter} counterAchievements={achievements}></Achievements>
               </TabPanel>
             </TabContext>
