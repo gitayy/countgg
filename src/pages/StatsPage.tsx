@@ -336,7 +336,7 @@ export const StatsPage = () => {
           {stats && stats['palindromes'] && Object.keys(stats['palindromes']).length > 0 && <Tab label="Palindromes" value="tab_3" />}
           {stats && stats['repdigits'] && Object.keys(stats['repdigits']).length > 0 && <Tab label="Repdigits" value="tab_4" />}
           {stats && stats['speed'] && stats['speed'].length > 0 && <Tab label="Speed" value="tab_5" />}
-          <Tab label="Query" value="tab_6" />
+          {/* <Tab label="Query" value="tab_6" /> */}
         </TabList>
       </Box>
         <Box sx={{flexGrow: 1, p: 2, bgcolor: 'background.paper', color: 'text.primary'}}>
