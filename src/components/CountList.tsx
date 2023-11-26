@@ -1,6 +1,6 @@
 import { Box, TextField, Button, Zoom, Fab, useTheme, useMediaQuery, Typography, IconButton, alpha, Theme, Tooltip, Input } from "@mui/material";
 import { memo, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { cachedCounters } from "../utils/helpers";
+import { cachedCounters, loginRedirect } from "../utils/helpers";
 import Count  from "./Count";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 // import { Send as SendIcon, Keyboard as KeyboardIcon } from '@mui/icons-material';
@@ -44,7 +44,6 @@ const CountList = memo((props: any) => {
     if (window.location.href.indexOf("scrollDiagnostics") > -1) {
       scrollDiagnostics.current = true;
     }
-    const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
     const throttleCount = useRef(0);
     const [gotNewerUUIDs, setGotNewerUUIDs] = useState<string[]>([]);
     const [gotOlderUUIDs, setGotOlderUUIDs] = useState<string[]>([]);

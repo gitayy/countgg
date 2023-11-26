@@ -3,7 +3,7 @@ import { UserContext } from '../utils/contexts/UserContext';
 import { useContext, useEffect, useState } from 'react';
 import { Alert, AlertColor, Badge, Box, Button, CardMedia, Chip, Grid, Link, Modal, Paper, Skeleton, Snackbar, Typography, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
-import { calculateLevel, modalStyle } from '../utils/helpers';
+import { calculateLevel, loginRedirect, modalStyle } from '../utils/helpers';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import PlusOneIcon from '@mui/icons-material/PlusOne';
@@ -43,7 +43,6 @@ export const DefaultPage = () => {
       }    
       setSnackbarOpen(false);
   };
-  const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
   const {allThreads, allThreadsLoading} = useContext(ThreadsContext)
   const [sums, setSums] = useState<{[thread_uuid: string]: number}>({});
@@ -567,12 +566,15 @@ useEffect(() => {
 
 <Grid container>
   <Grid item xs={12} lg={6} sx={{p: 2}}>
-  {dailyLeaderboard && <DailyHOCTable mini={true} dailyHOC={dailyLeaderboard} name={'Sitewide Daily Leaders'} countName={'Counts'}></DailyHOCTable>}
+  {dailyLeaderboard && <DailyHOCTable mini={true} dailyHOC={dailyLeaderboard} name={'Daily Leaderboard'} countName={'Counts'}></DailyHOCTable>}
   </Grid>
   <Grid item xs={12} lg={6} sx={{p: 2}}>
     {/* Top Threads Today */}
     {threadLeaderboards && <TopThreadsTable mini={true} sums={sums} name={'Top Threads Today'} countName={'Counts'}></TopThreadsTable>}
   </Grid>
+  {/* <Grid item xs={12} lg={4} sx={{p: 2}}>
+    {threadLeaderboards && <TopThreadsTable mini={true} sums={sums} name={'Top Servers Today'} countName={'Counts'}></TopThreadsTable>}
+  </Grid> */}
 </Grid>
 
 <Box sx={{justifyContent: 'center', width: '100%', display: 'flex'}}>

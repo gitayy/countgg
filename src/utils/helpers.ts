@@ -143,9 +143,11 @@ export const cachedCounters = {'[SYSTEM]': {
   cardStyle: 'card_default', 
   cardBorderStyle: 'no_border_circle', 
   xp: 0,
-  color: '#222222', 
+  color: '#069420', 
   emoji: "🤖",
 }} as { [key: string]: Counter };
+
+export const loginRedirect = `${process.env.REACT_APP_API_HOST}${process.env.REACT_APP_LOGIN || '/api/auth/login'}`
 
 export const fakePost = (counter?: Counter): PostType => {
   return {

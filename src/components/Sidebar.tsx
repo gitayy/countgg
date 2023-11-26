@@ -27,7 +27,7 @@ import CggLogo from '../assets/cgg-128.png'
 import GavelIcon from '@mui/icons-material/Gavel';
 import SearchIcon from '@mui/icons-material/Search';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import { calculateLevel, site_version } from '../utils/helpers';
+import { calculateLevel, loginRedirect, site_version } from '../utils/helpers';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import ErrorIcon from '@mui/icons-material/Error';
 import PendingIcon from '@mui/icons-material/Pending';
@@ -47,8 +47,6 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 export const Sidebar = () => {
   const navigate = useNavigate();
   const { hash } = useLocation();
-
-  const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/login'
 
   const { loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, user } = useContext(UserContext);
   const socket = useContext(SocketContext);

@@ -9,6 +9,7 @@ import mkcert from'vite-plugin-mkcert'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   setEnv(mode);
+  const IS_NOT_HTTPS = process.env.REACT_APP_HTTPS === "false";
   return {
     plugins: [
       react(),
@@ -23,6 +24,7 @@ export default defineConfig(({ mode }) => {
       htmlPlugin(mode),
 	//   basicSsl(),
 	// mkcert(),
+	IS_NOT_HTTPS ? null : mkcert(),
 
       
       
@@ -84,18 +86,21 @@ function devServerPlugin(): Plugin {
 				["HOST", "PORT", "HTTPS", "SSL_CRT_FILE", "SSL_KEY_FILE"],
 			);
 			const https = HTTPS === "true";
+			const IS_NOT_HTTPS = HTTPS === "false";
 			return {
 				server: {
 					host: HOST || "localhost",
 					port: parseInt(PORT || "3000", 10),
 					open: true,
 					// https: true,
-					https: https && SSL_CRT_FILE && SSL_KEY_FILE
-							? {
-									cert: readFileSync(resolve(SSL_CRT_FILE)),
-									key: readFileSync(resolve(SSL_KEY_FILE)),
-							  }
-							: https,
+					https:
+					!IS_NOT_HTTPS,
+					// https && SSL_CRT_FILE && SSL_KEY_FILE
+					// 		? {
+					// 				cert: readFileSync(resolve(SSL_CRT_FILE)),
+					// 				key: readFileSync(resolve(SSL_KEY_FILE)),
+					// 		  }
+					// 		: https,
 				},
 			};
 		},
