@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import React, { Fragment, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AlertColor, alpha, Badge, Box, Button, Chip, Collapse, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Drawer, FormControl, Grid, IconButton, Input, InputLabel, LinearProgress, Link, List, ListItemButton, ListItemIcon, ListItemText, Skeleton, Snackbar, Tab, Theme, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
@@ -42,6 +42,7 @@ let imsorryfortheglobalpull = "DISABLED";
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const location = useLocation();
     const params = useParams();
+    const [searchParams,setSearchParams] = useSearchParams();
     const { context } = queryString.parse(window.location.search);
     const thread_name:string = params.thread_name || "main";
     const {threadName, setThreadName} = useThread();
@@ -104,6 +105,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [timerStr, setTimerStr] = useState("");
     const [activeTimer, setActiveTimer] = useState<ReturnType<typeof setInterval>>();
     const [clearCounts, setClearCounts] = useState(false);
+    const [autoplay, setAutoplay] = useState(0);
     const findPost = async (countNumber, rawCount) => {
         let value;
         try {
@@ -128,7 +130,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                 })
                 .catch((err) => {
                   console.log(err);
-                })
+                });
             } 
         }
         catch(err) {
@@ -142,14 +144,15 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       let start;
       let end;
       try {
-        start = countNumber1 ? await findPost(countNumber1, null) : await findPost(null, rawCount1);
-        end = countNumber2 ? await findPost(countNumber2, null) : await findPost(null, rawCount2);
+        start = countNumber1!==null ? await findPost(countNumber1, null) : await findPost(null, rawCount1);
+        end = countNumber2!==null ? await findPost(countNumber2, null) : await findPost(null, rawCount2);
       } catch(err) {
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
         setSnackbarMessage('Error: Post not found, or server rejected your request.')
         return;
       }
+      if(start===undefined || end===undefined) return;
       if(parseFloat(end.timestamp) <= parseFloat(start.timestamp)) return;
       socket.emit('leave_threads');
       socket.off('connection_error');
@@ -204,8 +207,20 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             break;
           }
         }
+        loaded_counts = data.data.counts;
       }
     }
+    const clearReplay = () => {
+      if(activeTimer!==undefined) clearInterval(activeTimer);
+      setTimerStr("");
+      setReplayActive(false);
+      imsorryfortheglobalpull="DISABLED";
+      setSocketStatus("LIVE")
+    }
+    useEffect(() => {
+      clearReplay();
+    },[threadName]);
+
     async function timer(start, end)  {
       // Update the count down every 1 second
       const diff = end-start;
@@ -299,7 +314,27 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       }
     },[replayActive, thread_name, dingSound, currentCount]);
 
-
+    useEffect(() => {
+      if(autoplay===0 && !loading) {
+        const num1 = searchParams.get('startCountNumber');
+        const num2 = searchParams.get('endCountNumber');
+        const raw1 = searchParams.get('startCountRaw');
+        const raw2 = searchParams.get('endCountRaw');
+        setAutoplay(2);
+        if(num1 !==null && num2 !== null) {
+          setCountNumber1(isNaN(parseInt(num1)) ? null : parseInt(num1));
+          setCountNumber2(isNaN(parseInt(num2)) ? null : parseInt(num2));
+          setAutoplay(1);
+        } else if(raw1 !== null && raw2 !== null) {
+          setRawCount1(raw1);
+          setRawCount2(raw2);
+          setAutoplay(1);
+        }
+      } else if(autoplay===1 && thread!==undefined) {
+          setAutoplay(2);
+          startReplay();
+      }
+    },[searchParams, loading, countNumber1, countNumber2, rawCount1, rawCount2, autoplay, thread])
 
     useEffect(() => {
       if(!loading && user) {
@@ -1302,7 +1337,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               <Button variant="contained" onClick={() => {startReplay()}}>
                 Replay </Button> ||
               replayActive && 
-              <Button variant="contained" onClick={() => {if(activeTimer!==undefined)clearInterval(activeTimer);setTimerStr("");setReplayActive(false);imsorryfortheglobalpull="DISABLED";setSocketStatus("LIVE")}}>
+              <Button variant="contained" onClick={() => {clearReplay()}}>
               Cancel </Button>
             }
             {replayActive && <Typography>{timerStr}</Typography>}
@@ -1375,5 +1410,4 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     } else {
         return(<Loading />);
     }
-
 });
