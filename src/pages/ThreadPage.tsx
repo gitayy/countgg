@@ -210,6 +210,17 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         loaded_counts = data.data.counts;
       }
     }
+    const clearReplay = () => {
+      if(activeTimer!==undefined) clearInterval(activeTimer);
+      setTimerStr("");
+      setReplayActive(false);
+      imsorryfortheglobalpull="DISABLED";
+      setSocketStatus("LIVE")
+    }
+    useEffect(() => {
+      clearReplay();
+    },[threadName]);
+
     async function timer(start, end)  {
       // Update the count down every 1 second
       const diff = end-start;
@@ -1326,7 +1337,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               <Button variant="contained" onClick={() => {startReplay()}}>
                 Replay </Button> ||
               replayActive && 
-              <Button variant="contained" onClick={() => {if(activeTimer!==undefined)clearInterval(activeTimer);setTimerStr("");setReplayActive(false);imsorryfortheglobalpull="DISABLED";setSocketStatus("LIVE")}}>
+              <Button variant="contained" onClick={() => {clearReplay()}}>
               Cancel </Button>
             }
             {replayActive && <Typography>{timerStr}</Typography>}
