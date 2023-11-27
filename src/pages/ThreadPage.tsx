@@ -105,7 +105,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [timerStr, setTimerStr] = useState("");
     const [activeTimer, setActiveTimer] = useState<ReturnType<typeof setInterval>>();
     const [clearCounts, setClearCounts] = useState(false);
-    const [autoplay, setAutoplay] = useState(false);
+    const [autoplay, setAutoplay] = useState(0);
     const findPost = async (countNumber, rawCount) => {
         let value;
         try {
@@ -304,7 +304,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     },[replayActive, thread_name, dingSound, currentCount]);
 
     useEffect(() => {
-      if(!loading && countNumber1 === null && countNumber2 == null && rawCount1 === "" && rawCount2 === "") {
+      if(autoplay==0 && !loading) {
         const num1 = searchParams.get('startCountNumber');
         const num2 = searchParams.get('endCountNumber');
         const raw1 = searchParams.get('startCountRaw');
@@ -312,14 +312,16 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         if(num1 !==null && num2 !== null) {
           setCountNumber1(isNaN(parseInt(num1)) ? null : parseInt(num1));
           setCountNumber2(isNaN(parseInt(num2)) ? null : parseInt(num2));
-          setAutoplay(true)
+          setAutoplay(1)
         } else if(raw1 !== null && raw2 !== null) {
           setRawCount1(raw1);
           setRawCount2(raw2);
-          setAutoplay(true);
+          setAutoplay(1);
+        } else {
+          setAutoplay(2)
         }
-      } else if(autoplay && thread!==undefined) {
-          setAutoplay(false);
+      } else if(autoplay===1 && thread!==undefined) {
+          setAutoplay(2);
           startReplay();
       }
     },[searchParams, loading, countNumber1, countNumber2, rawCount1, rawCount2, autoplay, thread])
