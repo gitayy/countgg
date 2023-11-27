@@ -304,7 +304,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     },[replayActive, thread_name, dingSound, currentCount]);
 
     useEffect(() => {
-      if(autoplay==0 && !loading) {
+      if(autoplay===0 && !loading) {
         const num1 = searchParams.get('startCountNumber');
         const num2 = searchParams.get('endCountNumber');
         const raw1 = searchParams.get('startCountRaw');
