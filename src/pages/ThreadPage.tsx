@@ -309,7 +309,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         const num2 = searchParams.get('endCountNumber');
         const raw1 = searchParams.get('startCountRaw');
         const raw2 = searchParams.get('endCountRaw');
-        setAutoplay(-1);
+        setAutoplay(2);
         if(num1 !==null && num2 !== null) {
           setCountNumber1(isNaN(parseInt(num1)) ? null : parseInt(num1));
           setCountNumber2(isNaN(parseInt(num2)) ? null : parseInt(num2));
@@ -318,8 +318,6 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           setRawCount1(raw1);
           setRawCount2(raw2);
           setAutoplay(1);
-        } else {
-          setAutoplay(2)
         }
       } else if(autoplay===1 && thread!==undefined) {
           setAutoplay(2);
