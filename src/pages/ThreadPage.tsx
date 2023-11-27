@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
-import { Fragment, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AlertColor, alpha, Badge, Box, Button, Chip, Collapse, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Drawer, Grid, IconButton, LinearProgress, Link, List, ListItemButton, ListItemIcon, ListItemText, Skeleton, Snackbar, Tab, Theme, Typography, useMediaQuery, useTheme } from '@mui/material';
+import React, { Fragment, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, AlertColor, alpha, Badge, Box, Button, Chip, Collapse, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Drawer, FormControl, Grid, IconButton, Input, InputLabel, LinearProgress, Link, List, ListItemButton, ListItemIcon, ListItemText, Skeleton, Snackbar, Tab, Theme, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
 import { addCounterToCache, cachedCounters } from '../utils/helpers';
 import { useFetchRecentCounts } from '../utils/hooks/useFetchRecentCounts';
@@ -17,11 +17,10 @@ import TabPanel from '@mui/lab/TabPanel';
 import { useFetchRecentChats } from '../utils/hooks/useFetchRecentChats';
 import remarkGfm from 'remark-gfm';
 import ReactMarkdown from 'react-markdown';
-import { modToggleSilentThreadLock, modToggleThreadLock } from '../utils/api';
+import { findPostByThreadAndNumber, findPostByThreadAndRawCount, loadNewerCounts, modToggleSilentThreadLock, modToggleThreadLock } from '../utils/api';
 import { DailyHOCTable } from '../components/DailyHOCTable';
 import { SplitsTable } from '../components/SplitsTable';
 import { useFavicon } from '../utils/hooks/useFavicon';
-import Timer from '../components/Timer';
 import { ContestPage } from './ContestPage';
 // import { InfoOutlined } from '@mui/icons-material';
 import InfoIcon from '@mui/icons-material/Info';
@@ -39,7 +38,7 @@ import Spoiler from '../components/Spoiler';
 import { ThreadProvider, useThread } from '../utils/contexts/ThreadContext';
 import Lever from '../components/Lever';
 
-
+let imsorryfortheglobalpull = "DISABLED";
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const location = useLocation();
     const params = useParams();
@@ -96,6 +95,211 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
     const [mobilePickerOpen, setMobilePickerOpen] = useState(false);
     const [desktopPickerOpen, setDesktopPickerOpen] = useState(true);
+    const [replayActive, setReplayActive] = useState(false)
+    const [countNumber1, setCountNumber1] = useState<number|null>(null); // "123" in main, "676" in letters
+    const [countNumber2, setCountNumber2] = useState<number|null>(null); // "123" in main, "676" in letters
+    const [rawCount1, setRawCount1] = useState(''); // "123" in main, "ZZ" in letters
+    const [rawCount2, setRawCount2] = useState(''); // "123" in main, "ZZ" in letters
+    const [currentCount, setCurrentCount] = useState<PostType>();
+    const [timerStr, setTimerStr] = useState("");
+    const [activeTimer, setActiveTimer] = useState<ReturnType<typeof setInterval>>();
+    const [clearCounts, setClearCounts] = useState(false);
+    const findPost = async (countNumber, rawCount) => {
+        let value;
+        try {
+            if (thread === undefined) throw new Error();
+            if(countNumber !== null && countNumber > 0) {
+                const res = await findPostByThreadAndNumber(thread.uuid, countNumber.toString())
+                .then(({ data }) => {
+                  for (const counter of data.counters) {
+                    addCounterToCache(counter);
+                  }
+                  value = data.posts[0];
+                })
+                .catch((err) => {
+                  console.log(err);
+                });
+            } else if(rawCount.length > 0) {
+                const res = await findPostByThreadAndRawCount(thread.uuid, rawCount).then(({ data }) => {
+                  for (const counter of data.counters) {
+                    addCounterToCache(counter);
+                  }
+                  value = data.posts[0];
+                })
+                .catch((err) => {
+                  console.log(err);
+                })
+            } 
+        }
+        catch(err) {
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true)
+          setSnackbarMessage('Error: Post not found, or server rejected your request.')
+        }
+        return value;
+    };
+    const startReplay = async() => {
+      let start;
+      let end;
+      try {
+        start = countNumber1 ? await findPost(countNumber1, null) : await findPost(null, rawCount1);
+        end = countNumber2 ? await findPost(countNumber2, null) : await findPost(null, rawCount2);
+      } catch(err) {
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        setSnackbarMessage('Error: Post not found, or server rejected your request.')
+        return;
+      }
+      if(parseFloat(end.timestamp) <= parseFloat(start.timestamp)) return;
+      socket.emit('leave_threads');
+      socket.off('connection_error');
+      socket.off('post');
+      socket.off('lastCount');
+      socket.off('watcher_count');
+      socket.off('deleteComment');
+      socket.off('thread_update');
+      socket.off('split');
+      setSocketStatus("DISCONNECTED");
+      let data = await loadNewerCounts(thread?.name,start.uuid,1000,false);
+      let loaded_counts = data.data.counts;
+      for (const counter of data.data.counters) {
+        addCounterToCache(counter);
+      }
+      timer(parseFloat(start.timestamp),parseFloat(end.timestamp));
+      const t_start = performance.now();
+      setReplayActive(true);
+      setClearCounts(true);
+      imsorryfortheglobalpull = "ENABLED";
+      const wait = function (ms) {
+        return new Promise(resolve => {
+          setTimeout(resolve, ms);
+        });
+      };
+      setCurrentCount(start);
+      let broken = false;
+      while(!broken) {
+        const res = loadNewerCounts(thread?.name,loaded_counts[loaded_counts.length-1].uuid,1000,false)
+        .then((data2) => {
+          data = data2;
+          for (const counter of data.data.counters) {
+            addCounterToCache(counter);
+          }
+        });
+        for(let i=0;i<loaded_counts.length;i++) {
+          let delay = parseFloat(loaded_counts[i].timestamp)-parseFloat(start.timestamp);
+          if(imsorryfortheglobalpull !== "ENABLED") {
+            broken = true;
+            break;
+          }
+          while(t_start+delay > performance.now()) {
+            await wait(20);
+            if(imsorryfortheglobalpull !== "ENABLED") {
+              broken = true;
+              break;
+            }
+          }
+          setCurrentCount(loaded_counts[i]);
+          if(loaded_counts[i].uuid === end.uuid) {
+            broken = true;
+            break;
+          }
+        }
+      }
+    }
+    async function timer(start, end)  {
+      // Update the count down every 1 second
+      const diff = end-start;
+      end = performance.now() + diff;
+      const timer_active = setInterval(function() {
+        // Find the distance between now and the count down date
+        const distance = end-performance.now();
+        // Time calculations for days, hours, minutes and seconds
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        // Display the result in the element with id="demo"
+        setTimerStr("Time remaining: "+ days + "d " + hours + "h " + minutes + "m " + seconds + "s ");
+        // If the count down is finished, write some text
+        if (distance < 0) {
+          clearInterval(timer_active);
+          setTimerStr("Replay complete");
+        }
+      }, 501);
+      setActiveTimer(timer_active);
+    };
+    useEffect(() => {
+      if(replayActive && currentCount !== undefined){   
+        cache_counts(currentCount);
+        if(loadedNewestRef.current) {
+          if(user && user.pref_load_from_bottom) {
+            recentCountsRef.current = (() => {
+              const newCounts = [...recentCountsRef.current, currentCount];
+              if (isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
+                if (newCounts.length > 50) {
+                  return newCounts.slice(newCounts.length - 50);
+                } else {
+                  return newCounts;
+                }
+              } else {
+                return newCounts;
+              }
+            })();                    
+            if(currentCount.hasComment) {
+              recentChatsRef.current = [
+                ...recentChatsRef.current,
+                currentCount
+              ];
+            
+              if (chatsIsScrolledToNewest.current !== undefined && chatsIsScrolledToNewest.current) {
+                if (recentChatsRef.current.length > 50) {
+                  recentChatsRef.current = recentChatsRef.current.slice(recentChatsRef.current.length - 50);
+                }
+              }
+            }
+          } else {
+            recentCountsRef.current = [currentCount, ...recentCountsRef.current];
+
+            if (isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
+              if (recentCountsRef.current.length > 50) {
+                recentCountsRef.current = recentCountsRef.current.slice(0, 50);
+              }
+            }
+            if(currentCount.hasComment) {
+              recentChatsRef.current = [
+                currentCount,
+                ...recentChatsRef.current
+              ];
+            
+              if (chatsIsScrolledToNewest.current !== undefined && chatsIsScrolledToNewest.current) {
+                if (recentChatsRef.current.length > 50) {
+                  recentChatsRef.current = recentChatsRef.current.slice(0, 50);
+                }
+              }
+            }
+          }
+        }
+        setLatencyStateTest(`${currentCount.uuid}_${Date.now()}`);
+        if(currentCount.hasComment && tabValueRef.current === "tab_2") {
+          setNewChatsLoadedState(currentCount.uuid);
+        }
+        if(currentCount.isValidCount) {
+          setLastCount({lastCount: currentCount, lastCounter: cachedCounters[currentCount.authorUUID]});
+        }
+        if(currentCount.stricken && user && user.pref_sound_on_stricken !== 'Disabled') {
+          if(user.pref_sound_on_stricken === 'Only My Counts' && currentCount.authorUUID === user.uuid) {
+            playDing();
+          } else if(user.pref_sound_on_stricken === 'All Stricken') {
+            playDing();
+          }
+        }
+        if (document.hidden) {
+          setFaviconCount();
+        }
+      }
+    },[replayActive, thread_name, dingSound, currentCount]);
+
+
 
     useEffect(() => {
       if(!loading && user) {
@@ -935,6 +1139,11 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       }, [recentChatsLoading, newChatsLoadedState, thread_name, loadedNewChat, loadedOldChat, deleteComments, loadedOldestChats, loadedNewestChats, chatsIsScrolledToNewest, loading])
 
       const sidebarMemo = useMemo(() => {
+        if(clearCounts) {
+          recentCountsRef.current = [];
+          recentChatsRef.current = [];
+          setClearCounts(false);
+        }
         return (
           <TabContext value={tabValue}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
@@ -944,6 +1153,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           <Tab label="Chats" value="tab_2" />
           <Tab label="Splits" value="tab_3" />
           <Tab label="Stats" value="tab_4" />
+          <Tab label="Replay" value="tab_5" />
         </TabList>
       </Box>
         <Box sx={{flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', overflowY: 'scroll'}}>
@@ -1032,11 +1242,76 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
           {dailyHOC && <DailyHOCTable mini={false} dailyHOC={dailyHOC} name={'Daily Leaderboard'} countName={'Counts'}></DailyHOCTable>}
           {dailyRobs && thread_name === "main" && <DailyRobTable dailyRobs={dailyRobs}></DailyRobTable>}
         </TabPanel>
+        <TabPanel value="tab_5" sx={{flexGrow: 1}}>
+            <FormControl variant="standard" sx={{}} >
+                <Tooltip title="Finds the nth count in a thread. In letters, 26th count would return Z, for example." placement='top'>
+                <InputLabel htmlFor="countNumber1" shrink>
+                  Start Number (Count #)
+                </InputLabel>
+                </Tooltip>
+                <Input
+                  onInput={e => setCountNumber1(isNaN(parseInt((e.target as HTMLInputElement).value)) ? null : parseInt((e.target as HTMLInputElement).value))}
+                  value={countNumber1}
+                  id="countNumber1"
+                  type='number'
+                  disabled={rawCount1.length > 0}
+                />
+              </FormControl>
+              <FormControl variant="standard" sx={{mr: 2}} >
+              <Tooltip title="Finds the raw count in a thread. In letters, you can search for ZZ here, for example." placement='top'>
+                <InputLabel htmlFor="rawCount1" shrink>
+                    Start Number (Raw Count)
+                </InputLabel>
+                </Tooltip>
+                <Input
+                  onInput={e => setRawCount1((e.target as HTMLInputElement).value)}
+                  value={rawCount1}
+                  id="rawCount1"
+                  disabled={countNumber1 !== null && countNumber1 > 0}
+                />
+              </FormControl>
+              <br></br>
+            <FormControl variant="standard" sx={{}} >
+                <Tooltip title="Finds the nth count in a thread. In letters, 26th count would return Z, for example." placement='top'>
+                <InputLabel htmlFor="countNumber2" shrink>
+                  End Number (Count #)
+                </InputLabel>
+                </Tooltip>
+                <Input
+                  onInput={e => setCountNumber2(isNaN(parseInt((e.target as HTMLInputElement).value)) ? null : parseInt((e.target as HTMLInputElement).value))}
+                  value={countNumber2}
+                  id="countNumber2"
+                  type='number'
+                  disabled={rawCount2.length > 0}
+                />
+              </FormControl>
+              <FormControl variant="standard" sx={{mr: 2}} >
+              <Tooltip title="Finds the raw count in a thread. In letters, you can search for ZZ here, for example." placement='top'>
+                <InputLabel htmlFor="rawCount2" shrink>
+                    End Number (Raw Count)
+                </InputLabel>
+                </Tooltip>
+                <Input
+                  onInput={e => setRawCount2((e.target as HTMLInputElement).value)}
+                  value={rawCount2}
+                  id="rawCount2"
+                  disabled={countNumber2 !== null && countNumber2 > 0}
+                />
+              </FormControl>
+            {!replayActive &&
+              <Button variant="contained" onClick={() => {startReplay()}}>
+                Replay </Button> ||
+              replayActive && 
+              <Button variant="contained" onClick={() => {if(activeTimer!==undefined)clearInterval(activeTimer);setTimerStr("");setReplayActive(false);imsorryfortheglobalpull="DISABLED";setSocketStatus("LIVE")}}>
+              Cancel </Button>
+            }
+            {replayActive && <Typography>{timerStr}</Typography>}
+        </TabPanel>
         </Box>
         </TabContext>
         )
       }, [tabValue, thread, isDesktop, newChatsLoadedState, lastCount, splits, dailyHOC, dailyRobs, bank, robOpen, loading, recentChatsLoading,
-        cachedCounts, thread, thread_name, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, loading])
+        cachedCounts, thread, thread_name, loadedNewestRef, loadedNewestRef.current, recentCountsLoading, latencyStateTest, loadedNewCount, loadedOldCount, deleteComments, loadedOldest, loadedNewest, isScrolledToNewest, loading, replayActive, countNumber1, countNumber2, rawCount1, rawCount2, timerStr, activeTimer, clearCounts])
       
 
       if(!loading && !threadLoading && thread) {
