@@ -204,6 +204,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             break;
           }
         }
+        loaded_counts = data.data.counts;
       }
     }
     async function timer(start, end)  {
