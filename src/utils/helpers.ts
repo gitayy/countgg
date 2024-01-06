@@ -10,22 +10,7 @@ export function updateSiteVer(siteVer: string) {
   loaded_site_version = siteVer;
 }
 
-export const titles = {
-  'COUNTER': {value: 1, style: 'title-default'},
-  'BETA TESTER': {value: 2, style: 'title-default'},
-  'THE BIG ONE': {value: 3, style: 'title-default'},
-  'NOTHING PERSONNEL': {value: 4, style: 'title-default'},
-  'CAN I GET UHHHH': {value: 5, style: 'title-default'},
-  'TEAM BLAZE': {value: 6, style: 'title-default'},
-  'HOT': {value: 7, style: 'title-default'},
-  '🔥': {value: 8, style: 'title-default'},
-  'TEAM RADIANT': {value: 9, style: 'title-default'},
-  'DAZZLING': {value: 10, style: 'title-default'},
-  '⭐': {value: 11, style: 'title-default'},
-  'TEAM WAVE': {value: 12, style: 'title-default'},
-  'SOAKED': {value: 13, style: 'title-default'},
-  // '🌊': {value: 14, style: 'title-default'},
-};
+
 
 export const card_backgrounds = {
   // 'default': {value: 1, style: 'light'},
@@ -40,18 +25,18 @@ export const card_backgrounds = {
   // 'wave_2': {value: 10, style: 'light'},
 }
 
-export const card_borders = {
-  'no_border_square': {value: 1},
-  'no_border_circle': {value: 2},
-  'border_square_blue': {value: 3},
-  'border_circle_blue': {value: 4},
-  'border_blaze_square': {value: 5},
-  'border_blaze_circle': {value: 6},
-  'border_radiant_square': {value: 7},
-  'border_radiant_circle': {value: 8},
-  'border_wave_square': {value: 9},
-  'border_wave_circle': {value: 10},
-}
+// export const card_borders = {
+//   'no_border_square': {value: 1},
+//   'no_border_circle': {value: 2},
+//   'border_square_blue': {value: 3},
+//   'border_circle_blue': {value: 4},
+//   'border_blaze_square': {value: 5},
+//   'border_blaze_circle': {value: 6},
+//   'border_radiant_square': {value: 7},
+//   'border_radiant_circle': {value: 8},
+//   'border_wave_square': {value: 9},
+//   'border_wave_circle': {value: 10},
+// }
 
 export const pronouns: [string, string, string, string][] = [['he', 'him', 'his', 'his'], ['she', 'her', 'her', 'hers'], ['they', 'them', 'their', 'theirs']];
 
@@ -146,6 +131,14 @@ export const cachedCounters = {'[SYSTEM]': {
   color: '#069420', 
   emoji: "🤖",
 }} as { [key: string]: Counter };
+
+export function isParsable(input: string): boolean {
+  return parseInt(input).toString() === input;
+}
+
+export const discordAvatarLink = (counter: Counter): string => {
+  return counter && counter.avatar && counter.avatar.length > 5 ? `https://cdn.discordapp.com/avatars/${counter.discordId}/${counter.avatar}` : `https://cdn.discordapp.com/embed/avatars/0.png`
+}
 
 export const loginRedirect = `${process.env.REACT_APP_API_HOST}${process.env.REACT_APP_LOGIN || '/api/auth/login'}`
 

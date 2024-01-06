@@ -31,6 +31,9 @@ import { UserContext } from '../utils/contexts/UserContext';
     const [postBans, setPostBans] = useState('');
     const [resetOnMistakes, setResetOnMistakes] = useState(false);
     const [allowDoublePosts, setAllowDoublePosts] = useState(false);
+    const [countsPerSplit, setCountsPerSplit] = useState(100);
+    const [splitsPerGet, setSplitsPerGet] = useState(10);
+    const [splitOffset, setSplitOffset] = useState(0);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>('error');
@@ -50,6 +53,9 @@ import { UserContext } from '../utils/contexts/UserContext';
       setAutoValidated(selectedThread.autoValidated);
       setResetOnMistakes(selectedThread.resetOnMistakes);
       setAllowDoublePosts(selectedThread.allowDoublePosts);
+      setCountsPerSplit(selectedThread.countsPerSplit);
+      setSplitsPerGet(selectedThread.splitsPerGet);
+      setSplitOffset(selectedThread.splitOffset);
       setModerators(selectedThread.moderators ? selectedThread.moderators.join(',') : '');
       setVerifiers(selectedThread.verifiers ? selectedThread.verifiers.join(',') : '');
       setCountBans(selectedThread.countBans ? selectedThread.countBans.join(',') : '');
@@ -70,7 +76,7 @@ import { UserContext } from '../utils/contexts/UserContext';
     const sendValues = async () => {
       if(name) {
         try {
-        const res = await adminCreateThread(name, title, description, rules, firstValidCount, validationType, visibleTo, updatableBy, locked, autoValidated, resetOnMistakes, allowDoublePosts, moderators, verifiers, countBans, postBans, shortDescription, color1, color2, category, uuid);
+        const res = await adminCreateThread(name, title, description, rules, firstValidCount, validationType, visibleTo, updatableBy, locked, autoValidated, resetOnMistakes, allowDoublePosts, moderators, verifiers, countBans, postBans, shortDescription, color1, color2, category, countsPerSplit, splitsPerGet, splitOffset, uuid);
           if(res.status == 201) {
             setSnackbarSeverity('success');
             setSnackbarOpen(true)
@@ -215,6 +221,39 @@ import { UserContext } from '../utils/contexts/UserContext';
                   defaultValue={firstValidCount}
                   value={firstValidCount}
                   id="firstValidCount"
+                />
+              </FormControl>
+              <FormControl variant="standard" sx={{}} >
+                <InputLabel htmlFor="countsPerSplit" shrink>
+                Counts Per Split
+                </InputLabel>
+                <Input
+                  onInput={e => setCountsPerSplit(parseInt((e.target as HTMLInputElement).value))}
+                  defaultValue={countsPerSplit}
+                  value={countsPerSplit}
+                  id="countsPerSplit"
+                />
+              </FormControl>
+              <FormControl variant="standard" sx={{}} >
+                <InputLabel htmlFor="splitsPerGet" shrink>
+                Splits Per Get
+                </InputLabel>
+                <Input
+                  onInput={e => setSplitsPerGet(parseInt((e.target as HTMLInputElement).value))}
+                  defaultValue={splitsPerGet}
+                  value={splitsPerGet}
+                  id="splitsPerGet"
+                />
+              </FormControl>
+              <FormControl variant="standard" sx={{}} >
+                <InputLabel htmlFor="splitOffset" shrink>
+                Split Offset
+                </InputLabel>
+                <Input
+                  onInput={e => setSplitOffset(parseInt((e.target as HTMLInputElement).value))}
+                  defaultValue={splitOffset}
+                  value={splitOffset}
+                  id="splitOffset"
                 />
               </FormControl>
               <FormControl variant="standard" sx={{}} >

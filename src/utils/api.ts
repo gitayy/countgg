@@ -223,7 +223,7 @@ axios.post(
   CONFIG
 );
 
-export const adminCreateThread = (name: string, title: string, description: string, rules: string, firstValidCount: string, validationType: string, visibleTo: string, updatableBy: string, locked: boolean, autoValidated: boolean, resetOnMistakes: boolean, allowDoublePosts: boolean, moderators: string, verifiers: string, countBans: string, postBans: string, shortDescription: string, color1: string, color2: string, category: string, uuid?: string) =>
+export const adminCreateThread = (name: string, title: string, description: string, rules: string, firstValidCount: string, validationType: string, visibleTo: string, updatableBy: string, locked: boolean, autoValidated: boolean, resetOnMistakes: boolean, allowDoublePosts: boolean, moderators: string, verifiers: string, countBans: string, postBans: string, shortDescription: string, color1: string, color2: string, category: string, countsPerSplit: number, splitsPerGet: number, splitOffset: number, uuid?: string) =>
 axios.post(
   `${API_URL}/thread/create`,
   {name: name,
@@ -246,6 +246,9 @@ axios.post(
   color1: color1,
   color2: color2,
   category: category,
+  countsPerSplit: countsPerSplit,
+  splitsPerGet: splitsPerGet,
+  splitOffset: splitOffset,
   uuid: uuid
   },
   CONFIG

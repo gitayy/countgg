@@ -1,11 +1,10 @@
 import { Card, Box, CardMedia, CardContent, Typography, Grid, createTheme, responsiveFontSizes, ThemeProvider, Alert, Badge, Chip } from "@mui/material";
 import CggLogo2 from '../assets/emotes/gg.png'
 
-import { calculateLevel, card_backgrounds, titles } from "../utils/helpers";
+import { calculateLevel, card_backgrounds } from "../utils/helpers";
 
 export function CounterCard(props) {
 
-  const titleInfo = titles[props.counter.title];
   const backgroundInfo = card_backgrounds[props.counter.cardStyle];
   let counterCardTheme = createTheme({
     palette: {
@@ -45,7 +44,7 @@ export function CounterCard(props) {
                         &nbsp;
                         <Typography component="span" variant="body2" sx={{}}>@{props.counter.username}</Typography>
                         </Typography>
-                    <Typography className={titleInfo && titleInfo.style ? titleInfo.style : 'title-default'} variant="subtitle1" color={"text.secondary"} component="div">
+                    <Typography className={'title-default'} variant="subtitle1" color={"text.secondary"} component="div">
                     {props.counter.roles.includes('admin') ? <Chip component={"span"} size="small" label={"Admin"} sx={{mr: 1, bgcolor: "gold", color: "black"}} /> : props.counter.roles.includes('mod') ? <Chip component={"span"} size="small" label={"Moderator"} sx={{mr: 1, bgcolor: "lightgreen", color: "black"}} /> : null}{props.counter.title}&nbsp;
                       </Typography>
 

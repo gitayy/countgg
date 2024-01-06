@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import { Alert, Box, Button, Container, FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Snackbar, Switch, Typography, AlertColor, Tooltip, TextField } from '@mui/material';
 import { UserContext } from '../utils/contexts/UserContext';
-import { card_backgrounds, card_borders, clearOptions, customStrickenOptions, hideStrickenOptions, isColorSuitableForBackground, isValidHexColor, nightModeColorOptions, nightModeOptions, postPositionOptions, postStyleOptions, soundOnStrickenOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
+import { clearOptions, customStrickenOptions, hideStrickenOptions, isColorSuitableForBackground, isValidHexColor, nightModeColorOptions, nightModeOptions, postPositionOptions, postStyleOptions, soundOnStrickenOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
 import { updateCounterPrefs } from '../utils/api';
 import { CounterCard } from '../components/CounterCard';
 import { Loading } from '../components/Loading';

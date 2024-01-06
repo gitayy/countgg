@@ -1,7 +1,7 @@
 import { TableRow, TableCell, TableContainer, Table, TableHead, TableBody, Typography, Link, TablePagination, Avatar, CardHeader } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { cachedCounters, convertToTimestamp, formatTimeDiff } from "../utils/helpers";
+import { cachedCounters, convertToTimestamp, formatTimeDiff, isParsable } from "../utils/helpers";
 import { ThreadType } from "../utils/types";
 
 interface Props {
@@ -53,8 +53,8 @@ export const SpeedTable = ({ speed, thread }: Props) => {
         <TableRow key={index}>
           <TableCell>{index + 1}</TableCell>
           <TableCell>{obj.timeFancy}</TableCell>
-          <TableCell><Link underline="hover" href={`/thread/${thread.name}/${obj.start}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}/${obj.start}`);}}>{parseInt(obj.startCount).toLocaleString()}</Link></TableCell>
-          <TableCell><Link underline="hover" href={`/thread/${thread.name}/${obj.end}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}/${obj.end}`);}}>{parseInt(obj.endCount).toLocaleString()}</Link></TableCell>
+          <TableCell><Link underline="hover" href={`/thread/${thread.name}/${obj.start}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}/${obj.start}`);}}>{isParsable(obj.startCount) ? parseInt(obj.startCount).toLocaleString() : obj.startCount}</Link></TableCell>
+          <TableCell><Link underline="hover" href={`/thread/${thread.name}/${obj.end}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}/${obj.end}`);}}>{isParsable(obj.endCount) ? parseInt(obj.endCount).toLocaleString() : obj.endCount}</Link></TableCell>
           <TableCell>
             {obj.qualifiedCounters.map((author, index) => (
                 <span key={index}>
@@ -96,8 +96,8 @@ export const SpeedTable = ({ speed, thread }: Props) => {
                 )}
           </TableCell>
           <TableCell>{formatTimeDiff(0, row.obj.time)}</TableCell>
-          <TableCell><Link underline="hover" href={`/thread/${thread.name}/${row.obj.start}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}/${row.obj.start}`);}}>{parseInt(row.obj.startCount).toLocaleString()}</Link></TableCell>
-          <TableCell><Link underline="hover" href={`/thread/${thread.name}/${row.obj.end}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}/${row.obj.end}`);}}>{parseInt(row.obj.endCount).toLocaleString()}</Link></TableCell>
+          <TableCell><Link underline="hover" href={`/thread/${thread.name}/${row.obj.start}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}/${row.obj.start}`);}}>{isParsable(row.obj.startCount) ? parseInt(row.obj.startCount).toLocaleString() : row.obj.startCount}</Link></TableCell>
+          <TableCell><Link underline="hover" href={`/thread/${thread.name}/${row.obj.end}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}/${row.obj.end}`);}}>{isParsable(row.obj.endCount) ? parseInt(row.obj.endCount).toLocaleString() : row.obj.endCount}</Link></TableCell>
           <TableCell>{row.obj.qualifiedCounters.filter(ct => {return ct !== row.counter}).map(ct => {return cachedCounters[ct] 
           ? <><CardHeader sx={{p: 0}} avatar={cachedCounters[ct] && cachedCounters[ct].name && <Avatar component={"span"} sx={{ width: 24, height: 24 }} alt={`${cachedCounters[ct].name}`} src={`${cachedCounters[ct].avatar.length > 5 && `https://cdn.discordapp.com/avatars/${cachedCounters[ct].discordId}/${cachedCounters[ct].avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>}
           title={<Link color={cachedCounters[ct].color} underline='hover' href={`/counter/${cachedCounters[ct].username}`} onClick={(e) => {e.preventDefault();navigate(`/counter/${cachedCounters[ct].username}`);}}>

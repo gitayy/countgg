@@ -26,7 +26,7 @@ export const StatsPage = () => {
   const [count, setCount] = useState(0);
   const [urlCheck, setUrlCheck] = useState(false);
   const [allStats, setAllStats] = useState<{gets: object[], assists: object[], palindromes: object[], repdigits: object[], speed: object[], leaderboard: object[], last_updated: string, last_updated_uuid: string}[]>();
-  const [stats, setStats] = useState<{gets: object[], assists: object[], palindromes: object[], repdigits: object[], speed: object[], leaderboard: object[], last_updated: string, last_updated_uuid: string}>();
+  const [stats, setStats] = useState<{gets: object[], assists: object[], palindromes: object[], repdigits: object[], speed: object[], splitSpeed: object[], leaderboard: object[], last_updated: string, last_updated_uuid: string}>();
   const [statsLoading, setStatsLoading] = useState(true);
   const isMounted = useIsMounted();
   const navigate = useNavigate();
@@ -90,16 +90,9 @@ export const StatsPage = () => {
             for (const counter of data.counters) {
               addCounterToCache(counter)
             }
-            setAllStats(data.stats)
-            // console.log("Pog? Allstats set to ");
-            // console.log(data.stats);
-            // console.log("Ok");
-            // console.log(data.stats);
-            // console.log(dateStr);
-            // console.log(data.stats && data.stats[dateStr]);
-            // console.log(dateStr && data && data[dateStr] ? data[dateStr] : dateStr ? {} : data['all'] ? data['all'] : {});
+
             setStats(getStatsBetween(startdateStr, enddateStr));
-            // setStats(dateStr && data && data.stats && data.stats[dateStr] ? data.stats[dateStr] : dateStr ? {} : data.stats && data.stats['all'] ? data.stats['all'] : {})
+            setAllStats(data.stats)
             setStatsLoading(false);
           }
           
@@ -111,12 +104,6 @@ export const StatsPage = () => {
       }
     if(urlCheck && page && name) {fetchData();}
   }, [urlCheck, page, name]);
-
-  // useEffect(() => {
-  //     let dateStr;
-  //     if(selectedDate && !disableDates(selectedDate)) {dateStr = selectedDate._d.toISOString().slice(0,10);}
-  //   setStats(dateStr && allStats &&  allStats[dateStr] ? allStats[dateStr] : dateStr ? {} : allStats && allStats['all'] ? allStats['all'] : {})
-  // }, [selectedStartDate, selectedEndDate])
 
   function getFirstDate(stats) {
     let firstDate: string | null = null;
@@ -142,7 +129,6 @@ export const StatsPage = () => {
   function mergeStats(stats1: any, stats2: any): any {
     if (!stats1) return stats2;
     if (!stats2) return stats1;
-    // console.log("Merging stats...");
   
     // Merge the last_updated and last_updated_uuid
     const latestStats = {
@@ -182,16 +168,12 @@ export const StatsPage = () => {
   }
 
   function getStatsBetween(startDateStr:string | undefined =undefined, endDateStr:string | undefined=undefined) {
-    console.log(`Get stats between ${startDateStr} and ${endDateStr}`);
     if(!allStats) {console.error("No allStats... this is bad");console.log(allStats);return undefined;}
     if (startDateStr && endDateStr) {
       let stats = allStats[startDateStr];
       for (let date = getNextDate(startDateStr); date <= endDateStr; date = getNextDate(date)) {
-        // console.log("ayo: ", date);
         stats = mergeStats(stats, allStats[date])
-        // console.log(stats);
       }
-      // setStats(stats);
       return stats;
     } else if (endDateStr) {
       // Only end date is defined, merge stats from the first day up to end date
@@ -201,17 +183,12 @@ export const StatsPage = () => {
       for (let date = getNextDate(firstDate); date <= endDateStr; date = getNextDate(date)) {
         stats = mergeStats(stats, allStats[date])
       }
-      // setStats(stats);
       return stats;
     } else if (startDateStr) {
       // Only start date is defined, get stats for just that start date
-      // setStats(allStats[startDateStr]);
       return allStats[startDateStr];
     } else {
       // Neither start nor end date is defined, use the 'all' stats
-      console.log("Setting to all");
-      console.log(allStats['all']);
-      // setStats(allStats['all']);
       return allStats['all']
     }
   }
@@ -250,9 +227,6 @@ export const StatsPage = () => {
     const handleClearEndDate = () => {
       setSelectedEndDate(null);
     };
-
-    console.log("Hmm");
-    console.log(stats, !statsLoading, selectedThread);
 
   if(!loading && !allThreadsLoading) {
 
@@ -336,6 +310,7 @@ export const StatsPage = () => {
           {stats && stats['palindromes'] && Object.keys(stats['palindromes']).length > 0 && <Tab label="Palindromes" value="tab_3" />}
           {stats && stats['repdigits'] && Object.keys(stats['repdigits']).length > 0 && <Tab label="Repdigits" value="tab_4" />}
           {stats && stats['speed'] && stats['speed'].length > 0 && <Tab label="Speed" value="tab_5" />}
+          {stats && stats['splitSpeed'] && stats['splitSpeed'].length > 0 && <Tab label="Splits" value="tab_6" />}
           {/* <Tab label="Query" value="tab_6" /> */}
         </TabList>
       </Box>
@@ -370,9 +345,13 @@ export const StatsPage = () => {
           <SpeedTable speed={stats && stats.speed} thread={selectedThread}></SpeedTable>
         </TabPanel>
         <TabPanel value="tab_6" sx={{}}>
+          <Typography variant='h6'>Splits</Typography>
+          <SpeedTable speed={stats && stats.splitSpeed} thread={selectedThread}></SpeedTable>
+        </TabPanel>
+        {/* <TabPanel value="tab_6" sx={{}}>
           <Typography variant='h6'>Query</Typography>
           <StatsQuery thread={selectedThread}></StatsQuery>
-        </TabPanel>
+        </TabPanel> */}
         {statsLoading && <Loading mini={true} />}
         </Box>
         </TabContext>        

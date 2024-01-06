@@ -102,6 +102,9 @@ export type ThreadType = {
   color1: string;
   color2: string;
   category: string;
+  countsPerSplit: number;
+  splitsPerGet: number;
+  splitOffset: number;
 };
 
 export type AchievementType = {
