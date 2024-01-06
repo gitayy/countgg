@@ -65,6 +65,9 @@ axios.get<{counters: Counter[], pageCount: number}>(`${API_URL}/counter/counters
 export const getBlogs = (page: number) =>
 axios.get<{blogs: Blog[], pageCount: number}>(`${API_URL}/thread/blogs/${page}`, CONFIG);
 
+export const getAllBlogs = () =>
+axios.get<{blogs: Blog[]}>(`${API_URL}/thread/allBlogs`, CONFIG);
+
 export const getFreeSecretAchievement = () =>
 axios.get<any>(`${API_URL}/counter/free_secret_achievement`, CONFIG);
 
@@ -131,7 +134,7 @@ axios.get<{counts: PostType[], loadedOldest: boolean, loadedNewest: boolean}>(
 );
 
 export const loadNewerCounts = (thread_name?: string, uuid?: string, limit?: number, commentsOnly?: boolean) =>
-axios.get<{counts: PostType[], loadedOldest: boolean, loadedNewest: boolean}>(
+axios.get<{counts: PostType[], loadedOldest: boolean, loadedNewest: boolean, counters: Counter[]}>(
   `${API_URL}/thread/loadNewerCounts`,
   {
     params: {
