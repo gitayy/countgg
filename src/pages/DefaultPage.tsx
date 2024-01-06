@@ -200,6 +200,26 @@ useEffect(() => {
     setRegisterModalOpen(false);
   };
 
+  const miniMainItem = (icon, title: string, href: string, mustBeRegistered=false) => {
+    return <Grid item xs={6} sx={{padding: "6px"}}>
+            <Link color={'inherit'} underline='none' href={isCounter ? href : undefined} onClick={isCounter ? (e) => {e.preventDefault();navigate(href);} : handleRegisterModalOpen}>
+              <Paper className="littlescale card" elevation={8} sx={{
+                background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
+                cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={12}>
+                  <Typography variant="h4" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                  }}>
+                    {icon} {title}
+                  {/* <ReorderIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> Number Shuffle */}
+                  </Typography>
+                </Grid>
+              </Grid>
+              </Paper>
+            </Link>
+          </Grid>
+  }
+
   const isRegistered = user && counter;
   const isCounter = counter && counter.roles.includes('counter');
 
@@ -323,7 +343,7 @@ useEffect(() => {
               </Paper>
             </Link>
           </Grid> */}
-          <Grid item xs={12} sx={{padding: "6px"}}>
+          {/* <Grid item xs={12} sx={{padding: "6px"}}>
             <Link color={'inherit'} underline='none' href={`/lrwoed`} onClick={(e) => {e.preventDefault();navigate(`/lrwoed`);}}>
               <Paper className="littlescale card" elevation={8} sx={{
                 background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
@@ -338,15 +358,19 @@ useEffect(() => {
               </Grid>
               </Paper>
             </Link>
-          </Grid>
-          <Grid item xs={12} sx={{padding: "6px"}}>
+          </Grid> */}
+          {miniMainItem(<AbcIcon style={{fontSize: 'inherit', marginRight: '5%'}} />, "LRWOED", "/lrwoed")}
+          {miniMainItem(<ReorderIcon style={{fontSize: 'inherit', marginRight: '5%'}} />, "Number Shuffle", "/shuffle")}
+          {miniMainItem(<RedditIcon style={{fontSize: 'inherit', marginRight: '5%'}} />, "Reddit Live", "/r/livecounting", true)}
+          {/* {miniMainItem(<ContentCutIcon style={{fontSize: 'inherit', marginRight: '5%'}} />, "RPS", "/rps")} */}
+          {/* <Grid item xs={6} sx={{padding: "6px"}}>
             <Link color={'inherit'} underline='none' href={`/shuffle`} onClick={(e) => {e.preventDefault();navigate(`/shuffle`);}}>
               <Paper className="littlescale card" elevation={8} sx={{
                 background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
                 cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={12}>
-                  <Typography variant="h2" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
+                  <Typography variant="h4" color={'black'} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', 
                   }}>
                   <ReorderIcon style={{fontSize: 'inherit', marginRight: '5%'}} /> Number Shuffle
                   </Typography>
@@ -354,8 +378,8 @@ useEffect(() => {
               </Grid>
               </Paper>
             </Link>
-          </Grid>
-          <Grid item xs={12} sx={{padding: "6px"}}>
+          </Grid> */}
+          {/* <Grid item xs={12} sx={{padding: "6px"}}>
             <Link color={'inherit'} underline='none' href={isCounter ? `/r/livecounting` : undefined} onClick={isCounter ? (e) => {e.preventDefault();navigate(`/r/livecounting`);} : handleRegisterModalOpen}>
               <Paper className="littlescale card" elevation={8} sx={{
                 background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
@@ -370,7 +394,7 @@ useEffect(() => {
               </Grid>
               </Paper>
             </Link>
-          </Grid>
+          </Grid> */}
           {/* <Grid item xs={12} md={6}>
             <Link color={'inherit'} underline='none' href={`/baseball`} onClick={(e) => {e.preventDefault();navigate(`/baseball`);}}>
               <Paper className="littlescale card" elevation={8} sx={{

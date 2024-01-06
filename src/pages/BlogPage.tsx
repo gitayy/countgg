@@ -3,12 +3,50 @@ import { Box, Typography, Avatar, Card, Container, Grid, CardContent, Button } f
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import { SocketContext } from '../utils/contexts/SocketContext';
+import { BlogPost } from '../components/BlogPost';
+import { getAllBlogs } from '../utils/api';
+import { useIsMounted } from '../utils/hooks/useIsMounted';
+import { Blog } from '../utils/types';
+import { Loading } from '../components/Loading';
+import { defaultCounter } from '../utils/helpers';
 
 
 const BlogPage = () => {
 
     const params = useParams();
-    const blog:number = parseInt(params.blog || "1") || 1;
+    const blog: string|undefined = params.blog
+
+    const [blogs, setBlogs] = useState<Blog[]>([]);
+    const [blogsLoading, setBlogsLoading] = useState<boolean>(true);
+
+    const [fullBlog, setFullBlog] = useState<Blog>();
+
+    useEffect(() => {
+      const the_blog = blogs.filter(ablog => ablog.uuid === blog)
+      if(the_blog.length > 0) {
+        setFullBlog(the_blog[0])
+      }
+    }, [blogs])
+
+    const isMounted = useIsMounted()
+
+    useEffect(() => {
+      async function fetchData() {
+          setBlogsLoading(true);
+          getAllBlogs()
+          .then(({ data }) => {
+            if(isMounted.current) {
+              setBlogs(data.blogs);
+              setBlogsLoading(false);
+            }
+            
+          })
+          .catch((err) => {
+            console.log(err);
+          })
+        }
+        fetchData();
+    }, []);
 
     const { user, counter, loading, setCounter } = useContext(UserContext); 
     const socket = useContext(SocketContext);
@@ -25,9 +63,24 @@ const BlogPage = () => {
             })
           }, [location.pathname, title]);
 
-          return             <Box sx={{ bgcolor: 'background.paper', flexGrow: 1, p: 2, color: 'text.primary'}}>
-            Yep
+          console.log(fullBlog)
+
+          return (
+          fullBlog ? 
+          <Box sx={{ bgcolor: 'background.paper', flexGrow: 1, p: 2, color: 'text.primary'}}>
+
+            <BlogPost 
+                    title={fullBlog.title} 
+                    body={fullBlog.body} 
+                    author={fullBlog.author ? fullBlog.author : defaultCounter("")}
+                    timestamp={fullBlog.timestamp}
+                    />
 </Box>
+:
+<Box sx={{ bgcolor: 'background.paper', flexGrow: 1, p: 2, color: 'text.primary'}}>
+  <Loading />
+</Box>
+          )
 
 //     const blogPost = blogs.length >= blog ? blogs[blog - 1] : undefined;
 //     const prevBlog = blogs.length >= blog && blog >= 2 ? blogs[blog - 2] : undefined;

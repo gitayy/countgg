@@ -65,7 +65,7 @@ export const ThreadsPage = () => {
     const groupedThreads = {};
   
     threads.forEach((thread) => {
-      const category = thread.category || 'Uncategorized'; // If category is undefined or blank, consider it as "Uncategorized"
+      const category = thread.locked ? 'Archived' : thread.category || 'Uncategorized'; // If category is undefined or blank, consider it as "Uncategorized"
   
       if (!groupedThreads[category]) {
         groupedThreads[category] = [];

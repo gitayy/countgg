@@ -74,6 +74,8 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const { thread, threadLoading, setThread } = useFetchThread(thread_name);
     const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest, recentCountsRef } = useFetchRecentCounts(thread_name, context, socketStatus, thread_ref);
     const { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats, recentChatsRef } = useFetchRecentChats(thread_name, context, socketStatus, thread_ref);
+        // const { recentCounts, recentCountsLoading, setRecentCounts, loadedOldest, setLoadedOldest, loadedNewest, setLoadedNewest, recentCountsRef } = useFetchRecentCounts(thread_name, context, socketStatus, thread_ref);
+    // const { recentChats, recentChatsLoading, setRecentChats, loadedOldestChats, setLoadedOldestChats, loadedNewestChats, setLoadedNewestChats, recentChatsRef } = useFetchRecentChats(thread_name, context, socketStatus, thread_ref);
 //     const debouncedFetchThread = debounce(useFetchThread, 500); // Adjust the debounce delay (500ms in this example)
 // const debouncedFetchRecentCounts = debounce(useFetchRecentCounts, 500);
 // const debouncedFetchRecentChats = debounce(useFetchRecentChats, 500);
@@ -336,6 +338,15 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
       }
     },[searchParams, loading, countNumber1, countNumber2, rawCount1, rawCount2, autoplay, thread])
 
+    // const recentCountsRef = useRef<PostType[]>([]);
+    // const recentChatsRef = useRef<PostType[]>([]);
+    // const [recentCountsLoading, setRecentCountsLoading] = useState<boolean>(true);
+    // const [recentChatsLoading, setRecentChatsLoading] = useState<boolean>(true);
+    // const [loadedOldest, setLoadedOldest] = useState(false); 
+    // const [loadedNewest, setLoadedNewest] = useState(true);
+    // const [loadedOldestChats, setLoadedOldestChats] = useState(false); 
+    // const [loadedNewestChats, setLoadedNewestChats] = useState(true);
+
     useEffect(() => {
       if(!loading && user) {
         if(user.pref_hide_thread_picker) {
@@ -567,6 +578,24 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             socket.on(`watcher_count`, function(data) {
               setSocketViewers(data);
             });
+            // socket.on(`recentPosts`, function(data) {
+            //   const {last50Posts, last50Chats, lastCount, loadedOldest, loadedNewest, loadedOldestChats, loadedNewestChats} = data;
+            //   recentCountsRef.current = last50Posts;
+            //   recentChatsRef.current = last50Chats;
+            //   setLastCount(lastCount);
+            //   setRecentCountsLoading(false);
+            //   setRecentChatsLoading(false);
+            //   setLoadedOldest(loadedOldest)
+            //   setLoadedNewest(loadedNewest)
+            //   setLoadedOldestChats(loadedOldestChats)
+            //   setLoadedNewestChats(loadedNewestChats)
+            //   // if(user && !loading && user.pref_load_from_bottom) {
+            //   //   setRecentCounts(data.recentCounts.reverse())
+            //   //   recentCountsRef.current = data.last50Posts;
+            //   // } else {
+            //   //   setRecentCounts(data.recentCounts)
+            //   // }
+            // });
             socket.on(`lastCount`, function(data) {
               setLastCount(data);
               addCounterToCache(data.lastCounter);
@@ -582,16 +611,16 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
             socket.on(`bank`, function(data) {
               setBank(data);
             });
-            socket.on(`deleteComment`, function(data) {
-              setRecentCounts(prevCounts => {
-                return prevCounts.map(post => {
-                  if (post.uuid === data.uuid) {
-                    return data;
-                  }
-                  return post;
-                });
-              });
-            });
+            // socket.on(`deleteComment`, function(data) {
+            //   setRecentCounts(prevCounts => {
+            //     return prevCounts.map(post => {
+            //       if (post.uuid === data.uuid) {
+            //         return data;
+            //       }
+            //       return post;
+            //     });
+            //   });
+            // });
             socket.on(`addCounterToCache`, function(data) {
               addCounterToCache(data);
               setLatencyStateTest(`${data.uuid}_${Date.now()}`);
@@ -1263,7 +1292,10 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         <TabPanel value="tab_3" sx={{flexGrow: 1}}>
         {lastCount && tabValueRef.current === "tab_3" && <>
         <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Last count: {lastCount.lastCount.rawCount} by {lastCount.lastCounter.name}</Typography>
-        {thread && lastCount.lastCount && lastCount.lastCount.rawCount && ['main', 'slow', 'bars', 'parity', 'yoco', 'roulette', 'tslc', 'randomhour', 'randomminute', 'waitx', '1inx', 'countdown', 'tugofwar'].includes(thread.validationType) && <LinearProgress variant="determinate" color='primary' title={`${parseInt(lastCount.lastCount.rawCount) % 1000}`} value={(parseInt(lastCount.lastCount.rawCount) % 1000) / 10} sx={{borderRadius: '10px'}} />}</>}
+        {(thread && lastCount.lastCount && lastCount.lastCount.validCountNumber !== undefined && thread.countsPerSplit !== undefined && thread.splitOffset !== undefined) && <LinearProgressWithLabel variant="determinate" color='secondary' title={`${lastCount.lastCount.validCountNumber % (thread.countsPerSplit)}`} progress={((lastCount.lastCount.validCountNumber - thread.splitOffset) % (thread.countsPerSplit))} max={(thread.countsPerSplit)} sx={{borderRadius: '10px', mb: 2}} />}
+        {(thread && lastCount.lastCount && lastCount.lastCount.validCountNumber !== undefined && thread.countsPerSplit !== undefined && thread.splitsPerGet !== undefined && thread.splitOffset !== undefined) && <LinearProgressWithLabel variant="determinate" color='primary' progress={(lastCount.lastCount.validCountNumber - thread.splitOffset) % (thread.countsPerSplit * thread.splitsPerGet)} max={(thread.countsPerSplit * thread.splitsPerGet)} value={(lastCount.lastCount.validCountNumber % (thread.countsPerSplit * thread.splitsPerGet)) / 10} sx={{borderRadius: '10px', mb: 2}} />}
+        {/* {thread && lastCount.lastCount && lastCount.lastCount.rawCount && ['main', 'slow', 'bars', 'parity', 'yoco', 'roulette', 'tslc', 'randomhour', 'randomminute', 'waitx', '1inx', 'countdown', 'tugofwar'].includes(thread.validationType) && <LinearProgress variant="determinate" color='primary' title={`${parseInt(lastCount.lastCount.rawCount) % 1000}`} value={(parseInt(lastCount.lastCount.rawCount) % 1000) / 10} sx={{borderRadius: '10px'}} />} */}
+        </>}
           <SplitsTable splits={splits}></SplitsTable>
         </TabPanel>
         <TabPanel value="tab_4" sx={{flexGrow: 1}}>

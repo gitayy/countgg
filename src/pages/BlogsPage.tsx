@@ -1,11 +1,15 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Box, Typography, Avatar, Card, Container, Grid, CardContent, Button, Pagination, PaginationItem, Link } from '@mui/material';
+import { Box, Typography, Avatar, Card, Container, Grid, CardContent, Button, Pagination, PaginationItem, Link, IconButton } from '@mui/material';
 import { Link as routerLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { UserContext } from '../utils/contexts/UserContext';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import { getBlogs } from '../utils/api';
 import { Blog } from '../utils/types';
+import { discordAvatarLink, formatDate } from '../utils/helpers';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+
 
 
 const BlogsPage = () => {
@@ -76,6 +80,26 @@ const BlogsPage = () => {
 
           const navigate = useNavigate();
           
+          const truncateText = (text, maxLength) => {
+            if (text.length > maxLength) {
+              return text.substring(0, maxLength) + '...'; // Adjust the length as needed
+            }
+            return text;
+          };
+
+          const handleUpvote = () => {
+            // Implement logic to increment upvotes in your backend
+            // For example, make an API call to update the upvotes for this blog
+            // Update the state to reflect the change
+            // setUpvotes(upvotes + 1);
+          };
+        
+          const handleDownvote = () => {
+            // Implement logic to increment downvotes in your backend
+            // For example, make an API call to update the downvotes for this blog
+            // Update the state to reflect the change
+            // setDownvotes(downvotes + 1);
+          };
 
           return (
             <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2}}>
@@ -121,7 +145,7 @@ const BlogsPage = () => {
               const href = `/blog/${blog.uuid}`;
                 return (
                   <Grid item xs={12} md={6} lg={4}>
-                  <Link href={href} sx={{maxWidth: '100%'}} onClick={(e) => {
+                  <Link href={href} sx={{maxWidth: '100%'}} underline='none' onClick={(e) => {
                     e.preventDefault();
                     navigate(href);
                   }}>
@@ -129,21 +153,54 @@ const BlogsPage = () => {
                     <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
                     <Avatar
                       sx={{ width: 50, height: 50, mr: 2 }}
-                      alt={blog.author.name}
-                      src={blog.author.avatar}
+                      alt={blog.author?.name}
+                      src={discordAvatarLink(blog.author)}
                     />
-                        <Typography variant="h6" sx={{mr: 1}}>
-                            {blog.title}
-                        </Typography>
+                      <Grid container>
+                        <Grid xs={12}>
+                          <Typography variant="h6" sx={{mr: 1}}>
+                              {blog.title}
+                          </Typography>
+                        </Grid>
+                        <Grid xs={12}>              
+                          <Typography variant="body2" sx={{mr: 1}}>
+                              by {blog.author?.name}
+                          </Typography>
+                        </Grid>
+                        <Grid xs={12}>
+                          <Typography variant="body2" sx={{mr: 1}}>
+                              {formatDate(parseFloat(blog.timestamp))}
+                          </Typography>
+                        </Grid>
+                      </Grid>
                     </CardContent>
-                    <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography variant="body2" sx={{mr: 1}}>
-                            {blog.author.name}
-                        </Typography>
-                        <Typography variant="body2" sx={{mr: 1}}>
-                            {blog.timestamp}
-                        </Typography>
-                    </CardContent>
+                    <CardContent>
+            {/* Upvote and Downvote buttons */}
+            <Grid container alignItems="center">
+              <Grid item>
+                <IconButton onClick={handleUpvote} aria-label="upvote">
+                  <ArrowUpwardIcon />
+                </IconButton>
+              </Grid>
+              <Grid item>
+                <Typography variant="body2">2</Typography>
+              </Grid>
+              <Grid item>
+                <IconButton onClick={handleDownvote} aria-label="downvote">
+                  <ArrowDownwardIcon />
+                </IconButton>
+              </Grid>
+              <Grid item>
+                <Typography variant="body2">4</Typography>
+              </Grid>
+            </Grid>
+          </CardContent>
+                    <CardContent>
+          {/* Display a preview of the blog body */}
+          <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {truncateText(blog.body, 300)} {/* Displaying first 300 characters as a preview */}
+          </Typography>
+        </CardContent>
                     </Card>
                     </Link>
                     </Grid>
