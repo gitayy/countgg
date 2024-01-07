@@ -3,7 +3,7 @@ import { UserContext } from '../utils/contexts/UserContext';
 import { useContext, useEffect, useState } from 'react';
 import { Alert, AlertColor, Badge, Box, Button, CardMedia, Chip, Grid, Link, Modal, Paper, Skeleton, Snackbar, Typography, useTheme } from '@mui/material';
 import { Loading } from '../components/Loading';
-import { calculateLevel, loginRedirect, modalStyle } from '../utils/helpers';
+import { calculateLevel, formatTimeDiff, loginRedirect, modalStyle } from '../utils/helpers';
 import { SocketContext } from '../utils/contexts/SocketContext';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import PlusOneIcon from '@mui/icons-material/PlusOne';
@@ -46,6 +46,7 @@ export const DefaultPage = () => {
 
   const {allThreads, allThreadsLoading} = useContext(ThreadsContext)
   const [sums, setSums] = useState<{[thread_uuid: string]: number}>({});
+  const [totalTimeOnline, setTotalTimeOnline] = useState<number>(0);
 
   // Calculate the sum of counts for each thread
 const sumCountsForThreads = () => {
@@ -86,11 +87,12 @@ useEffect(() => {
     // }
 
     socket.on('defaultPage', function(data) {
-      const {users_online, total_counts, daily_leaderboard, all_leaderboards } = data;
+      const {users_online, total_online_time, total_counts, daily_leaderboard, all_leaderboards } = data;
       setTotalCounts(total_counts);
       setUsersOnline(users_online);
       setDailyLeaderboard(daily_leaderboard);
       setThreadLeaderboards(all_leaderboards);
+      setTotalTimeOnline(total_online_time);
     });
     
 
@@ -241,7 +243,7 @@ useEffect(() => {
       <Typography variant="body1" component={'div'} sx={{ textAlign: 'center', m: 1, }}>
          <Chip variant='filled' color='success' 
         //  icon={<Box component='span' sx={{ml: '9px!important', bgcolor: theme.palette.mode === 'dark' ? `#44b700` : `#7fff19`, display: 'inline-block', width: 8, height: 8, borderRadius: '50%'}}></Box>} 
-         label={`${usersOnline.toLocaleString()} user${usersOnline === 1 ? `` : 's'} online`} /> <Chip label={`${sumCounts.toLocaleString()} counts today`} />
+         label={`${usersOnline.toLocaleString()} user${usersOnline === 1 ? `` : 's'} online`} /> <Chip label={`${sumCounts.toLocaleString()} counts today`} /> <Chip label={`Time spent counting: ${formatTimeDiff(0, totalTimeOnline)}`} />
       </Typography>
         {!counter && <Paper elevation={8} sx={{mb: 2, display: 'flex', alignItems: 'stretch', background: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),url(https://i.imgur.com/IOj9OZI.png)`, minHeight: '33vh', p: 2, backgroundSize: 'cover', backgroundPosition: 'top right'}}>
           <Grid container direction={'row'}>
