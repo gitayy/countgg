@@ -45,7 +45,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const [searchParams,setSearchParams] = useSearchParams();
     const { context } = queryString.parse(window.location.search);
     const thread_name:string = params.thread_name || "main";
-    const {threadName, setThreadName} = useThread();
+    const {threadName, setThreadName, setFullThread} = useThread();
     const thread_ref = useRef(thread_name);
     useEffect(() => {
       thread_ref.current = thread_name;
@@ -68,6 +68,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const socket = useContext(SocketContext);
     const [socketStatus, setSocketStatus] = useState("CONNECTING...");
     const [socketViewers, setSocketViewers] = useState(1);
+    const [threadStreak, setThreadStreak] = useState<number|undefined>(undefined);
 
     const { user, counter, loading, challenges, setChallenges } = useContext(UserContext);
     const { allThreads, allThreadsLoading } = useContext(ThreadsContext);
@@ -633,7 +634,10 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               }
               setLatencyStateTest(`${data.uuid}_${Date.now()}`);
             });
-            socket.on(`post`, async function(data: {post: PostType, counter: Counter}) {
+            socket.on(`post`, async function(data: {post: PostType, counter: Counter, thread_streak?: number}) {
+              if(data.thread_streak !== undefined) {
+                setThreadStreak(data.thread_streak)
+              }
               if(renderLatencyEnabled.current) {
                 startRenderRef.current = Date.now(); // Needed for render latency test 2
                 postTextRef.current = data.post.rawText;
@@ -827,6 +831,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
           socket.on(`thread_update`, function(data) {
             setThread(data.threadInfo);
+            setFullThread && setFullThread(data.threadInfo);
           });
 
           socket.on('split', function(data) {
@@ -957,7 +962,10 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
 
       const headerMemo = useMemo(() => {
         if(thread) {return (
-          <Box sx={{ display: 'flex', flexGrow: 0, p: 0.5, bgcolor: alpha(theme.palette.background.paper, 0.9)}}>
+          <Box sx={{ display: 'flex', flexGrow: 0, p: 0.5, 
+          bgcolor: alpha(theme.palette.background.paper, 0.9)
+          // background: `linear-gradient(to bottom, ${thread.color1}, ${thread.color2})`
+          }}>
             <Typography sx={{p: 0.5}} variant="h6" color="text.primary">{thread.title}</Typography>
             {socketMemo}
           </Box>)
@@ -1294,6 +1302,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
         <Typography sx={{p: 0.5}} variant="body1" color="text.secondary">Last count: {lastCount.lastCount.rawCount} by {lastCount.lastCounter.name}</Typography>
         {(thread && lastCount.lastCount && lastCount.lastCount.validCountNumber !== undefined && thread.countsPerSplit !== undefined && thread.splitOffset !== undefined) && <LinearProgressWithLabel variant="determinate" color='secondary' title={`${lastCount.lastCount.validCountNumber % (thread.countsPerSplit)}`} progress={((lastCount.lastCount.validCountNumber - thread.splitOffset) % (thread.countsPerSplit))} max={(thread.countsPerSplit)} sx={{borderRadius: '10px', mb: 2}} />}
         {(thread && lastCount.lastCount && lastCount.lastCount.validCountNumber !== undefined && thread.countsPerSplit !== undefined && thread.splitsPerGet !== undefined && thread.splitOffset !== undefined) && <LinearProgressWithLabel variant="determinate" color='primary' progress={(lastCount.lastCount.validCountNumber - thread.splitOffset) % (thread.countsPerSplit * thread.splitsPerGet)} max={(thread.countsPerSplit * thread.splitsPerGet)} value={(lastCount.lastCount.validCountNumber % (thread.countsPerSplit * thread.splitsPerGet)) / 10} sx={{borderRadius: '10px', mb: 2}} />}
+        {(thread && lastCount.lastCount && threadStreak !== undefined) && <LinearProgressWithLabel variant="determinate" color='primary' progress={threadStreak} max={(thread.countsPerSplit * thread.splitsPerGet)} value={threadStreak} sx={{borderRadius: '10px', mb: 2}} />}
         {/* {thread && lastCount.lastCount && lastCount.lastCount.rawCount && ['main', 'slow', 'bars', 'parity', 'yoco', 'roulette', 'tslc', 'randomhour', 'randomminute', 'waitx', '1inx', 'countdown', 'tugofwar'].includes(thread.validationType) && <LinearProgress variant="determinate" color='primary' title={`${parseInt(lastCount.lastCount.rawCount) % 1000}`} value={(parseInt(lastCount.lastCount.rawCount) % 1000) / 10} sx={{borderRadius: '10px'}} />} */}
         </>}
           <SplitsTable splits={splits}></SplitsTable>

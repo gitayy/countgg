@@ -180,7 +180,7 @@ export const Sidebar = () => {
       }
     };
 
-    const { threadName } = useThread();
+    const { threadName, fullThread } = useThread();
 
     useEffect(() => {
       function navigateThread(direction) {
@@ -510,7 +510,11 @@ export const Sidebar = () => {
 
   return (
     <Box sx={{ flexGrow: 1, minHeight: 65, maxHeight: 65 }}>
-      <AppBar position="static" color={'primary'} sx={{minHeight: 65, maxHeight: 65, bgcolor: loadedSiteVer && site_version !== loadedSiteVer ? 'red' : '', borderBottom: '1px solid', borderColor: 'rgba(194, 224, 255, 0.30)' }}>
+      <AppBar position="static" color={'primary'} sx={{minHeight: 65, maxHeight: 65, 
+        // bgcolor: loadedSiteVer && site_version !== loadedSiteVer ? 'red' : '',
+        // background: fullThread ? `linear-gradient(to right, ${fullThread.color1}, ${fullThread.color2})` : 'blue',
+        background: loadedSiteVer && site_version !== loadedSiteVer ? 'red' : (fullThread ? `linear-gradient(to right, ${fullThread.color1}, ${fullThread.color2})` : ''),
+        borderBottom: '1px solid', borderColor: 'rgba(194, 224, 255, 0.30)' }}>
         <Toolbar sx={{ minHeight: 65, maxHeight: 65 }}>
           <IconButton
             size="large"

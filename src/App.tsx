@@ -54,6 +54,7 @@ import BlogsPage from './pages/BlogsPage';
 import BlogCreatePage from './pages/BlogCreatePage';
 import { ThreadProvider } from './utils/contexts/ThreadContext';
 import { NumberShufflePage } from './pages/NumberShufflePage';
+import ServersPage from './pages/ServersPage';
 
 function App() {
 
@@ -260,6 +261,8 @@ function App() {
             <Route path="/blogs" element={<BlogsPage />} />
             <Route path="/blog/create" element={<BlogCreatePage />} />
             <Route path="/blog/:blogId" element={<BlogPage />} />
+            <Route path="/servers" element={<ServersPage />} />
+            <Route path="/server/:serverId" element={<ServersPage />} />
             {user && counter && <Route path="/prefs" element={<PrefsPage />} />}
             {user && counter && <Route path="/mentions" element={<MentionsPage />} />}
             {user && counter && <Route path="/shop" element={<ShopPage />} />}
