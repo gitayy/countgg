@@ -19,7 +19,7 @@ export function LinearProgressWithLabel(props: LinearProgressProps & { color: st
           <LinearProgress sx={{borderRadius: '5px', height: 10}} variant="determinate" color={props.color} value={normalise} />
         </Box>
         <Box sx={{ minWidth: 35 }}>
-        <Typography variant="body2" color="text.secondary">{normalise >= 100 ? (!props.dontUseComplete ? `Complete` : `${props.max.toLocaleString()}/${props.max.toLocaleString()}`) : `${props.progress.toLocaleString()}/${props.max.toLocaleString()}`}</Typography>
+        <Typography variant="body2" color="text.secondary">{normalise >= 100 ? (!props.dontUseComplete ? `Complete` : `${props.progress.toLocaleString()}/${props.max.toLocaleString()}`) : `${props.progress.toLocaleString()}/${props.max.toLocaleString()}`}</Typography>
           {/* <Typography variant="body2" color="text.secondary">{`${Math.round(
             props.progress,
           )}%`}</Typography> */}
