@@ -480,7 +480,23 @@ export const levelThresholds: Level[] = [
   { level: '47', xpRequired: 2270000, minXP: 2020202 },
   { level: '48', xpRequired: 2600000, minXP: 2270000 },
   { level: '49', xpRequired: 3000000, minXP: 2600000 },
-  { level: '50', xpRequired: 3000000, minXP: 3000000 }, // Maximum level
+  { level: '50', xpRequired: 3500000, minXP: 3000000 }, 
+  { level: '51', xpRequired: 4000000, minXP: 3500000 }, 
+  { level: '52', xpRequired: 4500000, minXP: 4000000 }, 
+  { level: '53', xpRequired: 5000000, minXP: 4500000 }, 
+  { level: '54', xpRequired: 5500000, minXP: 5000000 }, 
+  { level: '55', xpRequired: 6000000, minXP: 5500000 },
+  { level: '56', xpRequired: 6500000, minXP: 6000000 },
+  { level: '57', xpRequired: 7000000, minXP: 6500000 },
+  { level: '58', xpRequired: 7500000, minXP: 7000000 },
+  { level: '59', xpRequired: 8000000, minXP: 7500000 },
+  { level: '60', xpRequired: 8500000, minXP: 8000000 },
+  { level: '61', xpRequired: 9000000, minXP: 8500000 },
+  { level: '62', xpRequired: 9500000, minXP: 9000000 },
+  { level: '63', xpRequired: 10000000, minXP: 9500000 },
+  { level: '64', xpRequired: 11111111, minXP: 10000000 },
+  { level: '65', xpRequired: 11111111, minXP: 11111111 },
+  // Maximum level
 ];
 
 export const calculateLevel = (totalXP) => {

@@ -11,7 +11,7 @@ export const ListButton = (props) => {
 }
 
 export function LinearProgressWithLabel(props: LinearProgressProps & { color: string, progress: number, max: number, dontUseComplete?: boolean } = {color: 'primary', progress: 0, max: 100, dontUseComplete: false}) {
-    const normalise = ((props.progress) * 100) / (props.max);
+    const normalise = Math.min(((props.progress) * 100) / (props.max), 100);
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', filter: 'none' }}>
         <Box sx={{ width: '100%', mr: 1 }}>

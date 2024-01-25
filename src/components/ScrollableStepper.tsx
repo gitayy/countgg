@@ -4,6 +4,7 @@ import GiftBox from './GiftBox';
 import { UserContext } from '../utils/contexts/UserContext';
 import { calculateLevel, levelThresholds } from '../utils/helpers';
 import ItemBox from './ItemBox';
+import { LinearProgressWithLabel } from '../utils/styles';
 
 const ScrollableStepper = () => {
   const { counter, items, loading } = useContext(UserContext);
@@ -16,16 +17,10 @@ const ScrollableStepper = () => {
   }, [loading])
 
   const [activeStep, setActiveStep] = useState(counter ? parseInt(calculateLevel(counter.xp).level) - 1 : 0);
-  const steps = Array.from(Array(50).keys()); // Array of 50 steps
+  const steps = Array.from(Array(levelThresholds.length).keys());
   const handleStepClick = (index) => {
     setActiveStep(index);
-    // Perform any additional navigation or logic here
   };
-
-  // console.log("Ok");
-  // console.log(calculateLevel(2999999));
-  // console.log(calculateLevel(3000000));
-  // console.log(calculateLevel(3000001));
 
   return (
     <Box overflow="auto">
@@ -33,6 +28,7 @@ const ScrollableStepper = () => {
         {steps.map((step, index) => {
           const reward = items ? items.filter(item => {return item.levelToUnlock === index + 1}) : [];
           const isItemUnlocked = reward.length > 0;
+          const hasReachedLevel = counter && (counter.xp >= levelThresholds[index].minXP)
           return (          
           <Step key={index} onClick={() => handleStepClick(index)}>
             <StepLabel
@@ -44,7 +40,13 @@ const ScrollableStepper = () => {
                 '&:hover': {
                   backgroundColor: `${theme.palette.primary.main}50`,
                   color: theme.palette.getContrastText(theme.palette.primary.main),
-                }
+                },
+                ...(level === index + 1 && {
+                  // '&:hover': {
+                    backgroundColor: `${theme.palette.secondary.main}50`,
+                    color: theme.palette.getContrastText(theme.palette.secondary.main),
+                  // }
+                })
               }}
             >
               {counter && !isItemUnlocked && (level > index) ?
@@ -56,6 +58,7 @@ const ScrollableStepper = () => {
                 LVL {step + 1}
               </Typography>
               }
+              {counter && <Box sx={{width: '50%'}}><LinearProgressWithLabel color={hasReachedLevel ? "success" : "secondary"} progress={counter.xp} max={levelThresholds[index].minXP} /></Box>}
             </StepLabel>
             {index === activeStep ? <>
               {counter && (isItemUnlocked ? <Typography>Item unlocked: {reward[0].name} ({reward[0].category})</Typography> : (level > index ? <Typography>Reward available! Press the gift box to receive your reward!</Typography> : <Typography>You're just {(levelThresholds[index].minXP - counter.xp).toLocaleString()} xp away from unlocking this reward!</Typography>))}
