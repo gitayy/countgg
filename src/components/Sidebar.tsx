@@ -676,7 +676,14 @@ export const Sidebar = () => {
                 aria-haspopup="true"
                 onClick={handleMenu}
                 color="inherit"
-                sx={{borderRadius: '0'}}
+                sx={{
+                  borderRadius: '0',
+                  // textShadow: '0px 1px 3px black;0px 1px 3px black;0px 1px 3px black;'
+                  // color: theme.palette.background.paper,
+                  // textShadow: `-1px 0px 0px ${theme.palette.text.primary}, 1px 0px 0px ${theme.palette.text.primary}, 0px -1px 0px ${theme.palette.text.primary}, 0px 1px 0px ${theme.palette.text.primary}`
+                  textShadow: `-1px 0px 0px #000000, 1px 0px 0px #000000, 0px -1px 0px #000000, 0px 1px 0px #000000`,
+                  // bgcolor: alpha(theme.palette.primary.main, 0.5)
+                }}
               >
                 <Avatar alt={`${counter.name}`} src={`${counter.avatar.length > 5 && `https://cdn.discordapp.com/avatars/${counter.discordId}/${counter.avatar}` || `https://cdn.discordapp.com/embed/avatars/0.png`}`}></Avatar>
                 <XPDisplay />
