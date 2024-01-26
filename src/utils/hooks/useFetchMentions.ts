@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { getCountByUuid, getMentions } from '../api';
 import { addCounterToCache } from '../helpers';
-import { Counter, PostType } from '../types';
+import { Counter, PostType, ThreadType } from '../types';
 import { useIsMounted } from './useIsMounted';
 
 
 export function useFetchMentions(from: number|undefined) {
-      const [loadedMentions, setLoadedMentions] = useState<{mentions: any[], posts: PostType[], counters: Counter[]}>();
+      const [loadedMentions, setLoadedMentions] = useState<{mentions: any[], posts: PostType[], counters: Counter[], threads: ThreadType[]}>();
       const [loadedMentionsLoading, setLoadedMentionsLoading] = useState<boolean>(true);
       const isMounted = useIsMounted();
     
@@ -26,5 +26,5 @@ export function useFetchMentions(from: number|undefined) {
         })
     }, []);
     
-      return { loadedMentions, loadedMentionsLoading };
+      return { loadedMentions, loadedMentionsLoading, setLoadedMentions };
     }

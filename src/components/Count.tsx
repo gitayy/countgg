@@ -59,9 +59,10 @@ const Count = memo((props: any) => {
   const hasPostFinder = location.pathname.includes('post-finder');
 
   // build the URL
-  const url = isSameUuid
-    ? location.pathname
-    : hasPostFinder && props.thread ? `${location.pathname.replace(/\/+$/, '').replace('post-finder', `thread/${props.thread.name}`)}/${props.post.uuid}` : `${location.pathname.replace(/\/+$/, '')}/${props.post.uuid}`;
+  const url = `/thread/${props.thread ? props.thread.name : ''}/${props.post.uuid}`
+  // isSameUuid
+  //   ? location.pathname
+  //   : hasPostFinder && props.thread ? `${location.pathname.replace(/\/+$/, '').replace('post-finder', `thread/${props.thread.name}`)}/${props.post.uuid}` : `${location.pathname.replace(/\/+$/, '')}/${props.post.uuid}`;
   
   const uncachedCounter: Counter = defaultCounter(props.post.authorUUID);
   

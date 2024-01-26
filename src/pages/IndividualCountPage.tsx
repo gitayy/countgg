@@ -33,7 +33,7 @@ export const IndividualCountPage = memo(() => {
 
     const { user, counter, loading } = useContext(UserContext);
     const { thread, threadLoading } = useFetchThread(thread_name);
-    const { specificCount, specificCountLoading, setSpecificCount } = useFetchSpecificCount(count_uuid);
+    const { specificCount, specificCountLoading, setSpecificCount, specificCountThread } = useFetchSpecificCount(count_uuid);
     const [ modalOpen, setModalOpen ] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -114,7 +114,7 @@ export const IndividualCountPage = memo(() => {
                     <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}>This is one update from the thread. Click the thread name above to see the latest counts, or see the context of this post <Link onClick={(e) => {e.preventDefault();navigate(`/thread/${thread_name}?context=${specificCount[0].uuid}`);}} underline='always' color={"text.secondary"} href={`/thread/${thread_name}?context=${specificCount[0].uuid}`}>here.</Link></Typography>
                     <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
                     {specificCount.map(count => (
-                        <Count key={count.uuid} socket={socket} post={count} renderedCounter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
+                        <Count key={count.uuid} thread={specificCountThread} socket={socket} post={count} renderedCounter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
                     ))}
                     </Box>
                 </Stack>
@@ -126,7 +126,7 @@ export const IndividualCountPage = memo(() => {
                     <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}>This is one update from the thread. Click the thread name above to see the latest counts, or see the context of this post <Link onClick={(e) => {e.preventDefault();navigate(`..?context=${specificCount[0].uuid}`);}} underline='always' color={"text.secondary"} href={`..?context=${specificCount[0].uuid}`}>here.</Link></Typography>
                     <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
                     {specificCount.map(count => (
-                        <CountMobile user={user} key={count.uuid} socket={socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
+                        <CountMobile user={user} key={count.uuid} thread={specificCountThread} socket={socket} post={count} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
                     ))}
                     </Box>
                 </Stack>

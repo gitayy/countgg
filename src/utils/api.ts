@@ -19,7 +19,8 @@ export const getAuthStatus = () =>
     counter: Counter, 
     items: Item[], 
     site_version: string,
-    totalCounters: number
+    totalCounters: number,
+    unreadMentionCount: number,
   }>(`${API_URL}/auth/status`, CONFIG);
 
   export const logout = () =>
@@ -80,6 +81,15 @@ axios.post(
   {item_id: item_id},
   CONFIG
 );
+
+export const changeMessageReadStatus = (post_uuids: string[], newReadStatus: boolean) =>
+axios.post(
+  `${API_URL}/counter/changeMessageReadStatus`,
+  {messageIDs: post_uuids, newReadStatus: newReadStatus},
+  CONFIG
+);
+
+
 
 export const getThreadStats = (threadName: string, dateStr: string|undefined) =>
 axios.post<{stats: {gets: object[], assists: object[], palindromes: object[], repdigits: object[], speed: object[], leaderboard: object[], last_updated: string, last_updated_uuid: string}[], counters: Counter[]}>(`${API_URL}/thread/stats/threadStats`, {thread: threadName, dateStr: dateStr}, CONFIG);

@@ -58,7 +58,7 @@ import ServersPage from './pages/ServersPage';
 
 function App() {
 
-  const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, challenges, setChallenges, totalCounters, setTotalCounters } = useFetchUser();
+  const { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, challenges, setChallenges, totalCounters, setTotalCounters, unreadMessageCount, setUnreadMessageCount } = useFetchUser();
   const { allThreads, allThreadsLoading } = useFetchAllThreads();
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light');
@@ -210,7 +210,7 @@ function App() {
         <ThemeProvider theme={theme}>
         <CssBaseline />
         <UserContext.Provider
-      value={{user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, challenges, setChallenges, totalCounters, setTotalCounters}}
+      value={{user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, challenges, setChallenges, totalCounters, setTotalCounters, unreadMessageCount, setUnreadMessageCount}}
       >
         <CookiesProvider>
         <SocketContext.Provider value={socket}>

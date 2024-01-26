@@ -11,6 +11,7 @@ export function useFetchUser() {
   const [counter, setCounter] = useState<Counter>();
   const [items, setItems] = useState<Item[]>();
   const [challenges, setChallenges] = useState<Challenge[]>();
+  const [unreadMessageCount, setUnreadMessageCount] = useState<number>();
   const isMounted = useIsMounted();
 
   useEffect(() => {
@@ -22,6 +23,7 @@ export function useFetchUser() {
           setCounter(data.counter);
           setItems(data.items);
           setTotalCounters(data.totalCounters)
+          setUnreadMessageCount(data.unreadMentionCount)
         }
         setLoading(false);
       })
@@ -30,5 +32,5 @@ export function useFetchUser() {
       })
   }, []);
 
-  return { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, challenges, setChallenges, totalCounters, setTotalCounters };
+  return { user, setUser, loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, items, setItems, challenges, setChallenges, totalCounters, setTotalCounters, unreadMessageCount, setUnreadMessageCount };
 }

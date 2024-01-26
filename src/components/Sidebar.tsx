@@ -43,12 +43,13 @@ import { ThreadsContext } from '../utils/contexts/ThreadsContext';
 import { useThread } from '../utils/contexts/ThreadContext';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import MailIcon from '@mui/icons-material/Mail'
 
 export const Sidebar = () => {
   const navigate = useNavigate();
   const { hash } = useLocation();
 
-  const { loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, user } = useContext(UserContext);
+  const { loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, user, unreadMessageCount } = useContext(UserContext);
   const socket = useContext(SocketContext);
 
   useEffect(() => {
@@ -383,6 +384,17 @@ export const Sidebar = () => {
             <ListItemText primary={'Threads'} />
           </ListItemButton>
         </ListItem></Link>
+        <Link color={'inherit'} underline='none' href={`/mentions`} onClick={(e) => {e.preventDefault();navigate(`/mentions`);}}>
+        <ListItem onClick={handleDrawerToggle} key={'mentions'} disablePadding>
+          <ListItemButton>
+            <ListItemIcon>
+              <MailIcon />
+            </ListItemIcon>
+            <Badge color='error' badgeContent={unreadMessageCount}>
+              <ListItemText primary={'Mentions'} />
+            </Badge>
+          </ListItemButton>
+        </ListItem></Link>
         <Link color={'inherit'} underline='none' href={`/rules`} onClick={(e) => {e.preventDefault();navigate(`/rules`);}}>
         <ListItem onClick={handleDrawerToggle} key={'rules'} disablePadding>
           <ListItemButton>
@@ -524,7 +536,9 @@ export const Sidebar = () => {
             sx={{ mr: 2 }}
             onClick={handleDrawerToggle}
           >
-            <MenuIcon />
+            <Badge color='error' badgeContent={unreadMessageCount}>
+              <MenuIcon />
+            </Badge>
           </IconButton>
           <Drawer
           anchor="left"

@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import { Container, Box, FormControl, InputLabel, Select, MenuItem, Button, Input, Alert, AlertColor, Snackbar, FormControlLabel, Checkbox, SelectChangeEvent, Typography, Stack, Link, useMediaQuery, Theme, Toolbar, Tooltip, useTheme } from '@mui/material';
 import { useFetchAllThreads } from '../utils/hooks/useFetchAllThreads';
-import { adminCreateThread, findPostByThreadAndNumber, findPostByThreadAndRawCount } from '../utils/api';
+import { adminCreateThread, changeMessageReadStatus, findPostByThreadAndNumber, findPostByThreadAndRawCount } from '../utils/api';
 import { PostType, ThreadType } from '../utils/types';
 import Count from '../components/Count';
 import CountMobile from '../components/CountMobile';
@@ -11,7 +11,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useFetchMentions } from '../utils/hooks/useFetchMentions';
   
   export const MentionsPage = () => {
-    const { user, counter, loading } = useContext(UserContext);
+    const { user, counter, loading, unreadMessageCount, setUnreadMessageCount } = useContext(UserContext);
 
     const [rawCount, setRawCount] = useState('');
     const [countNumber, setCountNumber] = useState<number|null>(null);
@@ -19,7 +19,7 @@ import { useFetchMentions } from '../utils/hooks/useFetchMentions';
     const [uuid, setUuid] = useState('');
     const params = useParams();
     const from = parseInt(params.from || "0");
-    const {loadedMentions, loadedMentionsLoading} = useFetchMentions(from);
+    const {loadedMentions, loadedMentionsLoading, setLoadedMentions} = useFetchMentions(from);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
     const [snackbarSeverity, setSnackbarSeverity] = useState<AlertColor>('error');
@@ -46,11 +46,10 @@ import { useFetchMentions } from '../utils/hooks/useFetchMentions';
 
       const theme = useTheme();
 
-   
-
-      console.log(loadedMentions);
-   
+     
     if(counter && !loading) {
+
+      setUnreadMessageCount && setUnreadMessageCount(0);
 
         return (<>
           <Snackbar
@@ -72,30 +71,116 @@ import { useFetchMentions } from '../utils/hooks/useFetchMentions';
                 <Stack direction="column" alignItems="center" sx={{width: '100%'}}>
                     <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
                     {loadedMentions.posts.map((mention) => {
+                      const mentionThread = loadedMentions.threads.filter(thread => mention.thread === thread.uuid)[0]
                     const correspondingMention = loadedMentions.mentions.filter(mentiony => {return mention.uuid === mentiony['postUUID']})
                     return <Box sx={{ justifyContent: "center", display: "flex", m: 2, pt: 2, pb: 2, border: `2px solid ${correspondingMention && correspondingMention[0] && correspondingMention[0]["readStatus"] === false ? theme.palette.info.main : theme.palette.background.paper}`, bgcolor: `${correspondingMention && correspondingMention[0] && correspondingMention[0]["readStatus"] === false ? theme.palette.info.main : theme.palette.background.paper}30`}}>
                       <Box sx={{width: "50%"}}>
-                      <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}><Link onClick={(e) => {e.preventDefault();navigate(`/thread/${name}?context=${mention.uuid}`);}} underline='always' color={"text.secondary"} href={`/thread/${name}?context=${mention.uuid}`}>Context</Link></Typography>
-                        <Count key={mention.uuid} post={mention} thread={mention.thread} renderedCounter={cachedCounters[mention.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
+                      <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}><Link onClick={(e) => {e.preventDefault();navigate(`/thread/${mentionThread.name}?context=${mention.uuid}`);}} underline='always' color={"text.secondary"} href={`/thread/${mentionThread.name}?context=${mention.uuid}`}>Context</Link> 
+                      {correspondingMention && correspondingMention[0] && correspondingMention[0]["readStatus"] === false 
+                      ? <Link onClick={(e) => {e.preventDefault();changeMessageReadStatus([mention.uuid], true);
+                      // setLoadedMentions(
+                      //   prevLoadedMentions => {
+                      //     return {
+                      //       posts: prevLoadedMentions ? prevLoadedMentions.posts : [], 
+                      //       counters: prevLoadedMentions ? prevLoadedMentions.counters : [], 
+                      //       threads: prevLoadedMentions ? prevLoadedMentions.threads : [],
+                      //       mentions: prevLoadedMentions ? prevLoadedMentions.mentions.map(loadedMention => {
+                      //       if (mention.uuid !== loadedMention.postUUID) {
+                      //         return { ...mention, readStatus: true };
+                      //       }
+                      //       return mention;
+                      //     })
+                      //     : []
+                      //   }
+                      // }
+                      //     );
+}} underline='always' color={"text.secondary"} sx={{cursor: "pointer"}}>Mark as read</Link> 
+: 
+<Link onClick={(e) => {e.preventDefault();changeMessageReadStatus([mention.uuid], false);
+                      // setLoadedMentions(
+                      //   prevLoadedMentions => {
+                      //     return {
+                      //       posts: prevLoadedMentions ? prevLoadedMentions.posts : [], 
+                      //       counters: prevLoadedMentions ? prevLoadedMentions.counters : [], 
+                      //       threads: prevLoadedMentions ? prevLoadedMentions.threads : [],
+                      //       mentions: prevLoadedMentions ? prevLoadedMentions.mentions.map(loadedMention => {
+                      //       if (mention.uuid !== loadedMention.postUUID) {
+                      //         return { ...mention, readStatus: false };
+                      //       }
+                      //       return mention;
+                      //     })
+                      //     : []
+                      //   }
+                      // }
+                      //     );
+}} underline='always' color={"text.secondary"} sx={{cursor: "pointer"}}>Mark as unread</Link> 
+}</Typography>
+                        <Count key={mention.uuid} post={mention} thread={mentionThread} renderedCounter={cachedCounters[mention.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
                         </Box>
                         </Box>
                     })}
                     </Box>
                 </Stack>
                 </>
-              ) : (
+              ) : 
+              (
                 <>
                 <Stack direction="column" alignItems="center" sx={{width: '100%'}}>
                     <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
-                    {loadedMentions.posts.map((count, countIndex) => (<>
-                      <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}><Link onClick={(e) => {e.preventDefault();navigate(`/thread/${name}?context=${count.uuid}`);}} underline='always' color={"text.secondary"} href={`/thread/${name}?context=${count.uuid}`}>Context</Link></Typography>
-                        <CountMobile user={user} key={count.uuid} post={count} thread={count.thread} counter={cachedCounters[count.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
-                        </>
-                    ))}
+                    {loadedMentions.posts.map((mention) => {
+                      const mentionThread = loadedMentions.threads.filter(thread => mention.thread === thread.uuid)[0]
+                    const correspondingMention = loadedMentions.mentions.filter(mentiony => {return mention.uuid === mentiony['postUUID']})
+                    return <Box sx={{ justifyContent: "center", display: "flex", m: 2, pt: 2, pb: 2, border: `2px solid ${correspondingMention && correspondingMention[0] && correspondingMention[0]["readStatus"] === false ? theme.palette.info.main : theme.palette.background.paper}`, bgcolor: `${correspondingMention && correspondingMention[0] && correspondingMention[0]["readStatus"] === false ? theme.palette.info.main : theme.palette.background.paper}30`}}>
+                      <Box sx={{width: "50%"}}>
+                      <Typography sx={{mb: 2}} variant="h6" color={"text.secondary"}><Link onClick={(e) => {e.preventDefault();navigate(`/thread/${mentionThread.name}?context=${mention.uuid}`);}} underline='always' color={"text.secondary"} href={`/thread/${mentionThread.name}?context=${mention.uuid}`}>Context</Link> 
+                      {correspondingMention && correspondingMention[0] && correspondingMention[0]["readStatus"] === false 
+                      ? <Link onClick={(e) => {e.preventDefault();changeMessageReadStatus([mention.uuid], true);
+                      // setLoadedMentions(
+                      //   prevLoadedMentions => {
+                      //     return {
+                      //       posts: prevLoadedMentions ? prevLoadedMentions.posts : [], 
+                      //       counters: prevLoadedMentions ? prevLoadedMentions.counters : [], 
+                      //       threads: prevLoadedMentions ? prevLoadedMentions.threads : [],
+                      //       mentions: prevLoadedMentions ? prevLoadedMentions.mentions.map(loadedMention => {
+                      //       if (mention.uuid === loadedMention.postUUID) {
+                      //         return { ...mention, readStatus: true };
+                      //       }
+                      //       return mention;
+                      //     })
+                      //     : []
+                      //   }
+                      // }
+                      //     );
+}} underline='always' color={"text.secondary"} sx={{cursor: "pointer"}}>Mark as read</Link> 
+: 
+<Link onClick={(e) => {e.preventDefault();changeMessageReadStatus([mention.uuid], false);
+                      // setLoadedMentions(
+                      //   prevLoadedMentions => {
+                      //     return {
+                      //       posts: prevLoadedMentions ? prevLoadedMentions.posts : [], 
+                      //       counters: prevLoadedMentions ? prevLoadedMentions.counters : [], 
+                      //       threads: prevLoadedMentions ? prevLoadedMentions.threads : [],
+                      //       mentions: prevLoadedMentions ? prevLoadedMentions.mentions.map(loadedMention => {
+                      //       if (mention.uuid === loadedMention.postUUID) {
+                      //         return { ...mention, readStatus: false };
+                      //       }
+                      //       return mention;
+                      //     })
+                      //     : []
+                      //   }
+                      // }
+                      //     );
+}} underline='always' color={"text.secondary"} sx={{cursor: "pointer"}}>Mark as unread</Link> 
+}</Typography>
+                        <CountMobile key={mention.uuid} post={mention} thread={mention.thread} renderedCounter={cachedCounters[mention.authorUUID]} maxWidth={'32px'} maxHeight={'32px'} />
+                        </Box>
+                        </Box>
+                    })}
                     </Box>
                 </Stack>
                 </>
-              )}
+              )
+              }
             </Box>}
           </Box>
           </>);
