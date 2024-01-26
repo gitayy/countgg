@@ -5,7 +5,6 @@ import { cachedCounters } from "../utils/helpers";
 export const LeaderboardTable = ({ stat, blud, justLB=false }) => {
 
   const navigate = useNavigate();
-  console.log(stat);
 
     if((!stat && !justLB) || stat === undefined) return <>...</>;
 

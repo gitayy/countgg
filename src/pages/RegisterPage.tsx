@@ -76,15 +76,15 @@ export const RegisterPage = () => {
             setSnackbarOpen(true)
             setSnackbarMessage('Error: Color must start with #.')
         }
-        else if (!isSuitableForLightMode) {
-            setSnackbarOpen(true)
-            setSnackbarMessage('Error: Color is too close to white, and is hard to read on light mode, please try a different color.')
-            return;
-          } else if (!isSuitableForDarkMode) {
-            setSnackbarOpen(true)
-            setSnackbarMessage('Error: Color is too close to black, and is hard to read on dark mode, please try a different color.')
-            return;
-          }
+        // else if (!isSuitableForLightMode) {
+        //     setSnackbarOpen(true)
+        //     setSnackbarMessage('Error: Color is too close to white, and is hard to read on light mode, please try a different color.')
+        //     return;
+        //   } else if (!isSuitableForDarkMode) {
+        //     setSnackbarOpen(true)
+        //     setSnackbarMessage('Error: Color is too close to black, and is hard to read on dark mode, please try a different color.')
+        //     return;
+        //   }
         else if(name.trim().length < 1) {
             setSnackbarOpen(true)
             setSnackbarMessage('Error: Name has no length')

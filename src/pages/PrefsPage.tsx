@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useIsMounted } from '../utils/hooks/useIsMounted';
 import { Alert, Box, Button, Container, FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Snackbar, Switch, Typography, AlertColor, Tooltip, TextField } from '@mui/material';
 import { UserContext } from '../utils/contexts/UserContext';
-import { clearOptions, customStrickenOptions, hideStrickenOptions, isColorSuitableForBackground, isValidHexColor, nightModeColorOptions, nightModeOptions, postPositionOptions, postStyleOptions, soundOnStrickenOptions, standardizeFormatOptions, submitShortcutOptions, titles } from '../utils/helpers';
+import { clearOptions, customStrickenOptions, hideStrickenOptions, isColorSuitableForBackground, isValidHexColor, nightModeColorOptions, nightModeOptions, postPositionOptions, postStyleOptions, soundOnStrickenOptions, standardizeFormatOptions, submitShortcutOptions } from '../utils/helpers';
 import { updateCounterPrefs } from '../utils/api';
 import { CounterCard } from '../components/CounterCard';
 import { Loading } from '../components/Loading';
@@ -99,16 +99,15 @@ import Count from '../components/Count';
               setSnackbarOpen(true)
               setSnackbarMessage('Error: Color must start with #.')
               return;
-          } else if (!isSuitableForLightMode) {
-            setSnackbarOpen(true)
-            setSnackbarMessage('Error: Color is too close to white, and is hard to read on light mode, please try a different color.')
-            return;
-          } else if (!isSuitableForDarkMode) {
-            setSnackbarOpen(true)
-            setSnackbarMessage('Error: Color is too close to black, and is hard to read on dark mode, please try a different color.')
-            return;
-          }
-          else if(displayName.trim().length < 1) {
+          // } else if (!isSuitableForLightMode) {
+          //   setSnackbarOpen(true)
+          //   setSnackbarMessage('Error: Color is too close to white, and is hard to read on light mode, please try a different color.')
+          //   return;
+          // } else if (!isSuitableForDarkMode) {
+          //   setSnackbarOpen(true)
+          //   setSnackbarMessage('Error: Color is too close to black, and is hard to read on dark mode, please try a different color.')
+          //   return;
+          } else if(displayName.trim().length < 1) {
               setSnackbarOpen(true)
               setSnackbarMessage('Error: Name has no length')
               return;

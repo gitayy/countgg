@@ -5,6 +5,8 @@ import { UserContext } from "../utils/contexts/UserContext";
 import moment from 'moment-timezone';
 import { Counter } from "../utils/types";
 import UserMultiSelect from "./UserMultiSelect";
+import CounterAutocomplete from "./CounterAutocomplete";
+import { Box } from "@mui/material";
 
 const LeaderboardGraph = ({ stats, cum }) => {
 let cumulativeTotals = {};
@@ -88,11 +90,16 @@ const chartData = Object.keys(cumulativeTotals).map((date) => ({
     userData[userUUID] = userChartData;
   }
 
-  // console.log(userData[selectedCounter.uuid]);
 
   const userUUIDs = Object.keys(userStats);
+  const counterAutocompleteOptions = Object.values(cachedCounters).map(counter => counter.username)
+  const [selectedCounterFromChild, setSelectedCounterFromChild] = useState(null);
+
+  const handleCounterSelection = (selectedCounter) => {
+    const countersFromUsername = Object.values(cachedCounters).filter(counter => counter.username === selectedCounter);
+    setSelectedCounters(countersFromUsername);
+  };
   return (<>
-  {/* <UserMultiSelect users={cachedCounters} selectedUsers={selectedCounters} onSelectedUsersChange={handleSelectedUsersChange} /> */}
     <ResponsiveContainer width="100%" aspect={2}>
         <LineChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" />
@@ -104,6 +111,7 @@ const chartData = Object.keys(cumulativeTotals).map((date) => ({
         {!cum && <Line type="monotone" dataKey="daily" stroke="#82ca9d" />}
         </LineChart>
     </ResponsiveContainer>
+    <Box sx={{width: '50%'}}><CounterAutocomplete counters={counterAutocompleteOptions} onCounterSelect={handleCounterSelection} /></Box>
     {selectedCounters.map((selectedCounter) => (
       userData[selectedCounter.uuid] && (
         <ResponsiveContainer key={selectedCounter.uuid} width="100%" aspect={2}>
