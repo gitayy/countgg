@@ -92,11 +92,9 @@ const chartData = Object.keys(cumulativeTotals).map((date) => ({
 
 
   const userUUIDs = Object.keys(userStats);
-  const counterAutocompleteOptions = Object.values(cachedCounters).map(counter => counter.username)
-  const [selectedCounterFromChild, setSelectedCounterFromChild] = useState(null);
 
-  const handleCounterSelection = (selectedCounter) => {
-    const countersFromUsername = Object.values(cachedCounters).filter(counter => counter.username === selectedCounter);
+  const handleCounterSelection = (selectedCounters: string[]) => {
+    const countersFromUsername = Object.values(cachedCounters).filter(counter => selectedCounters.includes(counter.username));
     setSelectedCounters(countersFromUsername);
   };
   return (<>
@@ -111,7 +109,7 @@ const chartData = Object.keys(cumulativeTotals).map((date) => ({
         {!cum && <Line type="monotone" dataKey="daily" stroke="#82ca9d" />}
         </LineChart>
     </ResponsiveContainer>
-    <Box sx={{width: '50%'}}><CounterAutocomplete counters={counterAutocompleteOptions} onCounterSelect={handleCounterSelection} /></Box>
+    <Box sx={{width: '50%'}}><CounterAutocomplete onCounterSelect={handleCounterSelection} /></Box>
     {selectedCounters.map((selectedCounter) => (
       userData[selectedCounter.uuid] && (
         <ResponsiveContainer key={selectedCounter.uuid} width="100%" aspect={2}>

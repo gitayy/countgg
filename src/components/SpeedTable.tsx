@@ -1,8 +1,9 @@
-import { TableRow, TableCell, TableContainer, Table, TableHead, TableBody, Typography, Link, TablePagination, Avatar, CardHeader } from "@mui/material";
+import { TableRow, TableCell, TableContainer, Table, TableHead, TableBody, Typography, Link, TablePagination, Avatar, CardHeader, Box } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cachedCounters, convertToTimestamp, formatTimeDiff, isParsable } from "../utils/helpers";
-import { ThreadType } from "../utils/types";
+import { Counter, ThreadType } from "../utils/types";
+import CounterAutocomplete from "./CounterAutocomplete";
 
 interface Props {
     speed: any;
@@ -26,6 +27,8 @@ export const SpeedTable = ({ speed, thread }: Props) => {
     // Create an object to store the best time of each counter
     const bestTimes: Record<string, any> = {};
 
+  const [selectedCounters, setSelectedCounters] = useState<Counter[]>([]);
+
     for (const obj of speed) {
         const timestamp1 = convertToTimestamp(obj.start);
         const timestamp2 = convertToTimestamp(obj.end);
@@ -35,12 +38,23 @@ export const SpeedTable = ({ speed, thread }: Props) => {
         for (const counter of obj.qualifiedCounters) {
             const time = obj.time || Infinity;
             if(cachedCounters[counter] && (cachedCounters[counter].roles.includes('banned'))) {continue;}
+            if(selectedCounters.length > 0 && !(selectedCounters.map(counter => counter.username).includes(cachedCounters[counter].username))) {continue;}
             if (!bestTimes[counter] || time < bestTimes[counter]['time']) {
                 bestTimes[counter] = obj;
             }
         }
     }
-    speed.sort((a, b) => a.time - b.time);
+    selectedCounters.length > 0
+    ? 
+    (
+      speed = 
+      speed
+    .filter(obj => obj.qualifiedCounters.some(counter => selectedCounters.map(counter => counter.uuid).includes(counter))))
+    .sort((a, b) => a.time - b.time)
+    :
+    speed = 
+    speed
+    .sort((a, b) => a.time - b.time);
 
     // Sort the leaderboard based on the best time for each counter
     const pbLeaderboard = Object.entries(bestTimes)
@@ -111,6 +125,11 @@ export const SpeedTable = ({ speed, thread }: Props) => {
 
   const sumCounts = speed.length
 
+  const handleCounterSelection = (selectedCounters: string[]) => {
+    const countersFromUsername = Object.values(cachedCounters).filter(counter => selectedCounters.includes(counter.username));
+    setSelectedCounters(countersFromUsername);
+  };
+
 return (
   <TableContainer>
     <Typography sx={{mt: 2, mb: 2}} variant='body2'>Hall of Speed</Typography>
@@ -128,6 +147,7 @@ return (
       <TableBody>{pbLeaderboardRows}</TableBody>
     </Table>
     <Typography sx={{mt: 2, mb: 2}} variant='body2'>Sub 6: {sumCounts.toLocaleString()} {sumCounts != 1 ? "threads" : "thread"}</Typography>
+    <Box sx={{width: '50%'}}><CounterAutocomplete onCounterSelect={handleCounterSelection} /></Box>
     <Table>
       <TableHead>
         <TableRow>
