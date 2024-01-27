@@ -510,6 +510,12 @@ export const calculateLevel = (totalXP) => {
   return level;
 }
 
+export function snowflakeToTime(snowflake) {
+  const discordEpoch = 1420070400000; // Discord Epoch in milliseconds
+  const timestamp = (snowflake / 4194304) + discordEpoch;
+  return new Date(timestamp);
+}
+
 
 export const standardizeFormatOptions = ['Disabled', 'No Separator', 'Commas', 'Periods', 'Spaces']
 export const nightModeOptions = ['System', 'On', 'Off'];
