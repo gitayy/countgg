@@ -250,7 +250,7 @@ import { UuidPage } from './UuidPage';
                 />
               </FormControl>
                 <Button variant='contained' disabled={buttonDisable} onClick={findRawCount}>Submit</Button>
-                <FormControl variant="standard" sx={{mr: 2}} >
+                {/* <FormControl variant="standard" sx={{mr: 2}} >
               <Tooltip title="Finds post where the comment contains the following." placement='top'>
                 <InputLabel htmlFor="comment" shrink>
                     Comment Contains...
@@ -263,7 +263,7 @@ import { UuidPage } from './UuidPage';
                   // disabled={countNumber !== null && countNumber > 0}
                 />
               </FormControl>
-                <Button variant='contained' disabled={buttonDisable} onClick={findComment}>Submit</Button>
+                <Button variant='contained' disabled={buttonDisable} onClick={findComment}>Submit</Button> */}
             </Box>
             {loadedPosts && Array.isArray(loadedPosts) && 
             <Box sx={{ bgcolor: 'background.paper', display: 'flex', justifyContent: 'center', flexGrow: 1, p: 2 }}>
