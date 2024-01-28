@@ -44,6 +44,8 @@ import { useThread } from '../utils/contexts/ThreadContext';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import MailIcon from '@mui/icons-material/Mail'
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
+
 
 export const Sidebar = () => {
   const navigate = useNavigate();
@@ -299,7 +301,7 @@ export const Sidebar = () => {
               }}
               onClick={() => navigate(`/thread/${thread.name}`)}
             >
-              {thread.title}
+              {thread.threadOfTheDay && <LocalFireDepartmentIcon sx={{'color': 'orangered', verticalAlign: 'bottom'}} />}{thread.title}
             </Button>
           ))}
         </List>

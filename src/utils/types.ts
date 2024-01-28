@@ -105,6 +105,7 @@ export type ThreadType = {
   countsPerSplit: number;
   splitsPerGet: number;
   splitOffset: number;
+  threadOfTheDay: boolean;
 };
 
 export type AchievementType = {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Counter } from '../utils/types';
 import { useState, useContext } from 'react';
 import { ThreadsContext } from '../utils/contexts/ThreadsContext';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 
 interface Props {
 //   threadLeaderboards: {[threadUUID: string]: {[counterUUID: string]: {counter: Counter, counts: number}}}|undefined;
@@ -95,7 +96,7 @@ export const TopThreadsTable = ({ sums, name, countName, mini }: Props) => {
                       <PlaceCell place={index + 1} />
                       <TableCell component="th" scope="row" sx={{}}>
                       <Link color={'inherit'} underline='hover' href={`/thread/${thread.name}`} onClick={(e) => {e.preventDefault();navigate(`/thread/${thread.name}`);}}>
-                        {thread.title}
+                      {thread.threadOfTheDay && <LocalFireDepartmentIcon sx={{'color': 'orangered', verticalAlign: 'bottom'}} />} {thread.title}
                         </Link>
                       </TableCell>
                       <TableCell>{row[1].toLocaleString()}</TableCell>

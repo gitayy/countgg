@@ -38,6 +38,8 @@ import Spoiler from '../components/Spoiler';
 import { ThreadProvider, useThread } from '../utils/contexts/ThreadContext';
 import Lever from '../components/Lever';
 
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
+
 let imsorryfortheglobalpull = "DISABLED";
 export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
     const location = useLocation();
@@ -1139,7 +1141,7 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
                   }}
                   onClick={() => navigate(`/thread/${thread.name}`)}
                 >
-                  {thread.title}
+                  {thread.threadOfTheDay && <LocalFireDepartmentIcon sx={{'color': 'orangered', verticalAlign: 'bottom'}} />}{thread.title}
                 </Button>
               ))}
             </List>
@@ -1246,6 +1248,12 @@ export const ThreadPage = memo(({ chats = false }: {chats?: boolean}) => {
               You're viewing the context of an old post. For live updates, click <Link href={`/thread/${thread.name}`}>here</Link>.
             </Typography>
           </Box>}
+          {thread && thread.threadOfTheDay && <>
+          <Typography variant="h5" sx={{mb: 1}}><LocalFireDepartmentIcon sx={{color: 'orangered', verticalAlign: 'middle', fontSize: '2rem'}}  /> Thread of the Day</Typography>
+            <Typography variant="body1" sx={{whiteSpace: 'pre-wrap', mb: 2}}>
+              Normal counts will be worth twice as much XP in this thread today. Counting will improve your odds in the daily lottery for this thread. Good luck!
+            </Typography>
+          </>}
           {/* {counter && <>
           <Typography variant="h5" sx={{mb: 1}}>Challenges</Typography>
           <Typography variant="body1" sx={{whiteSpace: 'pre-wrap', mb: 2}}>
