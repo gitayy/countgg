@@ -173,7 +173,7 @@ axios.post(
   CONFIG
 );
 
-export const findPostByThreadAndNumber = (thread: string, number: string) =>
+export const findPostByThreadAndNumber = (number: string, thread?: string, ) =>
 axios.post(
   `${API_URL}/thread/findPostByThreadAndNumber`,
   {thread: thread,
@@ -181,11 +181,19 @@ axios.post(
   CONFIG
 );
 
-export const findPostByThreadAndRawCount = (thread: string, rawCount: string) =>
+export const findPostByThreadAndRawCount = (rawCount: string, thread?: string, ) =>
 axios.post(
   `${API_URL}/thread/findPostByThreadAndRawCount`,
   {thread: thread,
   rawCount: rawCount},
+  CONFIG
+);
+
+export const findPostByThreadAndComment = (comment: string, thread?: string, ) =>
+axios.post(
+  `${API_URL}/thread/findPostByThreadAndComment`,
+  {thread: thread,
+  comment: comment},
   CONFIG
 );
 

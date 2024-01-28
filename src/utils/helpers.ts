@@ -1,4 +1,4 @@
-import { Counter, PostType } from './types';
+import { Counter, PostType, ThreadType } from './types';
 import { format } from 'date-fns';
 import { createElement } from 'react';
 import { visit } from 'unist-util-visit';
@@ -162,6 +162,37 @@ export const fakePost = (counter?: Counter): PostType => {
     isCommentDeleted: false,
     isValidCount: true,
     validCountNumber: 1234567,
+  }
+}
+
+export const fakeThread = (thread?: ThreadType): ThreadType => {
+  return {
+
+    uuid: `00000000-0000-0000-00000000`,
+  name: 'all',
+  title: 'All Threads',
+  description: 'All Threads',
+  rules: '',
+  firstValidCount: '',
+  validationType: 'none',
+  visibleTo: ['all'],
+  updatableBy: ['nobody'],
+  locked: false,
+  autoValidated: true,
+  resetOnMistakes: false,
+  allowDoublePosts: false,
+  moderators: [],
+  verifiers: [],
+  countBans: [],
+  postBans: [],
+  shortDescription: "All Threads",
+  color1: "#069420",
+  color2: "#069420",
+  category: "Miscellaneous",
+  countsPerSplit: 100,
+  splitsPerGet: 10,
+  splitOffset: 0,
+  threadOfTheDay: false,
   }
 }
 
