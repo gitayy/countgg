@@ -22,6 +22,7 @@ import { Counter, PostType } from '../utils/types';
 import RedditIcon from '@mui/icons-material/Reddit';
 import { TopThreadsTable } from '../components/TopThreadsTable';
 import { ThreadsContext } from '../utils/contexts/ThreadsContext';
+import WavyText from '../components/WavyText';
 
 export const DefaultPage = () => {
   const navigate = useNavigate();
@@ -364,6 +365,7 @@ useEffect(() => {
           {miniMainItem(<AbcIcon style={{fontSize: 'inherit', marginRight: '5%'}} />, "LRWOED", "/lrwoed")}
           {miniMainItem(<ReorderIcon style={{fontSize: 'inherit', marginRight: '5%'}} />, "Number Shuffle", "/shuffle")}
           {miniMainItem(<RedditIcon style={{fontSize: 'inherit', marginRight: '5%'}} />, "Reddit Live", "/r/livecounting", true)}
+          {/* {miniMainItem(<ContentCutIcon style={{fontSize: 'inherit', marginRight: '5%'}} />, "RPS", "rps")} */}
           {/* {miniMainItem(<ContentCutIcon style={{fontSize: 'inherit', marginRight: '5%'}} />, "RPS", "/rps")} */}
           {/* <Grid item xs={6} sx={{padding: "6px"}}>
             <Link color={'inherit'} underline='none' href={`/shuffle`} onClick={(e) => {e.preventDefault();navigate(`/shuffle`);}}>

@@ -1,0 +1,88 @@
+$b: #222;
+$num: 20;
+
+
+
+@font-face {
+    font-family: 'Coop';
+    src: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/383755/cooper-black-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@function stroke($stroke, $color) {
+  $shadow: ();
+  $from: $stroke*-1;
+  @for $i from $from through $stroke {
+   @for $j from $from through $stroke {
+      $shadow: append($shadow, $i*1px $j*1px 0 $color, comma);
+    }
+  }
+  @return $shadow;
+}
+
+@mixin stroke($stroke, $color) {
+  text-shadow: stroke($stroke, $color);
+}
+
+body{
+//   background:$b;
+//   width:100%;
+//   height:100vh;
+//   overflow:hidden;
+//   font-family:"Coop";
+  .wrap{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:300px;
+    height:300px;
+    transform:translateX(-50%) translateY(-50%);
+    h1{
+      @include stroke(1,#26A69A);
+      color:$b;
+      position:absolute;
+      font-size:100px;
+      text-align:center;
+      line-height:0.75;
+      @for $i from 1 through $num{
+        &:nth-of-type(#{$i}){
+          margin-top:#{$i * 5px};
+          @include stroke(1,adjust-hue(yellow, $num * $i));
+          animation:bounce 1s ease-in-out infinite;
+          animation-delay:#{$i / -20}s;
+          will-change: transform;
+          @keyframes bounce{
+            0%{
+              transform:translateY(0px) translateX(-10px) translateZ(0);
+            }
+            50%{
+              transform:translateY(-10px) translateX(10px) translateZ(0);
+            }
+            100%{
+              transform:translateY(0px) translateX(-10px) translateZ(0);
+            }
+          }
+          span{
+            display:inline-block;
+            animation:rotate 1s ease-in-out infinite alternate;
+            will-change: transform;
+            @for $j from 1 through $num{
+              &:nth-of-type(#{$j}){
+                animation-delay:#{$j/-5}s;
+              }
+            }
+            @keyframes rotate{
+              0%{
+                transform:rotate(-25deg) translateZ(0);
+              }
+              100%{
+                transform:rotate(25deg) translateZ(0);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

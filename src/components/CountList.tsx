@@ -45,6 +45,7 @@ const CountList = memo((props: any) => {
       scrollDiagnostics.current = true;
     }
     const throttleCount = useRef(0);
+    const burstThrottleCount = useRef(0);
     const [gotNewerUUIDs, setGotNewerUUIDs] = useState<string[]>([]);
     const [gotOlderUUIDs, setGotOlderUUIDs] = useState<string[]>([]);
     const throttle = useRef(performance.now());
@@ -251,9 +252,10 @@ const CountList = memo((props: any) => {
 
     const handlePosting = async () => {
       const throttleCheck = performance.now() - throttle.current;
-      if(props.thread && props.thread.validationType === 'bars' ? throttleCheck < 1000 : throttleCheck < 100) {
+      if(props.thread && props.thread.validationType === 'bars' ? throttleCheck < 1000 : throttleCheck < Math.min(500, Math.max(35, 35 + ((burstThrottleCount.current) * 20)))) {
         console.log(`You are being throttled. Start: ${throttle.current}, end: ${performance.now()} (${throttleCheck}ms difference)`);
         throttleCount.current += 1;
+        burstThrottleCount.current += 1;
         isThrottled.current = true;
         setSubmitColor("error")
         if(throttleCount.current > 100) {
@@ -489,6 +491,12 @@ const CountList = memo((props: any) => {
         setInterval(function() {
           throttleCount.current = 0;
         }, 30000);
+      }, [])
+
+      useEffect(() => {
+        setInterval(function() {
+          burstThrottleCount.current = 0;
+        }, 3000);
       }, [])
   
       const theRock = () => {

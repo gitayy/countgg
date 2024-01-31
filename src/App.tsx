@@ -55,6 +55,7 @@ import BlogCreatePage from './pages/BlogCreatePage';
 import { ThreadProvider } from './utils/contexts/ThreadContext';
 import { NumberShufflePage } from './pages/NumberShufflePage';
 import ServersPage from './pages/ServersPage';
+import './utils/styles/wavy.scss'
 
 function App() {
 
