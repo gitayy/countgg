@@ -844,7 +844,6 @@ export const DefaultPage = () => {
               src="https://discord.com/widget?id=1074858682141126676&theme=dark"
               width="350"
               height="300"
-              allowTransparency={true}
               frameBorder="0"
               sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
             ></iframe>

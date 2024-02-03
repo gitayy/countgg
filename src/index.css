@@ -746,6 +746,36 @@ background-size: 1800% 1800%;
   100%{background-position:0% 82%}
 }
 
+.rainbow-border {
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+
+.rainbow-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 5px solid transparent;
+  background-clip: padding-box;
+  animation: rainbowborder 5s infinite linear;
+}
+
+@keyframes rainbowborder {
+  0% {
+    border-image: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
+    border-image-slice: 1;
+  }
+  100% {
+    border-image: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
+    border-image-slice: 8;
+    transform: rotate(360deg);
+  }
+}
+
 .zoom-in {
   animation-name: zoom-in;
   transform-origin: top left;

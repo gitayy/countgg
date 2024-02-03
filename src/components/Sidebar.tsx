@@ -1031,11 +1031,11 @@ export const Sidebar = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
-                {counter && counter.color && (
-                  <>
+                {counter && counter.color && [
                     <Link
                       color={'inherit'}
                       underline="none"
+                      key={'profileKey'}
                       href={`/counter/${counter.username}`}
                       onClick={(e) => {
                         e.preventDefault()
@@ -1044,11 +1044,12 @@ export const Sidebar = () => {
                       }}
                     >
                       <MenuItem>Profile</MenuItem>
-                    </Link>
+                    </Link>,
                     <Link
                       color={'inherit'}
                       underline="none"
                       href={`/prefs`}
+                      key={'prefsKey'}
                       onClick={(e) => {
                         e.preventDefault()
                         navigate(`/prefs`)
@@ -1057,8 +1058,8 @@ export const Sidebar = () => {
                     >
                       <MenuItem>Preferences</MenuItem>
                     </Link>
-                  </>
-                )}
+                  ]
+                }
                 <Link onClick={handleClose} target={'_blank'} color="inherit" underline="none" href="https://discord.gg/bfS9RQht6M">
                   <MenuItem>Discord Server</MenuItem>
                 </Link>

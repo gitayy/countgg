@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const NumberAnimator = ({ number, startRange, endRange }) => {
+const NumberAnimator = ({ number, startRange, endRange, animationDuration }) => {
     const [animatedNumber, setAnimatedNumber] = useState(number);
   
     useEffect(() => {
@@ -9,7 +9,7 @@ const NumberAnimator = ({ number, startRange, endRange }) => {
       // Run animation when the number prop changes
       const animateOnNumberChange = () => {
         const startTime = Date.now();
-        const duration = 500; // 1 second
+        const duration = animationDuration;
   
         intervalId = setInterval(() => {
           const elapsedTime = Date.now() - startTime;
@@ -18,9 +18,8 @@ const NumberAnimator = ({ number, startRange, endRange }) => {
             const randomValue = Math.floor(progress * (endRange - startRange + 1) + startRange);
             setAnimatedNumber(randomValue);
           } else {
-            // Stop the interval after 1 second
-            clearInterval(intervalId);
             setAnimatedNumber(number);
+            clearInterval(intervalId);
           }
         }, 16); // Approximately 60 frames per second
       };
@@ -35,26 +34,3 @@ const NumberAnimator = ({ number, startRange, endRange }) => {
   };
   
   export default NumberAnimator;
-
-// const NumberAnimator = ({ number, startRange, endRange }) => {
-//   const [animatedNumber, setAnimatedNumber] = useState(number);
-
-//   useEffect(() => {
-//     let intervalId;
-
-//     const animateNumber = () => {
-//       const randomValue = Math.floor(Math.random() * (endRange - startRange + 1) + startRange);
-//       setAnimatedNumber(randomValue);
-//     };
-
-//     // Start animation when component mounts
-//     intervalId = setInterval(animateNumber, 1000);
-
-//     // Cleanup interval when component unmounts
-//     return () => clearInterval(intervalId);
-//   }, [startRange, endRange]);
-
-//   return <div>{animatedNumber}</div>;
-// };
-
-// export default NumberAnimator;
