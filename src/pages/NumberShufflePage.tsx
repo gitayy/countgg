@@ -31,6 +31,7 @@ import { MUIBarGraph } from '../components/MUIBarGraph'
 import ErrorBoundary from '../components/ErrorBoundary'
 import { UserContext } from '../utils/contexts/UserContext'
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline'
+import NumberAnimator from '../components/NumberAnimator'
 
 export const NumberShufflePage = () => {
   const location = useLocation()
@@ -762,7 +763,7 @@ export const NumberShufflePage = () => {
               // bgcolor: `secondary.light`
             }}
           >
-            {currentNumber > 0 ? currentNumber : gameStatus === 'won' ? 'W' : ''}
+            {currentNumber > 0 ? <NumberAnimator number={currentNumber} startRange={1} endRange={1000} /> : gameStatus === 'won' ? 'W' : ''}
           </Typography>
           {gameStatus !== 'Loading...' && gameStatus === 'in_progress' && (
             <Button
