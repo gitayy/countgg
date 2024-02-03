@@ -50,7 +50,7 @@ body{
           margin-top:#{$i * 5px};
           @include stroke(1,adjust-hue(yellow, $num * $i));
           animation:bounce 1s ease-in-out infinite;
-          animation-delay:#{$i / -20}s;
+          animation-delay:#{calc($i / -20)}s;
           will-change: transform;
           @keyframes bounce{
             0%{
@@ -69,7 +69,7 @@ body{
             will-change: transform;
             @for $j from 1 through $num{
               &:nth-of-type(#{$j}){
-                animation-delay:#{$j/-5}s;
+                animation-delay:#{calc($j/-5)}s;
               }
             }
             @keyframes rotate{
