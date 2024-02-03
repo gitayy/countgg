@@ -1,112 +1,106 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 
 function CaesarCipher({ text }) {
-  const [cipheredText, setCipheredText] = useState(text);
-  const [isCiphered, setIsCiphered] = useState(true);
-  const [isInit, setIsInit] = useState(false);
+  const [cipheredText, setCipheredText] = useState(text)
+  const [isCiphered, setIsCiphered] = useState(true)
+  const [isInit, setIsInit] = useState(false)
 
   useEffect(() => {
     setTimeout(() => {
-      setIsInit(true);
-    }, 60000);
+      setIsInit(true)
+    }, 60000)
     setTimeout(() => {
-      setIsCiphered(false);
-    }, 70000);
-  }, []);
+      setIsCiphered(false)
+    }, 70000)
+  }, [])
 
   useEffect(() => {
     if (isCiphered && isInit) {
-      let currentIndex = 0;
-      const ciphered = getCipheredText(text);
+      let currentIndex = 0
+      const ciphered = getCipheredText(text)
 
       const intervalId = setInterval(() => {
-        setCipheredText(prevText =>
-          prevText.slice(0, currentIndex) +
-          ciphered[currentIndex] +
-          prevText.slice(currentIndex + 1)
-        );
+        setCipheredText((prevText) => prevText.slice(0, currentIndex) + ciphered[currentIndex] + prevText.slice(currentIndex + 1))
 
-        currentIndex++;
+        currentIndex++
 
         if (currentIndex === text.length) {
-          clearInterval(intervalId);
+          clearInterval(intervalId)
         }
-      }, 50);
+      }, 50)
 
       return () => {
-        clearInterval(intervalId);
-      };
-    } else if(!isCiphered && isInit) {
-      let currentIndex = 0;
-      const original = getOriginalText(cipheredText);
+        clearInterval(intervalId)
+      }
+    } else if (!isCiphered && isInit) {
+      let currentIndex = 0
+      const original = getOriginalText(cipheredText)
 
       const intervalId = setInterval(() => {
-        setCipheredText(prevText =>
-          prevText.slice(0, currentIndex) +
-          original[currentIndex] +
-          prevText.slice(currentIndex + 1)
-        );
+        setCipheredText((prevText) => prevText.slice(0, currentIndex) + original[currentIndex] + prevText.slice(currentIndex + 1))
 
-        currentIndex++;
+        currentIndex++
 
         if (currentIndex === cipheredText.length) {
-          clearInterval(intervalId);
+          clearInterval(intervalId)
         }
-      }, 50);
+      }, 50)
 
       return () => {
-        clearInterval(intervalId);
-      };
+        clearInterval(intervalId)
+      }
     }
-  }, [isCiphered, isInit]);
+  }, [isCiphered, isInit])
 
   function getCipheredText(text) {
-    let ciphered = '';
+    let ciphered = ''
 
     for (let i = 0; i < text.length; i++) {
-      const charCode = text.charCodeAt(i);
-      let cipheredCharCode;
+      const charCode = text.charCodeAt(i)
+      let cipheredCharCode
 
-      if (charCode >= 65 && charCode <= 90) { // uppercase letter
-        cipheredCharCode = ((charCode - 65 + 23) % 26) + 65;
-      } else if (charCode >= 97 && charCode <= 122) { // lowercase letter
-        cipheredCharCode = ((charCode - 97 + 23) % 26) + 97;
-      } else { // not a letter
-        cipheredCharCode = charCode;
+      if (charCode >= 65 && charCode <= 90) {
+        // uppercase letter
+        cipheredCharCode = ((charCode - 65 + 23) % 26) + 65
+      } else if (charCode >= 97 && charCode <= 122) {
+        // lowercase letter
+        cipheredCharCode = ((charCode - 97 + 23) % 26) + 97
+      } else {
+        // not a letter
+        cipheredCharCode = charCode
       }
 
-      ciphered += String.fromCharCode(cipheredCharCode);
+      ciphered += String.fromCharCode(cipheredCharCode)
     }
 
-    return ciphered;
+    return ciphered
   }
 
   function getOriginalText(text) {
-    let original = '';
+    let original = ''
 
     for (let i = 0; i < text.length; i++) {
-      const charCode = text.charCodeAt(i);
-      let originalCharCode;
+      const charCode = text.charCodeAt(i)
+      let originalCharCode
 
-      if (charCode >= 65 && charCode <= 90) { // uppercase letter
-        originalCharCode = ((charCode - 65 - 23 + 26) % 26) + 65;
-      } else if (charCode >= 97 && charCode <= 122) { // lowercase letter
-        originalCharCode = ((charCode - 97 - 23 + 26) % 26) + 97;
-      } else { // not a letter
-        originalCharCode = charCode;
+      if (charCode >= 65 && charCode <= 90) {
+        // uppercase letter
+        originalCharCode = ((charCode - 65 - 23 + 26) % 26) + 65
+      } else if (charCode >= 97 && charCode <= 122) {
+        // lowercase letter
+        originalCharCode = ((charCode - 97 - 23 + 26) % 26) + 97
+      } else {
+        // not a letter
+        originalCharCode = charCode
       }
 
-      original += String.fromCharCode(originalCharCode);
+      original += String.fromCharCode(originalCharCode)
     }
 
-    return original;
+    return original
   }
 
-  return (
-    <span>
-      {cipheredText}
-    </span>
-  );
+  return <span>{cipheredText}</span>
 }
 
-export default CaesarCipher;
+export default CaesarCipher

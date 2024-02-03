@@ -1,18 +1,18 @@
-import React, { useState } from "react";
-import { FormControl, InputLabel, MenuItem, Select, Chip } from "@mui/material";
-import { Counter } from "../utils/types";
+import React, { useState } from 'react'
+import { FormControl, InputLabel, MenuItem, Select, Chip } from '@mui/material'
+import { Counter } from '../utils/types'
 
 interface UserMultiSelectProps {
-users:  { [key: string]: Counter };
-    selectedUsers: Counter[];
-    onSelectedUsersChange: (selectedUsers: Counter[]) => void;
-  }
+  users: { [key: string]: Counter }
+  selectedUsers: Counter[]
+  onSelectedUsersChange: (selectedUsers: Counter[]) => void
+}
 
 const UserMultiSelect = ({ users, selectedUsers, onSelectedUsersChange }: UserMultiSelectProps) => {
   const handleChange = (event) => {
-    const newSelectedUsers = event.target.value;
-    onSelectedUsersChange(newSelectedUsers);
-  };
+    const newSelectedUsers = event.target.value
+    onSelectedUsersChange(newSelectedUsers)
+  }
 
   return (
     <FormControl>
@@ -26,7 +26,11 @@ const UserMultiSelect = ({ users, selectedUsers, onSelectedUsersChange }: UserMu
         renderValue={(selected) => (
           <div>
             {selected.map((counter) => (
-              <Chip key={counter.username} label={counter.username} onDelete={() => onSelectedUsersChange(selected.filter(c => c.uuid !== counter.uuid))} />
+              <Chip
+                key={counter.username}
+                label={counter.username}
+                onDelete={() => onSelectedUsersChange(selected.filter((c) => c.uuid !== counter.uuid))}
+              />
             ))}
           </div>
         )}
@@ -38,7 +42,7 @@ const UserMultiSelect = ({ users, selectedUsers, onSelectedUsersChange }: UserMu
         ))}
       </Select>
     </FormControl>
-  );
-};
+  )
+}
 
-export default UserMultiSelect;
+export default UserMultiSelect

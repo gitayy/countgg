@@ -1,24 +1,22 @@
-import { Counter, PostType, ThreadType } from './types';
-import { format } from 'date-fns';
-import { createElement } from 'react';
-import { visit } from 'unist-util-visit';
-import { validate as uuid_validate } from 'uuid';
+import { Counter, PostType, ThreadType } from './types'
+import { format } from 'date-fns'
+import { createElement } from 'react'
+import { visit } from 'unist-util-visit'
+import { validate as uuid_validate } from 'uuid'
 
-export const site_version = "v1.3.4";
-export var loaded_site_version;
+export const site_version = 'v1.3.4'
+export var loaded_site_version
 export function updateSiteVer(siteVer: string) {
-  loaded_site_version = siteVer;
+  loaded_site_version = siteVer
 }
-
-
 
 export const card_backgrounds = {
   // 'default': {value: 1, style: 'light'},
-  'wavypurple': {value: 2, style: 'dark'},
+  wavypurple: { value: 2, style: 'dark' },
   // 'rainbow_light': {value: 3, style: 'light'},
-  'rainbow_dark': {value: 4, style: 'dark'},
-  'blaze_1': {value: 5, style: 'dark'},
-  'blaze_2': {value: 6, style: 'dark'},
+  rainbow_dark: { value: 4, style: 'dark' },
+  blaze_1: { value: 5, style: 'dark' },
+  blaze_2: { value: 6, style: 'dark' },
   // 'radiant_1': {value: 7, style: 'light'},
   // 'radiant_2': {value: 8, style: 'light'},
   // 'wave_1': {value: 9, style: 'light'},
@@ -38,7 +36,11 @@ export const card_backgrounds = {
 //   'border_wave_circle': {value: 10},
 // }
 
-export const pronouns: [string, string, string, string][] = [['he', 'him', 'his', 'his'], ['she', 'her', 'her', 'hers'], ['they', 'them', 'their', 'theirs']];
+export const pronouns: [string, string, string, string][] = [
+  ['he', 'him', 'his', 'his'],
+  ['she', 'her', 'her', 'hers'],
+  ['they', 'them', 'their', 'theirs'],
+]
 
 export const defaultCounter = (uuid: string) => ({
   uuid: uuid,
@@ -53,51 +55,50 @@ export const defaultCounter = (uuid: string) => ({
   title: '...',
   cardStyle: '',
   cardBorderStyle: '',
-  xp: 100
-});
+  xp: 100,
+})
 
 export function isColorSuitableForBackground(textColor: string, backgroundColor: string, minContrastRatio: number = 4.5): boolean {
   const getLuminance = (color: string) => {
-      const hex = color.slice(1); // Remove the '#' character
-      const r = parseInt(hex.substr(0, 2), 16) / 255;
-      const g = parseInt(hex.substr(2, 2), 16) / 255;
-      const b = parseInt(hex.substr(4, 2), 16) / 255;
-      const sRGB = [r, g, b].map(value => {
-          if (value <= 0.03928) {
-              return value / 12.92;
-          } else {
-              return Math.pow((value + 0.055) / 1.055, 2.4);
-          }
-      });
-      return sRGB[0] * 0.2126 + sRGB[1] * 0.7152 + sRGB[2] * 0.0722;
-  };
+    const hex = color.slice(1) // Remove the '#' character
+    const r = parseInt(hex.substr(0, 2), 16) / 255
+    const g = parseInt(hex.substr(2, 2), 16) / 255
+    const b = parseInt(hex.substr(4, 2), 16) / 255
+    const sRGB = [r, g, b].map((value) => {
+      if (value <= 0.03928) {
+        return value / 12.92
+      } else {
+        return Math.pow((value + 0.055) / 1.055, 2.4)
+      }
+    })
+    return sRGB[0] * 0.2126 + sRGB[1] * 0.7152 + sRGB[2] * 0.0722
+  }
 
-  const textColorLuminance = getLuminance(textColor);
-  const backgroundColorLuminance = getLuminance(backgroundColor);
+  const textColorLuminance = getLuminance(textColor)
+  const backgroundColorLuminance = getLuminance(backgroundColor)
 
-  const lightest = Math.max(textColorLuminance, backgroundColorLuminance);
-  const darkest = Math.min(textColorLuminance, backgroundColorLuminance);
+  const lightest = Math.max(textColorLuminance, backgroundColorLuminance)
+  const darkest = Math.min(textColorLuminance, backgroundColorLuminance)
 
-  const contrastRatio = (lightest + 0.05) / (darkest + 0.05);
+  const contrastRatio = (lightest + 0.05) / (darkest + 0.05)
 
-  return contrastRatio >= minContrastRatio;
+  return contrastRatio >= minContrastRatio
 }
 
-
-export function EmojiTest(props) {  
-  return createElement('em-emoji', props, "" )
+export function EmojiTest(props) {
+  return createElement('em-emoji', props, '')
 }
 
 export const areAllArrayItemsUnique = (arrToTest) => {
-  return (arrToTest.length === new Set(arrToTest).size);
+  return arrToTest.length === new Set(arrToTest).size
 }
 
 export const doesArrayContainEntireOf2ndArray = (arr, target) => {
-  return target.every(v => arr.includes(v));
+  return target.every((v) => arr.includes(v))
 }
 
 export const countSameItemsInTwoArrays = (arr1, arr2) => {
-  return arr1.filter(i => arr2.includes(i)).length;
+  return arr1.filter((i) => arr2.includes(i)).length
 }
 
 export const modalStyle = {
@@ -111,33 +112,37 @@ export const modalStyle = {
   border: '2px solid #000',
   boxShadow: 24,
   p: 4,
-  maxHeight: '75%', 
+  maxHeight: '75%',
   overflowY: 'scroll',
-};
+}
 
-export const cachedCounters = {'[SYSTEM]': {
-  id: -1,
-  uuid: '[SYSTEM]',
-  name: '[SYSTEM]',
-  username: '[SYSTEM]',
-  roles: ['counter'], 
-  title: 'SYSTEM', 
-  discordId: '0',
-  pronouns: ['IT', 'IT', 'IT', 'IT'],
-  avatar: '0',
-  cardStyle: 'card_default', 
-  cardBorderStyle: 'no_border_circle', 
-  xp: 0,
-  color: '#069420', 
-  emoji: "🤖",
-}} as { [key: string]: Counter };
+export const cachedCounters = {
+  '[SYSTEM]': {
+    id: -1,
+    uuid: '[SYSTEM]',
+    name: '[SYSTEM]',
+    username: '[SYSTEM]',
+    roles: ['counter'],
+    title: 'SYSTEM',
+    discordId: '0',
+    pronouns: ['IT', 'IT', 'IT', 'IT'],
+    avatar: '0',
+    cardStyle: 'card_default',
+    cardBorderStyle: 'no_border_circle',
+    xp: 0,
+    color: '#069420',
+    emoji: '🤖',
+  },
+} as { [key: string]: Counter }
 
 export function isParsable(input: string): boolean {
-  return parseInt(input).toString() === input;
+  return parseInt(input).toString() === input
 }
 
 export const discordAvatarLink = (counter: Counter): string => {
-  return counter && counter.avatar && counter.avatar.length > 5 ? `https://cdn.discordapp.com/avatars/${counter.discordId}/${counter.avatar}` : `https://cdn.discordapp.com/embed/avatars/0.png`
+  return counter && counter.avatar && counter.avatar.length > 5
+    ? `https://cdn.discordapp.com/avatars/${counter.discordId}/${counter.avatar}`
+    : `https://cdn.discordapp.com/embed/avatars/0.png`
 }
 
 export const loginRedirect = `${process.env.REACT_APP_API_HOST}${process.env.REACT_APP_LOGIN || '/api/auth/login'}`
@@ -145,19 +150,19 @@ export const loginRedirect = `${process.env.REACT_APP_API_HOST}${process.env.REA
 export const fakePost = (counter?: Counter): PostType => {
   return {
     uuid: `00000000-0000-0000-00000000`,
-    timestamp: "0",
+    timestamp: '0',
     timeSinceLastCount: 321,
     timeSinceLastPost: 152,
-    thread: "fake", 
-    rawText: "1,234,567 This is an example post.",
+    thread: 'fake',
+    rawText: '1,234,567 This is an example post.',
     reactions: [],
-    rawCount: "1234567",
+    rawCount: '1234567',
     stricken: false,
     isCount: true,
     hasComment: true,
-    comment: "This is an example post.", 
-    countContent: "1,234,567",
-    authorUUID: counter ? counter.uuid : "[SYSTEM]",
+    comment: 'This is an example post.',
+    countContent: '1,234,567',
+    authorUUID: counter ? counter.uuid : '[SYSTEM]',
     isDeleted: false,
     isCommentDeleted: false,
     isValidCount: true,
@@ -167,60 +172,58 @@ export const fakePost = (counter?: Counter): PostType => {
 
 export const fakeThread = (thread?: ThreadType): ThreadType => {
   return {
-
     uuid: `00000000-0000-0000-00000000`,
-  name: 'all',
-  title: 'All Threads',
-  description: 'All Threads',
-  rules: '',
-  firstValidCount: '',
-  validationType: 'none',
-  visibleTo: ['all'],
-  updatableBy: ['nobody'],
-  locked: false,
-  autoValidated: true,
-  resetOnMistakes: false,
-  allowDoublePosts: false,
-  moderators: [],
-  verifiers: [],
-  countBans: [],
-  postBans: [],
-  shortDescription: "All Threads",
-  color1: "#069420",
-  color2: "#069420",
-  category: "Miscellaneous",
-  countsPerSplit: 100,
-  splitsPerGet: 10,
-  splitOffset: 0,
-  threadOfTheDay: false,
+    name: 'all',
+    title: 'All Threads',
+    description: 'All Threads',
+    rules: '',
+    firstValidCount: '',
+    validationType: 'none',
+    visibleTo: ['all'],
+    updatableBy: ['nobody'],
+    locked: false,
+    autoValidated: true,
+    resetOnMistakes: false,
+    allowDoublePosts: false,
+    moderators: [],
+    verifiers: [],
+    countBans: [],
+    postBans: [],
+    shortDescription: 'All Threads',
+    color1: '#069420',
+    color2: '#069420',
+    category: 'Miscellaneous',
+    countsPerSplit: 100,
+    splitsPerGet: 10,
+    splitOffset: 0,
+    threadOfTheDay: false,
   }
 }
 
 export function transformMarkdown(markdownContent) {
   // Replace blockquotes
-  const transformedContent = markdownContent.replace(/^>/gm, '&gt;');
+  const transformedContent = markdownContent.replace(/^>/gm, '&gt;')
 
   // Replace nested lists
-  const simplifiedContent = transformedContent.replace(/^[\*-]\ ([\*-]\s)+/gm, '* ');
+  const simplifiedContent = transformedContent.replace(/^[\*-]\ ([\*-]\s)+/gm, '* ')
   // const simplifiedContent = transformedContent.replace(/^([*-]) \1+/gm, '$1 ');
   // const simplifiedContent = transformedContent.replace(/([*-])\s\1+/g, '$1 ');
 
-
-  return simplifiedContent;
+  return simplifiedContent
 }
 
 export function customBlockquotePlugin() {
   return (tree) => {
-    const newChildren: any = [];
+    const newChildren: any = []
 
     tree.children.forEach((node) => {
       if (node.type !== 'blockquote') {
-        newChildren.push(node);
+        newChildren.push(node)
       }
-    });
+    })
 
-    tree.children = newChildren;
-  };
+    tree.children = newChildren
+  }
   // return (tree) => {
   //   visit(tree, 'blockquote', (node) => {
   //     let content = '';
@@ -248,107 +251,103 @@ export function customBlockquotePlugin() {
 }
 
 export const addCounterToCache = (counter: Counter) => {
-  const { uuid } = counter;
-              
+  const { uuid } = counter
+
   if (!cachedCounters[uuid]) {
-    cachedCounters[uuid] = counter;
+    cachedCounters[uuid] = counter
   }
 }
 
 export const formatDate = (timestamp: number, dontSayToday: boolean = false) => {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  const date = new Date(timestamp)
+  const now = new Date()
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
 
   // check if date is today or yesterday
-  if(date.toDateString() === now.toDateString()) {
-    return `${dontSayToday ? `` : `Today at `}${date.toLocaleTimeString()}`;
-  } else if(date.toDateString() === yesterday.toDateString()) {
-    return `Yesterday at ${date.toLocaleTimeString()}`;
+  if (date.toDateString() === now.toDateString()) {
+    return `${dontSayToday ? `` : `Today at `}${date.toLocaleTimeString()}`
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return `Yesterday at ${date.toLocaleTimeString()}`
   }
 
   // format date in standard format
-  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`;
+  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString()}`
 }
 
 export const formatDateWithMilliseconds = (timestamp: number, dontSayToday: boolean = false) => {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
+  const date = new Date(timestamp)
+  const now = new Date()
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
 
   // check if date is today or yesterday
-  if(date.toDateString() === now.toDateString()) {
-    return `${dontSayToday ? `` : `Today at `}${date.toLocaleTimeString(undefined, {hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3})}`;
-  } else if(date.toDateString() === yesterday.toDateString()) {
-    return `Yesterday at ${date.toLocaleTimeString(undefined, {hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3})}`;
+  if (date.toDateString() === now.toDateString()) {
+    return `${dontSayToday ? `` : `Today at `}${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3 })}`
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return `Yesterday at ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3 })}`
   }
 
   // format date in standard format
-  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString(undefined, {hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3})}`;
+  return `${date.toLocaleDateString()} at ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: 'numeric', second: 'numeric', fractionalSecondDigits: 3 })}`
 }
 
 export const formatDateExact = (timestamp: number) => {
-  const fnsFormatted = format(timestamp, 'yyyy-MM-dd HH:mm:ss.SSS');
-  return timestamp.toString().split(".")[1] ? fnsFormatted + timestamp.toString().split(".")[1] : fnsFormatted; //nanoseconds
+  const fnsFormatted = format(timestamp, 'yyyy-MM-dd HH:mm:ss.SSS')
+  return timestamp.toString().split('.')[1] ? fnsFormatted + timestamp.toString().split('.')[1] : fnsFormatted //nanoseconds
 }
 
-export var latencyCheck = '';
+export var latencyCheck = ''
 export var latency = 0
 
 export const uuidParseNano = (uuid) => {
   // Get nanosecond current timestamp string length
-  let tl = 16;
+  let tl = 16
   // Strip out timestamp from UUID
-  let ts = '';
-  let i = -1;
-  while(tl--) {
-    i++;
+  let ts = ''
+  let i = -1
+  while (tl--) {
+    i++
     // If special symbols, skip
-    if(i===8||i===13||i===14||i===18||i===19||i===23) {
-      tl++;
-      continue;
+    if (i === 8 || i === 13 || i === 14 || i === 18 || i === 19 || i === 23) {
+      tl++
+      continue
     }
     // If timestamp, copy
-    ts += uuid[i];
+    ts += uuid[i]
   }
-  return BigInt(ts);
+  return BigInt(ts)
 }
 
 export const uuidv1ToMs = (uuidv1) => {
   try {
-    const uuid_arr = uuidv1.split( '-' );
-    const time_str = [
-      uuid_arr[ 2 ].substring( 1 ),
-      uuid_arr[ 1 ],
-      uuid_arr[ 0 ]
-    ].join( '' );
-    const int_time = parseInt( time_str, 16 ) - 122192928000000000;
-    const int_millisec = Math.floor( int_time / 10000 );
-    return int_millisec;
-  } catch(err) {
-    console.log(`Error converting uuidv1 to ms: ${uuidv1}`);
-    console.log(err);
-    return 0;
-  }  
-};
+    const uuid_arr = uuidv1.split('-')
+    const time_str = [uuid_arr[2].substring(1), uuid_arr[1], uuid_arr[0]].join('')
+    const int_time = parseInt(time_str, 16) - 122192928000000000
+    const int_millisec = Math.floor(int_time / 10000)
+    return int_millisec
+  } catch (err) {
+    console.log(`Error converting uuidv1 to ms: ${uuidv1}`)
+    console.log(err)
+    return 0
+  }
+}
 
 export function findPossibleIndicesForNextMove(moves: number[], newNumber: number): number[] {
-  const possibleIndices: number[] = [];
+  const possibleIndices: number[] = []
 
   // Iterate through the moves array
   for (let i = 0; i < moves.length; i++) {
     if (moves[i] === 0) {
       // Check if newNumber can replace the 0 while maintaining order
-      let isValid = true;
-      
+      let isValid = true
+
       // Check if there are higher or lower non-zero values
       for (let j = i - 1; j >= 0; j--) {
         if (moves[j] !== 0) {
           if (newNumber < moves[j]) {
-            isValid = false;
-            break;
+            isValid = false
+            break
           }
         }
       }
@@ -356,46 +355,46 @@ export function findPossibleIndicesForNextMove(moves: number[], newNumber: numbe
       for (let k = i + 1; k < moves.length; k++) {
         if (moves[k] !== 0) {
           if (newNumber > moves[k]) {
-            isValid = false;
-            break;
+            isValid = false
+            break
           }
         }
       }
 
       if (isValid) {
-        possibleIndices.push(i);
+        possibleIndices.push(i)
       }
     }
   }
 
-  return possibleIndices;
+  return possibleIndices
 }
 
 export const formatTimeDiff = (time1, time2) => {
-  const diff = Math.abs(time2 - time1);
-  const year = 31536000000;
-  const day = 86400000;
-  const hour = 3600000;
-  const minute = 60000;
-  const second = 1000;
-  
-  const years = Math.floor(diff / year);
-  const days = Math.floor((diff % year) / day);
-  const hours = Math.floor((diff % day) / hour);
-  const minutes = Math.floor((diff % hour) / minute);
-  const seconds = Math.floor((diff % minute) / second);
-  const milliseconds = parseFloat((diff % second).toFixed(3));
+  const diff = Math.abs(time2 - time1)
+  const year = 31536000000
+  const day = 86400000
+  const hour = 3600000
+  const minute = 60000
+  const second = 1000
 
-  var result: string[] = [];
-  if (years) result.push(`${years} year${years > 1 ? 's' : ''}`);
-  if (days) result.push(`${days} day${days > 1 ? 's' : ''}`);
-  if (hours) result.push(`${hours} hour${hours > 1 ? 's' : ''}`);
-  if (minutes) result.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
-  if (seconds) result.push(`${seconds} second${seconds > 1 ? 's' : ''}`);
-  if (milliseconds) result.push(`${milliseconds} millisecond${milliseconds > 0 && milliseconds < 2 ? '' : 's'}`);
+  const years = Math.floor(diff / year)
+  const days = Math.floor((diff % year) / day)
+  const hours = Math.floor((diff % day) / hour)
+  const minutes = Math.floor((diff % hour) / minute)
+  const seconds = Math.floor((diff % minute) / second)
+  const milliseconds = parseFloat((diff % second).toFixed(3))
 
-  return result.join(', ');
-} 
+  var result: string[] = []
+  if (years) result.push(`${years} year${years > 1 ? 's' : ''}`)
+  if (days) result.push(`${days} day${days > 1 ? 's' : ''}`)
+  if (hours) result.push(`${hours} hour${hours > 1 ? 's' : ''}`)
+  if (minutes) result.push(`${minutes} minute${minutes > 1 ? 's' : ''}`)
+  if (seconds) result.push(`${seconds} second${seconds > 1 ? 's' : ''}`)
+  if (milliseconds) result.push(`${milliseconds} millisecond${milliseconds > 0 && milliseconds < 2 ? '' : 's'}`)
+
+  return result.join(', ')
+}
 
 const replyColorNames = [
   'replyGold',
@@ -409,61 +408,68 @@ const replyColorNames = [
   'reply700',
   'reply800',
   'reply900',
-  'reply1000'
-];
+  'reply1000',
+]
 
 export function getReplyColorName(time: number, per: number = 100) {
-  if(typeof(time) === 'string') {time = parseFloat(time)}
-  const intervalIndex = Math.ceil(Math.round(time) / per);
+  if (typeof time === 'string') {
+    time = parseFloat(time)
+  }
+  const intervalIndex = Math.ceil(Math.round(time) / per)
   if (time < 1) {
-    return replyColorNames[0];
+    return replyColorNames[0]
   }
   if (intervalIndex >= replyColorNames.length) {
-    return replyColorNames[replyColorNames.length - 1];
+    return replyColorNames[replyColorNames.length - 1]
   }
-  return replyColorNames[intervalIndex];
+  return replyColorNames[intervalIndex]
 }
 
 export const convertToTimestamp = (uuid) => {
   // should return epoch time as a number or null if invalid input
   try {
-    if(uuid_validate(uuid)) {
-        return Number(uuidParseNano(uuid)) / 1000;
+    if (uuid_validate(uuid)) {
+      return Number(uuidParseNano(uuid)) / 1000
     } else {
-        return null;
+      return null
     }
-  }
-  catch(err) {
-    console.log(err);
-    return null;
+  } catch (err) {
+    console.log(err)
+    return null
   }
 }
 
 export const isValidHexColor = (color: string): boolean => {
-  const hexColorRegex = /^[0-9A-Fa-f]{6}$/;
-  return hexColorRegex.test(color);
+  const hexColorRegex = /^[0-9A-Fa-f]{6}$/
+  return hexColorRegex.test(color)
 }
 
 export const convertMsToFancyTime = (ms: number) => {
-  const hours = Math.floor(ms / 3600000).toString().padStart(1, '0');
-  ms %= 3600000;
-  const minutes = Math.floor(ms / 60000).toString().padStart((parseInt(hours) > 0 ? 2 : 1), '0');
-  ms %= 60000;
-  const seconds = Math.floor(ms / 1000).toString().padStart(parseInt(hours) > 0 ? 2 : parseInt(minutes) > 0 ? 2 : 1, '0');
-  const millisecondsFormatted = (ms % 1000).toString().padStart(3, '0');
-  
-  return `${parseInt(hours) > 0 ? `${hours}:` : ``}${parseInt(hours) > 0 ? `${minutes}:` : parseInt(minutes) > 0 ? `${minutes}:` : ``}${seconds}.${millisecondsFormatted}`;
+  const hours = Math.floor(ms / 3600000)
+    .toString()
+    .padStart(1, '0')
+  ms %= 3600000
+  const minutes = Math.floor(ms / 60000)
+    .toString()
+    .padStart(parseInt(hours) > 0 ? 2 : 1, '0')
+  ms %= 60000
+  const seconds = Math.floor(ms / 1000)
+    .toString()
+    .padStart(parseInt(hours) > 0 ? 2 : parseInt(minutes) > 0 ? 2 : 1, '0')
+  const millisecondsFormatted = (ms % 1000).toString().padStart(3, '0')
+
+  return `${parseInt(hours) > 0 ? `${hours}:` : ``}${parseInt(hours) > 0 ? `${minutes}:` : parseInt(minutes) > 0 ? `${minutes}:` : ``}${seconds}.${millisecondsFormatted}`
 }
 
 interface Level {
-  level: string;
-  xpRequired: number;
-  minXP: number;
+  level: string
+  xpRequired: number
+  minXP: number
 }
 
 export const levelThresholds: Level[] = [
   { level: '1', xpRequired: 100, minXP: 0 },
-  { level: '2', xpRequired: 250, minXP: 100},
+  { level: '2', xpRequired: 250, minXP: 100 },
   { level: '3', xpRequired: 500, minXP: 250 },
   { level: '4', xpRequired: 800, minXP: 500 },
   { level: '5', xpRequired: 1200, minXP: 800 },
@@ -511,11 +517,11 @@ export const levelThresholds: Level[] = [
   { level: '47', xpRequired: 2270000, minXP: 2020202 },
   { level: '48', xpRequired: 2600000, minXP: 2270000 },
   { level: '49', xpRequired: 3000000, minXP: 2600000 },
-  { level: '50', xpRequired: 3500000, minXP: 3000000 }, 
-  { level: '51', xpRequired: 4000000, minXP: 3500000 }, 
-  { level: '52', xpRequired: 4500000, minXP: 4000000 }, 
-  { level: '53', xpRequired: 5000000, minXP: 4500000 }, 
-  { level: '54', xpRequired: 5500000, minXP: 5000000 }, 
+  { level: '50', xpRequired: 3500000, minXP: 3000000 },
+  { level: '51', xpRequired: 4000000, minXP: 3500000 },
+  { level: '52', xpRequired: 4500000, minXP: 4000000 },
+  { level: '53', xpRequired: 5000000, minXP: 4500000 },
+  { level: '54', xpRequired: 5500000, minXP: 5000000 },
   { level: '55', xpRequired: 6000000, minXP: 5500000 },
   { level: '56', xpRequired: 6500000, minXP: 6000000 },
   { level: '57', xpRequired: 7000000, minXP: 6500000 },
@@ -528,33 +534,32 @@ export const levelThresholds: Level[] = [
   { level: '64', xpRequired: 11111111, minXP: 10000000 },
   { level: '65', xpRequired: 11111111, minXP: 11111111 },
   // Maximum level
-];
+]
 
 export const calculateLevel = (totalXP) => {
-  let level: Level = { level: '1', xpRequired: 100, minXP: 0 };
+  let level: Level = { level: '1', xpRequired: 100, minXP: 0 }
   for (let i = levelThresholds.length - 1; i >= 0; i--) {
     if (totalXP >= levelThresholds[i].minXP) {
-      level = levelThresholds[i];
-      break;
+      level = levelThresholds[i]
+      break
     }
   }
-  return level;
+  return level
 }
 
 export function snowflakeToTime(snowflake) {
-  const discordEpoch = 1420070400000; // Discord Epoch in milliseconds
-  const timestamp = (snowflake / 4194304) + discordEpoch;
-  return new Date(timestamp);
+  const discordEpoch = 1420070400000 // Discord Epoch in milliseconds
+  const timestamp = snowflake / 4194304 + discordEpoch
+  return new Date(timestamp)
 }
 
-
 export const standardizeFormatOptions = ['Disabled', 'No Separator', 'Commas', 'Periods', 'Spaces']
-export const nightModeOptions = ['System', 'On', 'Off'];
-export const submitShortcutOptions = ['CtrlEnter', 'Enter', 'Off'];
-export const customStrickenOptions = ['Disabled', 'Enabled', 'Inverse'];
-export const soundOnStrickenOptions = ['Disabled', 'All Stricken', 'Only My Counts'];
-export const postStyleOptions = ['Default', 'LC', 'Minimal'];
-export const clearOptions = ['Clear', 'No Clear', 'Clipboard', 'Custom'];
-export const nightModeColorOptions = ['Default', 'Light', 'Dark'];
-export const postPositionOptions = ['Left', 'Right', ];
-export const hideStrickenOptions = ['Disabled', 'Minimize', 'Hide'];
+export const nightModeOptions = ['System', 'On', 'Off']
+export const submitShortcutOptions = ['CtrlEnter', 'Enter', 'Off']
+export const customStrickenOptions = ['Disabled', 'Enabled', 'Inverse']
+export const soundOnStrickenOptions = ['Disabled', 'All Stricken', 'Only My Counts']
+export const postStyleOptions = ['Default', 'LC', 'Minimal']
+export const clearOptions = ['Clear', 'No Clear', 'Clipboard', 'Custom']
+export const nightModeColorOptions = ['Default', 'Light', 'Dark']
+export const postPositionOptions = ['Left', 'Right']
+export const hideStrickenOptions = ['Disabled', 'Minimize', 'Hide']

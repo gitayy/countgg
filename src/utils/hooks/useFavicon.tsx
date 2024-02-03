@@ -1,10 +1,8 @@
-import { useEffect, useRef } from "react";
-import tinycon from "tinycon";
+import { useEffect, useRef } from 'react'
+import tinycon from 'tinycon'
 
 export function useFavicon() {
-
-
-  const countRef = useRef(0);
+  const countRef = useRef(0)
 
   tinycon.setOptions({
     // width: 7,
@@ -15,7 +13,7 @@ export function useFavicon() {
     color: '#ffffff',
     // background: '#145365',
     fallback: true,
-  });
+  })
 
   useEffect(() => {
     // tinycon.setOptions({ width: 16, height: 16, fallback: true });
@@ -23,29 +21,29 @@ export function useFavicon() {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         // Store the current count when the page is hidden
-        tinycon.setBubble(0);
+        tinycon.setBubble(0)
       } else {
         // Restore the previous count when the page is visible again
-        countRef.current = 0;
-        tinycon.setBubble(countRef.current);        
-        tinycon.reset();
+        countRef.current = 0
+        tinycon.setBubble(countRef.current)
+        tinycon.reset()
       }
-    };
+    }
 
     // Listen for visibility changes and update the favicon accordingly
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     // Clean up the event listener on unmount
     return () => {
-        tinycon.reset();
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, []);
+      tinycon.reset()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
 
   const setCount = () => {
-    countRef.current += 1;
-    tinycon.setBubble(countRef.current);
-  };
+    countRef.current += 1
+    tinycon.setBubble(countRef.current)
+  }
 
-  return setCount;
+  return setCount
 }

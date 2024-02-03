@@ -1,5 +1,5 @@
-import { createContext } from 'react';
-import { io } from 'socket.io-client';
+import { createContext } from 'react'
+import { io } from 'socket.io-client'
 
 export const socket = io(`${process.env.REACT_APP_SOCKET_HOST}`, {
   withCredentials: true,
@@ -10,11 +10,10 @@ export const socket = io(`${process.env.REACT_APP_SOCKET_HOST}`, {
   transports: ['websocket', 'polling'],
   // transports: ['polling', 'websocket'],
   // transports: ['websocket'],
-});
+})
 
+// socket.on(`site_version`, function(data) {
+//   if(setLoadedSiteVer) {setLoadedSiteVer(data)}
+// });
 
-    // socket.on(`site_version`, function(data) {
-    //   if(setLoadedSiteVer) {setLoadedSiteVer(data)}
-    // });
-
-export const SocketContext = createContext(socket);
+export const SocketContext = createContext(socket)

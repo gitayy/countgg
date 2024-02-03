@@ -1,6 +1,6 @@
-import { makeStyles, Card, CardHeader, CardContent, Typography, IconButton, Button, Box, Modal } from '@mui/material';
-import React, { useState } from 'react';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { makeStyles, Card, CardHeader, CardContent, Typography, IconButton, Button, Box, Modal } from '@mui/material'
+import React, { useState } from 'react'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 // const useStyles = makeStyles((theme) => ({
 const stylez = {
@@ -22,65 +22,69 @@ const stylez = {
 // }));
 
 export const InventoryItem = (props: any) => {
-  const [expanded, setExpanded] = useState(false);
-//   const classes = useStyles();
+  const [expanded, setExpanded] = useState(false)
+  //   const classes = useStyles();
 
   const handleExpandClick = () => {
-    setExpanded(!expanded);
-  };
-
-  const [noteModalOpen, setNoteModalOpen] = useState(false);
-
-  const handleNoteOpen = () => {
-    setNoteModalOpen(true);
-  };
-
-  const handleNoteClose = () => {
-    setNoteModalOpen(false);
-  };
-
-  const typeEmojis = {
-    'key': '🔑',
-    'note': '🗒️'
+    setExpanded(!expanded)
   }
 
-  const noteLines = props.content ? props.content.split('\n') : [];
+  const [noteModalOpen, setNoteModalOpen] = useState(false)
 
-  return (<>
-    <Card sx={{maxWidth: 300, m: 1, minWidth: 300}}>
-      <CardHeader title={`${typeEmojis[props.type] ? `${typeEmojis[props.type]} ` : ''}${props.name}`} sx={{p: 1}} />
-      <CardContent
-        sx={{
+  const handleNoteOpen = () => {
+    setNoteModalOpen(true)
+  }
+
+  const handleNoteClose = () => {
+    setNoteModalOpen(false)
+  }
+
+  const typeEmojis = {
+    key: '🔑',
+    note: '🗒️',
+  }
+
+  const noteLines = props.content ? props.content.split('\n') : []
+
+  return (
+    <>
+      <Card sx={{ maxWidth: 300, m: 1, minWidth: 300 }}>
+        <CardHeader title={`${typeEmojis[props.type] ? `${typeEmojis[props.type]} ` : ''}${props.name}`} sx={{ p: 1 }} />
+        <CardContent
+          sx={{
             cursor: 'pointer',
-    // height: expanded ? 'auto' : 72,
-    height: 'auto',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    transition: 'height 0.3s',
-    p: 1
-        }}
-        // className={`${classes.content} ${expanded && classes.expanded}`}
-        // onClick={handleExpandClick}
-      >
-        {props.type === 'note' && <Button onClick={handleNoteOpen} variant='contained'>Read</Button>}
-      </CardContent>
-      {expanded && (
-        <CardContent sx={{p: 1}}>
-            <Typography variant="body2">{props.description}</Typography>
-          <Typography component={'div'} variant="caption">Unlocked by: {props.unlocker}</Typography>
-          <Typography component={'div'} variant="caption">Timestamp: {props.timestamp}</Typography>
+            // height: expanded ? 'auto' : 72,
+            height: 'auto',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            transition: 'height 0.3s',
+            p: 1,
+          }}
+          // className={`${classes.content} ${expanded && classes.expanded}`}
+          // onClick={handleExpandClick}
+        >
+          {props.type === 'note' && (
+            <Button onClick={handleNoteOpen} variant="contained">
+              Read
+            </Button>
+          )}
         </CardContent>
-      )}
-      <IconButton onClick={handleExpandClick}>
-        <ExpandMoreIcon />
-      </IconButton>
-    </Card>
-    <Modal
-        open={noteModalOpen}
-        onClose={handleNoteClose}
-        aria-labelledby="modal-title"
-        aria-describedby="modal-description"
-      >
+        {expanded && (
+          <CardContent sx={{ p: 1 }}>
+            <Typography variant="body2">{props.description}</Typography>
+            <Typography component={'div'} variant="caption">
+              Unlocked by: {props.unlocker}
+            </Typography>
+            <Typography component={'div'} variant="caption">
+              Timestamp: {props.timestamp}
+            </Typography>
+          </CardContent>
+        )}
+        <IconButton onClick={handleExpandClick}>
+          <ExpandMoreIcon />
+        </IconButton>
+      </Card>
+      <Modal open={noteModalOpen} onClose={handleNoteClose} aria-labelledby="modal-title" aria-describedby="modal-description">
         <Box
           sx={{
             position: 'absolute',
@@ -100,15 +104,23 @@ export const InventoryItem = (props: any) => {
           <p id="modal-description">
             {/* {props.content} */}
             <>
-      {noteLines.map((line, index) => (
-        <Typography sx={{mb: 2}} key={index}>{line}</Typography>
-        // <Typography variant="body2" key={index}>{line}</Typography>
-      ))}
-    </>
-            </p>
-          <Button onClick={() => {handleNoteClose()}}>Close</Button>
+              {noteLines.map((line, index) => (
+                <Typography sx={{ mb: 2 }} key={index}>
+                  {line}
+                </Typography>
+                // <Typography variant="body2" key={index}>{line}</Typography>
+              ))}
+            </>
+          </p>
+          <Button
+            onClick={() => {
+              handleNoteClose()
+            }}
+          >
+            Close
+          </Button>
         </Box>
-      </Modal> 
+      </Modal>
     </>
-  );
-};
+  )
+}

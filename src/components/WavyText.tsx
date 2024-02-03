@@ -1,4 +1,4 @@
-const WavyText = ({text}) => {
+const WavyText = ({ text }) => {
   return (
     // <div className="wrap">
     //   <h1>{text.split('').map((char, index) => <span key={index}>{char}</span>)}</h1>
@@ -12,34 +12,34 @@ const WavyText = ({text}) => {
         </h1>
       ))}
     </div>
-  );
-};
+  )
+}
 
-export default WavyText;
+export default WavyText
 
 // const WavyText = ({ text }) => {
 //     const b = "#222";
 //     const num = 20;
-  
+
 //     const stroked = (stroke, color) => {
 //       let shadow: string[] = [];
 //       const from = stroke * -1;
-  
+
 //       for (let i = from; i <= stroke; i++) {
 //         for (let j = from; j <= stroke; j++) {
 //           shadow.push(`${i}px ${j}px 0 ${color}`);
 //         }
 //       }
-  
+
 //       return shadow.join(', ');
 //     };
-  
+
 //     const strokeMixin = (stroke, color) => {
 //       return {
 //         textShadow: stroked(stroke, color),
 //       };
 //     };
-  
+
 //     return (
 //       <div style={{ background: b, width: '100%', height: '100vh', overflow: 'hidden', fontFamily: 'Coop' }}>
 //         <div style={{ position: 'absolute', left: '50%', top: '50%', width: '300px', height: '300px', transform: 'translateX(-50%) translateY(-50%)' }}>
@@ -74,5 +74,5 @@ export default WavyText;
 //       </div>
 //     );
 //   };
-  
+
 //   export default WavyText;

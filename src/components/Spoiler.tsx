@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import { Box, Accordion, AccordionSummary, AccordionDetails, Typography } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import React, { useState } from 'react'
+import { Box, Accordion, AccordionSummary, AccordionDetails, Typography } from '@mui/material'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 
 const Spoiler = ({ title, children }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(false)
 
   const toggleExpanded = () => {
-    setExpanded(!expanded);
-  };
+    setExpanded(!expanded)
+  }
 
   return (
     <Box
@@ -15,8 +15,8 @@ const Spoiler = ({ title, children }) => {
       borderRadius="4px"
       overflow="hidden"
       border="1px solid"
-      borderColor={expanded ? "text.primary" : "divider"}
-      bgcolor={expanded ? "text.primary" : "background.paper"}
+      borderColor={expanded ? 'text.primary' : 'divider'}
+      bgcolor={expanded ? 'text.primary' : 'background.paper'}
     >
       <Accordion expanded={expanded} onChange={toggleExpanded}>
         <AccordionSummary
@@ -24,27 +24,23 @@ const Spoiler = ({ title, children }) => {
           aria-controls="spoiler-content"
           id="spoiler-header"
           sx={{
-            cursor: "pointer",
-            "&:hover": {
-              backgroundColor: "text.primary",
-              color: "background.paper",
+            cursor: 'pointer',
+            '&:hover': {
+              backgroundColor: 'text.primary',
+              color: 'background.paper',
             },
           }}
         >
           {title}
         </AccordionSummary>
         <AccordionDetails>
-          <Box
-            p={2}
-            bgcolor="background.paper"
-            color="text.primary"
-          >
+          <Box p={2} bgcolor="background.paper" color="text.primary">
             {children}
           </Box>
         </AccordionDetails>
       </Accordion>
     </Box>
-  );
-};
+  )
+}
 
-export default Spoiler;
+export default Spoiler

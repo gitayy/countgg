@@ -1,26 +1,28 @@
-import { Grid, Card, CardContent, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableRow } from "@mui/material";
+import { Grid, Card, CardContent, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableRow } from '@mui/material'
 
 interface ThreadStats {
-    posts?: number;
-    counts: number;
-    mistakes: number;
-    odds: number;
-    evens: number;
-    first_count: string;
-  }
-  
-  interface ThreadStatsCardProps {
-    threadTitle: string;
-    threadData: ThreadStats;
-    color?: string;
-  }
-  
-  const ThreadStatsCard: React.FC<ThreadStatsCardProps> = ({ threadTitle, threadData, color }) => {
-    return (
-      <Card sx={{...color && {background: color}}}>
-        <CardContent>
-          <Typography variant="h5" sx={{textAlign: 'center', ...color && {color: 'black'}}}>{threadTitle === 'all' ? 'Sitewide' : threadTitle}</Typography>
-          <TableContainer component={Paper}>
+  posts?: number
+  counts: number
+  mistakes: number
+  odds: number
+  evens: number
+  first_count: string
+}
+
+interface ThreadStatsCardProps {
+  threadTitle: string
+  threadData: ThreadStats
+  color?: string
+}
+
+const ThreadStatsCard: React.FC<ThreadStatsCardProps> = ({ threadTitle, threadData, color }) => {
+  return (
+    <Card sx={{ ...(color && { background: color }) }}>
+      <CardContent>
+        <Typography variant="h5" sx={{ textAlign: 'center', ...(color && { color: 'black' }) }}>
+          {threadTitle === 'all' ? 'Sitewide' : threadTitle}
+        </Typography>
+        <TableContainer component={Paper}>
           <Table size="small">
             <TableBody>
               <TableRow>
@@ -46,9 +48,9 @@ interface ThreadStats {
             </TableBody>
           </Table>
         </TableContainer>
-        </CardContent>
-      </Card>
-    );
-  };
-  
-  export default ThreadStatsCard;
+      </CardContent>
+    </Card>
+  )
+}
+
+export default ThreadStatsCard
