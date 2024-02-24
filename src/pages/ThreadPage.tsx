@@ -1561,6 +1561,12 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
                     Reset on mistakes: {thread.resetOnMistakes.toString()}
                   </Typography>
                   <Typography sx={{ fontSize: 9 }} variant="body2">
+                    Validation type: {thread.validationType}
+                  </Typography>
+                  <Typography sx={{ fontSize: 9 }} variant="body2">
+                    First count: {thread.firstValidCount}
+                  </Typography>
+                  <Typography sx={{ fontSize: 9 }} variant="body2">
                     UUID: {thread.uuid}
                   </Typography>
                 </Box>
