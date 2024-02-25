@@ -209,14 +209,16 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     let start
     let end
     try {
-      start = countNumber1 !== null ? await findPost(countNumber1, null) : await findPost(null, rawCount1)
-      end = countNumber2 !== null ? await findPost(countNumber2, null) : await findPost(null, rawCount2)
+      start = countNumber1 !== null ? await findPostByThreadAndNumber(countNumber1.toString(), thread?.uuid) : await findPostByThreadAndRawCount(rawCount1, thread?.uuid)
+      end = countNumber2 !== null ? await findPostByThreadAndNumber(countNumber2.toString(), thread?.uuid) : await findPostByThreadAndRawCount(rawCount2, thread?.uuid)
     } catch (err) {
       setSnackbarSeverity('error')
       setSnackbarOpen(true)
       setSnackbarMessage('Error: Post not found, or server rejected your request.')
       return
     }
+    start = start.data.posts[0]
+    end = end.data.posts[0]
     if (start === undefined || end === undefined) return
     if (parseFloat(end.timestamp) <= parseFloat(start.timestamp)) return
     socket.emit('leave_threads')
