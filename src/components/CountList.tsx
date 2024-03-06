@@ -280,11 +280,23 @@ const CountList = memo((props: any) => {
 
   const handlePosting = async () => {
     const throttleCheck = performance.now() - throttle.current
-    if (
-      props.thread && props.thread.validationType === 'bars'
-        ? throttleCheck < 1000
-        : throttleCheck < Math.min(500, Math.max(35, 35 + burstThrottleCount.current * 20))
+    let throttled;
+    if(props.thread && props.thread.validationType === 'bars') {
+      throttled = throttleCheck < 1000
+    } else if(props.thread && props.thread.validationType === 'tugofwar' && props.recentCounts.current &&
+    new Set(
+      props.recentCounts.current
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 50)
+      .filter(currentCount => currentCount.isValidCount)
+      .map(validCount => validCount.rawCount)
+    ).size < 10
     ) {
+      throttled = throttleCheck < 1000
+    } else {
+      throttled = throttleCheck < Math.min(500, Math.max(35, 35 + burstThrottleCount.current * 20))
+    }
+    if (throttled) {
       console.log(`You are being throttled. Start: ${throttle.current}, end: ${performance.now()} (${throttleCheck}ms difference)`)
       throttleCount.current += 1
       burstThrottleCount.current += 1
