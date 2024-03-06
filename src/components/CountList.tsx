@@ -290,7 +290,7 @@ const CountList = memo((props: any) => {
       .slice(0, 50)
       .filter(currentCount => currentCount.isValidCount)
       .map(validCount => validCount.rawCount)
-    ).size < 10
+    ).size <= 15
     ) {
       throttled = throttleCheck < 1000
     } else {
