@@ -98,6 +98,10 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       if (setThreadName) {
         setThreadName(undefined)
       }
+      setLoadedOldest(false);
+      setLoadedNewest(true);
+      setLoadedOldestChats(false);
+      setLoadedNewestChats(true);
     }
   }, [thread_name, setThreadName])
   const navigate = useNavigate()
