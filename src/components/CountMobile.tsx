@@ -70,6 +70,7 @@ const CountMobile = memo((props: any) => {
       'alphanumerics',
       'base62',
       'base64',
+      'coordinates',
       'wave',
       'mayan',
     ].includes(props.thread.validationType) &&
