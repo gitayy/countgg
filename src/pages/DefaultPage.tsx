@@ -74,7 +74,7 @@ export const DefaultPage = () => {
     // Check if threadLeaderboards is defined and not empty
     if (threadLeaderboards) {
       Object.keys(threadLeaderboards).forEach((threadUUID) => {
-        if (['all', 'last_updated', 'total_counts'].includes(threadUUID)) return
+        if (['all', 'last_updated', 'total_counts', 'total_posts', 'total_xp'].includes(threadUUID)) return
         const threadData = threadLeaderboards[threadUUID]
         const sum = Object.values(threadData).reduce((acc, { counts }) => acc + counts, 0)
         sums[threadUUID] = sum
@@ -103,8 +103,10 @@ export const DefaultPage = () => {
     // }
 
     socket.on('defaultPage', function (data) {
-      const { users_online, total_online_time, total_counts, daily_leaderboard, all_leaderboards } = data
+      const { users_online, total_online_time, total_counts, total_posts, total_xp, daily_leaderboard, all_leaderboards } = data
       setTotalCounts(total_counts)
+      setTotalPosts(total_posts)
+      setTotalXP(total_xp)
       setUsersOnline(users_online)
       setDailyLeaderboard(daily_leaderboard)
       setThreadLeaderboards(all_leaderboards)
@@ -112,8 +114,10 @@ export const DefaultPage = () => {
     })
 
     socket.on('post', function (data) {
-      const { post, counter, thread, total_counts } = data
+      const { post, counter, thread, total_counts, total_posts, total_xp } = data
       setTotalCounts(total_counts)
+      setTotalPosts(total_posts);
+      setTotalXP(total_xp);
       if (post.isValidCount) {
         setLastCount({ lastCount: post, lastCounter: counter })
         if (counter && counter.uuid) {
@@ -176,6 +180,8 @@ export const DefaultPage = () => {
 
   const [count, setCount] = useState(30)
   const [totalCounts, setTotalCounts] = useState(-1)
+  const [totalPosts, setTotalPosts] = useState(-1)
+  const [totalXP, setTotalXP] = useState(-1)
   const [usersOnline, setUsersOnline] = useState(-1)
 
   useEffect(() => {
@@ -214,9 +220,17 @@ export const DefaultPage = () => {
     setRegisterModalOpen(false)
   }
 
+  const [mainStatRotation, setMainStatRotation] = useState(0);
+  const [mainStatNumber, setMainStatNumber] = useState(-1);
+  const [mainStatLabel, setMainStatLabel] = useState("Counts");
+
+  const handleMainStatClick = () => {
+    setMainStatRotation(prevMainStatRotation => (prevMainStatRotation + 1) % 4)
+  }
+
   const miniMainItem = (icon, title: string, href: string, mustBeRegistered = false) => {
     return (
-      <Grid item xs={12} lg={6} sx={{ padding: '6px' }}>
+      <Grid item xs={12} lg={6} sx={{ padding: '6px', whiteSpace: 'pre' }}>
         <Link
           color={'inherit'}
           underline="none"
@@ -232,7 +246,7 @@ export const DefaultPage = () => {
         >
           <Paper
             className="littlescale card"
-            elevation={8}
+            elevation={2}
             sx={{
               background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
               cursor: 'pointer',
@@ -277,15 +291,43 @@ export const DefaultPage = () => {
             backgroundRepeat: 'no-repeat',
           }}
         >
-          <Typography variant="h1" sx={{ textAlign: 'center', m: 1 }}>
+          <Typography variant="h1" className='littlescale' onClick={() => {handleMainStatClick()}}  sx={{ textAlign: 'center', m: 1 }}>
             <Typography
               variant="h1"
               component={'span'}
               sx={{ textAlign: 'center', borderRadius: '10px', background: 'linear-gradient(to right, #FF8C00, #FFA500)' }}
             >
-              &nbsp;{totalCounts > -1 ? totalCounts.toLocaleString() : ''}&nbsp;
+              &nbsp;
+              {(() => {
+                switch (mainStatRotation) {
+                  case 0:
+                    return totalCounts > -1 ? totalCounts.toLocaleString() : '';
+                  case 1:
+                    return totalPosts > -1 ? totalPosts.toLocaleString() : '';
+                  case 2:
+                    return totalXP > -1 ? totalXP.toLocaleString() : '';
+                  case 3:
+                    return totalTimeOnline > 0 ? Math.floor((totalTimeOnline / (1000 * 60 * 60))).toLocaleString() : '';
+                  default:
+                    totalCounts > -1 ? totalCounts.toLocaleString() : '';
+                }
+              })()}
+              &nbsp;
             </Typography>{' '}
-            Counts
+            {(() => {
+                switch (mainStatRotation) {
+                  case 0:
+                    return 'Counts';
+                  case 1:
+                    return 'Posts';
+                  case 2:
+                    return 'XP';
+                  case 3:
+                    return 'Hours Online';
+                  default:
+                    return 'Counts';
+                }
+              })()}
           </Typography>
           <Typography variant="body1" component={'div'} sx={{ textAlign: 'center', m: 1 }}>
             <Chip
@@ -295,11 +337,11 @@ export const DefaultPage = () => {
               label={`${usersOnline.toLocaleString()} user${usersOnline === 1 ? `` : 's'} online`}
             />{' '}
             <Chip label={`${sumCounts.toLocaleString()} counts today`} />{' '}
-            <Chip label={`Time spent counting: ${formatTimeDiff(0, totalTimeOnline)}`} />
+            {/* <Chip label={`Time spent counting: ${formatTimeDiff(0, totalTimeOnline)}`} /> */}
           </Typography>
           {!counter && (
             <Paper
-              elevation={8}
+              elevation={2}
               sx={{
                 mb: 2,
                 display: 'flex',
@@ -400,7 +442,7 @@ export const DefaultPage = () => {
                   >
                     <Paper
                       className="littlescale card"
-                      elevation={8}
+                      elevation={2}
                       sx={{
                         background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
                         cursor: 'pointer',
@@ -426,7 +468,7 @@ export const DefaultPage = () => {
                 </Grid>
                 {/* <Grid item xs={12} md={12}>
             <Link color={'inherit'} underline='none' href={`/rps`} onClick={(e) => {e.preventDefault();navigate(`/rps`);}}>
-              <Paper className="littlescale card" elevation={8} sx={{
+              <Paper className="littlescale card" elevation={2} sx={{
                 background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
                 cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
               <Grid container spacing={2}>
@@ -442,7 +484,7 @@ export const DefaultPage = () => {
           </Grid> */}
                 {/* <Grid item xs={12} md={6}>
             <Link color={'inherit'} underline='none' href={`/battleship`} onClick={(e) => {e.preventDefault();navigate(`/battleship`);}}>
-              <Paper className="littlescale card" elevation={8} sx={{
+              <Paper className="littlescale card" elevation={2} sx={{
                 background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
                 cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
               <Grid container spacing={2}>
@@ -458,7 +500,7 @@ export const DefaultPage = () => {
           </Grid> */}
                 {/* <Grid item xs={12} sx={{padding: "6px"}}>
             <Link color={'inherit'} underline='none' href={`/lrwoed`} onClick={(e) => {e.preventDefault();navigate(`/lrwoed`);}}>
-              <Paper className="littlescale card" elevation={8} sx={{
+              <Paper className="littlescale card" elevation={2} sx={{
                 background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
                 cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
               <Grid container spacing={2}>
@@ -484,7 +526,7 @@ export const DefaultPage = () => {
                 {/* {miniMainItem(<ContentCutIcon style={{fontSize: 'inherit', marginRight: '5%'}} />, "RPS", "/rps")} */}
                 {/* <Grid item xs={6} sx={{padding: "6px"}}>
             <Link color={'inherit'} underline='none' href={`/shuffle`} onClick={(e) => {e.preventDefault();navigate(`/shuffle`);}}>
-              <Paper className="littlescale card" elevation={8} sx={{
+              <Paper className="littlescale card" elevation={2} sx={{
                 background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
                 cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
               <Grid container spacing={2}>
@@ -500,7 +542,7 @@ export const DefaultPage = () => {
           </Grid> */}
                 {/* <Grid item xs={12} sx={{padding: "6px"}}>
             <Link color={'inherit'} underline='none' href={isCounter ? `/r/livecounting` : undefined} onClick={isCounter ? (e) => {e.preventDefault();navigate(`/r/livecounting`);} : handleRegisterModalOpen}>
-              <Paper className="littlescale card" elevation={8} sx={{
+              <Paper className="littlescale card" elevation={2} sx={{
                 background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
                 cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
               <Grid container spacing={2}>
@@ -516,7 +558,7 @@ export const DefaultPage = () => {
           </Grid> */}
                 {/* <Grid item xs={12} md={6}>
             <Link color={'inherit'} underline='none' href={`/baseball`} onClick={(e) => {e.preventDefault();navigate(`/baseball`);}}>
-              <Paper className="littlescale card" elevation={8} sx={{
+              <Paper className="littlescale card" elevation={2} sx={{
                 background: 'linear-gradient(135deg,#1f005c, #5b0060, #870160, #ac255e, #ca485c, #e16b5c, #f39060, #ffb56b)',
                 cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
               <Grid container spacing={2}>
@@ -548,9 +590,10 @@ export const DefaultPage = () => {
                   >
                     <Paper
                       className="littlescale card"
-                      elevation={8}
+                      elevation={2}
                       sx={{
-                        background: 'linear-gradient(to right, #faf8f3, #eae4d9)',
+                        // background: 'linear-gradient(to right, #faf8f3, #eae4d9)',
+                        bgcolor: 'background.paper',
                         cursor: 'pointer',
                         mb: 2,
                         display: 'flex',
@@ -562,7 +605,7 @@ export const DefaultPage = () => {
                         <Grid item xs={12} md={12}>
                           <Typography
                             variant="h2"
-                            color={'black'}
+                            // color={'black'}
                             sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                           >
                             <GroupsIcon style={{ fontSize: 'inherit', marginRight: '5%' }} /> Users
@@ -584,9 +627,10 @@ export const DefaultPage = () => {
                   >
                     <Paper
                       className="littlescale card"
-                      elevation={8}
+                      elevation={2}
                       sx={{
-                        background: 'linear-gradient(to right, #faf8f3, #eae4d9)',
+                        // background: 'linear-gradient(to right, #faf8f3, #eae4d9)',
+                        bgcolor: 'background.paper',
                         cursor: 'pointer',
                         mb: 2,
                         display: 'flex',
@@ -598,7 +642,7 @@ export const DefaultPage = () => {
                         <Grid item xs={12} md={12}>
                           <Typography
                             variant="h2"
-                            color={'black'}
+                            // color={'black'}
                             sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                           >
                             <QueryStatsIcon style={{ fontSize: 'inherit', marginRight: '5%' }} /> Stats
@@ -624,9 +668,10 @@ export const DefaultPage = () => {
                   >
                     <Paper
                       className="littlescale card"
-                      elevation={8}
+                      elevation={2}
                       sx={{
-                        background: 'linear-gradient(to right, #faf8f3, #eae4d9)',
+                        // background: 'linear-gradient(to right, #faf8f3, #eae4d9)',
+                        bgcolor: 'background.paper',
                         cursor: 'pointer',
                         mb: 2,
                         display: 'flex',
@@ -638,7 +683,7 @@ export const DefaultPage = () => {
                         <Grid item xs={12} md={12}>
                           <Typography
                             variant="h2"
-                            color={'black'}
+                            // color={'black'}
                             sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                           >
                             <ShoppingCartIcon style={{ fontSize: 'inherit', marginRight: '30px' }} /> Shop
@@ -650,7 +695,7 @@ export const DefaultPage = () => {
                 </Grid>
                 {/* <Grid item xs={6} md={3}>
           <Link color={'inherit'} underline='none' href={`/blog`} onClick={(e) => {e.preventDefault();navigate(`/blog`);}}>
-            <Paper className="littlescale card" elevation={8} sx={{
+            <Paper className="littlescale card" elevation={2} sx={{
               background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
               cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
             <Grid container spacing={2}>
@@ -683,9 +728,10 @@ export const DefaultPage = () => {
                         >
                           <Paper
                             className="card"
-                            elevation={8}
+                            elevation={2}
                             sx={{
-                              background: 'linear-gradient(to right, #faf8f3, #eae4d9)',
+                              // background: 'linear-gradient(to right, #faf8f3, #eae4d9)',
+              bgcolor: theme.palette.mode === 'light' ? 'primary.light' : 'background.paper',
                               cursor: 'pointer',
                               mb: 2,
                               display: 'flex',
@@ -724,9 +770,10 @@ export const DefaultPage = () => {
                     >
                       <Paper
                         className="littlescale card"
-                        elevation={8}
+                        elevation={2}
                         sx={{
-                          background: 'linear-gradient(to right, #faf8f3, #eae4d9)',
+                          // background: 'linear-gradient(to right, #faf8f3, #eae4d9)',
+                          bgcolor: 'background.paper',
                           cursor: 'pointer',
                           mb: 2,
                           display: 'flex',
@@ -738,7 +785,7 @@ export const DefaultPage = () => {
                           <Grid item xs={12} md={12}>
                             <Typography
                               variant="h2"
-                              color={'black'}
+                              // color={'black'}
                               sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                             >
                               <StarsIcon style={{ fontSize: 'inherit', marginRight: '5%' }} /> Rewards
@@ -751,7 +798,7 @@ export const DefaultPage = () => {
                 </Grid>
                 {/* <Grid item xs={12} sm={6}>
           <Link color={'inherit'} underline='none' href={`/servers`} onClick={(e) => {e.preventDefault();navigate(`/servers`);}}>
-            <Paper className="littlescale card" elevation={8} sx={{
+            <Paper className="littlescale card" elevation={2} sx={{
               background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
               cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
             <Grid container spacing={2}>
@@ -767,7 +814,7 @@ export const DefaultPage = () => {
           </Grid> */}
                 {/* <Grid item xs={12} sm={6}>
           <Link color={'inherit'} underline='none' href={`/blogs`} onClick={(e) => {e.preventDefault();navigate(`/blogs`);}}>
-            <Paper className="littlescale card" elevation={8} sx={{
+            <Paper className="littlescale card" elevation={2} sx={{
               background: 'linear-gradient(to right, #faf8f3, #eae4d9)', 
               cursor: 'pointer', mb: 2, display: 'flex', alignItems: 'stretch', p: 2, }}>
             <Grid container spacing={2}>

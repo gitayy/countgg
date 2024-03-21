@@ -33,12 +33,13 @@ export const RulesPage: FC<Props> = ({ isRegistering, onceDone }) => {
       ],
     },
     {
-      title: 'At least three inputs per count: final two digits, and submit.',
+      title: '2+ manual inputs are required for each count. Minimum inputs per count: 1+ character of the post, and manually submitting.',
       description: [
-        `Scripts exist to automatically paste after submitting. These are allowed, but three inputs are required per count.`,
-        `You may not automatically increment the final two digits of a count. These must be inputted manually.`,
-        `You may not automatically submit. Each count must have a unique, manual submit input, separate from inputting the final two digits.`,
-        `Violations risk a ban. But don't be afraid to ask any questions about what may or may not be allowed.`,
+        `If you are not using external tools (macros, scripts, etc.), this rule should not be an issue.`,
+        `Auto-pasters are allowed (and are built into the site), but you are still required to input a portion of your post manually, and then submit your post manually.`,
+        `You may not automaticate the "submit" input. Each count must have a unique, manual "submit" input.`,
+        `Certain scripts may automcatically adjust your clipboard. Consult with the Discord community to ensure what you're using is allowed on a case-by-case basis. Generally, we will need 3+ inputs per count, even with these scripts.`,
+        `Blatant violations (fully automated inputs i.e. botting) risk a ban. Please don't be afraid to ask any questions about what may or may not be allowed.`,
       ],
     },
     {
