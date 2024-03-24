@@ -12,6 +12,7 @@ import {
   Theme,
   Tooltip,
   Input,
+  InputLabel,
 } from '@mui/material'
 import { memo, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { cachedCounters, loginRedirect } from '../utils/helpers'
@@ -40,6 +41,8 @@ const CountList = memo((props: any) => {
   const contextRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const customInputRef = useRef<HTMLInputElement>(null)
+  const noClearKeepInputRef = useRef<HTMLInputElement>(null)
+  const noClearDeleteInputRef = useRef<HTMLInputElement>(null)
   const [firstLoad, setFirstLoad] = useState(true)
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(user && user.pref_load_from_bottom ? true : false)
   const [isScrolledToTop, setIsScrolledToTop] = useState(user && user.pref_load_from_bottom ? false : true)
@@ -274,6 +277,14 @@ const CountList = memo((props: any) => {
         inputRef.current.value = await navigator.clipboard.readText()
       } else if (user && user.pref_clear === 'Custom') {
         inputRef.current.value = customInputRef.current ? customInputRef.current.value : ''
+      } else if (user && user.pref_clear === 'No Clear') {
+        inputRef.current.value = inputRef.current.value.substring(
+          0,
+          ((noClearKeepInputRef.current !== null && !isNaN(parseInt(noClearKeepInputRef.current.value)) ? parseInt(noClearKeepInputRef.current.value) : inputRef.current.value.length) - 
+          (noClearDeleteInputRef.current !== null && !isNaN(parseInt(noClearDeleteInputRef.current.value)) ? parseInt(noClearDeleteInputRef.current.value) : 0))
+      );
+        // inputRef.current.value = inputRef.current.value.substring(0, ((noClearKeepInputRef.current !== undefined && parseInt(noClearKeepInputRef.current.value)) ?? inputRef.current.value.length) - (noClearDeleteInputRef.current !== undefined && parseInt(noClearDeleteInputRef.current.value)) ?? 0)
+        // inputRef.current.value = noClearInputRef.current && !isNaN(parseInt(noClearInputRef.current.value)) ? inputRef.current.value.substring(0, inputRef.current.value.length - parseInt(noClearInputRef.current.value)) : inputRef.current.value;
       }
     }
   }
@@ -685,7 +696,7 @@ const CountList = memo((props: any) => {
           </Typography>
         </Box>
       )
-    } else if (isDesktop && counter && counter.roles.includes('counter') && props.thread && props.thread.locked === false) {
+    } else if (isDesktop && counter && counter.roles.includes('counter') && props.thread && props.thread.updatableBy.some(role => counter.roles.includes(role)) && props.thread.locked === false) {
       return (
         <Box
           ref={submitRef}
@@ -722,20 +733,46 @@ const CountList = memo((props: any) => {
             fullWidth
             multiline
             maxRows={4}
-            style={{ borderRadius: '20px', padding: '10px', width: user && user.pref_clear === 'Custom' ? '50%' : '70%' }}
+            style={{ borderRadius: '20px', padding: '10px', width: user && ['Custom', 'No Clear'].includes(user.pref_clear) ? '50%' : '70%' }}
             autoFocus
             inputRef={inputRef}
             inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: 'off' }}
           />
+          {user && user.pref_clear === 'No Clear' && (
+            <>
+            <Tooltip title="How many characters to keep.">
+              <TextField
+                maxRows={1}
+                variant='standard'
+                type='number'
+                sx={{ borderRadius: '20px', padding: '10px', width: '10%', mx: 0.5}}
+                inputRef={noClearKeepInputRef}
+                inputProps={{ inputMode: "numeric", spellCheck: 'false', autoCorrect: 'off' }}
+                helperText="Keep"
+              />
+            </Tooltip>
+            <Tooltip title="How many characters to delete.">
+              <TextField
+                maxRows={1}
+                type='number'
+                variant='standard'
+                sx={{ borderRadius: '20px', padding: '10px', width: '10%', mx: 0.5 }}
+                inputRef={noClearDeleteInputRef}
+                inputProps={{ inputMode: "numeric", spellCheck: 'false', autoCorrect: 'off' }}
+                helperText="Delete"
+              />
+            </Tooltip>
+            </>
+          )}
           {user && user.pref_clear === 'Custom' && (
-            <Input
-              // variant="outlined"
+            <TextField
+              variant="standard"
               maxRows={1}
               style={{ borderRadius: '20px', padding: '10px', width: '20%' }}
-              // autoFocus
               onInput={handleCustomInputChange}
               inputRef={customInputRef}
               inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: 'off' }}
+              helperText="Auto-paste"
             />
           )}
           {/* <TextField
@@ -753,7 +790,7 @@ const CountList = memo((props: any) => {
           </Tooltip>
         </Box>
       )
-    } else if (counter && counter.roles.includes('counter') && props.thread && props.thread.locked === false) {
+    } else if (!isDesktop && counter && counter.roles.includes('counter') && props.thread && props.thread.updatableBy.some(role => counter.roles.includes(role)) && props.thread.locked === false) {
       // } else {
       return (
         <>
@@ -790,29 +827,55 @@ const CountList = memo((props: any) => {
                 />
               </IconButton>
             </Tooltip>
+            <IconButton onClick={() => toggleKeyboard()}>
+              <KeyboardIcon />
+            </IconButton>
             <TextField
               fullWidth
               multiline
               maxRows={4}
-              style={{ borderRadius: '20px', padding: '10px', width: user && user.pref_clear === 'Custom' ? '40%' : '70%' }}
+              style={{ borderRadius: '20px', padding: '10px', width: user && ['Custom', 'No Clear'].includes(user.pref_clear) ? '40%' : '80%' }}
               autoFocus
               inputRef={inputRef}
               inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: 'off', enterKeyHint: 'send' }}
             />
-            {user && user.pref_clear === 'Custom' && (
-              <Input
-                // variant="outlined"
+            {user && user.pref_clear === 'No Clear' && (
+            <>
+            <Tooltip title="How many characters to keep.">
+              <TextField
                 maxRows={1}
-                style={{ borderRadius: '20px', padding: '10px', width: '30%' }}
-                onInput={handleCustomInputChange}
-                // autoFocus
-                inputRef={customInputRef}
-                inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: 'off' }}
+                variant='standard'
+                type='number'
+                sx={{ borderRadius: '20px', padding: '10px', width: '15%', mx: 0.25}}
+                inputRef={noClearKeepInputRef}
+                inputProps={{ inputMode: "numeric", spellCheck: 'false', autoCorrect: 'off' }}
+                helperText="Keep"
               />
-            )}
-            <IconButton onClick={() => toggleKeyboard()}>
-              <KeyboardIcon />
-            </IconButton>
+            </Tooltip>
+            <Tooltip title="How many characters to delete.">
+              <TextField
+                maxRows={1}
+                type='number'
+                variant='standard'
+                sx={{ borderRadius: '20px', padding: '10px', width: '15%', mx: 0.25 }}
+                inputRef={noClearDeleteInputRef}
+                inputProps={{ inputMode: "numeric", spellCheck: 'false', autoCorrect: 'off' }}
+                helperText="Delete"
+              />
+            </Tooltip>
+            </>
+          )}
+            {user && user.pref_clear === 'Custom' && (
+            <TextField
+              variant="standard"
+              maxRows={1}
+              style={{ borderRadius: '20px', padding: '10px', width: '30%' }}
+              onInput={handleCustomInputChange}
+              inputRef={customInputRef}
+              inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: 'off' }}
+              helperText="Auto-paste"
+            />
+          )}
             <Tooltip title="Throttled" open={submitColor === 'error' ? true : false} arrow>
               <IconButton color={submitColor} onClick={() => handlePosting()}>
                 <SendIcon />
@@ -821,6 +884,28 @@ const CountList = memo((props: any) => {
           </Box>
           <Box ref={endOfSubmitRef}></Box>
         </>
+      )
+    } else if (counter && counter.roles.includes('counter') && props.thread && !props.thread.updatableBy.some(role => counter.roles.includes(role))) {
+      return (
+        <Box
+          ref={submitRef}
+          sx={{
+            maxWidth: '100%',
+            height: '76px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            p: 2,
+            bgcolor: alpha(theme.palette.background.paper, 0.9),
+          }}
+        >
+          <Typography color="text.primary" variant="body1">
+            You don't have permissions to participate in this thread.
+          </Typography>
+        </Box>
       )
     } else if (props.thread && props.thread.locked) {
       return (
