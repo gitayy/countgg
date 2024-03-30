@@ -176,6 +176,9 @@ export const DefaultPage = () => {
   const [isCat, setIsCat] = useState(false)
   const catify = () => {
     setIsCat(!isCat)
+    if(isCat) {
+      socket.emit(`meow`);
+    }
   }
 
   const [count, setCount] = useState(30)

@@ -75,6 +75,7 @@ const Count = memo((props: any) => {
       'base62',
       'base64',
       'coordinates',
+      'coordinates_tow',
       'wave',
       'mayan',
     ].includes(props.thread.validationType) &&

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { Row, RowState } from './Row'
 import dictionary from './dictionary.json'
 import { Clue, clue, describeClue, violation } from './clue'
@@ -7,6 +7,7 @@ import { describeSeed, dictionarySet, Difficulty, gameName, pick, resetRng, seed
 import { decode, encode } from './base64'
 import seedrandom from 'seedrandom'
 import moment from 'moment-timezone'
+import { Counter } from '../utils/types'
 
 enum GameState {
   Playing,
@@ -66,12 +67,12 @@ function getRandomNonDictionaryWord(seed) {
   // console.log(`Ok, ${seed}`);
 
   const rngWord = () => {
-    let counter = 0
-    while (counter < 5) {
-      var rng = seedrandom(`${seed}-${failCount}-${counter}`)
+    let rng_counter = 0
+    while (rng_counter < 5) {
+      var rng = seedrandom(`${seed}-${failCount}-${rng_counter}`)
       // console.log(`seedrandom is ${rng()}, floor is ${Math.floor(rng() * charactersLength)}`);
       result += characters.charAt(Math.floor(rng() * charactersLength))
-      counter += 1
+      rng_counter += 1
     }
     return result
   }
@@ -189,7 +190,7 @@ const currentDate = moment()
 
 const daysDiff = currentDate.diff(targetDate, 'days')
 
-function Game(props: GameProps) {
+function Game({ socket, counter, ...props }: { socket: any; counter: Counter|undefined; } & GameProps) {
   let stateStorageKey = 'lrwoed-result-' + daysDiff
   let guessesStorageKey = 'lrwoed-guesses-' + daysDiff
   let hintStorageKey = 'lrwoed-hint-' + daysDiff
@@ -199,6 +200,7 @@ function Game(props: GameProps) {
   const [challenge, setChallenge] = useState<string>(initChallenge)
   const [wordLength, setWordLength] = useState(challenge ? challenge.length : parseUrlLength())
   const [gameNumber, setGameNumber] = useState(parseUrlGameNumber())
+  const [freshGameEnd, setFreshGameEnd] = useState(false);
   const [target, setTarget] = useState(() => {
     return getRandomNonDictionaryWord(seed)
     // resetRng();
@@ -297,15 +299,26 @@ function Game(props: GameProps) {
       if (currentGuess === target) {
         setHint(gameOver('won'))
         setGameState(GameState.Won)
+        setFreshGameEnd(true);
       } else if (guesses.length + 1 === props.maxGuesses) {
         setHint(gameOver('lost'))
         setGameState(GameState.Lost)
+        setFreshGameEnd(true);
       } else {
         setHint('')
         speak(describeClue(clue(currentGuess, target)))
       }
     }
   }
+
+  useEffect(() => {
+    if(freshGameEnd) {
+      if(gameState !== GameState.Playing && counter !== undefined) {
+        socket.emit(`lrwoedScore`, { score: gameState === GameState.Won ? guesses.length : 0, props: props })
+        console.log({ score: gameState === GameState.Won ? guesses.length : 0, props: props });
+      }
+    }
+  }, [freshGameEnd]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {

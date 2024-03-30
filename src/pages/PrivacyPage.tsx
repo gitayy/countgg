@@ -1,11 +1,14 @@
 import { Box } from '@mui/material'
-import { useEffect } from 'react'
+import { useContext, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { SocketContext } from '../utils/contexts/SocketContext'
 
 export const PrivacyPage = () => {
   const location = useLocation()
+  const socket = useContext(SocketContext);
   useEffect(() => {
     document.title = `Privacy Policy | Counting!`
+    socket.emit(`privacyPolicy`);
     return () => {
       document.title = 'Counting!'
     }

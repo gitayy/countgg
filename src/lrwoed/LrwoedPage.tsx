@@ -1,9 +1,11 @@
 import './App.css'
 import { maxGuesses, seed, urlParam } from './util'
 import Game from './Game'
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { About } from './About'
 import { Box, useTheme } from '@mui/material'
+import { SocketContext } from '../utils/contexts/SocketContext'
+import { UserContext } from '../utils/contexts/UserContext'
 
 function useSetting<T>(key: string, initial: T): [T, (value: T | ((t: T) => T)) => void] {
   const [current, setCurrent] = useState<T>(() => {
@@ -39,6 +41,9 @@ function LrwoedPage() {
   const [difficulty, setDifficulty] = useSetting<number>('difficulty', 0)
   const [keyboard, setKeyboard] = useSetting<string>('keyboard', 'qwertyuiop-asdfghjkl-BzxcvbnmE')
   const [enterLeft, setEnterLeft] = useSetting<boolean>('enter-left', false)
+
+  const socket = useContext(SocketContext);
+  const { counter} = useContext(UserContext)
 
   useEffect(() => {
     document.body.className = theme.palette.mode
@@ -174,6 +179,8 @@ function LrwoedPage() {
           difficulty={difficulty}
           colorBlind={colorBlind}
           keyboardLayout={keyboard.replaceAll(/[BE]/g, (x) => (enterLeft ? 'EB' : 'BE')['BE'.indexOf(x)])}
+          socket={socket}
+          counter={counter}
         />
       </Box>
     </Box>
