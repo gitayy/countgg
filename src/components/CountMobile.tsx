@@ -102,11 +102,8 @@ const CountMobile = memo((props: any) => {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // check if pathname ends with the post UUID
-  const isSameUuid = location.pathname.endsWith(props.post.uuid)
-
   // build the URL
-  const url = isSameUuid ? location.pathname : `${location.pathname.replace(/\/+$/, '')}/${props.post.uuid}`
+  const url = `/thread/${props.thread ? props.thread.name : ''}/${props.post.uuid}`
 
   const uncachedCounter: Counter = defaultCounter(props.post.authorUUID)
 

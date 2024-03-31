@@ -283,7 +283,7 @@ export const SpeedTable = ({ speed, thread }: Props) => {
           <TableBody>{pbLeaderboardRows}</TableBody>
         </Table>
         <Typography sx={{ mt: 2, mb: 2 }} variant="body2">
-          Sub 6: {sumCounts.toLocaleString()} {sumCounts != 1 ? 'threads' : 'thread'}
+          Leaderboard: {sumCounts.toLocaleString()} {sumCounts != 1 ? 'threads' : 'thread'}
         </Typography>
         <Box sx={{ width: '50%' }}>
           <CounterAutocomplete onCounterSelect={handleCounterSelection} />

@@ -194,7 +194,7 @@ export const IndividualCountPage = memo(() => {
                     thread={specificCountThread}
                     socket={socket}
                     post={count}
-                    counter={cachedCounters[count.authorUUID]}
+                    renderedCounter={cachedCounters[count.authorUUID]}
                     maxWidth={'32px'}
                     maxHeight={'32px'}
                   />

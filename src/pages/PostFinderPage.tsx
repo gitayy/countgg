@@ -305,9 +305,6 @@ export const PostFinderPage = () => {
                         <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
                           <Pagination count={Math.ceil(loadedPosts.length / 100)} page={page} onChange={handlePageChange} />
                           {loadedPosts.slice(page * 100 - 100, page * 100).map((count, countIndex) => {
-                            console.log(count.thread)
-                            console.log(loadedThreads)
-                            console.log(loadedThreads.filter((thread) => thread.uuid === count.thread))
                             const associatedThread =
                               (loadedThreads &&
                                 loadedThreads.length > 0 &&
@@ -360,32 +357,53 @@ export const PostFinderPage = () => {
                     <>
                       <Stack direction="column" alignItems="center" sx={{ width: '100%' }}>
                         <Box sx={{ width: '100%', justifyContent: 'center', margin: { xs: 'auto', lg: 'initial' } }}>
-                          {loadedPosts.map((count, countIndex) => (
-                            <>
-                              <Typography sx={{ mb: 2 }} variant="h6" color={'text.secondary'}>
-                                <Link
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    navigate(`/thread/${name}?context=${count.uuid}`)
-                                  }}
-                                  underline="always"
-                                  color={'text.secondary'}
-                                  href={`/thread/${name}?context=${count.uuid}`}
-                                >
-                                  Context
-                                </Link>
-                              </Typography>
-                              <CountMobile
-                                user={user}
-                                key={count.uuid}
-                                post={count}
-                                thread={selectedThread}
-                                counter={cachedCounters[count.authorUUID]}
-                                maxWidth={'32px'}
-                                maxHeight={'32px'}
-                              />
-                            </>
-                          ))}
+                          <Pagination count={Math.ceil(loadedPosts.length / 100)} page={page} onChange={handlePageChange} />
+                          {loadedPosts.slice(page * 100 - 100, page * 100).map((count, countIndex) => {
+                            const associatedThread =
+                              (loadedThreads &&
+                                loadedThreads.length > 0 &&
+                                loadedThreads.filter((thread) => thread.uuid === count.thread)[0]) ||
+                              fakeThread()
+                            return (
+                              <>
+                                <Typography sx={{ mb: 2 }} variant="h6" color={'text.secondary'}>
+                                  <Link
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      navigate(`/thread/${associatedThread.name}`)
+                                    }}
+                                    underline="always"
+                                    color={'text.secondary'}
+                                    href={`/thread/${associatedThread.name}`}
+                                  >
+                                    {associatedThread.title}
+                                  </Link>
+                                </Typography>
+                                <Typography sx={{ mb: 2 }} variant="h6" color={'text.secondary'}>
+                                  <Link
+                                    onClick={(e) => {
+                                      e.preventDefault()
+                                      navigate(`/thread/${associatedThread}?context=${count.uuid}`)
+                                    }}
+                                    underline="always"
+                                    color={'text.secondary'}
+                                    href={`/thread/${associatedThread.name}?context=${count.uuid}`}
+                                  >
+                                    Context
+                                  </Link>
+                                </Typography>
+                                <CountMobile
+                                  key={count.uuid}
+                                  post={count}
+                                  thread={associatedThread}
+                                  renderedCounter={cachedCounters[count.authorUUID]}
+                                  maxWidth={'32px'}
+                                  maxHeight={'32px'}
+                                />
+                              </>
+                            )
+                          })}
+                          <Pagination count={Math.ceil(loadedPosts.length / 100)} page={page} onChange={handlePageChange} />
                         </Box>
                       </Stack>
                     </>

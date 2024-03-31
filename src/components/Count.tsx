@@ -106,9 +106,6 @@ const Count = memo((props: any) => {
   const theme = useTheme()
   const location = useLocation()
 
-  // check if pathname ends with the post UUID
-  const isSameUuid = location.pathname.endsWith(props.post.uuid)
-  const hasPostFinder = location.pathname.includes('post-finder')
 
   // build the URL
   const url = `/thread/${props.thread ? props.thread.name : ''}/${props.post.uuid}`
@@ -120,16 +117,17 @@ const Count = memo((props: any) => {
 
   const renderedCounter: Counter = props.renderedCounter || uncachedCounter
 
-  const hoursSinceLastCount = Math.floor(props.post.timeSinceLastCount / 3600000)
-  const minutesSinceLastCount = Math.floor(props.post.timeSinceLastCount / 60000) % 60
-  const secondsSinceLastCount = Math.floor(props.post.timeSinceLastCount / 1000) % 60
-  const msSinceLastCount = Math.round(props.post.timeSinceLastCount) % 1000
-  const paddedMsSinceLastCount = msSinceLastCount.toString().padStart(3, '0')
+  // const hoursSinceLastCount = Math.floor(props.post.timeSinceLastCount / 3600000)
+  // const minutesSinceLastCount = Math.floor(props.post.timeSinceLastCount / 60000) % 60
+  // const secondsSinceLastCount = Math.floor(props.post.timeSinceLastCount / 1000) % 60
+  // const msSinceLastCount = Math.round(props.post.timeSinceLastCount) % 1000
+  // const paddedMsSinceLastCount = msSinceLastCount.toString().padStart(3, '0')
 
-  const hoursSinceLastPost = Math.floor(props.post.timeSinceLastPost / 3600000)
-  const minutesSinceLastPost = Math.floor(props.post.timeSinceLastPost / 60000) % 60
-  const secondsSinceLastPost = Math.floor(props.post.timeSinceLastPost / 1000) % 60
-  const msSinceLastPost = Math.round(props.post.timeSinceLastPost) % 1000
+  const roundedTimeSinceLastPost = Math.round(props.post.timeSinceLastPost);
+  const hoursSinceLastPost = Math.floor(roundedTimeSinceLastPost / 3600000)
+  const minutesSinceLastPost = Math.floor(roundedTimeSinceLastPost / 60000) % 60
+  const secondsSinceLastPost = Math.floor(roundedTimeSinceLastPost / 1000) % 60
+  const msSinceLastPost = roundedTimeSinceLastPost % 1000
   const paddedMsSinceLastPost = msSinceLastPost.toString().padStart(3, '0')
 
   const [action, setAction] = useState<string | null>(null)
