@@ -991,7 +991,6 @@ export const Sidebar = () => {
                       lineHeight: '200%',
                     },
                   }}
-                  // sx={{backgroundColor: '#937F13', color: 'white'}}
                 />
               )}
               <IconButton
@@ -1003,11 +1002,7 @@ export const Sidebar = () => {
                 color="inherit"
                 sx={{
                   borderRadius: '0',
-                  // textShadow: '0px 1px 3px black;0px 1px 3px black;0px 1px 3px black;'
-                  // color: theme.palette.background.paper,
-                  // textShadow: `-1px 0px 0px ${theme.palette.text.primary}, 1px 0px 0px ${theme.palette.text.primary}, 0px -1px 0px ${theme.palette.text.primary}, 0px 1px 0px ${theme.palette.text.primary}`
-                  textShadow: `-1px 0px 0px #000000, 1px 0px 0px #000000, 0px -1px 0px #000000, 0px 1px 0px #000000`,
-                  // bgcolor: alpha(theme.palette.primary.main, 0.5)
+                  textShadow: `-1px 0px 1px #000000, 1px 0px 1px #000000, 0px -1px 1px #000000, 0px 1px 1px #000000`,
                 }}
               >
                 <Avatar
