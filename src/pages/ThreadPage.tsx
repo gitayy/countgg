@@ -410,8 +410,6 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   // const [loadedOldestChats, setLoadedOldestChats] = useState(false);
   // const [loadedNewestChats, setLoadedNewestChats] = useState(true);
 
-  const epicRef = useRef<ReactPlayer>(null)
-
   useEffect(() => {
     if (!loading && user) {
       if (user.pref_hide_thread_picker) {
@@ -1090,7 +1088,6 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
             {thread.title}
           </Typography>
           {socketMemo}
-          <ReactPlayer style={{marginLeft: 'auto'}} ref={epicRef} loop={true} playing={true} muted={true} width={85} height={48} url='https://www.youtube.com/watch?v=slyErk24eas' />
         </Box>
       )
     } else {
