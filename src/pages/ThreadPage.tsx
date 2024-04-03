@@ -77,6 +77,7 @@ import { LinearProgressWithLabel } from '../utils/styles'
 import Spoiler from '../components/Spoiler'
 import { ThreadProvider, useThread } from '../utils/contexts/ThreadContext'
 import Lever from '../components/Lever'
+import ReactPlayer from 'react-player'
 
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 
@@ -408,6 +409,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   // const [loadedNewest, setLoadedNewest] = useState(true);
   // const [loadedOldestChats, setLoadedOldestChats] = useState(false);
   // const [loadedNewestChats, setLoadedNewestChats] = useState(true);
+
+  const epicRef = useRef<ReactPlayer>(null)
 
   useEffect(() => {
     if (!loading && user) {
@@ -1087,6 +1090,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
             {thread.title}
           </Typography>
           {socketMemo}
+          <ReactPlayer style={{marginLeft: 'auto'}} ref={epicRef} loop={true} playing={true} muted={true} width={85} height={48} url='https://www.youtube.com/watch?v=slyErk24eas' />
         </Box>
       )
     } else {
