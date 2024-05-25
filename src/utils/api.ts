@@ -42,6 +42,15 @@ export const getShopItems = () => axios.get<any>(`${API_URL}/user/shop`, CONFIG)
 
 export const purchaseItem = (item_id: number) => axios.post(`${API_URL}/api/purchaseItem`, { item_id: item_id }, CONFIG)
 
+export const transcribeAudio = (audio: any) => {
+  console.log({ audio: audio });
+  return axios.post(`${API_URL}/thread/transcribeAudio`, { audio: audio }, 
+{
+  ...CONFIG,
+  // headers: { 'Content-Type': 'multipart/form-data' }
+})
+}
+
 export const changeMessageReadStatus = (post_uuids: string[], newReadStatus: boolean) =>
   axios.post(`${API_URL}/counter/changeMessageReadStatus`, { messageIDs: post_uuids, newReadStatus: newReadStatus }, CONFIG)
 

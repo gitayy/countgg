@@ -80,6 +80,7 @@ import Lever from '../components/Lever'
 import ReactPlayer from 'react-player'
 
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
+import AudioRecorder from '../components/AudioRecorder'
 
 let imsorryfortheglobalpull = 'DISABLED'
 export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
@@ -485,12 +486,14 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [newChatsLoadedState, setNewChatsLoadedState] = useState('')
 
   const refScroll = useRef<any>([])
+  const postScroll = useRef<any>([])
   useEffect(() => {
     const scrollCheck = (event) => {
       const { key: test } = event
       if (refScroll.current.at(-1) !== test) {
         refScroll.current = [...refScroll.current, test].slice(-5)
       }
+      postScroll.current = [...postScroll.current, [test, Date.now()]].slice(-20);
     }
     document.addEventListener('keydown', scrollCheck)
     return () => {
@@ -990,7 +993,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     }
   }, [deleteComment])
 
-  const handleSubmit = (text: string, refScroll: any, post_hash: string) => {
+  const handleSubmit = (text: string, refScroll: any, postScroll: any, post_hash: string) => {
     const submitText = text
     if (thread_name && counter) {
       socket.emit('post', {
@@ -998,6 +1001,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         text: submitText,
         post_hash: post_hash,
         refScroll: refScroll,
+        postScroll: postScroll,
         latency: renderLatencyEnabled.current,
       })
     }
@@ -1355,6 +1359,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         setCachedCounts={setCachedCounts}
         loadedNewestRef={loadedNewestRef}
         refScroll={refScroll}
+        postScroll={postScroll}
         newRecentPostLoaded={newRecentPostLoaded}
         loadedOldest={loadedOldest}
         cachedCounts={cachedCounts}
@@ -1581,6 +1586,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
             ) : (
               <>Loading...</>
             )}
+            {/* <AudioRecorder />/ */}
           </TabPanel>
           <TabPanel value="tab_2" sx={{ flexGrow: 1, p: 0 }}>
             {/* <Typography variant='h4'>Chats</Typography> */}

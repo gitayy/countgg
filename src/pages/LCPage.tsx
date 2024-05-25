@@ -392,7 +392,6 @@ export const LCPage = () => {
       // console.log("Ahoy");
       handleSubmit(inputRef.current.value)
       throttle.current = performance.now()
-      //   props.refScroll.current = [];
       if (isThrottled.current) {
         isThrottled.current = false
         setThrottled(false)
