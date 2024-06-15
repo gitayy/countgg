@@ -5,7 +5,6 @@ import {
   Alert,
   AlertColor,
   alpha,
-  Badge,
   Box,
   Button,
   Chip,
@@ -20,13 +19,14 @@ import {
   Grid,
   IconButton,
   Input,
+  InputBase,
   InputLabel,
-  LinearProgress,
   Link,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Paper,
   Skeleton,
   Snackbar,
   Tab,
@@ -41,7 +41,7 @@ import { addCounterToCache, cachedCounters } from '../utils/helpers'
 import { useFetchRecentCounts } from '../utils/hooks/useFetchRecentCounts'
 import { useFetchThread } from '../utils/hooks/useFetchThread'
 import { SocketContext } from '../utils/contexts/SocketContext'
-import { Counter, PostType, User } from '../utils/types'
+import { Category, Counter, PostType, ThreadType, User } from '../utils/types'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
 import CountList from '../components/CountList'
 import queryString from 'query-string'
@@ -61,11 +61,8 @@ import {
 import { DailyHOCTable } from '../components/DailyHOCTable'
 import { SplitsTable } from '../components/SplitsTable'
 import { useFavicon } from '../utils/hooks/useFavicon'
-import { ContestPage } from './ContestPage'
-// import { InfoOutlined } from '@mui/icons-material';
 import InfoIcon from '@mui/icons-material/Info'
 import moment from 'moment-timezone'
-import { TerminalController } from '../components/TerminalController'
 import { DailyRobTable } from '../components/DailyRobTable'
 import { ThreadsContext } from '../utils/contexts/ThreadsContext'
 import TagIcon from '@mui/icons-material/Tag'
@@ -74,13 +71,14 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
 import dingSfx from '../utils/sounds/ding.mp3'
 import useSound from 'use-sound'
 import { LinearProgressWithLabel } from '../utils/styles'
-import Spoiler from '../components/Spoiler'
-import { ThreadProvider, useThread } from '../utils/contexts/ThreadContext'
-import Lever from '../components/Lever'
-import ReactPlayer from 'react-player'
+import { useThread } from '../utils/contexts/ThreadContext'
 
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
-import AudioRecorder from '../components/AudioRecorder'
+
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import CheckIcon from '@mui/icons-material/Check';
+import ClearIcon from '@mui/icons-material/Clear';
+import { isEqual } from 'lodash'
 
 let imsorryfortheglobalpull = 'DISABLED'
 export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
@@ -118,8 +116,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [socketViewers, setSocketViewers] = useState(1)
   const [threadStreak, setThreadStreak] = useState<number | undefined>(undefined)
 
-  const { user, counter, loading, challenges, setChallenges } = useContext(UserContext)
-  const { allThreads, allThreadsLoading } = useContext(ThreadsContext)
+  const { user, counter, loading, challenges, setChallenges, miscSettings, setMiscSettings } = useContext(UserContext)
+  const { allThreads, allThreadsLoading, setAllThreadsLoading } = useContext(ThreadsContext)
   const { thread, threadLoading, setThread } = useFetchThread(thread_name)
   const {
     recentCounts,
@@ -441,6 +439,14 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
 
   const [bank, setBank] = useState(-1)
   const [robOpen, setRobOpen] = useState(false)
+  const [deleteCategoryOpen, setDeleteCategoryOpen] = useState(false)
+  const [deletedCategory, setDeletedCategory] = useState<Category>();
+
+  const deleteCategoryConfirm = () => {
+    if(!deletedCategory) {return;}
+    deleteCategory(deletedCategory.name);
+    setDeleteCategoryOpen(false)
+  }
 
   const robConfirm = () => {
     socket.emit(`rob`)
@@ -455,12 +461,12 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     setRobOpen(true)
   }
 
-  const ConfirmDialog = ({ open, handleCancel, handleConfirm }) => {
+  const ConfirmDialog = ({ open, text, handleCancel, handleConfirm, title = "Are you sure?" }) => {
     return (
-      <Dialog open={open}>
-        <DialogTitle>Are you sure?</DialogTitle>
+      <Dialog open={open} onClose={handleCancel}>
+        <DialogTitle>{title}</DialogTitle>
         <DialogContent>
-          <DialogContentText>You may only rob once per day. Your ability to rob resets at midnight Eastern (US).</DialogContentText>
+          <DialogContentText>{text}</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancel} color="primary">
@@ -603,12 +609,44 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       }
     }
   }
+  
 
   // useEffect(() => {
   //   if(recentCountsLoading == false) {
   //     loadedNewestRef.current = loadedNewest;
   //   }
   // }, [recentCountsLoading])
+
+  const [miscSettingsChanged, setMiscSettingsChanged] = useState<number>(Date.now())
+  const [lastClick, setLastClick] = useState<number>(0);
+
+  // useEffect(() => {
+  //   const handleClick = (event) => {
+  //     if(!miscSettingsChanged) return;
+  //     console.log('Clicked');
+  //     if(setAllThreadsLoading) {
+  //       console.log("Toggling");
+  //       setAllThreadsLoading(true);
+  //       setAllThreadsLoading(false);
+  //     }
+  //     console.log("Removing event listener");
+  //     document.removeEventListener('click', handleClick);      
+  //   };
+  //   // setLastClick(Date.now());
+
+
+  //   // Add event listener for click on the entire document
+  //   if(miscSettingsChanged && miscSettingsChanged > 0 && Date.now() > miscSettingsChanged) {
+  //     document.addEventListener('click', handleClick);
+  //   } else {
+  //     console.log("Nope not valid");
+  //   }
+
+  //   // Clean up event listener on component unmount
+  //   return () => {
+  //     document.removeEventListener('click', handleClick);
+  //   };
+  // }, [miscSettingsChanged]);
 
   //Handle Socket data
   useEffect(() => {
@@ -679,6 +717,25 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       })
       socket.on(`bank`, function (data) {
         setBank(data)
+      })
+      socket.on(`miscSettingsLastUpdated`, function (data) {
+        if(setMiscSettings) {
+          setMiscSettings((prevMiscSettings) => {
+            return {
+              ...prevMiscSettings,
+              lastUpdated: data,
+            }
+            })
+        }
+      });
+      socket.on(`updateMiscSettings`, function (data) {
+        // I promised I tried this but it's so bad for performance. I know people are going to lose stuff by having
+        // different tabs open etc. I will try to handle this server-side lol
+
+        // if(setMiscSettings !== undefined && hasChangedRecently.current !== undefined && Date.now() - hasChangedRecently.current > 7000) {
+        //   setMiscSettings(data)
+        //   setMiscSettingsChanged(Date.now());
+        // }
       })
       // socket.on(`deleteComment`, function(data) {
       //   setRecentCounts(prevCounts => {
@@ -961,6 +1018,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         socket.off('deleteComment')
         socket.off('thread_update')
         socket.off('split')
+        socket.off('updateMiscSettings')
         setSocketStatus('DISCONNECTED')
       }
     }
@@ -1121,78 +1179,136 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     return groupedThreads
   }
 
-  const specificOrder = ['Traditional', 'Double Counting', 'No Mistakes', 'Miscellaneous']
-  const customSort = (a, b) => {
-    if (specificOrder.includes(a) && specificOrder.includes(b)) {
-      return specificOrder.indexOf(a) - specificOrder.indexOf(b)
-    } else if (specificOrder.includes(a)) {
-      return -1
-    } else if (specificOrder.includes(b)) {
-      return 1
-    }
+  // Array of objects
+  const [categorizedThreads, setCategorizedThreads] = useState<Category[]>([]);
+  const [lastCategoryChange, setLastCategoryChange] = useState<number>()
 
-    return a.localeCompare(b) // Keep the rest in alphabetical order
-  }
+  const defaultOtherThreadOverrides = ['test', 'test2', 'random_hour', 'tug_of_war_avoid_0', 'countdown', 'yoco', 'russian_roulette', '1inx', 'slow_tslc', 'wait_x', 'random_minute', 'no_counting', 'username', 'incremental_odds']
+  const defaultFavorites = allThreads.filter((thread) => ['main', 'double_counting', 'bars', 'slow', 'no_mistakes'].includes(thread.name))
+  const defaultTraditional = allThreads.filter((thread) => !defaultOtherThreadOverrides.includes(thread.name) && ![...defaultFavorites].includes(thread) && !thread.allowDoublePosts && !thread.resetOnMistakes)
+  const defaultDouble = allThreads.filter((thread) => !defaultOtherThreadOverrides.includes(thread.name) && ![...defaultFavorites, ...defaultTraditional].includes(thread) && thread.allowDoublePosts && !thread.resetOnMistakes)
+  const defaultNoMistakes = allThreads.filter((thread) => !defaultOtherThreadOverrides.includes(thread.name) && ![...defaultFavorites, ...defaultTraditional, ...defaultDouble].includes(thread) && thread.resetOnMistakes)
+  const defaultOther = allThreads.filter((thread) => ![...defaultFavorites, ...defaultTraditional, ...defaultDouble, ...defaultNoMistakes].includes(thread))
+  const defaultCategories = [
+    { name: 'Favorites', threads: defaultFavorites, expanded: true },
+    { name: 'Traditional', threads: defaultTraditional, expanded: true },
+    { name: 'Double Counting', threads: defaultDouble, expanded: true },
+    { name: 'No Mistakes', threads: defaultNoMistakes, expanded: true },
+    { name: 'Other', threads: defaultOther, expanded: true },
+  ]
 
-  const initialExpandedCategories = Object.keys(groupThreadsByCategory(allThreads)).sort(customSort)
-  const [expandedCategories, setExpandedCategories] = useState(initialExpandedCategories)
+
 
   useEffect(() => {
-    setExpandedCategories(Object.keys(groupThreadsByCategory(allThreads)).sort(customSort))
-  }, [allThreads])
+    if(!loading && !allThreadsLoading && allThreads) {
+    if(!miscSettings || miscSettings && !miscSettings.categories || miscSettings && miscSettings.categories.length === 0) {
+      setCategorizedThreads(defaultCategories);
+    } else {
+      // Step 1: Map threads to categories
+      const categorizedThreads = miscSettings.categories.map((category) => {
+        const fullThreads = category.threadUUIDs.map(threadUUID => {
+          return allThreads.find(thread => thread.uuid === threadUUID);
+        }).filter(thread => thread !== undefined) as ThreadType[];
+
+        return {
+          ...category,
+          threads: fullThreads,
+        };
+      });
+
+      // Step 2: Gather threads not in any category
+      const categoryNames = categorizedThreads.reduce((names: string[], category) => {
+        return names.concat(category.name);
+      }, []);
+      if(!categoryNames.includes("Other")) {
+        categorizedThreads.push({
+          name: "Other",
+          threads: [],
+          threadUUIDs: [],
+          expanded: true,
+        });
+      }
+      const threadsInCategories = categorizedThreads.reduce((threads: ThreadType[], category) => {
+        return threads.concat(category.threads);
+      }, []);
+
+      const threadsNotInCategories = allThreads.filter(thread => !threadsInCategories.includes(thread));
+
+      setCategorizedThreads(
+        categorizedThreads.map((category) => {
+          if (category.name === 'Other') {
+            return {
+              ...category,
+              threads: [
+                ...category.threads,
+                ...threadsNotInCategories,
+              ],
+            };
+          }
+
+          return category;
+        })
+      )
+    }
+    
+  }
+  }, [allThreads, allThreadsLoading, loading]);
 
   const handleCategoryClick = (category) => {
-    if (expandedCategories.includes(category)) {
-      setExpandedCategories(expandedCategories.filter((cat) => cat !== category))
-    } else {
-      setExpandedCategories([...expandedCategories, category])
-    }
+    setCategorizedThreads((prevCategorizedThreads) => {
+      return prevCategorizedThreads.map((categoryObj) => {
+        if (categoryObj.name === category) {
+          return { ...categoryObj, expanded: !categoryObj.expanded }
+        }
+        return categoryObj
+      })
+    })
+    setLastCategoryChange(Date.now());
   }
 
   useEffect(() => {
     function navigateThread(direction) {
-      console.log('Navigating thread', direction)
-      const groupedThreads = groupThreadsByCategory(allThreads)
-      const currentCategory = allThreads.find((thread) => thread.name === thread_name)?.category || 'Uncategorized'
-      console.log('Current category:', currentCategory)
-      if (!currentCategory || !groupedThreads[currentCategory]) {
-        return
+
+      let currentCategoryIndex = -1;
+      let currentThreadIndex = -1;
+
+      // Find the current thread's category and index
+      categorizedThreads.forEach((category, categoryIndex) => {
+        const threadIndex = category.threads.findIndex(thread => thread.name === thread_name);
+        if (threadIndex !== -1) {
+          currentCategoryIndex = categoryIndex;
+          currentThreadIndex = threadIndex;
+        }
+      });
+
+      if (currentCategoryIndex === -1 || currentThreadIndex === -1) {
+        return;
       }
 
-      const threadsInCategory = groupedThreads[currentCategory]
-      const currentIndex = threadsInCategory.findIndex((thread) => thread.name === thread_name)
+      var newThread: ThreadType|undefined = undefined;
 
-      if (currentIndex === -1) {
-        return
-      }
-
-      let newIndex
       if (direction === 'up') {
-        newIndex = currentIndex - 1
-      } else if (direction === 'down') {
-        newIndex = currentIndex + 1
-      }
-
-      if (newIndex >= 0 && newIndex < threadsInCategory.length) {
-        const newThread = threadsInCategory[newIndex]
-        navigate(`/thread/${newThread.name}`)
-      } else {
-        const categoryIndex = specificOrder.indexOf(currentCategory)
-        if (direction === 'up' && categoryIndex > 0) {
-          const previousCategory = specificOrder[categoryIndex - 1]
-          const previousThreads = groupedThreads[previousCategory]
-          if (previousThreads.length > 0) {
-            const lastThreadInPreviousCategory = previousThreads[previousThreads.length - 1]
-            navigate(`/thread/${lastThreadInPreviousCategory.name}`)
-          }
-        } else if (direction === 'down' && categoryIndex < specificOrder.length - 1) {
-          const nextCategory = specificOrder[categoryIndex + 1]
-          const nextThreads = groupedThreads[nextCategory]
-          if (nextThreads.length > 0) {
-            const firstThreadInNextCategory = nextThreads[0]
-            navigate(`/thread/${firstThreadInNextCategory.name}`)
+        if (currentThreadIndex > 0) {
+          newThread = categorizedThreads[currentCategoryIndex].threads[currentThreadIndex - 1];
+        } else if (currentCategoryIndex > 0) {
+          const previousCategory = categorizedThreads[currentCategoryIndex - 1];
+          if (previousCategory.threads.length > 0) {
+            newThread = previousCategory.threads[previousCategory.threads.length - 1];
           }
         }
+      } else if (direction === 'down') {
+        if (currentThreadIndex < categorizedThreads[currentCategoryIndex].threads.length - 1) {
+          newThread = categorizedThreads[currentCategoryIndex].threads[currentThreadIndex + 1];
+        } else if (currentCategoryIndex < categorizedThreads.length - 1) {
+          const nextCategory = categorizedThreads[currentCategoryIndex + 1];
+          if (nextCategory.threads.length > 0) {
+            newThread = nextCategory.threads[0];
+          }
+        }
+      }
+
+      if (newThread) {
+        navigate(`/thread/${newThread.name}`);
       }
     }
 
@@ -1200,88 +1316,271 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       if (event.altKey) {
         switch (event.key) {
           case 'ArrowUp':
-            navigateThread('up')
-            break
+            navigateThread('up');
+            break;
           case 'ArrowDown':
-            navigateThread('down')
-            break
+            navigateThread('down');
+            break;
         }
       }
-    }
+    };
 
-    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       // Remove the event listener when the component unmounts
-      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [thread_name, allThreadsLoading, categorizedThreads]);
+
+  const onDragEnd = (result) => {
+    const { source, destination, type } = result;
+
+    // Do nothing if the thread is dropped outside any droppable
+    if (!destination) return;
+
+    // Reordering categories
+  if (type === 'CATEGORY') {
+    const newCategorizedThreads = Array.from(categorizedThreads);
+    const [movedCategory] = newCategorizedThreads.splice(source.index, 1);
+    newCategorizedThreads.splice(destination.index, 0, movedCategory);
+
+    if (JSON.stringify(categorizedThreads) !== JSON.stringify(newCategorizedThreads)) {
+      setCategorizedThreads(newCategorizedThreads);
+      setLastCategoryChange(Date.now());
     }
-  }, [thread_name, allThreadsLoading]) // Empty dependency array to run this effect only once
+    return;
+  }
+
+    // Do nothing if the thread is dropped into the same place
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+
+  setCategorizedThreads((prevCategorizedThreads) => {
+    const newCategorizedThreads = Array.from(prevCategorizedThreads);
+    
+    // Get the source and destination categories
+    const sourceCategoryIndex = newCategorizedThreads.findIndex(cat => cat.name === source.droppableId);
+    const destinationCategoryIndex = newCategorizedThreads.findIndex(cat => cat.name === destination.droppableId);
+    
+    const sourceCategory = newCategorizedThreads[sourceCategoryIndex];
+    const destinationCategory = newCategorizedThreads[destinationCategoryIndex];
+    
+    // Get the threads from the source category
+    const sourceThreads = Array.from(sourceCategory.threads);
+    const [movedThread] = sourceThreads.splice(source.index, 1);
+    
+    if (sourceCategoryIndex === destinationCategoryIndex) {
+      // Insert the thread at the new position in the same category
+      sourceThreads.splice(destination.index, 0, movedThread);
+      newCategorizedThreads[sourceCategoryIndex].threads = sourceThreads;
+    } else {
+      // Get the threads from the destination category
+      const destinationThreads = Array.from(destinationCategory.threads);
+      // Insert the thread at the new position in the different category
+      destinationThreads.splice(destination.index, 0, movedThread);
+      newCategorizedThreads[sourceCategoryIndex].threads = sourceThreads;
+      newCategorizedThreads[destinationCategoryIndex].threads = destinationThreads;
+    }    
+    return newCategorizedThreads;
+  });
+  setLastCategoryChange(Date.now());
+};
+
+function deleteCategory(categoryName) {
+  setCategorizedThreads((prevCategorizedThreads) => {
+      // Remove the specified category
+      const updatedCategories = prevCategorizedThreads.filter(cat => cat.name !== categoryName);
+
+      // Find the threads to move
+      const categoryToDelete = prevCategorizedThreads.find(cat => cat.name === categoryName);
+      const threadsToMove = categoryToDelete ? categoryToDelete.threads : [];
+
+      // Check if "Other" category exists
+      let otherCategory = updatedCategories.find(cat => cat.name === "Other");
+
+      if (!otherCategory) {
+          // If "Other" category doesn't exist, create it
+          otherCategory = {
+              name: "Other",
+              threads: [],
+              expanded: true
+          };
+          updatedCategories.push(otherCategory);
+      }
+
+      // Append threads to the "Other" category
+      otherCategory.threads = [...otherCategory.threads, ...threadsToMove];
+
+      // Update the state
+      const newCategorizedThreads = updatedCategories.map(cat =>
+          cat.name === "Other" ? otherCategory : cat
+      );
+      return newCategorizedThreads;
+  });
+  setLastCategoryChange(Date.now());
+}
+
+const [newCategoryName, setNewCategoryName] = useState('');
+const categoryNameRef = useRef<HTMLInputElement>(null)
+
+  const handleCheckClick = () => {
+    if(newCategoryName.length > 0) {
+        // Clear the input after adding the category
+        setCategorizedThreads((prevCategorizedThreads) => [...prevCategorizedThreads, { name: newCategoryName, threads: [], expanded: true }]);
+        setLastCategoryChange(Date.now());
+        setNewCategoryName('');
+        if(categoryNameRef.current) {
+          categoryNameRef.current.value = '';
+        }
+      } else {
+        console.log('Please enter a category name.');
+      }
+  };
+
+  const hasChangedRecently = useRef<number>(0);
+
+  useEffect(() => {
+    if(categorizedThreads && !loading && categorizedThreads.length > 0 && lastCategoryChange && lastCategoryChange > 100) {
+      const mappedThreads = categorizedThreads.map(category => ({
+        ...category,
+        threads: undefined,
+        threadUUIDs: category.threads.map(thread => thread.uuid),
+      }));
+      if(miscSettings && JSON.stringify(miscSettings.categories) === JSON.stringify(mappedThreads)) {
+        return;
+      }
+      if(JSON.stringify(defaultCategories) === JSON.stringify(mappedThreads)) {
+        return;
+      }
+      hasChangedRecently.current = Date.now();
+      socket.emit(`updateCategories`, {update: mappedThreads, miscSettingsChanged: miscSettings ? miscSettings.lastUpdated : 0})
+      setLastCategoryChange(undefined);
+    }
+  }, [categorizedThreads, loading, lastCategoryChange]);
+
+  const newCategoryBox = (<Paper
+    square={true}
+    sx={{ p: '2px 4px', 
+      display: { xs: 'none', lg: `flex` },
+      alignItems: 'center', height: '50px' }}
+  >
+    <InputBase
+      sx={{ ml: 1, flex: 1 }}
+      inputRef={categoryNameRef}
+      placeholder="New category..."
+      inputProps={{ 'aria-label': 'new category', maxLength: 200 }}
+      onChange={(e) => {setNewCategoryName(e.target.value);}}
+    />
+    {newCategoryName.length > 0 && (
+      <IconButton type="button" onClick={handleCheckClick} sx={{ p: '10px' }} aria-label="search">
+        <CheckIcon />
+      </IconButton>
+    )}
+  </Paper>)
 
   const threadPickerMemo = useMemo(() => {
-    const groupedThreads = groupThreadsByCategory(allThreads)
-
     if (allThreads && allThreads.length > 0) {
       const picker = (
         <Box
           sx={{
             minHeight: 500,
-            height: { xs: '100vh', lg: 'calc(100vh - 65px)' },
+            height: { xs: '100vh', lg: `calc(100vh - 65px - 50px)` },
             width: 'auto',
             ...(!isDesktop && { width: 'min-content' }),
             flexGrow: 1,
-            display: 'flex',
+            display: { xs: 'none', lg: `flex` },
             bgcolor: 'background.paper',
             color: 'text.primary',
             flexDirection: 'column',
             overflowY: 'scroll',
           }}
         >
-          {Object.keys(groupedThreads)
-            .sort(customSort)
-            .map((category) => (
-              <div key={category}>
-                <ListItemButton
-                  onClick={() => handleCategoryClick(category)}
-                  sx={{
-                    py: 0,
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 24, paddingRight: 1 }}>
-                    {expandedCategories.includes(category) ? <KeyboardArrowDownIcon /> : <KeyboardArrowRightIcon />}
-                  </ListItemIcon>
-                  <ListItemText primary={category} />
-                </ListItemButton>
-                <Collapse in={expandedCategories.includes(category)}>
-                  <List>
-                    {groupedThreads[category].map((thread, index) => (
-                      <Button
-                        key={thread.id}
-                        startIcon={<TagIcon />}
-                        sx={{
-                          width: '100%',
-                          py: isDesktop ? 0 : 0.5,
-                          opacity: thread_name === thread.name ? 1 : 0.75,
-                          textAlign: 'left',
-                          border: '1px solid transparent',
-                          '&:hover': {
-                            opacity: 1,
-                            border: '1px solid',
-                            borderColor: theme.palette.primary.main,
-                          },
-                          bgcolor: thread_name === thread.name ? alpha(theme.palette.primary.main, 0.5) : 'background.paper',
-                          color: thread_name === thread.name ? 'text.primary' : 'text.secondary',
-                          justifyContent: 'flex-start',
-                        }}
-                        onClick={() => navigate(`/thread/${thread.name}`)}
-                      >
-                        {thread.threadOfTheDay && <LocalFireDepartmentIcon sx={{ color: 'orangered', verticalAlign: 'bottom' }} />}
-                        {thread.title}
-                      </Button>
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="categories" type="CATEGORY" direction="vertical">
+                {(provided) => (
+                  <div ref={provided.innerRef} {...provided.droppableProps}>
+                    {categorizedThreads.map((category, categoryIndex) => (
+                      <Draggable key={category.name} draggableId={category.name} index={categoryIndex}>
+                        {(provided) => (
+                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                            <Droppable droppableId={category.name} type="THREAD">
+                              {(provided) => (
+                                <div ref={provided.innerRef} {...provided.droppableProps}>
+                                  <ListItemButton
+                                    onClick={() => handleCategoryClick(category.name)}
+                                    sx={{ py: 0 }}
+                                  >
+                                    <ListItemIcon sx={{ minWidth: 24, paddingRight: 1 }}>
+                                      {category.expanded ? (
+                                        <KeyboardArrowDownIcon />
+                                      ) : (
+                                        <KeyboardArrowRightIcon />
+                                      )}
+                                    </ListItemIcon>
+                                    <ListItemText primary={category.name} sx={{overflowX: 'hidden'}} />
+                                    {category.name !== "Other" && <ListItemIcon className='deleteCategoryIcon' sx={{ minWidth: 8 }} onClick={() => {setDeletedCategory(category); setDeleteCategoryOpen(true)}}>
+                                        <ClearIcon fontSize='inherit' />
+                                    </ListItemIcon>}
+                                  </ListItemButton>
+                                  <Collapse in={category.expanded}>
+                                    <List>
+                                      {category.threads.map((thread, index) => (
+                                        <Draggable key={thread.uuid} draggableId={thread.uuid} index={index}>
+                                          {(provided) => (
+                                            <div
+                                              ref={provided.innerRef}
+                                              {...provided.draggableProps}
+                                              {...provided.dragHandleProps}
+                                            >
+                                              <Button
+                                                key={thread.uuid}
+                                                startIcon={<TagIcon />}
+                                                sx={{
+                                                  width: '100%',
+                                                  py: isDesktop ? 0 : 0.5,
+                                                  opacity: thread_name === thread.name ? 1 : 0.75,
+                                                  textAlign: 'left',
+                                                  border: '1px solid transparent',
+                                                  '&:hover': {
+                                                    opacity: 1,
+                                                    border: '1px solid',
+                                                    borderColor: theme.palette.primary.main,
+                                                  },
+                                                  bgcolor: thread_name === thread.name ? alpha(theme.palette.primary.main, 0.5) : 'background.paper',
+                                                  color: thread_name === thread.name ? 'text.primary' : 'text.secondary',
+                                                  justifyContent: 'flex-start',
+                                                }}
+                                                onClick={() => navigate(`/thread/${thread.name}`)}
+                                              >
+                                                {thread.threadOfTheDay && (
+                                                  <LocalFireDepartmentIcon sx={{ color: 'orangered', verticalAlign: 'bottom' }} />
+                                                )}
+                                                {thread.title}
+                                              </Button>
+                                            </div>
+                                          )}
+                                        </Draggable>
+                                      ))}
+                                      {provided.placeholder}
+                                    </List>
+                                  </Collapse>
+                                </div>
+                              )}
+                            </Droppable>
+                          </div>
+                        )}
+                      </Draggable>
                     ))}
-                  </List>
-                </Collapse>
-              </div>
-            ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
         </Box>
       )
       return (
@@ -1331,11 +1630,16 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         </Box>
       )
     }
-  }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name, expandedCategories, isDesktop])
+  }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name, isDesktop, allThreads, categorizedThreads])
 
   const robConfirmMemo = useMemo(() => {
-    return <ConfirmDialog open={robOpen} handleCancel={() => robCancel()} handleConfirm={() => robConfirm()} />
+    return <ConfirmDialog open={robOpen} text={`You may only rob once per day. Your ability to rob resets at midnight Eastern (US).`} handleCancel={() => robCancel()} handleConfirm={() => robConfirm()} />
   }, [robOpen])
+
+  const deleteCategoryConfirmMemo = useMemo(() => {
+    if(!deletedCategory) {return;}
+    return <ConfirmDialog open={deleteCategoryOpen} text={`You are deleting the ${deletedCategory.name} category (${deletedCategory.threads.length} thread${deletedCategory.threads.length === 1 ? `` : `s`}). \n\nDeleting a category will move all its threads to the "Other" category.`} handleCancel={() => {setDeleteCategoryOpen(false); setDeletedCategory(undefined);}} handleConfirm={() => (deleteCategoryConfirm())} />
+  }, [deletedCategory, deleteCategoryOpen])
 
   const countListMemo = useMemo(() => {
     return recentCountsLoading ? (
@@ -1777,6 +2081,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     dailyRobs,
     bank,
     robOpen,
+    deleteCategoryOpen,
     loading,
     recentChatsLoading,
     cachedCounts,
@@ -1817,7 +2122,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
           {user && user.pref_post_position === 'Right' ? (
             <>
               <Grid item xs={0} lg={2} sx={{ height: 'auto' }}>
-                <Box sx={{ minHeight: 500, height: 'calc(100vh - 65px)' }}>{threadPickerMemo}</Box>
+                <Box sx={{  }}>{threadPickerMemo}</Box>
+                {newCategoryBox}
               </Grid>
               <Grid item xs={12} lg={4}>
                 <Box
@@ -1833,6 +2139,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
                   {headerMemo}
                   {sidebarMemo}
                   {robConfirmMemo}
+                  {deleteCategoryConfirmMemo}
                 </Box>
               </Grid>
               {isDesktop && (
@@ -1843,8 +2150,9 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
             </>
           ) : (
             <>
-              <Grid item xs={0} lg={2} sx={{ height: 'auto', display: !desktopPickerOpen && isDesktop ? 'none' : 'initial' }}>
-                <Box sx={{ minHeight: 500, height: 'calc(100vh - 65px)' }}>{threadPickerMemo}</Box>
+              <Grid item xs={0} lg={2} sx={{ display: !desktopPickerOpen && isDesktop ? 'none' : 'flex', flexDirection: 'column' }}>
+                <Box sx={{  }}>{threadPickerMemo}</Box>
+                {newCategoryBox}
               </Grid>
               {isDesktop && (
                 <Grid item xs={12} lg={desktopPickerOpen ? 6 : 8} sx={{ height: 'auto' }}>
@@ -1865,6 +2173,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
                   {headerMemo}
                   {sidebarMemo}
                   {robConfirmMemo}
+                  {deleteCategoryConfirmMemo}
                 </Box>
               </Grid>
             </>

@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import { Challenge, Counter, Item, User } from '../types'
+import { Challenge, Counter, Item, MiscSettings, User } from '../types'
 
 type UserContextType = {
   user?: User
@@ -12,6 +12,8 @@ type UserContextType = {
   setCounter?: Function
   items?: Item[]
   setItems?: Function
+  miscSettings?: MiscSettings
+  setMiscSettings?: Function
   challenges?: Challenge[]
   setChallenges?: Function
   totalCounters?: number

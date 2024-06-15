@@ -21,5 +21,5 @@ export function useFetchAllThreads() {
       })
   }, [])
 
-  return { allThreads, allThreadsLoading }
+  return { allThreads, allThreadsLoading, setAllThreads, setAllThreadsLoading }
 }

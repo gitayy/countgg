@@ -36,6 +36,17 @@ html,
   transform: scale(1.1);
 }
 
+.deleteCategoryIcon {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.MuiListItemButton-root:hover .deleteCategoryIcon {
+  opacity: 1;
+  visibility: visible;
+}
+
 
 .threadcard {
   transition: all .2s ease-in-out!important;

@@ -217,73 +217,73 @@ export const Sidebar = () => {
 
   const { threadName, fullThread } = useThread()
 
-  useEffect(() => {
-    function navigateThread(direction) {
-      console.log('Navigating thread', direction)
-      const groupedThreads = groupThreadsByCategory(allThreads)
-      const currentCategory = allThreads.find((thread) => thread.name === threadName)?.category || 'Uncategorized'
-      console.log('Current category:', currentCategory)
-      if (!currentCategory || !groupedThreads[currentCategory]) {
-        return
-      }
+  // useEffect(() => {
+  //   function navigateThread(direction) {
+  //     console.log('Navigating thread', direction)
+  //     const groupedThreads = groupThreadsByCategory(allThreads)
+  //     const currentCategory = allThreads.find((thread) => thread.name === threadName)?.category || 'Uncategorized'
+  //     console.log('Current category:', currentCategory)
+  //     if (!currentCategory || !groupedThreads[currentCategory]) {
+  //       return
+  //     }
 
-      const threadsInCategory = groupedThreads[currentCategory]
-      const currentIndex = threadsInCategory.findIndex((thread) => thread.name === threadName)
+  //     const threadsInCategory = groupedThreads[currentCategory]
+  //     const currentIndex = threadsInCategory.findIndex((thread) => thread.name === threadName)
 
-      if (currentIndex === -1) {
-        return
-      }
+  //     if (currentIndex === -1) {
+  //       return
+  //     }
 
-      let newIndex
-      if (direction === 'up') {
-        newIndex = currentIndex - 1
-      } else if (direction === 'down') {
-        newIndex = currentIndex + 1
-      }
+  //     let newIndex
+  //     if (direction === 'up') {
+  //       newIndex = currentIndex - 1
+  //     } else if (direction === 'down') {
+  //       newIndex = currentIndex + 1
+  //     }
 
-      if (newIndex >= 0 && newIndex < threadsInCategory.length) {
-        const newThread = threadsInCategory[newIndex]
-        navigate(`/thread/${newThread.name}`)
-      } else {
-        const categoryIndex = specificOrder.indexOf(currentCategory)
-        if (direction === 'up' && categoryIndex > 0) {
-          const previousCategory = specificOrder[categoryIndex - 1]
-          const previousThreads = groupedThreads[previousCategory]
-          if (previousThreads.length > 0) {
-            const lastThreadInPreviousCategory = previousThreads[previousThreads.length - 1]
-            navigate(`/thread/${lastThreadInPreviousCategory.name}`)
-          }
-        } else if (direction === 'down' && categoryIndex < specificOrder.length - 1) {
-          const nextCategory = specificOrder[categoryIndex + 1]
-          const nextThreads = groupedThreads[nextCategory]
-          if (nextThreads.length > 0) {
-            const firstThreadInNextCategory = nextThreads[0]
-            navigate(`/thread/${firstThreadInNextCategory.name}`)
-          }
-        }
-      }
-    }
+  //     if (newIndex >= 0 && newIndex < threadsInCategory.length) {
+  //       const newThread = threadsInCategory[newIndex]
+  //       navigate(`/thread/${newThread.name}`)
+  //     } else {
+  //       const categoryIndex = specificOrder.indexOf(currentCategory)
+  //       if (direction === 'up' && categoryIndex > 0) {
+  //         const previousCategory = specificOrder[categoryIndex - 1]
+  //         const previousThreads = groupedThreads[previousCategory]
+  //         if (previousThreads.length > 0) {
+  //           const lastThreadInPreviousCategory = previousThreads[previousThreads.length - 1]
+  //           navigate(`/thread/${lastThreadInPreviousCategory.name}`)
+  //         }
+  //       } else if (direction === 'down' && categoryIndex < specificOrder.length - 1) {
+  //         const nextCategory = specificOrder[categoryIndex + 1]
+  //         const nextThreads = groupedThreads[nextCategory]
+  //         if (nextThreads.length > 0) {
+  //           const firstThreadInNextCategory = nextThreads[0]
+  //           navigate(`/thread/${firstThreadInNextCategory.name}`)
+  //         }
+  //       }
+  //     }
+  //   }
 
-    const handleKeyDown = (event) => {
-      if (event.altKey) {
-        switch (event.key) {
-          case 'ArrowUp':
-            navigateThread('up')
-            break
-          case 'ArrowDown':
-            navigateThread('down')
-            break
-        }
-      }
-    }
+  //   const handleKeyDown = (event) => {
+  //     if (event.altKey) {
+  //       switch (event.key) {
+  //         case 'ArrowUp':
+  //           navigateThread('up')
+  //           break
+  //         case 'ArrowDown':
+  //           navigateThread('down')
+  //           break
+  //       }
+  //     }
+  //   }
 
-    document.addEventListener('keydown', handleKeyDown)
+  //   document.addEventListener('keydown', handleKeyDown)
 
-    return () => {
-      // Remove the event listener when the component unmounts
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [threadName, allThreadsLoading]) // Empty dependency array to run this effect only once
+  //   return () => {
+  //     // Remove the event listener when the component unmounts
+  //     document.removeEventListener('keydown', handleKeyDown)
+  //   }
+  // }, [threadName, allThreadsLoading]) // Empty dependency array to run this effect only once
 
   const threadPickerMemo = useMemo(() => {
     const groupedThreads = groupThreadsByCategory(allThreads)

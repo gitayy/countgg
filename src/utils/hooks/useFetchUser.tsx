@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getAuthStatus } from '../api'
-import { Challenge, Counter, Item, User } from '../types'
+import { Challenge, Counter, Item, MiscSettings, User } from '../types'
 import { useIsMounted } from './useIsMounted'
 
 export function useFetchUser() {
@@ -10,6 +10,7 @@ export function useFetchUser() {
   const [totalCounters, setTotalCounters] = useState<number>()
   const [counter, setCounter] = useState<Counter>()
   const [items, setItems] = useState<Item[]>()
+  const [miscSettings, setMiscSettings] = useState<MiscSettings>()
   const [challenges, setChallenges] = useState<Challenge[]>()
   const [unreadMessageCount, setUnreadMessageCount] = useState<number>()
   const isMounted = useIsMounted()
@@ -22,6 +23,7 @@ export function useFetchUser() {
           setLoadedSiteVer(data.site_version)
           setCounter(data.counter)
           setItems(data.items)
+          setMiscSettings(data.miscSettings)
           setTotalCounters(data.totalCounters)
           setUnreadMessageCount(data.unreadMentionCount)
         }
@@ -42,6 +44,8 @@ export function useFetchUser() {
     setCounter,
     items,
     setItems,
+    miscSettings,
+    setMiscSettings,
     challenges,
     setChallenges,
     totalCounters,

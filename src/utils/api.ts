@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios'
-import { User, Counter, ThreadType, AllegianceType, Item, PostType, Blog } from './types'
+import { User, Counter, ThreadType, AllegianceType, Item, PostType, Blog, MiscSettings } from './types'
 
 const CONFIG: AxiosRequestConfig = { withCredentials: true }
 const API_URL = `${process.env.REACT_APP_API_HOST}/api`
@@ -9,6 +9,7 @@ export const getAuthStatus = () =>
     user: User
     counter: Counter
     items: Item[]
+    miscSettings: MiscSettings
     site_version: string
     totalCounters: number
     unreadMentionCount: number
@@ -39,6 +40,8 @@ export const getAllBlogs = () => axios.get<{ blogs: Blog[] }>(`${API_URL}/thread
 export const getFreeSecretAchievement = () => axios.get<any>(`${API_URL}/counter/free_secret_achievement`, CONFIG)
 
 export const getShopItems = () => axios.get<any>(`${API_URL}/user/shop`, CONFIG)
+
+export const getAllServers = () => axios.get<any>(`${API_URL}/server/all`, CONFIG)
 
 export const purchaseItem = (item_id: number) => axios.post(`${API_URL}/api/purchaseItem`, { item_id: item_id }, CONFIG)
 

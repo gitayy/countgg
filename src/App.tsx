@@ -68,6 +68,8 @@ function App() {
     setCounter,
     items,
     setItems,
+    miscSettings,
+    setMiscSettings,
     challenges,
     setChallenges,
     totalCounters,
@@ -75,7 +77,7 @@ function App() {
     unreadMessageCount,
     setUnreadMessageCount,
   } = useFetchUser()
-  const { allThreads, allThreadsLoading } = useFetchAllThreads()
+  const { allThreads, allThreadsLoading, setAllThreads, setAllThreadsLoading } = useFetchAllThreads()
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
   const [mode, setMode] = useState<PaletteMode>(prefersDarkMode ? 'dark' : 'light')
 
@@ -232,6 +234,8 @@ function App() {
                 setCounter,
                 items,
                 setItems,
+                miscSettings,
+                setMiscSettings,
                 challenges,
                 setChallenges,
                 totalCounters,
@@ -242,7 +246,7 @@ function App() {
             >
               <CookiesProvider>
                 <SocketContext.Provider value={socket}>
-                  <ThreadsContext.Provider value={{ allThreads, allThreadsLoading }}>
+                  <ThreadsContext.Provider value={{ allThreads, allThreadsLoading, setAllThreads, setAllThreadsLoading }}>
                     <ThreadProvider>
                       <Routes>
                         <Route path="/*" element={<Sidebar />} />
@@ -298,7 +302,6 @@ function App() {
                         <Route path="/blog/create" element={<BlogCreatePage />} />
                         <Route path="/blog/:blogId" element={<BlogPage />} />
                         <Route path="/servers" element={<ServersPage />} />
-                        <Route path="/server/:serverId" element={<ServersPage />} />
                         {user && counter && <Route path="/prefs" element={<PrefsPage />} />}
                         {user && counter && <Route path="/mentions" element={<MentionsPage />} />}
                         {user && counter && <Route path="/shop" element={<ShopPage />} />}

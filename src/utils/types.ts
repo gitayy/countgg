@@ -57,6 +57,11 @@ export type Counter = {
   emoji?: string
 }
 
+export type MiscSettings = {
+  categories: CategoryWithoutFullThreads[]
+  lastUpdated: number
+}
+
 export type PostType = {
   uuid: string
   timestamp: string
@@ -246,4 +251,32 @@ export type Blog = {
   tags: string[]
   views: number
   likes: number
+}
+
+export interface Category {
+  name: string;
+  threads: ThreadType[];
+  expanded: boolean;
+}
+
+export interface CategoryWithoutFullThreads {
+  name: string;
+  threadUUIDs: string[];
+  expanded: boolean;
+}
+
+export type Server = {
+  id: number
+  discordID: string
+  name: string
+  avatar: string
+  counts: number
+  botMods: string[]
+  nsfw: boolean
+  isBanned: boolean
+  threads: ThreadType[]
+  isActive: boolean
+  canUsersJoinWithoutApproval: boolean
+  canUsersNotInTheServerJoin: boolean
+  kickUsersAfterTheyLeaveTheDiscordServer: boolean
 }
