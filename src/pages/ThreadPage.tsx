@@ -1809,29 +1809,29 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
 
   function setPreferencesFromThreadOrUser(threadPrefs: ThreadPrefs | undefined, user: User): PreferencesType {
     const preferences: PreferencesType = {
-      pref_online: threadPrefs?.pref_online || user.pref_online || false,
-      pref_discord_pings: threadPrefs?.pref_discord_pings || user.pref_discord_pings || false,
-      pref_load_from_bottom: threadPrefs?.pref_load_from_bottom || user.pref_load_from_bottom || false,
-      pref_strike_color: threadPrefs?.pref_strike_color || user.pref_strike_color || '#cccccc',
-      pref_standardize_format: threadPrefs?.pref_standardize_format || user.pref_standardize_format || 'Disabled',
-      pref_nightMode: threadPrefs?.pref_nightMode || user.pref_nightMode || 'System',
-      pref_submit_shortcut: threadPrefs?.pref_submit_shortcut || user.pref_submit_shortcut || 'CtrlEnter',
-      pref_clear: threadPrefs?.pref_clear || user.pref_clear || 'Clear',
-      pref_time_since_last_count: threadPrefs?.pref_time_since_last_count || user.pref_time_since_last_count || false,
-      pref_custom_stricken: threadPrefs?.pref_custom_stricken || user.pref_custom_stricken || 'Disabled',
-      pref_post_style: threadPrefs?.pref_post_style || user.pref_post_style || 'Default',
-      pref_post_style_mobile: threadPrefs?.pref_post_style_mobile || user.pref_post_style_mobile || 'Default',
-      pref_reply_time_interval: threadPrefs?.pref_reply_time_interval || user.pref_reply_time_interval || 100,
-      pref_night_mode_colors: threadPrefs?.pref_night_mode_colors || user.pref_night_mode_colors || 'Default',
-      pref_post_position: threadPrefs?.pref_post_position || user.pref_post_position || 'Left',
-      pref_hide_stricken: threadPrefs?.pref_hide_stricken || user.pref_hide_stricken || 'Disabled',
-      pref_highlight_last_count: threadPrefs?.pref_highlight_last_count || user.pref_highlight_last_count || false,
-      pref_highlight_last_count_color: threadPrefs?.pref_highlight_last_count_color || user.pref_highlight_last_count_color || '#006b99',
-      pref_sound_on_stricken: threadPrefs?.pref_sound_on_stricken || user.pref_sound_on_stricken || 'Disabled',
-      pref_hide_thread_picker: threadPrefs?.pref_hide_thread_picker || user.pref_hide_thread_picker || false,
-      pref_stricken_count_opacity: threadPrefs?.pref_stricken_count_opacity || user.pref_stricken_count_opacity || 1,
-      pref_timestamp_display: user.pref_timestamp_display || 'Milliseconds',
-      pref_show_latency: user.pref_show_latency || true
+      pref_online: threadPrefs?.pref_online ?? user.pref_online ?? false,
+      pref_discord_pings: threadPrefs?.pref_discord_pings ?? user.pref_discord_pings ?? false,
+      pref_load_from_bottom: threadPrefs?.pref_load_from_bottom ?? user.pref_load_from_bottom ?? false,
+      pref_strike_color: threadPrefs?.pref_strike_color ?? user.pref_strike_color ?? '#cccccc',
+      pref_standardize_format: threadPrefs?.pref_standardize_format ?? user.pref_standardize_format ?? 'Disabled',
+      pref_nightMode: threadPrefs?.pref_nightMode ?? user.pref_nightMode ?? 'System',
+      pref_submit_shortcut: threadPrefs?.pref_submit_shortcut ?? user.pref_submit_shortcut ?? 'CtrlEnter',
+      pref_clear: threadPrefs?.pref_clear ?? user.pref_clear ?? 'Clear',
+      pref_time_since_last_count: threadPrefs?.pref_time_since_last_count ?? user.pref_time_since_last_count ?? false,
+      pref_custom_stricken: threadPrefs?.pref_custom_stricken ?? user.pref_custom_stricken ?? 'Disabled',
+      pref_post_style: threadPrefs?.pref_post_style ?? user.pref_post_style ?? 'Default',
+      pref_post_style_mobile: threadPrefs?.pref_post_style_mobile ?? user.pref_post_style_mobile ?? 'Default',
+      pref_reply_time_interval: threadPrefs?.pref_reply_time_interval ?? user.pref_reply_time_interval ?? 100,
+      pref_night_mode_colors: threadPrefs?.pref_night_mode_colors ?? user.pref_night_mode_colors ?? 'Default',
+      pref_post_position: threadPrefs?.pref_post_position ?? user.pref_post_position ?? 'Left',
+      pref_hide_stricken: threadPrefs?.pref_hide_stricken ?? user.pref_hide_stricken ?? 'Disabled',
+      pref_highlight_last_count: threadPrefs?.pref_highlight_last_count ?? user.pref_highlight_last_count ?? false,
+      pref_highlight_last_count_color: threadPrefs?.pref_highlight_last_count_color ?? user.pref_highlight_last_count_color ?? '#006b99',
+      pref_sound_on_stricken: threadPrefs?.pref_sound_on_stricken ?? user.pref_sound_on_stricken ?? 'Disabled',
+      pref_hide_thread_picker: threadPrefs?.pref_hide_thread_picker ?? user.pref_hide_thread_picker ?? false,
+      pref_stricken_count_opacity: threadPrefs?.pref_stricken_count_opacity ?? user.pref_stricken_count_opacity ?? 1,
+      pref_timestamp_display: user.pref_timestamp_display ?? 'Milliseconds',
+      pref_show_latency: user.pref_show_latency ?? true
       // Add more preferences as needed
     };
   
@@ -1846,27 +1846,27 @@ useEffect(() => {
 
     // Set default values from threadPrefs or user, falling back to hard-coded defaults if not available
     setPrefEnabled(threadPrefs && threadPrefs.enabled !== undefined ? threadPrefs.enabled : true);
-    setPrefOnline(threadPrefs?.pref_online || user.pref_online || false);
-    setPrefDiscordPings(threadPrefs?.pref_discord_pings || user.pref_discord_pings || false);
-    setPrefLoadFromBottom(threadPrefs?.pref_load_from_bottom || user.pref_load_from_bottom || false);
-    setPrefStrikeColor(threadPrefs?.pref_strike_color || user.pref_strike_color || '#cccccc');
-    setPrefStandardizeFormat(threadPrefs?.pref_standardize_format || user.pref_standardize_format || 'Disabled');
-    setPrefNightMode(threadPrefs?.pref_nightMode || user.pref_nightMode || 'System');
-    setPrefSubmitShortcut(threadPrefs?.pref_submit_shortcut || user.pref_submit_shortcut || 'CtrlEnter');
-    setPrefClear(threadPrefs?.pref_clear || user.pref_clear || 'Clear');
-    setPrefTimeSinceLastCount(threadPrefs?.pref_time_since_last_count || user.pref_time_since_last_count || false);
-    setPrefCustomStricken(threadPrefs?.pref_custom_stricken || user.pref_custom_stricken || 'Disabled');
-    setPrefPostStyle(threadPrefs?.pref_post_style || user.pref_post_style || 'Default');
-    setPrefPostStyleMobile(threadPrefs?.pref_post_style_mobile || user.pref_post_style_mobile || 'Default');
-    setPrefReplyTimeInterval(threadPrefs?.pref_reply_time_interval || user.pref_reply_time_interval || 100);
-    setPrefNightModeColors(threadPrefs?.pref_night_mode_colors || user.pref_night_mode_colors || 'Default');
-    setPrefPostPosition(threadPrefs?.pref_post_position || user.pref_post_position || 'Left');
-    setPrefHideStricken(threadPrefs?.pref_hide_stricken || user.pref_hide_stricken || 'Disabled');
-    setPrefHighlightLastCount(threadPrefs?.pref_highlight_last_count || user.pref_highlight_last_count || false);
-    setPrefHighlightLastCountColor(threadPrefs?.pref_highlight_last_count_color || user.pref_highlight_last_count_color || '#006b99');
-    setPrefSoundOnStricken(threadPrefs?.pref_sound_on_stricken || user.pref_sound_on_stricken || 'Disabled');
-    setPrefHideThreadPicker(threadPrefs?.pref_hide_thread_picker || user.pref_hide_thread_picker || false);
-    setPrefStrickenCountOpacity(threadPrefs?.pref_stricken_count_opacity || user.pref_stricken_count_opacity || 1);
+    setPrefOnline(threadPrefs?.pref_online ?? user.pref_online ?? false);
+    setPrefDiscordPings(threadPrefs?.pref_discord_pings ?? user.pref_discord_pings ?? false);
+    setPrefLoadFromBottom(threadPrefs?.pref_load_from_bottom ?? user.pref_load_from_bottom ?? false);
+    setPrefStrikeColor(threadPrefs?.pref_strike_color ?? user.pref_strike_color ?? '#cccccc');
+    setPrefStandardizeFormat(threadPrefs?.pref_standardize_format ?? user.pref_standardize_format ?? 'Disabled');
+    setPrefNightMode(threadPrefs?.pref_nightMode ?? user.pref_nightMode ?? 'System');
+    setPrefSubmitShortcut(threadPrefs?.pref_submit_shortcut ?? user.pref_submit_shortcut ?? 'CtrlEnter');
+    setPrefClear(threadPrefs?.pref_clear ?? user.pref_clear ?? 'Clear');
+    setPrefTimeSinceLastCount(threadPrefs?.pref_time_since_last_count ?? user.pref_time_since_last_count ?? false);
+    setPrefCustomStricken(threadPrefs?.pref_custom_stricken ?? user.pref_custom_stricken ?? 'Disabled');
+    setPrefPostStyle(threadPrefs?.pref_post_style ?? user.pref_post_style ?? 'Default');
+    setPrefPostStyleMobile(threadPrefs?.pref_post_style_mobile ?? user.pref_post_style_mobile ?? 'Default');
+    setPrefReplyTimeInterval(threadPrefs?.pref_reply_time_interval ?? user.pref_reply_time_interval ?? 100);
+    setPrefNightModeColors(threadPrefs?.pref_night_mode_colors ?? user.pref_night_mode_colors ?? 'Default');
+    setPrefPostPosition(threadPrefs?.pref_post_position ?? user.pref_post_position ?? 'Left');
+    setPrefHideStricken(threadPrefs?.pref_hide_stricken ?? user.pref_hide_stricken ?? 'Disabled');
+    setPrefHighlightLastCount(threadPrefs?.pref_highlight_last_count ?? user.pref_highlight_last_count ?? false);
+    setPrefHighlightLastCountColor(threadPrefs?.pref_highlight_last_count_color ?? user.pref_highlight_last_count_color ?? '#006b99');
+    setPrefSoundOnStricken(threadPrefs?.pref_sound_on_stricken ?? user.pref_sound_on_stricken ?? 'Disabled');
+    setPrefHideThreadPicker(threadPrefs?.pref_hide_thread_picker ?? user.pref_hide_thread_picker ?? false);
+    setPrefStrickenCountOpacity(threadPrefs?.pref_stricken_count_opacity ?? user.pref_stricken_count_opacity ?? 1);
 
     if(threadPrefs && threadPrefs.enabled === true && setPreferences) {
       setPreferences(setPreferencesFromThreadOrUser(threadPrefs, user))
