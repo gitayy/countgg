@@ -17,7 +17,7 @@ export function useFetchRecentCounts(
   const [loadedOldest, setLoadedOldest] = useState(false)
   const [loadedNewest, setLoadedNewest] = useState(true)
   const isMounted = useIsMounted()
-  const { user, loading } = useContext(UserContext)
+  const { user, loading, preferences } = useContext(UserContext)
 
   useEffect(() => {
     if (!loading && socketStatus === 'LIVE') {
@@ -27,7 +27,7 @@ export function useFetchRecentCounts(
           if (isMounted.current && data.recentCounts && thread_ref.current === thread_name) {
             // console.log("New posts loaded!");
             // console.log(`Thread: ${thread_name}, post 0: ${data.recentCounts[0].thread}, threadRef: ${thread_ref.current} now: ${Date.now()}`);
-            if (user && !loading && user.pref_load_from_bottom) {
+            if (user && !loading && preferences && preferences.pref_load_from_bottom) {
               setRecentCounts(data.recentCounts.reverse())
               recentCountsRef.current = data.recentCounts
             } else {

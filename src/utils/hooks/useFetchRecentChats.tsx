@@ -17,7 +17,7 @@ export function useFetchRecentChats(
   const [loadedOldestChats, setLoadedOldestChats] = useState(false)
   const [loadedNewestChats, setLoadedNewestChats] = useState(true)
   const isMounted = useIsMounted()
-  const { user, loading } = useContext(UserContext)
+  const { user, loading, preferences } = useContext(UserContext)
 
   useEffect(() => {
     if (!loading && socketStatus === 'LIVE') {
@@ -25,7 +25,7 @@ export function useFetchRecentChats(
       getRecentCounts(thread_name, context, true)
         .then(({ data }) => {
           if (isMounted.current && data.recentCounts && thread_ref.current === thread_name) {
-            if (user && !loading && user.pref_load_from_bottom) {
+            if (user && !loading && preferences && preferences.pref_load_from_bottom) {
               setRecentChats(data.recentCounts.reverse())
               recentChatsRef.current = data.recentCounts
             } else {

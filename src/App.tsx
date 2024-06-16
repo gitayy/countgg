@@ -76,6 +76,8 @@ function App() {
     setTotalCounters,
     unreadMessageCount,
     setUnreadMessageCount,
+    preferences,
+    setPreferences,
   } = useFetchUser()
   const { allThreads, allThreadsLoading, setAllThreads, setAllThreadsLoading } = useFetchAllThreads()
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)')
@@ -85,12 +87,12 @@ function App() {
   ReactGA.initialize(GA_TR_ID)
 
   useEffect(() => {
-    if (user && user.pref_nightMode != 'System') {
-      setMode(user.pref_nightMode === 'On' ? 'dark' : 'light')
+    if (preferences && preferences.pref_nightMode != 'System') {
+      setMode(preferences.pref_nightMode === 'On' ? 'dark' : 'light')
     } else {
       setMode(prefersDarkMode ? 'dark' : 'light')
     }
-  }, [prefersDarkMode, user])
+  }, [prefersDarkMode, preferences])
 
   const [snack, setSnack] = useState({
     message: '',
@@ -147,52 +149,52 @@ function App() {
             }),
       },
       replyGold: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#727200' : '#f2ee0e',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#f2ee0e' : '#727200',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#727200' : '#f2ee0e',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#f2ee0e' : '#727200',
       },
       reply0: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#4d0000' : '#ef7070',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#ef7070' : '#4d0000',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#4d0000' : '#ef7070',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#ef7070' : '#4d0000',
       },
       reply100: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#980000' : '#ffaeae',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#ffaeae' : '#980000',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#980000' : '#ffaeae',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#ffaeae' : '#980000',
       },
       reply200: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#654700' : '#ffebba',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#ffebba' : '#654700',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#654700' : '#ffebba',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#ffebba' : '#654700',
       },
       reply300: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#216e00' : '#cfffba',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#cfffba' : '#216e00',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#216e00' : '#cfffba',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#cfffba' : '#216e00',
       },
       reply400: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#003b0b' : '#a2e8af',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#a2e8af' : '#003b0b',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#003b0b' : '#a2e8af',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#a2e8af' : '#003b0b',
       },
       reply500: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#006b53' : '#adffed',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#adffed' : '#006b53',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#006b53' : '#adffed',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#adffed' : '#006b53',
       },
       reply600: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#004183' : '#add6ff',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#add6ff' : '#004183',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#004183' : '#add6ff',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#add6ff' : '#004183',
       },
       reply700: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#14006c' : '#bcadff',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#bcadff' : '#14006c',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#14006c' : '#bcadff',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#bcadff' : '#14006c',
       },
       reply800: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#460060' : '#e9adff',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#e9adff' : '#460060',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#460060' : '#e9adff',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#e9adff' : '#460060',
       },
       reply900: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#6e0064' : '#ffadf8',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#ffadf8' : '#6e0064',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#6e0064' : '#ffadf8',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#ffadf8' : '#6e0064',
       },
       reply1000: {
-        light: user && user.pref_night_mode_colors === 'Dark' ? '#2a2a2a' : '#ededed',
-        dark: user && user.pref_night_mode_colors === 'Light' ? '#ededed' : '#2a2a2a',
+        light: preferences && preferences.pref_night_mode_colors === 'Dark' ? '#2a2a2a' : '#ededed',
+        dark: preferences && preferences.pref_night_mode_colors === 'Light' ? '#ededed' : '#2a2a2a',
       },
     },
   })
@@ -242,6 +244,8 @@ function App() {
                 setTotalCounters,
                 unreadMessageCount,
                 setUnreadMessageCount,
+                preferences,
+                setPreferences,
               }}
             >
               <CookiesProvider>

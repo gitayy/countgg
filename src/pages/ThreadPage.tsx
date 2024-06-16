@@ -41,7 +41,7 @@ import { addCounterToCache, cachedCounters } from '../utils/helpers'
 import { useFetchRecentCounts } from '../utils/hooks/useFetchRecentCounts'
 import { useFetchThread } from '../utils/hooks/useFetchThread'
 import { SocketContext } from '../utils/contexts/SocketContext'
-import { Category, Counter, PostType, ThreadType, User } from '../utils/types'
+import { Category, Counter, PostType, PreferencesType, ThreadPrefs, ThreadType, User } from '../utils/types'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
 import CountList from '../components/CountList'
 import queryString from 'query-string'
@@ -52,11 +52,13 @@ import { useFetchRecentChats } from '../utils/hooks/useFetchRecentChats'
 import remarkGfm from 'remark-gfm'
 import ReactMarkdown from 'react-markdown'
 import {
+  deleteThreadPrefs,
   findPostByThreadAndNumber,
   findPostByThreadAndRawCount,
   loadNewerCounts,
   modToggleSilentThreadLock,
   modToggleThreadLock,
+  updateThreadPrefs,
 } from '../utils/api'
 import { DailyHOCTable } from '../components/DailyHOCTable'
 import { SplitsTable } from '../components/SplitsTable'
@@ -79,6 +81,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import CheckIcon from '@mui/icons-material/Check';
 import ClearIcon from '@mui/icons-material/Clear';
 import { isEqual } from 'lodash'
+import { Preferences } from '../components/Preferences'
 
 let imsorryfortheglobalpull = 'DISABLED'
 export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
@@ -112,11 +115,11 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
 
   const socket = useContext(SocketContext)
-  const [socketStatus, setSocketStatus] = useState('CONNECTING...')
+  const [socketStatus, setSocketStatus] = useState('CONNECTING')
   const [socketViewers, setSocketViewers] = useState(1)
   const [threadStreak, setThreadStreak] = useState<number | undefined>(undefined)
 
-  const { user, counter, loading, challenges, setChallenges, miscSettings, setMiscSettings } = useContext(UserContext)
+  const { user, counter, loading, challenges, setChallenges, miscSettings, setMiscSettings, preferences, setPreferences } = useContext(UserContext)
   const { allThreads, allThreadsLoading, setAllThreadsLoading } = useContext(ThreadsContext)
   const { thread, threadLoading, setThread } = useFetchThread(thread_name)
   const {
@@ -317,7 +320,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     if (replayActive && currentCount !== undefined) {
       cache_counts(currentCount)
       if (loadedNewestRef.current) {
-        if (user && user.pref_load_from_bottom) {
+        if (preferences && preferences.pref_load_from_bottom) {
           recentCountsRef.current = (() => {
             const newCounts = [...recentCountsRef.current, currentCount]
             if (isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
@@ -365,10 +368,10 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       if (currentCount.isValidCount) {
         setLastCount({ lastCount: currentCount, lastCounter: cachedCounters[currentCount.authorUUID] })
       }
-      if (currentCount.stricken && user && user.pref_sound_on_stricken !== 'Disabled') {
-        if (user.pref_sound_on_stricken === 'Only My Counts' && currentCount.authorUUID === user.uuid) {
+      if (currentCount.stricken && user && preferences && preferences.pref_sound_on_stricken !== 'Disabled') {
+        if (preferences.pref_sound_on_stricken === 'Only My Counts' && currentCount.authorUUID === user.uuid) {
           playDing()
-        } else if (user.pref_sound_on_stricken === 'All Stricken') {
+        } else if (preferences.pref_sound_on_stricken === 'All Stricken') {
           playDing()
         }
       }
@@ -376,7 +379,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         setFaviconCount()
       }
     }
-  }, [replayActive, thread_name, dingSound, currentCount])
+  }, [replayActive, thread_name, dingSound, currentCount, preferences])
 
   useEffect(() => {
     if (autoplay === 0 && !loading) {
@@ -410,8 +413,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   // const [loadedNewestChats, setLoadedNewestChats] = useState(true);
 
   useEffect(() => {
-    if (!loading && user) {
-      if (user.pref_hide_thread_picker) {
+    if (!loading && user && preferences) {
+      if (preferences.pref_hide_thread_picker) {
         setDesktopPickerOpen(false)
       }
     }
@@ -593,7 +596,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   }, [counter])
 
   const cache_counts = (count) => {
-    if (user && user.pref_load_from_bottom) {
+    if (user && preferences && preferences.pref_load_from_bottom) {
       if (loadedNewestRef.current == false) {
         setCachedCounts((prevCounts) => {
           const newCounts = [...prevCounts, count]
@@ -672,10 +675,10 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         setSocketStatus('DISCONNECTED')
       })
     }
-  }, [loading, thread_name])
+  }, [loading, thread_name, preferences])
 
   useEffect(() => {
-    if (isMounted.current && loading == false && socketStatus === 'LIVE' && dingSound !== null) {
+    if (isMounted.current && loading == false && ['LIVE'].includes(socketStatus) && dingSound !== null) {
       socket.emit('watch', thread_name)
 
       socket.on(`watcher_count`, function (data) {
@@ -779,7 +782,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         addCounterToCache(data.counter)
         cache_counts(data.post)
         if (loadedNewestRef.current) {
-          if (user && user.pref_load_from_bottom) {
+          if (user && preferences && preferences.pref_load_from_bottom) {
             recentCountsRef.current = (() => {
               const newCounts = [...recentCountsRef.current, data.post]
               if (isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
@@ -844,10 +847,10 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
             })
           }
         }
-        if (data.post.stricken && user && user.pref_sound_on_stricken !== 'Disabled') {
-          if (user.pref_sound_on_stricken === 'Only My Counts' && data.post.authorUUID === user.uuid) {
+        if (data.post.stricken && user && preferences && preferences.pref_sound_on_stricken !== 'Disabled') {
+          if (preferences.pref_sound_on_stricken === 'Only My Counts' && data.post.authorUUID === user.uuid) {
             playDing()
-          } else if (user.pref_sound_on_stricken === 'All Stricken') {
+          } else if (preferences.pref_sound_on_stricken === 'All Stricken') {
             playDing()
           }
         }
@@ -861,7 +864,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
           addCounterToCache(counter)
         }
         recentCountsRef.current =
-          user && user.pref_load_from_bottom
+          user && preferences && preferences.pref_load_from_bottom
             ? [
                 ...data.recentCounts
                   .filter((count) => !recentCountsRef.current.some((prevCount) => prevCount.uuid === count.uuid))
@@ -889,7 +892,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
           addCounterToCache(counter)
         }
         recentCountsRef.current =
-          user && user.pref_load_from_bottom
+          user && preferences && preferences.pref_load_from_bottom
             ? [
                 ...recentCountsRef.current,
                 ...data.recentCounts.filter((count) => !recentCountsRef.current.some((prevCount) => prevCount.uuid === count.uuid)),
@@ -923,7 +926,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
           setLoadedOldestChats(true)
         }
         recentChatsRef.current =
-          user && user.pref_load_from_bottom
+          user && preferences && preferences.pref_load_from_bottom
             ? [
                 ...data.recentCounts
                   .filter((count) => !recentChatsRef.current.some((prevCount) => prevCount.uuid === count.uuid))
@@ -951,7 +954,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
           setLoadedOldestChats(true)
         }
         recentChatsRef.current =
-          user && user.pref_load_from_bottom
+          user && preferences && preferences.pref_load_from_bottom
             ? [
                 ...recentChatsRef.current,
                 ...data.recentCounts
@@ -1007,6 +1010,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
           }
         })
       })
+      // setSocketStatus('LIVE')
 
       return () => {
         console.log('Disabling socket functions until you reconnect / join another thread.')
@@ -1630,7 +1634,7 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         </Box>
       )
     }
-  }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name, isDesktop, allThreads, categorizedThreads])
+  }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name, isDesktop, allThreads, categorizedThreads, preferences])
 
   const robConfirmMemo = useMemo(() => {
     return <ConfirmDialog open={robOpen} text={`You may only rob once per day. Your ability to rob resets at midnight Eastern (US).`} handleCancel={() => robCancel()} handleConfirm={() => robConfirm()} />
@@ -1700,6 +1704,7 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
     loadedNewest,
     isScrolledToNewest,
     loading,
+    preferences,
   ])
 
   const chatsMemo = useMemo(() => {
@@ -1752,7 +1757,232 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
     loadedNewestChats,
     chatsIsScrolledToNewest,
     loading,
+    preferences,
   ])
+
+  // const threadPrefs = user?.threadPrefs?.find(prefs => prefs.thread.uuid === thread?.uuid)
+
+  // const [prefOnline, setPrefOnline] = useState<boolean>(threadPrefs?.pref_online || user?.pref_online || false);
+  // const [prefDiscordPings, setPrefDiscordPings] = useState<boolean>(threadPrefs?.pref_discord_pings || user?.pref_discord_pings || false);
+  // const [prefLoadFromBottom, setPrefLoadFromBottom] = useState<boolean>(threadPrefs?.pref_load_from_bottom || user?.pref_load_from_bottom || false);
+  // const [prefStrikeColor, setPrefStrikeColor] = useState(threadPrefs?.pref_strike_color || user?.pref_strike_color || '#cccccc');
+  // const [prefStandardizeFormat, setPrefStandardizeFormat] = useState(threadPrefs?.pref_standardize_format || user?.pref_standardize_format || 'Disabled');
+  // const [prefNightMode, setPrefNightMode] = useState(threadPrefs?.pref_nightMode || user?.pref_nightMode || 'System');
+  // const [prefSubmitShortcut, setPrefSubmitShortcut] = useState(threadPrefs?.pref_submit_shortcut || user?.pref_submit_shortcut || 'CtrlEnter');
+  // const [prefClear, setPrefClear] = useState(threadPrefs?.pref_clear || user?.pref_clear || 'Clear');
+  // const [prefTimeSinceLastCount, setPrefTimeSinceLastCount] = useState(threadPrefs?.pref_time_since_last_count || user?.pref_time_since_last_count || false);
+  // const [prefCustomStricken, setPrefCustomStricken] = useState(threadPrefs?.pref_custom_stricken || user?.pref_custom_stricken || 'Disabled');
+  // const [prefPostStyle, setPrefPostStyle] = useState(threadPrefs?.pref_post_style || user?.pref_post_style || 'Default');
+  // const [prefPostStyleMobile, setPrefPostStyleMobile] = useState(threadPrefs?.pref_post_style_mobile || user?.pref_post_style_mobile || 'Default');
+  // const [prefReplyTimeInterval, setPrefReplyTimeInterval] = useState(threadPrefs?.pref_reply_time_interval || user?.pref_reply_time_interval || 100);
+  // const [prefNightModeColors, setPrefNightModeColors] = useState(threadPrefs?.pref_night_mode_colors || user?.pref_night_mode_colors || 'Default');
+  // const [prefPostPosition, setPrefPostPosition] = useState(threadPrefs?.pref_post_position || user?.pref_post_position || 'Left');
+  // const [prefHideStricken, setPrefHideStricken] = useState(threadPrefs?.pref_hide_stricken || user?.pref_hide_stricken || 'Disabled');
+  // const [prefHighlightLastCount, setPrefHighlightLastCount] = useState(threadPrefs?.pref_highlight_last_count || user?.pref_highlight_last_count || false);
+  // const [prefHighlightLastCountColor, setPrefHighlightLastCountColor] = useState(threadPrefs?.pref_highlight_last_count_color || user?.pref_highlight_last_count_color || '#006b99');
+  // const [prefSoundOnStricken, setPrefSoundOnStricken] = useState(threadPrefs?.pref_sound_on_stricken || user?.pref_sound_on_stricken || 'Disabled');
+  // const [prefHideThreadPicker, setPrefHideThreadPicker] = useState(threadPrefs?.pref_hide_thread_picker || user?.pref_hide_thread_picker || false);
+  // const [prefStrickenCountOpacity, setPrefStrickenCountOpacity] = useState(threadPrefs?.pref_stricken_count_opacity || user?.pref_stricken_count_opacity || 1);  
+
+  const [prefEnabled, setPrefEnabled] = useState<boolean | undefined>(undefined);
+  const [prefOnline, setPrefOnline] = useState<boolean | undefined>(undefined);
+  const [prefDiscordPings, setPrefDiscordPings] = useState<boolean | undefined>(undefined);
+  const [prefLoadFromBottom, setPrefLoadFromBottom] = useState<boolean | undefined>(undefined);
+  const [prefStrikeColor, setPrefStrikeColor] = useState<string | undefined>(undefined);
+  const [prefStandardizeFormat, setPrefStandardizeFormat] = useState<string | undefined>(undefined);
+  const [prefNightMode, setPrefNightMode] = useState<string | undefined>(undefined);
+  const [prefSubmitShortcut, setPrefSubmitShortcut] = useState<string | undefined>(undefined);
+  const [prefClear, setPrefClear] = useState<string | undefined>(undefined);
+  const [prefTimeSinceLastCount, setPrefTimeSinceLastCount] = useState<boolean | undefined>(undefined);
+  const [prefCustomStricken, setPrefCustomStricken] = useState<string | undefined>(undefined);
+  const [prefPostStyle, setPrefPostStyle] = useState<string | undefined>(undefined);
+  const [prefPostStyleMobile, setPrefPostStyleMobile] = useState<string | undefined>(undefined);
+  const [prefReplyTimeInterval, setPrefReplyTimeInterval] = useState<number | undefined>(undefined);
+  const [prefNightModeColors, setPrefNightModeColors] = useState<string | undefined>(undefined);
+  const [prefPostPosition, setPrefPostPosition] = useState<string | undefined>(undefined);
+  const [prefHideStricken, setPrefHideStricken] = useState<string | undefined>(undefined);
+  const [prefHighlightLastCount, setPrefHighlightLastCount] = useState<boolean | undefined>(undefined);
+  const [prefHighlightLastCountColor, setPrefHighlightLastCountColor] = useState<string | undefined>(undefined);
+  const [prefSoundOnStricken, setPrefSoundOnStricken] = useState<string | undefined>(undefined);
+  const [prefHideThreadPicker, setPrefHideThreadPicker] = useState<boolean | undefined>(undefined);
+  const [prefStrickenCountOpacity, setPrefStrickenCountOpacity] = useState<number | undefined>(undefined);
+
+  function setPreferencesFromThreadOrUser(threadPrefs: ThreadPrefs | undefined, user: User): PreferencesType {
+    const preferences: PreferencesType = {
+      pref_online: threadPrefs?.pref_online || user.pref_online || false,
+      pref_discord_pings: threadPrefs?.pref_discord_pings || user.pref_discord_pings || false,
+      pref_load_from_bottom: threadPrefs?.pref_load_from_bottom || user.pref_load_from_bottom || false,
+      pref_strike_color: threadPrefs?.pref_strike_color || user.pref_strike_color || '#cccccc',
+      pref_standardize_format: threadPrefs?.pref_standardize_format || user.pref_standardize_format || 'Disabled',
+      pref_nightMode: threadPrefs?.pref_nightMode || user.pref_nightMode || 'System',
+      pref_submit_shortcut: threadPrefs?.pref_submit_shortcut || user.pref_submit_shortcut || 'CtrlEnter',
+      pref_clear: threadPrefs?.pref_clear || user.pref_clear || 'Clear',
+      pref_time_since_last_count: threadPrefs?.pref_time_since_last_count || user.pref_time_since_last_count || false,
+      pref_custom_stricken: threadPrefs?.pref_custom_stricken || user.pref_custom_stricken || 'Disabled',
+      pref_post_style: threadPrefs?.pref_post_style || user.pref_post_style || 'Default',
+      pref_post_style_mobile: threadPrefs?.pref_post_style_mobile || user.pref_post_style_mobile || 'Default',
+      pref_reply_time_interval: threadPrefs?.pref_reply_time_interval || user.pref_reply_time_interval || 100,
+      pref_night_mode_colors: threadPrefs?.pref_night_mode_colors || user.pref_night_mode_colors || 'Default',
+      pref_post_position: threadPrefs?.pref_post_position || user.pref_post_position || 'Left',
+      pref_hide_stricken: threadPrefs?.pref_hide_stricken || user.pref_hide_stricken || 'Disabled',
+      pref_highlight_last_count: threadPrefs?.pref_highlight_last_count || user.pref_highlight_last_count || false,
+      pref_highlight_last_count_color: threadPrefs?.pref_highlight_last_count_color || user.pref_highlight_last_count_color || '#006b99',
+      pref_sound_on_stricken: threadPrefs?.pref_sound_on_stricken || user.pref_sound_on_stricken || 'Disabled',
+      pref_hide_thread_picker: threadPrefs?.pref_hide_thread_picker || user.pref_hide_thread_picker || false,
+      pref_stricken_count_opacity: threadPrefs?.pref_stricken_count_opacity || user.pref_stricken_count_opacity || 1,
+      pref_timestamp_display: user.pref_timestamp_display || 'Milliseconds',
+      pref_show_latency: user.pref_show_latency || true
+      // Add more preferences as needed
+    };
+  
+    return preferences;
+  }
+
+// Assuming 'user' and 'threadPrefs' are fetched asynchronously
+useEffect(() => {
+  // Check if user and threadPrefs are loaded
+  if (!loading && user && thread) {
+    let threadPrefs = user.threadPreferences && user.threadPreferences.length > 0 ? user.threadPreferences?.find(prefs => prefs.thread.uuid === thread?.uuid) : undefined;
+
+    // Set default values from threadPrefs or user, falling back to hard-coded defaults if not available
+    setPrefEnabled(threadPrefs && threadPrefs.enabled !== undefined ? threadPrefs.enabled : true);
+    setPrefOnline(threadPrefs?.pref_online || user.pref_online || false);
+    setPrefDiscordPings(threadPrefs?.pref_discord_pings || user.pref_discord_pings || false);
+    setPrefLoadFromBottom(threadPrefs?.pref_load_from_bottom || user.pref_load_from_bottom || false);
+    setPrefStrikeColor(threadPrefs?.pref_strike_color || user.pref_strike_color || '#cccccc');
+    setPrefStandardizeFormat(threadPrefs?.pref_standardize_format || user.pref_standardize_format || 'Disabled');
+    setPrefNightMode(threadPrefs?.pref_nightMode || user.pref_nightMode || 'System');
+    setPrefSubmitShortcut(threadPrefs?.pref_submit_shortcut || user.pref_submit_shortcut || 'CtrlEnter');
+    setPrefClear(threadPrefs?.pref_clear || user.pref_clear || 'Clear');
+    setPrefTimeSinceLastCount(threadPrefs?.pref_time_since_last_count || user.pref_time_since_last_count || false);
+    setPrefCustomStricken(threadPrefs?.pref_custom_stricken || user.pref_custom_stricken || 'Disabled');
+    setPrefPostStyle(threadPrefs?.pref_post_style || user.pref_post_style || 'Default');
+    setPrefPostStyleMobile(threadPrefs?.pref_post_style_mobile || user.pref_post_style_mobile || 'Default');
+    setPrefReplyTimeInterval(threadPrefs?.pref_reply_time_interval || user.pref_reply_time_interval || 100);
+    setPrefNightModeColors(threadPrefs?.pref_night_mode_colors || user.pref_night_mode_colors || 'Default');
+    setPrefPostPosition(threadPrefs?.pref_post_position || user.pref_post_position || 'Left');
+    setPrefHideStricken(threadPrefs?.pref_hide_stricken || user.pref_hide_stricken || 'Disabled');
+    setPrefHighlightLastCount(threadPrefs?.pref_highlight_last_count || user.pref_highlight_last_count || false);
+    setPrefHighlightLastCountColor(threadPrefs?.pref_highlight_last_count_color || user.pref_highlight_last_count_color || '#006b99');
+    setPrefSoundOnStricken(threadPrefs?.pref_sound_on_stricken || user.pref_sound_on_stricken || 'Disabled');
+    setPrefHideThreadPicker(threadPrefs?.pref_hide_thread_picker || user.pref_hide_thread_picker || false);
+    setPrefStrickenCountOpacity(threadPrefs?.pref_stricken_count_opacity || user.pref_stricken_count_opacity || 1);
+
+    if(threadPrefs && threadPrefs.enabled === true && setPreferences) {
+      setPreferences(setPreferencesFromThreadOrUser(threadPrefs, user))
+    } else if(setPreferences) {
+      setPreferences(setPreferencesFromThreadOrUser(undefined, user))
+    }
+  }
+}, [loading, thread]);
+
+const [resetPrefs, setResetPrefs] = useState<boolean>(false);
+
+useEffect(() => {
+  if(user && resetPrefs) {
+    setPrefEnabled(true);
+    setPrefOnline(user.pref_online);
+    setPrefDiscordPings(user.pref_discord_pings);
+    setPrefLoadFromBottom(user.pref_load_from_bottom);
+    setPrefStrikeColor(user.pref_strike_color);
+    setPrefStandardizeFormat(user.pref_standardize_format);
+    setPrefNightMode(user.pref_nightMode);
+    setPrefSubmitShortcut(user.pref_submit_shortcut);
+    setPrefClear(user.pref_clear);
+    setPrefTimeSinceLastCount(user.pref_time_since_last_count);
+    setPrefCustomStricken(user.pref_custom_stricken);
+    setPrefPostStyle(user.pref_post_style);
+    setPrefPostStyleMobile(user.pref_post_style_mobile);
+    setPrefReplyTimeInterval(user.pref_reply_time_interval);
+    setPrefNightModeColors(user.pref_night_mode_colors);
+    setPrefPostPosition(user.pref_post_position);
+    setPrefHideStricken(user.pref_hide_stricken);
+    setPrefHighlightLastCount(user.pref_highlight_last_count);
+    setPrefHighlightLastCountColor(user.pref_highlight_last_count_color);
+    setPrefSoundOnStricken(user.pref_sound_on_stricken);
+    setPrefHideThreadPicker(user.pref_hide_thread_picker);
+    setPrefStrickenCountOpacity(user.pref_stricken_count_opacity);
+  }
+  setResetPrefs(false);
+}, [resetPrefs]);
+
+  const savePrefs = async () => {
+    if (user && counter && thread) {
+      if(!user.threadPreferences) {user.threadPreferences = []}
+      let thisThreadPrefs: any = user.threadPreferences && user.threadPreferences.length > 0 ? user.threadPreferences?.find(prefs => prefs.thread.uuid === thread?.uuid) : undefined;
+      if(thisThreadPrefs === undefined) {
+        thisThreadPrefs = {
+          user: user,
+          thread: thread,
+        };
+      }
+
+      thisThreadPrefs.enabled = prefEnabled; 
+      thisThreadPrefs.pref_discord_pings = prefDiscordPings;
+      thisThreadPrefs.pref_online = prefOnline;
+      thisThreadPrefs.pref_load_from_bottom = prefLoadFromBottom;
+      thisThreadPrefs.pref_time_since_last_count = prefTimeSinceLastCount;
+      thisThreadPrefs.pref_standardize_format = prefStandardizeFormat;
+      thisThreadPrefs.pref_nightMode = prefNightMode;
+      thisThreadPrefs.pref_submit_shortcut = prefSubmitShortcut;
+      thisThreadPrefs.pref_custom_stricken = prefCustomStricken;
+      thisThreadPrefs.pref_strike_color = prefStrikeColor;
+      thisThreadPrefs.pref_clear = prefClear;
+      thisThreadPrefs.pref_post_style = prefPostStyle;
+      thisThreadPrefs.pref_post_style_mobile = prefPostStyleMobile;
+      thisThreadPrefs.pref_reply_time_interval = prefReplyTimeInterval;
+      thisThreadPrefs.pref_night_mode_colors = prefNightModeColors;
+      thisThreadPrefs.pref_post_position = prefPostPosition;
+      thisThreadPrefs.pref_hide_stricken = prefHideStricken;
+      thisThreadPrefs.pref_hide_thread_picker = prefHideThreadPicker;
+      thisThreadPrefs.pref_sound_on_stricken = prefSoundOnStricken;
+      thisThreadPrefs.pref_highlight_last_count = prefHighlightLastCount;
+      thisThreadPrefs.pref_highlight_last_count_color = prefHighlightLastCountColor;
+      thisThreadPrefs.pref_stricken_count_opacity = prefStrickenCountOpacity;
+      if(setPreferences) {
+        setPreferences(setPreferencesFromThreadOrUser(prefEnabled ? thisThreadPrefs : undefined, user))
+      }
+      try {
+        const res = await updateThreadPrefs(thisThreadPrefs)
+        if (res.status == 201) {
+          setSnackbarSeverity('success')
+          setSnackbarOpen(true)
+          setSnackbarMessage('Changes made successfully')
+        }
+      } catch (err) {
+        setSnackbarSeverity('error')
+        setSnackbarOpen(true)
+        setSnackbarMessage('Error: Submission rejected. If this comes as a surprise, please reach out to discord mods via DM!')
+      }
+    }
+  }
+
+  const deletePrefs = async () => {
+    if (user && counter && thread) {
+      if(setPreferences) {
+        setPreferences(setPreferencesFromThreadOrUser(undefined, user))
+      }
+      try {
+        const res = await deleteThreadPrefs(thread);
+        if (res.status == 200) {
+          setSnackbarSeverity('success')
+          setSnackbarOpen(true)
+          setSnackbarMessage('Changes made successfully')
+        }
+      } catch (err) {
+        setSnackbarSeverity('error')
+        setSnackbarOpen(true)
+        setSnackbarMessage('Error: Submission rejected. If this comes as a surprise, please reach out to discord mods via DM!')
+      }
+    }
+  }
+
+  let [maybeU, setMaybeU] = useState('')
+  useEffect(() => {
+    if (Math.random() > 0.5) {
+      setMaybeU('u')
+    }
+  }, [])
 
   const sidebarMemo = useMemo(() => {
     if (clearCounts) {
@@ -1770,6 +2000,7 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
             <Tab label="Splits" value="tab_3" />
             <Tab label="Stats" value="tab_4" />
             <Tab label="Replay" value="tab_5" />
+            <Tab label="Prefs" value="tab_6" />
           </TabList>
         </Box>
         <Box sx={{ flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', overflowY: 'scroll' }}>
@@ -2067,6 +2298,58 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
               ))}
             {replayActive && <Typography>{timerStr}</Typography>}
           </TabPanel>
+          <TabPanel value="tab_6" sx={{ flexGrow: 1 }}>
+          {/* {user && thread && user.threadPreferences && user.threadPreferences.length > 0 && user.threadPreferences.find(prefs => prefs.thread.uuid === thread?.uuid) !== undefined && <> */}
+          <Button
+                sx={{ m: 2 }}
+                size="large"
+                color="success"
+                variant="outlined"
+                onClick={() => {
+                  setResetPrefs(true)
+                }}
+              >
+                Set to Global Prefs
+              </Button>
+              <Button
+                sx={{ m: 2 }}
+                size="large"
+                color="error"
+                variant="outlined"
+                onClick={() => {
+                  deletePrefs()
+                }}
+              >
+                Delete Thread Prefs
+              </Button>
+          {/* </>}  */}
+          
+          <Preferences
+            savePrefs={savePrefs} maybeU={maybeU} title={`${thread?.title} Preferences`}
+            prefOnline={prefOnline} setPrefOnline={setPrefOnline}
+            prefDiscordPings={prefDiscordPings} setPrefDiscordPings={setPrefDiscordPings}
+            prefLoadFromBottom={prefLoadFromBottom} setPrefLoadFromBottom={setPrefLoadFromBottom}
+            prefStrikeColor={prefStrikeColor} setPrefStrikeColor={setPrefStrikeColor}
+            prefStandardizeFormat={prefStandardizeFormat} setPrefStandardizeFormat={setPrefStandardizeFormat}
+            prefNightMode={prefNightMode} setPrefNightMode={setPrefNightMode}
+            prefSubmitShortcut={prefSubmitShortcut} setPrefSubmitShortcut={setPrefSubmitShortcut}
+            prefClear={prefClear} setPrefClear={setPrefClear}
+            prefTimeSinceLastCount={prefTimeSinceLastCount} setPrefTimeSinceLastCount={setPrefTimeSinceLastCount}
+            prefCustomStricken={prefCustomStricken} setPrefCustomStricken={setPrefCustomStricken}
+            prefPostStyle={prefPostStyle} setPrefPostStyle={setPrefPostStyle}
+            prefPostStyleMobile={prefPostStyleMobile} setPrefPostStyleMobile={setPrefPostStyleMobile}
+            prefReplyTimeInterval={prefReplyTimeInterval} setPrefReplyTimeInterval={setPrefReplyTimeInterval}
+            prefNightModeColors={prefNightModeColors} setPrefNightModeColors={setPrefNightModeColors}
+            prefPostPosition={prefPostPosition} setPrefPostPosition={setPrefPostPosition}
+            prefHideStricken={prefHideStricken} setPrefHideStricken={setPrefHideStricken}
+            prefHighlightLastCount={prefHighlightLastCount} setPrefHighlightLastCount={setPrefHighlightLastCount}
+            prefHighlightLastCountColor={prefHighlightLastCountColor} setPrefHighlightLastCountColor={setPrefHighlightLastCountColor}
+            prefSoundOnStricken={prefSoundOnStricken} setPrefSoundOnStricken={setPrefSoundOnStricken}
+            prefHideThreadPicker={prefHideThreadPicker} setPrefHideThreadPicker={setPrefHideThreadPicker}
+            prefStrickenCountOpacity={prefStrickenCountOpacity} setPrefStrickenCountOpacity={setPrefStrickenCountOpacity}
+            enabled={prefEnabled} setEnabled={setPrefEnabled}
+          />
+          </TabPanel>
         </Box>
       </TabContext>
     )
@@ -2106,6 +2389,29 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
     timerStr,
     activeTimer,
     clearCounts,
+    prefEnabled,
+    prefOnline,
+    prefDiscordPings,
+    prefLoadFromBottom,
+    prefStrikeColor,
+    prefStandardizeFormat,
+    prefNightMode,
+    prefSubmitShortcut,
+    prefClear,
+    prefTimeSinceLastCount,
+    prefCustomStricken,
+    prefPostStyle,
+    prefPostStyleMobile,
+    prefReplyTimeInterval,
+    prefNightModeColors,
+    prefPostPosition,
+    prefHideStricken,
+    prefHighlightLastCount,
+    prefHighlightLastCountColor,
+    prefSoundOnStricken,
+    prefHideThreadPicker,
+    prefStrickenCountOpacity,
+    preferences,
   ])
 
   if (!loading && !threadLoading && thread) {
@@ -2119,7 +2425,7 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
 
         {snackbarMemo}
         <Grid container>
-          {user && user.pref_post_position === 'Right' ? (
+          {user && preferences && preferences.pref_post_position === 'Right' ? (
             <>
               <Grid item xs={0} lg={2} sx={{ height: 'auto' }}>
                 <Box sx={{  }}>{threadPickerMemo}</Box>

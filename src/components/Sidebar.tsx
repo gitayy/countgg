@@ -75,7 +75,7 @@ export const Sidebar = () => {
   const navigate = useNavigate()
   const { hash } = useLocation()
 
-  const { loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, user, unreadMessageCount } = useContext(UserContext)
+  const { loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, user, unreadMessageCount, preferences } = useContext(UserContext)
   const socket = useContext(SocketContext)
 
   useEffect(() => {
@@ -157,8 +157,8 @@ export const Sidebar = () => {
   const [desktopPickerOpen, setDesktopPickerOpen] = useState(false)
 
   useEffect(() => {
-    if (!loading && user) {
-      if (user.pref_hide_thread_picker) {
+    if (!loading && user && preferences) {
+      if (preferences.pref_hide_thread_picker) {
         setDesktopPickerOpen(false)
       }
     }

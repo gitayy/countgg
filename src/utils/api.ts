@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios'
-import { User, Counter, ThreadType, AllegianceType, Item, PostType, Blog, MiscSettings } from './types'
+import { User, Counter, ThreadType, AllegianceType, Item, PostType, Blog, MiscSettings, ThreadPrefs } from './types'
 
 const CONFIG: AxiosRequestConfig = { withCredentials: true }
 const API_URL = `${process.env.REACT_APP_API_HOST}/api`
@@ -78,6 +78,12 @@ export const registerCounter = (updateInfo: object) => axios.post(`${API_URL}/co
 
 export const updateCounterPrefs = (update: User, counter: Counter) =>
   axios.post(`${API_URL}/user/prefs`, { prefsUpdate: update, counterUpdate: counter }, CONFIG)
+
+export const updateThreadPrefs = (update: ThreadPrefs) =>
+  axios.post(`${API_URL}/user/threadPrefs`, { prefsUpdate: update }, CONFIG)
+
+export const deleteThreadPrefs = (thread: ThreadType) =>
+  axios.delete(`${API_URL}/user/deleteThreadPrefs`, {...CONFIG,  params: {threadUUID: thread.uuid} })
 
 export const getRecentCounts = (thread_name: string, context: string | (string | null)[] | null, commentsOnly?: boolean) =>
   axios.post(`${API_URL}/thread/getRecent`, { thread_name: thread_name, context: context, commentsOnly: commentsOnly }, CONFIG)

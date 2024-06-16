@@ -31,7 +31,7 @@ import { UserContext } from '../utils/contexts/UserContext'
 import { SocketContext } from '../utils/contexts/SocketContext'
 
 const CountList = memo((props: any) => {
-  const { user, counter, loading } = useContext(UserContext)
+  const { user, counter, loading, preferences } = useContext(UserContext)
   const socket = useContext(SocketContext)
   const navigate = useNavigate()
   const boxRef = useRef<HTMLDivElement>(null)
@@ -44,8 +44,8 @@ const CountList = memo((props: any) => {
   const noClearKeepInputRef = useRef<HTMLInputElement>(null)
   const noClearDeleteInputRef = useRef<HTMLInputElement>(null)
   const [firstLoad, setFirstLoad] = useState(true)
-  const [isScrolledToBottom, setIsScrolledToBottom] = useState(user && user.pref_load_from_bottom ? true : false)
-  const [isScrolledToTop, setIsScrolledToTop] = useState(user && user.pref_load_from_bottom ? false : true)
+  const [isScrolledToBottom, setIsScrolledToBottom] = useState(preferences && preferences.pref_load_from_bottom ? true : false)
+  const [isScrolledToTop, setIsScrolledToTop] = useState(preferences && preferences.pref_load_from_bottom ? false : true)
   const [scrollThrottle, setScrollThrottle] = useState(false)
   const [isNewRecentCountAdded, setIsNewRecentCountAdded] = useState(false)
   const [keyboardType, setKeyboardType] = useState<
@@ -81,12 +81,12 @@ const CountList = memo((props: any) => {
       ) {
         event.preventDefault()
       }
-      if (inputRef.current && inputRef.current === document.activeElement && user && user.pref_submit_shortcut === 'Enter') {
+      if (inputRef.current && inputRef.current === document.activeElement && user && preferences && preferences.pref_submit_shortcut === 'Enter') {
         if (event.key === 'Enter' && !event.shiftKey && !event.altKey) {
           event.preventDefault()
           handlePosting()
         }
-      } else if (user && user.pref_submit_shortcut === 'Off') {
+      } else if (user && preferences && preferences.pref_submit_shortcut === 'Off') {
         return
       } else if (inputRef.current && inputRef.current === document.activeElement) {
         if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
@@ -102,7 +102,7 @@ const CountList = memo((props: any) => {
 
   //Scroll to bottom upon isDesktop change
   useEffect(() => {
-    if (isScrolledToBottom && counter && user && user.pref_load_from_bottom) {
+    if (isScrolledToBottom && counter && user && preferences && preferences.pref_load_from_bottom) {
       scrollToBottomAuto()
       setTimeout(function () {
         scrollToBottomAuto()
@@ -112,7 +112,7 @@ const CountList = memo((props: any) => {
 
   const changeScrolledToBottom = (isScrolled: boolean) => {
     setIsScrolledToBottom(isScrolled)
-    if (props.isScrolledToNewest.current !== undefined && user && user.pref_load_from_bottom) {
+    if (props.isScrolledToNewest.current !== undefined && user && preferences && preferences.pref_load_from_bottom) {
       props.isScrolledToNewest.current = isScrolled
     }
     if (isScrolled) {
@@ -126,7 +126,7 @@ const CountList = memo((props: any) => {
 
   const changeScrolledToTop = (isScrolled: boolean) => {
     setIsScrolledToTop(isScrolled)
-    if (props.isScrolledToNewest.current !== undefined && (!user || user.pref_load_from_bottom === false)) {
+    if (props.isScrolledToNewest.current !== undefined && (!preferences || preferences.pref_load_from_bottom === false)) {
       props.isScrolledToNewest.current = isScrolled
     }
     if (isScrolled) {
@@ -140,7 +140,7 @@ const CountList = memo((props: any) => {
 
   const handleUnfreeze = () => {
     if (props.cachedCounts && props.cachedCounts.length > 0) {
-      if (user && user.pref_load_from_bottom) {
+      if (user && preferences && preferences.pref_load_from_bottom) {
         !props.chatsOnly
           ? (props.recentCounts.current = (() => {
               const newCounts = [...props.recentCounts.current, ...props.cachedCounts]
@@ -271,13 +271,13 @@ const CountList = memo((props: any) => {
 
   const handleClear = async () => {
     if (inputRef.current) {
-      if (!user || (user && user.pref_clear === 'Clear')) {
+      if (!user || (user && preferences && preferences.pref_clear === 'Clear')) {
         inputRef.current.value = ''
-      } else if (user && user.pref_clear === 'Clipboard') {
+      } else if (user && preferences && preferences.pref_clear === 'Clipboard') {
         inputRef.current.value = await navigator.clipboard.readText()
-      } else if (user && user.pref_clear === 'Custom') {
+      } else if (user && preferences && preferences.pref_clear === 'Custom') {
         inputRef.current.value = customInputRef.current ? customInputRef.current.value : ''
-      } else if (user && user.pref_clear === 'No Clear') {
+      } else if (user && preferences && preferences.pref_clear === 'No Clear') {
         inputRef.current.value = inputRef.current.value.substring(
           0,
           ((noClearKeepInputRef.current !== null && !isNaN(parseInt(noClearKeepInputRef.current.value)) ? parseInt(noClearKeepInputRef.current.value) : inputRef.current.value.length) - 
@@ -331,7 +331,7 @@ const CountList = memo((props: any) => {
         setSubmitColor('primary')
       }
       handleClear()
-      if (user && user.pref_load_from_bottom) {
+      if (user && preferences && preferences.pref_load_from_bottom) {
         changeScrolledToBottom(true)
         if (isDesktop) {
           scrollToBottomAuto()
@@ -362,13 +362,13 @@ const CountList = memo((props: any) => {
   }
 
   useEffect(() => {
-    if (((!isScrolledToBottom && user && user.pref_load_from_bottom) || !isScrolledToTop) && !firstLoad) {
+    if (((!isScrolledToBottom && user && preferences && preferences.pref_load_from_bottom) || !isScrolledToTop) && !firstLoad) {
       setIsNewRecentCountAdded(true)
     }
   }, [props.newRecentPostLoaded])
 
   useEffect(() => {
-    if (((isScrolledToBottom && user && user.pref_load_from_bottom) || isScrolledToTop) && !firstLoad) {
+    if (((isScrolledToBottom && user && preferences && preferences.pref_load_from_bottom) || isScrolledToTop) && !firstLoad) {
       setIsNewRecentCountAdded(false)
     }
   }, [isScrolledToBottom, isScrolledToTop, props.newRecentPostLoaded])
@@ -380,7 +380,7 @@ const CountList = memo((props: any) => {
         setFirstLoad(false)
         props.isScrolledToNewest.current = true
       } else {
-        if (isScrolledToBottom && user && user.pref_load_from_bottom) {
+        if (isScrolledToBottom && user && preferences && preferences.pref_load_from_bottom) {
           if (!props.chatsOnly && isDesktop) {
             messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' })
             if (submitRef.current) {
@@ -406,7 +406,7 @@ const CountList = memo((props: any) => {
     }, 1000)
     if (old) {
       if (props.chatsOnly) {
-        if (user && user.pref_load_from_bottom && !gotOlderUUIDs.includes(props.recentCounts.current[0].uuid)) {
+        if (user && preferences && preferences.pref_load_from_bottom && !gotOlderUUIDs.includes(props.recentCounts.current[0].uuid)) {
           setGotOlderUUIDs((old) => {
             return [...old, props.recentCounts.current[0].uuid]
           })
@@ -421,7 +421,7 @@ const CountList = memo((props: any) => {
           })
         }
       } else {
-        if (user && user.pref_load_from_bottom && !gotOlderUUIDs.includes(props.recentCounts.current[0].uuid)) {
+        if (user && preferences && preferences.pref_load_from_bottom && !gotOlderUUIDs.includes(props.recentCounts.current[0].uuid)) {
           setGotOlderUUIDs((old) => {
             return [...old, props.recentCounts.current[0].uuid]
           })
@@ -440,7 +440,7 @@ const CountList = memo((props: any) => {
       if (props.chatsOnly) {
         if (
           user &&
-          user.pref_load_from_bottom &&
+          preferences && preferences.pref_load_from_bottom &&
           !gotNewerUUIDs.includes(props.recentCounts.current[props.recentCounts.current.length - 1].uuid)
         ) {
           setGotNewerUUIDs((old) => {
@@ -459,7 +459,7 @@ const CountList = memo((props: any) => {
       } else {
         if (
           user &&
-          user.pref_load_from_bottom &&
+          preferences && preferences.pref_load_from_bottom &&
           !gotNewerUUIDs.includes(props.recentCounts.current[props.recentCounts.current.length - 1].uuid)
         ) {
           setGotNewerUUIDs((old) => {
@@ -499,7 +499,7 @@ const CountList = memo((props: any) => {
         props.recentCounts.current[0] &&
         props.loadedNewest === false &&
         user &&
-        user.pref_load_from_bottom
+        preferences && preferences.pref_load_from_bottom
       ) {
         const distance_From_Top = element.scrollHeight
         distanceFromTop.current = distance_From_Top
@@ -509,7 +509,7 @@ const CountList = memo((props: any) => {
         props.recentCounts.current[0] &&
         props.loadedOldest === false &&
         loading === false &&
-        (!user || (user && !user.pref_load_from_bottom))
+        (!user || (user && preferences && !preferences.pref_load_from_bottom))
       ) {
         const distance_From_Top = element.scrollHeight
         distanceFromTop.current = distance_From_Top
@@ -528,7 +528,7 @@ const CountList = memo((props: any) => {
         props.recentCounts.current[0] &&
         props.loadedOldest === false &&
         user &&
-        user.pref_load_from_bottom
+        preferences && preferences.pref_load_from_bottom
       ) {
         const distance_From_Bottom = element.scrollHeight - element.scrollTop - element.clientHeight
         distanceFromBottom.current = distance_From_Bottom
@@ -562,7 +562,7 @@ const CountList = memo((props: any) => {
     }
   }
   useEffect(() => {
-    if (user && user.pref_load_from_bottom) {
+    if (user && preferences && preferences.pref_load_from_bottom) {
       if (distanceFromBottom.current) {
         scrollToDistanceFromBottom(distanceFromBottom.current)
         setTimeout(function () {
@@ -580,7 +580,7 @@ const CountList = memo((props: any) => {
   }, [props.loadedOldCount])
 
   useEffect(() => {
-    if (user && user.pref_load_from_bottom) {
+    if (user && preferences && preferences.pref_load_from_bottom) {
       if (distanceFromTop.current) {
         scrollToDistanceFromTop(distanceFromTop.current)
         setTimeout(function () {
@@ -622,16 +622,16 @@ const CountList = memo((props: any) => {
       <>
         {isNewRecentCountAdded &&
           !firstLoad &&
-          ((user && user.pref_load_from_bottom && !isScrolledToBottom) ||
+          ((user && preferences && preferences.pref_load_from_bottom && !isScrolledToBottom) ||
             !user ||
-            (user && user.pref_load_from_bottom === false && !isScrolledToTop)) && (
+            (user && preferences && preferences.pref_load_from_bottom === false && !isScrolledToTop)) && (
             <>
               {isDesktop ? (
                 <Box sx={{ position: 'fixed', bottom: '130px', right: '10%' }}>
-                  <Zoom in={user && user.pref_load_from_bottom ? !isScrolledToBottom : !isScrolledToTop}>
+                  <Zoom in={user && preferences && preferences.pref_load_from_bottom ? !isScrolledToBottom : !isScrolledToTop}>
                     <Box sx={{ display: 'flex', alignItems: 'center', borderRadius: '100px', bgcolor: 'primary.main' }}>
                       <Fab color="primary" variant="extended" size="medium" onClick={scrollToBottom}>
-                        {user && user.pref_load_from_bottom ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
+                        {user && preferences && preferences.pref_load_from_bottom ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
                         New Posts
                       </Fab>
                     </Box>
@@ -639,9 +639,9 @@ const CountList = memo((props: any) => {
                 </Box>
               ) : (
                 <Box sx={{ position: 'fixed', bottom: '130px', right: '5%' }}>
-                  <Zoom in={user && user.pref_load_from_bottom ? !isScrolledToBottom : !isScrolledToTop}>
+                  <Zoom in={user && preferences && preferences.pref_load_from_bottom ? !isScrolledToBottom : !isScrolledToTop}>
                     <Fab color="primary" size="medium" onClick={scrollToBottom}>
-                      {user && user.pref_load_from_bottom ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
+                      {user && preferences && preferences.pref_load_from_bottom ? <ArrowDownwardIcon /> : <ArrowUpwardIcon />}
                     </Fab>
                   </Zoom>
                 </Box>
@@ -734,12 +734,12 @@ const CountList = memo((props: any) => {
             fullWidth
             multiline
             maxRows={4}
-            style={{ borderRadius: '20px', padding: '10px', width: user && ['Custom', 'No Clear'].includes(user.pref_clear) ? '50%' : '70%' }}
+            style={{ borderRadius: '20px', padding: '10px', width: user && preferences && ['Custom', 'No Clear'].includes(preferences.pref_clear) ? '50%' : '70%' }}
             autoFocus
             inputRef={inputRef}
             inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: 'off' }}
           />
-          {user && user.pref_clear === 'No Clear' && (
+          {user && preferences && preferences.pref_clear === 'No Clear' && (
             <>
             <Tooltip title="How many characters to keep.">
               <TextField
@@ -765,7 +765,7 @@ const CountList = memo((props: any) => {
             </Tooltip>
             </>
           )}
-          {user && user.pref_clear === 'Custom' && (
+          {user && preferences && preferences.pref_clear === 'Custom' && (
             <TextField
               variant="standard"
               maxRows={1}
@@ -835,12 +835,12 @@ const CountList = memo((props: any) => {
               fullWidth
               multiline
               maxRows={4}
-              style={{ borderRadius: '20px', padding: '10px', width: user && ['Custom', 'No Clear'].includes(user.pref_clear) ? '40%' : '80%' }}
+              style={{ borderRadius: '20px', padding: '10px', width: user && preferences && ['Custom', 'No Clear'].includes(preferences.pref_clear) ? '40%' : '80%' }}
               autoFocus
               inputRef={inputRef}
               inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: 'off', enterKeyHint: 'send' }}
             />
-            {user && user.pref_clear === 'No Clear' && (
+            {user && preferences && preferences.pref_clear === 'No Clear' && (
             <>
             <Tooltip title="How many characters to keep.">
               <TextField
@@ -866,7 +866,7 @@ const CountList = memo((props: any) => {
             </Tooltip>
             </>
           )}
-            {user && user.pref_clear === 'Custom' && (
+            {user && preferences && preferences.pref_clear === 'Custom' && (
             <TextField
               variant="standard"
               maxRows={1}
@@ -1016,6 +1016,7 @@ const CountList = memo((props: any) => {
     props.loadedNewest,
     forceRerenderSubmit,
     props.recentCountsLoading,
+    preferences,
   ])
 
   const countsMemo = useMemo(() => {
@@ -1060,9 +1061,9 @@ const CountList = memo((props: any) => {
           !prevKey ||
           (index === props.recentCounts.current.length - 1 && countsByDayAndHour[key].showHourBar !== false)
         ) {
-          if (user && user.pref_load_from_bottom && index === 0) {
+          if (user && preferences && preferences.pref_load_from_bottom && index === 0) {
             countsByDayAndHour[key].showHourBar = false
-          } else if ((!user || (user && !user.pref_load_from_bottom)) && index === props.recentCounts.current.length - 1) {
+          } else if ((!preferences || (preferences && !preferences.pref_load_from_bottom)) && index === props.recentCounts.current.length - 1) {
             countsByDayAndHour[key].showHourBar = false
           } else {
             countsByDayAndHour[key].showHourBar = true
@@ -1080,7 +1081,7 @@ const CountList = memo((props: any) => {
       const shouldShowHourBar = showHourBar
       return (
         <div key={key}>
-          {index === 0 && !props.loadedOldest && user && user.pref_load_from_bottom && (
+          {index === 0 && !props.loadedOldest && user && preferences && preferences.pref_load_from_bottom && (
             <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
               <Button
                 variant="contained"
@@ -1093,11 +1094,11 @@ const CountList = memo((props: any) => {
               </Button>
             </Box>
           )}
-          {user && user.pref_load_from_bottom && shouldShowHourBar && <HourBar label={day} />}
+          {user && preferences && preferences.pref_load_from_bottom && shouldShowHourBar && <HourBar label={day} />}
           {counts.map((count, index) => {
             const contextMatch = props.context && props.context === count.uuid
             const ref = contextMatch ? contextRef : null
-            if (isDesktop && !(count.stricken && !count.hasComment && user && user.pref_hide_stricken === 'Hide')) {
+            if (isDesktop && !(count.stricken && !count.hasComment && user && preferences && preferences.pref_hide_stricken === 'Hide')) {
               return (
                 <Count
                   mostRecentCount={count.id === highestValidCountId}
@@ -1112,7 +1113,7 @@ const CountList = memo((props: any) => {
                   contextRef={ref}
                 />
               )
-            } else if (!(count.stricken && user && user.pref_hide_stricken === 'Hide')) {
+            } else if (!(count.stricken && user && preferences && preferences.pref_hide_stricken === 'Hide')) {
               return (
                 <CountMobile
                   mostRecentCount={count.id === highestValidCountId}
@@ -1129,10 +1130,10 @@ const CountList = memo((props: any) => {
               )
             }
           })}
-          {(!user || (user && !user.pref_load_from_bottom)) && shouldShowHourBar && <HourBar label={day} />}
+          {(!user || (user && preferences && !preferences.pref_load_from_bottom)) && shouldShowHourBar && <HourBar label={day} />}
           {index + 1 === Object.keys(countsByDayAndHour).length &&
             !props.loadedOldest &&
-            (!user || (user && !user.pref_load_from_bottom)) && (
+            (!user || (user && preferences && !preferences.pref_load_from_bottom)) && (
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                 <Button
                   variant="contained"
@@ -1148,7 +1149,7 @@ const CountList = memo((props: any) => {
         </div>
       )
     })
-  }, [props.recentCounts.current, cachedCounters, isDesktop, scrollThrottle])
+  }, [props.recentCounts.current, cachedCounters, isDesktop, scrollThrottle, preferences])
 
   const [submitHeight, setSubmitHeight] = useState(76)
 
@@ -1173,7 +1174,7 @@ const CountList = memo((props: any) => {
   //   };
   // }, [submitRef.current]);
 
-  if (user && user.pref_load_from_bottom) {
+  if (user && preferences && preferences.pref_load_from_bottom) {
     return (
       <>
         <Box

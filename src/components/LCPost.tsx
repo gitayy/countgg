@@ -48,7 +48,7 @@ interface LCPostProps {
 export const LCPost = memo(({ postString, thread }: LCPostProps) => {
   // export const LCPost = ({ post, thread }: LCPostProps ) => {
   const post = JSON.parse(postString) as RedditPost
-  const { user, counter, loading } = useContext(UserContext)
+  const { user, counter, loading, preferences } = useContext(UserContext)
   // console.log(`LCPost rendered (${post.body}, ${post.author}, ${post.stricken})`);
 
   const apiUrl = `https://oauth.reddit.com/api/live/${thread}`
@@ -131,7 +131,7 @@ export const LCPost = memo(({ postString, thread }: LCPostProps) => {
   const replyTimeColor = post.replyTime
     ? getReplyColorName(
         post.replyTime,
-        user && user.pref_reply_time_interval !== undefined ? user.pref_reply_time_interval : undefined,
+        user && preferences && preferences.pref_reply_time_interval !== undefined ? preferences.pref_reply_time_interval : undefined,
       )
     : undefined
   const theme = useTheme()
@@ -147,9 +147,9 @@ export const LCPost = memo(({ postString, thread }: LCPostProps) => {
           my: 1,
           flexDirection: 'column',
           fontFamily: 'Verdana!important',
-          filter: post.stricken && user && user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '',
-          opacity: post.stricken && user ? user.pref_stricken_count_opacity : 1,
-          background: post.stricken && user && user.pref_custom_stricken != 'Disabled' ? user.pref_strike_color : 'initial',
+          filter: post.stricken && user && preferences && preferences.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '',
+          opacity: post.stricken && user && preferences? preferences.pref_stricken_count_opacity : 1,
+          background: post.stricken && user && preferences && preferences.pref_custom_stricken != 'Disabled' ? preferences.pref_strike_color : 'initial',
         }}
       >
         <Grid container>
@@ -159,8 +159,8 @@ export const LCPost = memo(({ postString, thread }: LCPostProps) => {
               sx={{
                 fontFamily: 'Verdana!important',
                 color:
-                  user && user.pref_night_mode_colors && user.pref_night_mode_colors !== 'Default'
-                    ? user.pref_night_mode_colors === 'Light'
+                  user && preferences && preferences.pref_night_mode_colors && preferences.pref_night_mode_colors !== 'Default'
+                    ? preferences.pref_night_mode_colors === 'Light'
                       ? '#000000de'
                       : '#ffffffde'
                     : 'text.primary',

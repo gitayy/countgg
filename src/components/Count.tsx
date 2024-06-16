@@ -48,7 +48,7 @@ import ErrorBoundary from './ErrorBoundary'
 const Count = memo((props: any) => {
   let maybeSpace
   let countContentCopy = props.post.countContent
-  const { user, counter } = useContext(UserContext)
+  const { user, counter, preferences } = useContext(UserContext)
 
   if (props.post.countContent && props.post.rawText.includes(props.post.countContent)) {
     const index = props.post.rawText.indexOf(props.post.countContent) + props.post.countContent.length
@@ -59,7 +59,7 @@ const Count = memo((props: any) => {
 
   if (
     user &&
-    user.pref_standardize_format != 'Disabled' &&
+    preferences && preferences.pref_standardize_format != 'Disabled' &&
     props.thread &&
     ![
       'binary',
@@ -82,7 +82,7 @@ const Count = memo((props: any) => {
     props.post.countContent &&
     props.post.rawCount
   ) {
-    const format = user.pref_standardize_format
+    const format = preferences.pref_standardize_format
     switch (format) {
       case 'No Separator':
         countContentCopy = props.post.rawCount
@@ -144,7 +144,7 @@ const Count = memo((props: any) => {
 
   const replyTimeColor = getReplyColorName(
     props.post.timeSinceLastPost,
-    user && user.pref_reply_time_interval !== undefined ? user.pref_reply_time_interval : undefined,
+    user && preferences && preferences.pref_reply_time_interval !== undefined ? preferences.pref_reply_time_interval : undefined,
   )
 
   function handleDeleteComment() {
@@ -154,7 +154,7 @@ const Count = memo((props: any) => {
   const anchorRef = useRef(null)
 
   const [expanded, setExpanded] = useState(
-    user && user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment ? false : true,
+    user && preferences && preferences.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment ? false : true,
   )
 
   const handleExpand = () => {
@@ -179,10 +179,10 @@ const Count = memo((props: any) => {
       )
     },
   }
-  if (user && user.pref_post_style == 'Minimal') {
+  if (user && preferences && preferences.pref_post_style == 'Minimal') {
     return (
       <>
-        {user && user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && (
+        {user && preferences && preferences.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && (
           <div
             className="minimized-post-toggler"
             onClick={() => handleExpand()}
@@ -199,17 +199,17 @@ const Count = memo((props: any) => {
             paddingRight: 2,
             boxSizing: 'border-box',
             wordWrap: 'break-word',
-            filter: props.post.stricken && user && user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '',
-            opacity: props.post.stricken && user ? user.pref_stricken_count_opacity : 1,
+            filter: props.post.stricken && user && preferences && preferences.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '',
+            opacity: props.post.stricken && user && preferences ? preferences.pref_stricken_count_opacity : 1,
             border:
-              props.mostRecentCount && user && user.pref_highlight_last_count
-                ? `1px solid ${user.pref_highlight_last_count_color}`
+              props.mostRecentCount && user && preferences && preferences.pref_highlight_last_count
+                ? `1px solid ${preferences.pref_highlight_last_count_color}`
                 : '1px solid transparent',
             background:
-              props.mostRecentCount && user && user.pref_highlight_last_count
-                ? `${user.pref_highlight_last_count_color}1c`
-                : props.post.stricken && user && user.pref_custom_stricken != 'Disabled'
-                  ? user.pref_strike_color
+              props.mostRecentCount && user && preferences && preferences.pref_highlight_last_count
+                ? `${preferences.pref_highlight_last_count_color}1c`
+                : props.post.stricken && user && preferences && preferences.pref_custom_stricken != 'Disabled'
+                  ? preferences.pref_strike_color
                   : 'initial',
           }}
         >
@@ -221,10 +221,10 @@ const Count = memo((props: any) => {
         </div>
       </>
     )
-  } else if (user && user.pref_post_style == 'LC') {
+  } else if (user && preferences && preferences.pref_post_style == 'LC') {
     return (
       <>
-        {user && user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && (
+        {user && preferences && preferences.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && (
           <Typography
             className="minimized-post-toggler"
             variant="body2"
@@ -243,17 +243,17 @@ const Count = memo((props: any) => {
             pr: 2,
             boxSizing: 'border-box',
             wordWrap: 'break-word',
-            filter: props.post.stricken && user && user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '',
-            opacity: props.post.stricken && user ? user.pref_stricken_count_opacity : 1,
+            filter: props.post.stricken && user && preferences && preferences.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '',
+            opacity: props.post.stricken && user && preferences ? preferences.pref_stricken_count_opacity : 1,
             border:
-              props.mostRecentCount && user && user.pref_highlight_last_count
-                ? `1px solid ${user.pref_highlight_last_count_color}`
+              props.mostRecentCount && user && preferences && preferences.pref_highlight_last_count
+                ? `1px solid ${preferences.pref_highlight_last_count_color}`
                 : '1px solid transparent',
             background:
-              props.mostRecentCount && user && user.pref_highlight_last_count
-                ? `${user.pref_highlight_last_count_color}1c`
-                : props.post.stricken && user && user.pref_custom_stricken != 'Disabled'
-                  ? user.pref_strike_color
+              props.mostRecentCount && user && preferences && preferences.pref_highlight_last_count
+                ? `${preferences.pref_highlight_last_count_color}1c`
+                : props.post.stricken && user && preferences && preferences.pref_custom_stricken != 'Disabled'
+                  ? preferences.pref_strike_color
                   : 'initial',
           }}
         >
@@ -311,8 +311,8 @@ const Count = memo((props: any) => {
                           title={`${convertMsToFancyTime(Math.round(props.post.timeSinceLastCount))} since last count`}
                           sx={{
                             color:
-                              user && user.pref_night_mode_colors && user.pref_night_mode_colors !== 'Default'
-                                ? user.pref_night_mode_colors === 'Light'
+                              user && preferences && preferences.pref_night_mode_colors && preferences.pref_night_mode_colors !== 'Default'
+                                ? preferences.pref_night_mode_colors === 'Light'
                                   ? '#000000de'
                                   : '#ffffffde'
                                 : 'text.primary',
@@ -586,7 +586,7 @@ const Count = memo((props: any) => {
   } else {
     return (
       <>
-        {user && user.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && (
+        {user && preferences && preferences.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment && (
           <Typography
             className="minimized-post-toggler"
             variant="body2"
@@ -605,17 +605,17 @@ const Count = memo((props: any) => {
             pr: 2,
             boxSizing: 'border-box',
             wordWrap: 'break-word',
-            filter: props.post.stricken && user && user.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '',
-            opacity: props.post.stricken && user ? user.pref_stricken_count_opacity : 1,
+            filter: props.post.stricken && user && preferences && preferences.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '',
+            opacity: props.post.stricken && user && preferences ? preferences.pref_stricken_count_opacity : 1,
             border:
-              props.mostRecentCount && user && user.pref_highlight_last_count
-                ? `1px solid ${user.pref_highlight_last_count_color}`
+              props.mostRecentCount && user && preferences && preferences.pref_highlight_last_count
+                ? `1px solid ${preferences.pref_highlight_last_count_color}`
                 : '1px solid transparent',
             background:
-              props.mostRecentCount && user && user.pref_highlight_last_count
-                ? `${user.pref_highlight_last_count_color}1c`
-                : props.post.stricken && user && user.pref_custom_stricken != 'Disabled'
-                  ? user.pref_strike_color
+              props.mostRecentCount && user && preferences && preferences.pref_highlight_last_count
+                ? `${preferences.pref_highlight_last_count_color}1c`
+                : props.post.stricken && user && preferences && preferences.pref_custom_stricken != 'Disabled'
+                  ? preferences.pref_strike_color
                   : 'initial',
           }}
         >
@@ -662,8 +662,8 @@ const Count = memo((props: any) => {
                           title={`${convertMsToFancyTime(Math.round(props.post.timeSinceLastCount))} since last count`}
                           sx={{
                             color:
-                              user && user.pref_night_mode_colors && user.pref_night_mode_colors !== 'Default'
-                                ? user.pref_night_mode_colors === 'Light'
+                              user && preferences && preferences.pref_night_mode_colors && preferences.pref_night_mode_colors !== 'Default'
+                                ? preferences.pref_night_mode_colors === 'Light'
                                   ? '#000000de'
                                   : '#ffffffde'
                                 : 'text.primary',

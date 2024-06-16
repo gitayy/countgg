@@ -15,7 +15,7 @@ import { Loading } from '../components/Loading'
 
 export const LCPage = () => {
   const location = useLocation()
-  const { user, counter, loading, setUser } = useContext(UserContext)
+  const { user, counter, loading, setUser, preferences } = useContext(UserContext)
   const [redditLoading, setRedditLoading] = useState(true)
   const replyTimeRef = useRef(0)
   useEffect(() => {
@@ -303,11 +303,11 @@ export const LCPage = () => {
 
   const handleClear = async () => {
     if (inputRef.current) {
-      if (!user || (user && user.pref_clear === 'Clear')) {
+      if (!user || (user && preferences && preferences.pref_clear === 'Clear')) {
         inputRef.current.value = ''
-      } else if (user && user.pref_clear === 'Clipboard') {
+      } else if (user && preferences && preferences.pref_clear === 'Clipboard') {
         inputRef.current.value = await navigator.clipboard.readText()
-      } else if (user && user.pref_clear === 'Custom') {
+      } else if (user && preferences && preferences.pref_clear === 'Custom') {
         inputRef.current.value = customInputRef.current ? customInputRef.current.value : ''
       }
     }
@@ -449,9 +449,9 @@ export const LCPage = () => {
             !prevKey ||
             (index === redditMessages.current.length - 1 && countsByDayAndHour[key].showHourBar !== false)
           ) {
-            if (user && user.pref_load_from_bottom && index === 0) {
+            if (user && preferences && preferences.pref_load_from_bottom && index === 0) {
               countsByDayAndHour[key].showHourBar = false
-            } else if ((!user || (user && !user.pref_load_from_bottom)) && index === redditMessages.current.length - 1) {
+            } else if ((!user || (user && preferences && !preferences.pref_load_from_bottom)) && index === redditMessages.current.length - 1) {
               countsByDayAndHour[key].showHourBar = false
             } else {
               countsByDayAndHour[key].showHourBar = true
