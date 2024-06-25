@@ -697,7 +697,7 @@ const CountList = memo((props: any) => {
           </Typography>
         </Box>
       )
-    } else if (isDesktop && counter && counter.roles.includes('counter') && props.thread && props.thread.updatableBy.some(role => counter.roles.includes(role)) && props.thread.locked === false) {
+    } else if (isDesktop && counter && (counter.roles.includes('counter') || counter.roles.includes('bot')) && props.thread && [...props.thread.updatableBy, 'bot'].some(role => counter.roles.includes(role)) && props.thread.locked === false) {
       return (
         <Box
           ref={submitRef}
@@ -791,7 +791,7 @@ const CountList = memo((props: any) => {
           </Tooltip>
         </Box>
       )
-    } else if (!isDesktop && counter && counter.roles.includes('counter') && props.thread && props.thread.updatableBy.some(role => counter.roles.includes(role)) && props.thread.locked === false) {
+    } else if (!isDesktop && counter && (counter.roles.includes('counter') || counter.roles.includes('bot')) && props.thread && [...props.thread.updatableBy, 'bot'].some(role => counter.roles.includes(role)) && props.thread.locked === false) {
       // } else {
       return (
         <>
@@ -886,7 +886,7 @@ const CountList = memo((props: any) => {
           <Box ref={endOfSubmitRef}></Box>
         </>
       )
-    } else if (counter && counter.roles.includes('counter') && props.thread && !props.thread.updatableBy.some(role => counter.roles.includes(role))) {
+    } else if (counter && (counter.roles.includes('counter') || counter.roles.includes('bot')) && props.thread && ![...props.thread.updatableBy, 'bot'].some(role => counter.roles.includes(role))) {
       return (
         <Box
           ref={submitRef}
