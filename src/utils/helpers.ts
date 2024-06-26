@@ -204,7 +204,7 @@ function replaceLinebreaks(inputString: string) {
   let count = 0;
   return inputString.replace(/\n/g, match => {
       count++;
-      return count <= 20 ? match : ' ';
+      return count <= 30 ? match : ' ';
   });
 }
 
