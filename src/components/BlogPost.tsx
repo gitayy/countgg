@@ -7,6 +7,8 @@ import { EmojiTest, formatDate, transformMarkdown } from '../utils/helpers'
 import data from '@emoji-mart/data/sets/14/twitter.json'
 import remarkGfm from 'remark-gfm'
 import { useNavigate } from 'react-router-dom'
+import { Table, TableBody, TableCell, TableHead, TableRow, Paper } from '@mui/material';
+import { CodeBlock } from './CodeBlock'
 
 interface Props {
   title: string
@@ -24,9 +26,20 @@ export const BlogPost: FC<Props> = ({ title, body, author, timestamp, update }) 
       return Object.keys(data.emojis).includes((children[0] as string).toLowerCase()) ? (
         EmojiTest({ id: (children[0] as string).toLowerCase(), size: 24, set: 'twitter' })
       ) : (
-        <code>{children}</code>
+        // <code>{children}</code>
+        <CodeBlock>{children}</CodeBlock>
       )
     },
+    table: ({ children }) => (
+      <Table component={Paper}>
+        {children}
+      </Table>
+    ),
+    thead: ({ children }) => <TableHead>{children}</TableHead>,
+    tbody: ({ children }) => <TableBody>{children}</TableBody>,
+    tr: ({ children }) => <TableRow>{children}</TableRow>,
+    th: ({ children }) => <TableCell component="th">{children}</TableCell>,
+    td: ({ children }) => <TableCell>{children}</TableCell>,
   }
 
   const navigate = useNavigate()
@@ -60,7 +73,7 @@ export const BlogPost: FC<Props> = ({ title, body, author, timestamp, update }) 
           <Typography variant="body2">{formatDate(parseFloat(timestamp))}</Typography>
         </Box>
       </Typography>
-      <ReactMarkdown children={transformMarkdown(body)} components={components} remarkPlugins={[remarkGfm]} />
+      <ReactMarkdown children={transformMarkdown(body, 250)} components={components} remarkPlugins={[remarkGfm]} />
     </>
   )
 }

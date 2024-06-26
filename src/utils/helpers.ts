@@ -200,15 +200,15 @@ export const fakeThread = (thread?: ThreadType): ThreadType => {
   }
 }
 
-function replaceLinebreaks(inputString: string) {
+function replaceLinebreaks(inputString: string, replaceLinebreakCount) {
   let count = 0;
   return inputString.replace(/\n/g, match => {
       count++;
-      return count <= 30 ? match : ' ';
+      return count <= replaceLinebreakCount ? match : ' ';
   });
 }
 
-export function transformMarkdown(markdownContent) {
+export function transformMarkdown(markdownContent, replaceLinebreakCount = 30) {
   // Replace blockquotes
   const transformedContent = markdownContent.replace(/^>/gm, '&gt;')
 
@@ -216,7 +216,7 @@ export function transformMarkdown(markdownContent) {
   const simplifiedContent = transformedContent.replace(/^[\*-]\ ([\*-]\s)+/gm, '* ')
 
   // Replace >20 line breaks
-  const noLinebreakSpamContent = replaceLinebreaks(simplifiedContent);
+  const noLinebreakSpamContent = replaceLinebreaks(simplifiedContent, replaceLinebreakCount);
 
   return noLinebreakSpamContent
 }
