@@ -31,7 +31,7 @@ export const BlogPost: FC<Props> = ({ title, body, author, timestamp, update }) 
       )
     },
     table: ({ children }) => (
-      <Table component={Paper}>
+      <Table size='small' component={Paper}>
         {children}
       </Table>
     ),
