@@ -10,7 +10,7 @@ import { useIsMounted } from '../utils/hooks/useIsMounted'
 import { useFetchSpecificCount } from '../utils/hooks/useFetchSpecificCount'
 import { UserContext } from '../utils/contexts/UserContext'
 import Count from '../components/count/Count'
-import CountMobile from '../components/Count/CountMobile'
+import CountMobile from '../components/count/CountMobile'
 
 export const IndividualCountPage = memo(() => {
   const params = useParams()
