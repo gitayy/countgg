@@ -26,7 +26,7 @@ import { fakePost, isColorSuitableForBackground, isValidHexColor, pronouns } fro
 import { HexColorPicker } from 'react-colorful'
 import { RulesPage } from './RulesPage'
 import { UserContext } from '../utils/contexts/UserContext'
-import Count from '../components/Count'
+import Count from '../components/count/Count'
 
 export const RegisterPage = () => {
   const navigate = useNavigate()

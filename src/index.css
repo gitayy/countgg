@@ -36,6 +36,14 @@ html,
   transform: scale(1.1);
 }
 
+.displayOnHover {
+  display: none;
+}
+
+.displayOnHover:hover {
+  display: inherit;
+}
+
 .deleteCategoryIcon {
   opacity: 0;
   visibility: hidden;

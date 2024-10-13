@@ -1183,7 +1183,6 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     return groupedThreads
   }
 
-  // Array of objects
   const [categorizedThreads, setCategorizedThreads] = useState<Category[]>([]);
   const [lastCategoryChange, setLastCategoryChange] = useState<number>()
 
@@ -2429,6 +2428,7 @@ useEffect(() => {
             <>
               <Grid item xs={0} lg={2} sx={{ height: 'auto' }}>
                 <Box sx={{  }}>{threadPickerMemo}</Box>
+                {/* <Box sx={{  }}>{threadPicker}</Box> */}
                 {newCategoryBox}
               </Grid>
               <Grid item xs={12} lg={4}>

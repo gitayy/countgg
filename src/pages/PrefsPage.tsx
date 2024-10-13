@@ -38,7 +38,7 @@ import { CounterCard } from '../components/CounterCard'
 import { Loading } from '../components/Loading'
 import { HexColorPicker } from 'react-colorful'
 import { useLocation } from 'react-router-dom'
-import Count from '../components/Count'
+import Count from '../components/count/Count'
 import { Preferences } from '../components/Preferences'
 
 export const PrefsPage = () => {

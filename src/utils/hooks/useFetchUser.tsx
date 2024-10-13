@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getAuthStatus } from '../api'
 import { Challenge, Counter, Item, MiscSettings, PreferencesType, User } from '../types'
 import { useIsMounted } from './useIsMounted'
+import { defaultPreferences } from '../helpers'
 
 export function useFetchUser() {
   const [user, setUser] = useState<User>()
@@ -13,7 +14,7 @@ export function useFetchUser() {
   const [miscSettings, setMiscSettings] = useState<MiscSettings>()
   const [challenges, setChallenges] = useState<Challenge[]>()
   const [unreadMessageCount, setUnreadMessageCount] = useState<number>()
-  const [preferences, setPreferences] = useState<PreferencesType>()
+  const [preferences, setPreferences] = useState<PreferencesType>(defaultPreferences)
   const isMounted = useIsMounted()
 
   useEffect(() => {

@@ -3,7 +3,7 @@ import React, { useContext } from 'react'
 import { Item } from '../utils/types'
 import { UserContext } from '../utils/contexts/UserContext'
 import { CounterCard } from './CounterCard'
-import Count from './Count'
+import Count from './count/Count'
 import { fakePost } from '../utils/helpers'
 
 interface ItemBoxProps {

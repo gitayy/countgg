@@ -1,5 +1,6 @@
 import { createContext } from 'react'
 import { Challenge, Counter, Item, MiscSettings, PreferencesType, User } from '../types'
+import { defaultPreferences } from '../helpers'
 
 type UserContextType = {
   user?: User
@@ -20,8 +21,8 @@ type UserContextType = {
   setTotalCounters?: Function
   unreadMessageCount?: number
   setUnreadMessageCount?: Function
-  preferences?: PreferencesType
+  preferences: PreferencesType
   setPreferences?: Function
 }
 
-export const UserContext = createContext<UserContextType>({ loading: true })
+export const UserContext = createContext<UserContextType>({ loading: true, preferences: defaultPreferences })

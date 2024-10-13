@@ -1,4 +1,4 @@
-import { Counter, PostType, ThreadType } from './types'
+import { Counter, PostType, PreferencesType, ThreadType } from './types'
 import { format } from 'date-fns'
 import { createElement } from 'react'
 import { visit } from 'unist-util-visit'
@@ -379,7 +379,7 @@ export function findPossibleIndicesForNextMove(moves: number[], newNumber: numbe
   return possibleIndices
 }
 
-export const formatTimeDiff = (time1, time2) => {
+export const formatTimeDiff = (time1, time2, mini = false) => {
   const diff = Math.abs(time2 - time1)
   const year = 31536000000
   const day = 86400000
@@ -394,16 +394,66 @@ export const formatTimeDiff = (time1, time2) => {
   const seconds = Math.floor((diff % minute) / second)
   const milliseconds = parseFloat((diff % second).toFixed(3))
 
-  var result: string[] = []
-  if (years) result.push(`${years} year${years > 1 ? 's' : ''}`)
-  if (days) result.push(`${days} day${days > 1 ? 's' : ''}`)
-  if (hours) result.push(`${hours} hour${hours > 1 ? 's' : ''}`)
-  if (minutes) result.push(`${minutes} minute${minutes > 1 ? 's' : ''}`)
-  if (seconds) result.push(`${seconds} second${seconds > 1 ? 's' : ''}`)
-  if (milliseconds) result.push(`${milliseconds} millisecond${milliseconds > 0 && milliseconds < 2 ? '' : 's'}`)
+  const [yearLabel, dayLabel, hourLabel, minuteLabel, secondLabel, millisecondLabel] = mini
+  ? ['y', 'd', 'h', 'm', 's', 'ms']
+  : [
+      ` year${years > 1 ? 's' : ''}`,
+      ` day${days > 1 ? 's' : ''}`,
+      ` hour${hours > 1 ? 's' : ''}`,
+      ` minute${minutes > 1 ? 's' : ''}`,
+      ` second${seconds > 1 ? 's' : ''}`,
+      ` millisecond${milliseconds !== 1 ? 's' : ''}`
+    ];
 
-  return result.join(', ')
+  var result: string[] = []
+  if (years) result.push(`${years}${yearLabel}`);
+  if (days) result.push(`${days}${dayLabel}`);
+  if (hours) result.push(`${hours}${hourLabel}`);
+  if (minutes) result.push(`${minutes}${minuteLabel}`);
+  if (seconds) result.push(`${seconds}${secondLabel}`);
+  if (milliseconds) result.push(`${milliseconds}${millisecondLabel}`);
+
+  return result.join(mini ? '' : ', ')
 }
+
+export const fancyTime2 = (time1, time2, mini = false) => {
+  const diff = Math.abs(time2 - time1)
+  const year = 31536000000
+  const day = 86400000
+  const hour = 3600000
+  const minute = 60000
+  const second = 1000
+
+  const years = Math.floor(diff / year)
+  const days = Math.floor((diff % year) / day)
+  const hours = Math.floor((diff % day) / hour)
+  const minutes = Math.floor((diff % hour) / minute)
+  const seconds = Math.floor((diff % minute) / second)
+  const milliseconds = parseFloat((diff % second).toFixed(3))
+
+  const [yearLabel, dayLabel, hourLabel, minuteLabel, secondLabel, millisecondLabel] = mini
+  ? ['y', 'd', 'h', 'm', 's', 'ms']
+  : [
+      ` year${years > 1 ? 's' : ''}`,
+      ` day${days > 1 ? 's' : ''}`,
+      ` hour${hours > 1 ? 's' : ''}`,
+      ` minute${minutes > 1 ? 's' : ''}`,
+      ` second${seconds > 1 ? 's' : ''}`,
+      ` millisecond${milliseconds !== 1 ? 's' : ''}`
+    ];
+
+  var result: string[] = []
+  if (years) result.push(`${years}${yearLabel}`);
+  if (days) result.push(`${days}${dayLabel}`);
+  if (hours && !years) result.push(`${hours}${hourLabel}`);
+  if (minutes && !years && !days) result.push(`${minutes}${minuteLabel}`);
+  if (seconds && !years && !days && !hours) result.push(`${seconds}${secondLabel}`);
+  if (milliseconds && !years && !days && !hours && !minutes) result.push(`${milliseconds}${millisecondLabel}`);
+
+  return result.join(mini ? ' ' : ', ')
+}
+
+
 
 const replyColorNames = [
   'replyGold',
@@ -433,6 +483,113 @@ export function getReplyColorName(time: number, per: number = 100) {
   }
   return replyColorNames[intervalIndex]
 }
+
+// Assume base colors for interpolation
+
+// const baseColors: { [key: string]: string } = {
+//   replyGold: '#f2ee0e',
+//   reply0: '#ef7070',
+//   reply100: '#ffaeae',
+//   reply200: '#ffebba',
+//   reply300: '#cfffba',
+//   reply400: '#a2e8af',
+//   reply500: '#adffed',
+//   reply600: '#add6ff',
+//   reply700: '#bcadff',
+//   reply800: '#e9adff',
+//   reply900: '#ffadf8',
+//   reply1000: '#ededed',
+// };
+
+function getBaseColors(isDark: boolean): { [key: string]: string } {
+  return {
+    replyGold: isDark ? '#727200' : '#f2ee0e',
+    reply0: isDark ? '#4d0000' : '#ef7070',
+    reply100: isDark ? '#980000' : '#ffaeae',
+    reply200: isDark ? '#654700' : '#ffebba',
+    reply300: isDark ? '#216e00' : '#cfffba',
+    reply400: isDark ? '#003b0b' : '#a2e8af',
+    reply500: isDark ? '#006b53' : '#adffed',
+    reply600: isDark ? '#004183' : '#add6ff',
+    reply700: isDark ? '#14006c' : '#bcadff',
+    reply800: isDark ? '#460060' : '#e9adff',
+    reply900: isDark ? '#6e0064' : '#ffadf8',
+    reply1000: isDark ? '#2a2a2a' : '#ededed',
+  };
+}
+
+// Function to interpolate between two colors
+function interpolateColor(color1: string, color2: string, weight: number): string {
+  const c1 = hexToRgb(color1);
+  const c2 = hexToRgb(color2);
+
+  const mixedColor = c1.map((c, index) => Math.round(c + weight * (c2[index] - c)));
+
+  return rgbToHex(mixedColor[0], mixedColor[1], mixedColor[2]);
+}
+
+// Helper function to convert hex to RGB
+function hexToRgb(hex: string): number[] {
+  const bigint = parseInt(hex.replace(/^#/, ''), 16);
+  return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+}
+
+// Helper function to convert RGB to hex
+function rgbToHex(r: number, g: number, b: number): string {
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
+// New function to get the interpolated color
+export function getInterpolatedReplyColor(time: number, useDarkColors: boolean, per: number = 100): string {
+  if (typeof time === 'string') {
+    time = parseFloat(time);
+  }
+  
+  const intervalIndex = Math.ceil(Math.round(time) / per);
+  
+  // Get the current and next reply color names
+  const currentColorName = getReplyColorName(time, per);
+  const nextColorName = getReplyColorName(time + per + 1, per);
+  // const nextColorName = intervalIndex < replyColorNames.length - 1 ? replyColorNames[intervalIndex] : currentColorName;
+
+  // Get the base colors for the current and next names
+  // const currentColor = baseColors[currentColorName];
+  // const nextColor = baseColors[nextColorName];
+  const currentColor = getBaseColors(useDarkColors)[currentColorName];
+  const nextColor = getBaseColors(useDarkColors)[nextColorName];
+
+  // Calculate the weight for interpolation
+  const weight = (time % per) / per;
+
+  // Get the interpolated color
+  return interpolateColor(currentColor, nextColor, weight);
+}
+
+export const defaultPreferences: PreferencesType = {
+  pref_online: true,
+  pref_discord_pings: true,
+  pref_load_from_bottom: false,
+  pref_strike_color: '#333', // Default color for striking text
+  pref_submit_shortcut: 'Enter', // Shortcut for submitting posts
+  pref_clear: 'none', // Option for clearing input, e.g., 'none', 'afterSubmit'
+  pref_nightMode: 'System', // Can be 'on', 'off', or 'auto'
+  pref_standardize_format: 'on', // Standardizes post formatting
+  pref_time_since_last_count: true, // Show time since last count
+  pref_custom_stricken: '', // Custom style for stricken text, if any
+  pref_post_style: 'Default', // Default post style for desktop
+  pref_post_style_mobile: 'Default', // Default post style for mobile
+  pref_reply_time_interval: 100, // Default time interval for replies in seconds
+  pref_night_mode_colors: 'Dark', // Default night mode color palette ('Light' or 'Dark')
+  pref_post_position: 'Left', // Post position can be 'top' or 'bottom'
+  pref_hide_stricken: 'none', // Option for hiding stricken posts, e.g., 'none', 'blur', 'hide'
+  pref_highlight_last_count: true, // Highlight the last counted post
+  pref_highlight_last_count_color: '#00b2ff', // Color for highlighting last counted post
+  pref_sound_on_stricken: 'none', // Sound to play when a post is stricken
+  pref_hide_thread_picker: false, // Hide the thread picker by default
+  pref_stricken_count_opacity: 1, // Opacity for stricken count display (0.0 to 1.0)
+  pref_timestamp_display: 'relative', // Timestamp display format ('relative' or 'absolute')
+  pref_show_latency: true, // Show latency information in the UI
+};
 
 export const convertToTimestamp = (uuid) => {
   // should return epoch time as a number or null if invalid input
@@ -567,7 +724,7 @@ export const nightModeOptions = ['System', 'On', 'Off']
 export const submitShortcutOptions = ['CtrlEnter', 'Enter', 'Off']
 export const customStrickenOptions = ['Disabled', 'Enabled', 'Inverse']
 export const soundOnStrickenOptions = ['Disabled', 'All Stricken', 'Only My Counts']
-export const postStyleOptions = ['Default', 'LC', 'Minimal']
+export const postStyleOptions = ['Default', 'Classic', 'LC', 'Minimal']
 export const clearOptions = ['Clear', 'No Clear', 'Clipboard', 'Custom']
 export const nightModeColorOptions = ['Default', 'Light', 'Dark']
 export const postPositionOptions = ['Left', 'Right']
