@@ -565,7 +565,8 @@ export function getInterpolatedReplyColor(time: number, useDarkColors: boolean, 
   return interpolateColor(currentColor, nextColor, weight);
 }
 
-export const defaultPreferences: PreferencesType = {
+export const defaultPreferences: PreferencesType & {'is_default': boolean} = {
+  is_default: true,
   pref_online: true,
   pref_discord_pings: true,
   pref_load_from_bottom: false,
