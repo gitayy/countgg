@@ -7,10 +7,10 @@ import { useFetchThread } from '../utils/hooks/useFetchThread'
 import { SocketContext } from '../utils/contexts/SocketContext'
 import { Counter, PostType } from '../utils/types'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
-import Count from '../components/count/Count'
-import CountMobile from '../components/Count/CountMobile'
 import { useFetchSpecificCount } from '../utils/hooks/useFetchSpecificCount'
 import { UserContext } from '../utils/contexts/UserContext'
+import Count from '../components/count/Count'
+import CountMobile from '../components/Count/CountMobile'
 
 export const IndividualCountPage = memo(() => {
   const params = useParams()
