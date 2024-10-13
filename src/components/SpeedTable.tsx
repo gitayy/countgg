@@ -50,9 +50,9 @@ export const SpeedTable = ({ speed, thread }: Props) => {
       obj.timeFancy = formatTimeDiff(timestamp1, timestamp2)
       for (const counter of obj.qualifiedCounters) {
         const time = obj.time || Infinity
-        if (cachedCounters[counter] && cachedCounters[counter].roles.includes('banned')) {
-          continue
-        }
+        // if (cachedCounters[counter] && cachedCounters[counter].roles.includes('banned')) {
+        //   continue
+        // }
         if (
           selectedCounters.length > 0 &&
           !selectedCounters.map((counter) => counter.username).includes(cachedCounters[counter].username)
@@ -79,6 +79,18 @@ export const SpeedTable = ({ speed, thread }: Props) => {
       <TableRow key={index}>
         <TableCell>{index + 1}</TableCell>
         <TableCell>{obj.timeFancy}</TableCell>
+        <TableCell>
+          <Link
+            underline="hover"
+            href={`/thread/${thread.name}?startCountRaw=${obj.startCount}&endCountRaw=${obj.endCount}`}
+            onClick={(e) => {
+              e.preventDefault()
+              navigate(`/thread/${thread.name}?startCountRaw=${obj.startCount}&endCountRaw=${obj.endCount}`)
+            }}
+          >
+            Replay
+          </Link>
+        </TableCell>
         <TableCell>
           <Link
             underline="hover"
@@ -192,6 +204,18 @@ export const SpeedTable = ({ speed, thread }: Props) => {
         <TableCell>
           <Link
             underline="hover"
+            href={`/thread/${thread.name}?startCountRaw=${row.obj.startCount}&endCountRaw=${row.obj.endCount}`}
+            onClick={(e) => {
+              e.preventDefault()
+              navigate(`/thread/${thread.name}?startCountRaw=${row.obj.startCount}&endCountRaw=${row.obj.endCount}`)
+            }}
+          >
+            Replay
+          </Link>
+        </TableCell>
+        <TableCell>
+          <Link
+            underline="hover"
             href={`/thread/${thread.name}/${row.obj.start}`}
             onClick={(e) => {
               e.preventDefault()
@@ -275,6 +299,7 @@ export const SpeedTable = ({ speed, thread }: Props) => {
               <TableCell>Rank</TableCell>
               <TableCell>Counter</TableCell>
               <TableCell>Time</TableCell>
+              <TableCell>Replay</TableCell>
               <TableCell>Start</TableCell>
               <TableCell>End</TableCell>
               <TableCell>Partners</TableCell>
@@ -293,6 +318,7 @@ export const SpeedTable = ({ speed, thread }: Props) => {
             <TableRow>
               <TableCell>Rank</TableCell>
               <TableCell>Time</TableCell>
+              <TableCell>Replay</TableCell>
               <TableCell>Start</TableCell>
               <TableCell>End</TableCell>
               <TableCell>Qualified Counters</TableCell>
