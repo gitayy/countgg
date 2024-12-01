@@ -988,13 +988,13 @@ const Count = memo((props: any) => {
             filter: props.post.stricken && user && preferences && preferences.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '',
             opacity: props.post.stricken && user && preferences ? preferences.pref_stricken_count_opacity : 1,
             border:
-              props.mostRecentCount && (!user || user && preferences && preferences.pref_highlight_last_count)
+              props.mostRecentCount && user && preferences && preferences.pref_highlight_last_count
                 ? `1px solid ${preferences.pref_highlight_last_count_color}`
                 : '1px solid transparent',
             background:
-              props.mostRecentCount && (!user || user && preferences && preferences.pref_highlight_last_count)
+              props.mostRecentCount && user && preferences && preferences.pref_highlight_last_count
                 ? `${preferences.pref_highlight_last_count_color}1c`
-                : props.post.stricken && (!user || (user && preferences && preferences.pref_custom_stricken != 'Disabled'))
+                : props.post.stricken && (user && preferences && preferences.pref_custom_stricken != 'Disabled')
                   ? preferences.pref_strike_color
                   : 'initial',
           }}
