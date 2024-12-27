@@ -655,7 +655,7 @@ export const DefaultPage = () => {
                     </Paper>
                   </Link>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={6} sx={{ padding: '6px' }}>
                   <Link
                     color={'inherit'}
                     underline="none"
