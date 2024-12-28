@@ -137,7 +137,9 @@ export const getAchievements = (uuid?: string) => axios.get<any>(`${API_URL}/cou
 
 export const getAchievement = (id: number) => axios.get<any>(`${API_URL}/counter/achievement/${id}`, CONFIG)
 
-export const unlockReward = (level: number) => axios.post(`${API_URL}/user/unlockReward`, { level: level }, CONFIG)
+export const unlockReward = (level: number) => axios.post(`${API_URL}/api/unlockReward`, { level: level }, CONFIG)
+
+// export const unlockRewardSeason2 = (level: number) => axios.post(`${API_URL}/api/unlockRewardSeason2`, { level: level }, CONFIG)
 
 // Contest related
 
