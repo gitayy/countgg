@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, IconButton, TextField, Button } from '@mui/material';
 import { Check, Close, Edit } from '@mui/icons-material';
 import { Counter, ThreadType } from '../../utils/types';
-import { getLevelFromXP } from '../../utils/helpers';
+import Markdown from "markdown-parser-react";
+import { transformMarkdown } from '../../utils/helpers';
 import ReactMarkdown from 'react-markdown';
 import { useTheme } from '@mui/material/styles';
 
@@ -94,7 +95,7 @@ export default function CommunityNotes({ thread, setThread, counter, onSave }: C
           ) : (
             
             <Typography variant="body1" sx={{overflowWrap: 'anywhere'}}>
-                <ReactMarkdown children={thread ? thread.rules : ''} />  
+                <Markdown content={thread ? thread.rules : ''} options={ {sanitizeHtml: true} } />  
             </Typography>
           )}
         </Box>
