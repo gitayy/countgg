@@ -82,6 +82,7 @@ const Count = memo((props: any) => {
       'coordinates_tow',
       'wave',
       'mayan',
+      '2048',
     ].includes(props.thread.validationType) &&
     props.post.countContent &&
     props.post.rawCount
