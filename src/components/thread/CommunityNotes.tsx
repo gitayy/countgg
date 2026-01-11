@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, IconButton, TextField, Button } from '@mui/material';
 import { Check, Close, Edit } from '@mui/icons-material';
 import { Counter, ThreadType } from '../../utils/types';
-import Markdown from "markdown-parser-react";
-import { transformMarkdown } from '../../utils/helpers';
 import ReactMarkdown from 'react-markdown';
 import { useTheme } from '@mui/material/styles';
+import remarkMaxNesting from '../markdown/remarkMaxNesting';
 
 
 interface CommunityNotesProps {
@@ -95,7 +94,7 @@ export default function CommunityNotes({ thread, setThread, counter, onSave }: C
           ) : (
             
             <Typography variant="body1" sx={{overflowWrap: 'anywhere'}}>
-                <Typography>{thread.rules}</Typography>  
+                <ReactMarkdown remarkPlugins={[[remarkMaxNesting, 6]]} children={thread ? thread.rules : ''} />  
             </Typography>
           )}
         </Box>
