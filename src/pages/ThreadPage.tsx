@@ -58,6 +58,7 @@ import {
   loadNewerCounts,
   modToggleSilentThreadLock,
   modToggleThreadLock,
+  updateCommunityNotes,
   updateThreadPrefs,
 } from '../utils/api'
 import { DailyHOCTable } from '../components/DailyHOCTable'
@@ -82,6 +83,8 @@ import CheckIcon from '@mui/icons-material/Check';
 import ClearIcon from '@mui/icons-material/Clear';
 import { isEqual } from 'lodash'
 import { Preferences } from '../components/Preferences'
+import MiscInfo from '../components/thread/MiscInfo'
+import CommunityNotes from '../components/thread/CommunityNotes'
 
 let imsorryfortheglobalpull = 'DISABLED'
 export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
@@ -1976,6 +1979,23 @@ useEffect(() => {
     }
   }
 
+  const saveCommunityNotes = async (update: string) => {  
+    if(thread) {
+      try {
+        const res = await updateCommunityNotes(thread, update);
+        if (res.status == 200) {
+          setSnackbarSeverity('success')
+          setSnackbarOpen(true)
+          setSnackbarMessage('Changes made successfully')
+        }
+      } catch (err) {
+        setSnackbarSeverity('error')
+        setSnackbarOpen(true)
+        setSnackbarMessage(`${err}`)
+      }
+    }
+  }
+
   let [maybeU, setMaybeU] = useState('')
   useEffect(() => {
     if (Math.random() > 0.5) {
@@ -2078,12 +2098,16 @@ useEffect(() => {
                 remarkPlugins={[remarkGfm]}
               />
             </Typography>
-            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
-              Rules
+            {/* <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              Community Notes
+            </Typography>
+            <Typography variant="subtitle2" sx={{ color: 'grey', fontStyle: 'italic', mt: 0, fontSize: 'small' }}>
+              You can edit these notes once you reach Level 20.
             </Typography>
             <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
               <ReactMarkdown children={thread ? thread.rules : 'Loading...'} components={{ p: 'span' }} remarkPlugins={[remarkGfm]} />
-            </Typography>
+            </Typography> */}
+            <CommunityNotes thread={thread} setThread={setThread} counter={counter} onSave={saveCommunityNotes} />
             {counter && thread && counter.roles.includes('mod') && (
               <Button variant="contained" onClick={lockThread}>
                 {thread.locked ? 'Unlock Thread' : 'Lock Thread'}
@@ -2094,7 +2118,7 @@ useEffect(() => {
                 Silent Lock Toggle
               </Button>
             )}
-            {thread ? (
+            {/* {thread ? (
               <>
                 <Box sx={{ mt: 2 }}>
                   <Typography sx={{ fontSize: 9 }} variant="body2">
@@ -2119,7 +2143,8 @@ useEffect(() => {
               </>
             ) : (
               <>Loading...</>
-            )}
+            )} */}
+            <MiscInfo thread={thread} />
             {/* <AudioRecorder />/ */}
           </TabPanel>
           <TabPanel value="tab_2" sx={{ flexGrow: 1, p: 0 }}>

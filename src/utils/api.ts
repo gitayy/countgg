@@ -85,8 +85,21 @@ export const updateThreadPrefs = (update: ThreadPrefs) =>
 export const deleteThreadPrefs = (thread: ThreadType) =>
   axios.delete(`${API_URL}/user/deleteThreadPrefs`, {...CONFIG,  params: {threadUUID: thread.uuid} })
 
+export const updateCommunityNotes = (thread: ThreadType, update: string) =>
+  axios.post(`${API_URL}/thread/updateCommunityNotes`, { threadUUID: thread.uuid, update: update }, CONFIG)
+
 export const getRecentCounts = (thread_name: string, context: string | (string | null)[] | null, commentsOnly?: boolean) =>
   axios.post(`${API_URL}/thread/getRecent`, { thread_name: thread_name, context: context, commentsOnly: commentsOnly }, CONFIG)
+
+export const recentOnLoadFull = (threadName: string, context?: string, commentsOnly?: boolean) =>
+  axios.get(`${API_URL}/thread/recentOnLoadFull/${threadName}`, 
+    {
+    params: {
+      context: context, 
+      commentsOnly: commentsOnly
+    },
+  ...CONFIG,
+})
 
 export const getOlderCounts = (thread_name: string, uuid: string) =>
   axios.post(`${API_URL}/thread/getOlder`, { thread_name: thread_name, uuid: uuid }, CONFIG)
