@@ -136,6 +136,8 @@ const Count = memo((props: any) => {
   const fancyMs = convertMsToFancyTime(Math.round(props.post.timeSinceLastPost))
   const fancyMs2 = fancyTime2(0, Math.round(props.post.timeSinceLastPost), true)
 
+  const isRainbow = renderedCounter.rainbow === msSinceLastPost;
+
   const [action, setAction] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const handleConfirm = () => {
@@ -225,7 +227,7 @@ const Count = memo((props: any) => {
                   : 'initial',
           }}
         >
-          <span style={{ color: renderedCounter.color }}>{renderedCounter.name}</span>
+          <span className={isRainbow ? "rainbow-text" : undefined} style={{ color: renderedCounter.color }}>{renderedCounter.name}</span>
           &nbsp;
           <span style={{ textDecoration: props.post.stricken ? 'line-through' : 'none' }}>{countContentCopy}</span>
           {maybeSpace}
@@ -425,6 +427,7 @@ const Count = memo((props: any) => {
                             textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none',
                             fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal',
                           }}
+                          className={isRainbow ? "rainbow-text" : undefined}
                           color={renderedCounter.color}
                           onClick={(e) => {
                             e.preventDefault()
@@ -792,6 +795,7 @@ const Count = memo((props: any) => {
                           textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none',
                           fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal',
                         }}
+                        className={isRainbow ? "rainbow-text" : undefined}
                         color={renderedCounter.color}
                         onClick={(e) => {
                           e.preventDefault()
@@ -1109,6 +1113,7 @@ const Count = memo((props: any) => {
                             justifyContent: 'center',
                             alignItems: 'center',
                           }}
+                          className={isRainbow ? "rainbow-text" : undefined}
                           color={renderedCounter.color}
                           onClick={(e) => {
                             e.preventDefault()
@@ -1186,6 +1191,7 @@ const Count = memo((props: any) => {
                             // fontWeight: 600,
                             // fontWeight: 'bold',
                           }}
+                          className={isRainbow ? "rainbow-text" : undefined}
                           color={renderedCounter.color}
                           onClick={(e) => {
                             e.preventDefault()
@@ -1214,6 +1220,7 @@ const Count = memo((props: any) => {
                             // fontWeight: 600,
                             // fontWeight: 'bold',
                           }}
+                          className={isRainbow ? "rainbow-text" : undefined}
                           color={renderedCounter.color}
                           onClick={(e) => {
                             e.preventDefault()

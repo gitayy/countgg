@@ -205,6 +205,13 @@ export const CounterPage = () => {
                 </Typography>
               </CardContent>
             </Card>
+            <Card sx={{ my: 2, p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <CardContent>
+                <Typography variant="h5" color="text.primary">
+                  Rainbow: {loadedCounter.rainbow }
+                </Typography>
+              </CardContent>
+            </Card>
 
             <Card sx={{ my: 2, p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <Typography variant="body1">LVL {calculateLevel(loadedCounter.xp).level}</Typography>

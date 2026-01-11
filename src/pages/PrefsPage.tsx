@@ -84,6 +84,7 @@ export const PrefsPage = () => {
   const [prefSoundOnStricken, setPrefSoundOnStricken] = useState(user?.pref_sound_on_stricken || 'Disabled')
   const [prefHideThreadPicker, setPrefHideThreadPicker] = useState(user?.pref_hide_thread_picker || false)
   const [prefStrickenCountOpacity, setPrefStrickenCountOpacity] = useState(user?.pref_stricken_count_opacity || 1)
+  const [rainbowNumber, setRainbowNumber] = useState(counter?.rainbow || 1)
   const [cardStyle, setCardStyle] = useState(counter?.cardStyle || 'card_default')
   const [cardBorderStyle, setCardBorderStyle] = useState(counter?.cardBorderStyle || 'no_border_square')
   const [displayName, setDisplayName] = useState(counter?.name || '')
@@ -165,6 +166,7 @@ export const PrefsPage = () => {
       user.pref_stricken_count_opacity = prefStrickenCountOpacity
       counter.name = displayName
       counter.color = color
+      counter.rainbow = rainbowNumber
       counter.cardStyle = cardStyle
       counter.cardBorderStyle = cardBorderStyle
       counter.title = title
@@ -245,6 +247,21 @@ export const PrefsPage = () => {
               InputLabelProps={{ shrink: true }}
               value={color}
             ></TextField>
+            <TextField
+              sx={{ m: 2, minWidth: 200 }}
+              id="RainbowNumber"
+              type="number"
+              inputProps={{ min: '1', max: '100000', step: '1' }}
+              onInput={(e) => {
+                const value = parseInt((e.target as HTMLInputElement).value || '1', 10)
+                if (value >= 1 && value <= 100_000) {
+                  setRainbowNumber(value)
+                }
+              }}
+              label="Rainbow Number"
+              InputLabelProps={{ shrink: true }}
+              value={rainbowNumber}
+            />
             <FormControl sx={{ m: 2 }}>
               <InputLabel id="card-style-label">Card Style</InputLabel>
               <Select

@@ -1015,3 +1015,20 @@ background-size: 1800% 1800%;
   50% { width: 4em; transform: translate(-50%,-50%); }
   to { width: 7.5em; transform: translate(0.5em,-50%); }
 }
+
+.rainbow-text {
+  background: linear-gradient(
+    90deg,
+    #ff0000,
+    #ff7f00,
+    #ffff00,
+    #00ff00,
+    #00ffff,
+    #0000ff,
+    #8b00ff
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}

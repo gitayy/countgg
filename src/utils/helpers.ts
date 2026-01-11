@@ -124,6 +124,7 @@ export const cachedCounters = {
     username: '[SYSTEM]',
     roles: ['counter'],
     title: 'SYSTEM',
+    rainbow: 1,
     discordId: '0',
     pronouns: ['IT', 'IT', 'IT', 'IT'],
     avatar: '0',

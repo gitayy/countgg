@@ -103,6 +103,7 @@ export type Counter = {
   username: string
   color: string
   roles: string[]
+  rainbow: number
   avatar: string
   cardStyle: string
   cardBorderStyle: string
