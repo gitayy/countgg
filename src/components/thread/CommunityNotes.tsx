@@ -95,7 +95,7 @@ export default function CommunityNotes({ thread, setThread, counter, onSave }: C
           ) : (
             
             <Typography variant="body1" sx={{overflowWrap: 'anywhere'}}>
-                <Markdown content={thread ? thread.rules : ''} options={ {sanitizeHtml: true} } />  
+                <Typography>{thread.rules}</Typography>  
             </Typography>
           )}
         </Box>
