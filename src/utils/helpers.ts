@@ -222,6 +222,13 @@ export function transformMarkdown(markdownContent, replaceLinebreakCount = 30) {
   return noLinebreakSpamContent
 }
 
+export function tooManyMarkers(md: string, max = 200) {
+  // counts common markdown syntax markers
+  const m = md.match(/[*_~`#>|-]/g)
+  return (m?.length ?? 0) > max
+}
+
+
 export function customBlockquotePlugin() {
   return (tree) => {
     const newChildren: any = []

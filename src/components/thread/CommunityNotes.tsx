@@ -5,6 +5,8 @@ import { Counter, ThreadType } from '../../utils/types';
 import ReactMarkdown from 'react-markdown';
 import { useTheme } from '@mui/material/styles';
 import remarkMaxNesting from '../markdown/remarkMaxNesting';
+import { tooManyMarkers } from '../../utils/helpers';
+import remarkGfm from 'remark-gfm';
 
 
 interface CommunityNotesProps {
@@ -94,7 +96,7 @@ export default function CommunityNotes({ thread, setThread, counter, onSave }: C
           ) : (
             
             <Typography variant="body1" sx={{overflowWrap: 'anywhere'}}>
-                <ReactMarkdown remarkPlugins={[[remarkMaxNesting, 6]]} children={thread ? thread.rules : ''} />  
+                { tooManyMarkers(thread.rules) ? <Typography>{thread.rules}</Typography> : <ReactMarkdown remarkPlugins={[remarkGfm]} children={thread ? thread.rules : ''} />  }
             </Typography>
           )}
         </Box>
