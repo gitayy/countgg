@@ -58,6 +58,13 @@ export const AchievementsPage = () => {
   publicAchievements.sort((a, b) => b.countersEarned - a.countersEarned)
   nonPublicAchievements.sort((a, b) => b.countersEarned - a.countersEarned)
 
+  const loadingStatuses = [
+    { label: 'User session', ready: !loading },
+    { label: 'Achievements', ready: !achievementsLoading },
+    { label: 'Earned split', ready: !unearnedAchievementsLoading },
+    { label: 'Mounted', ready: isMounted.current },
+  ]
+
   if (!loading && !achievementsLoading && !unearnedAchievementsLoading && isMounted.current) {
     return (
       <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2 }}>
@@ -152,6 +159,6 @@ export const AchievementsPage = () => {
       </Box>
     )
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 }

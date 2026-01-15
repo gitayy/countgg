@@ -42,7 +42,7 @@ import Count from '../components/count/Count'
 import { Preferences } from '../components/Preferences'
 
 export const PrefsPage = () => {
-  const { user, counter, items } = useContext(UserContext)
+  const { user, counter, items, loading } = useContext(UserContext)
   const isMounted = useIsMounted()
 
   // console.log("AYO");
@@ -192,6 +192,11 @@ export const PrefsPage = () => {
       setMaybeU('u')
     }
   }, [])
+
+  const loadingStatuses = [
+    { label: 'User session', ready: !loading },
+    { label: 'Counter profile', ready: Boolean(counter) },
+  ]
 
   if (user && counter) {
     return (
@@ -402,6 +407,6 @@ export const PrefsPage = () => {
       </>
     )
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 }

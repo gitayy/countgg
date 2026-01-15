@@ -562,7 +562,16 @@ export const LCPage = () => {
       </Box>
     )
   } else if (loading) {
-    return <Loading />
+    return (
+      <Loading
+        statuses={[
+          { label: 'User session', ready: !loading },
+          { label: 'User profile', ready: Boolean(user) },
+          { label: 'Reddit link', ready: Boolean(user && user.reddit) },
+          { label: 'Counter profile', ready: Boolean(counter) },
+        ]}
+      />
+    )
   } else if (user && !user.reddit) {
     return (
       <Box sx={{ bgcolor: 'background.paper', flexGrow: 1, p: 2, color: 'text.primary' }}>

@@ -2438,6 +2438,11 @@ useEffect(() => {
     preferences,
   ])
 
+  const loadingStatuses = [
+    { label: 'User session', ready: !loading },
+    { label: 'Thread', ready: !threadLoading && Boolean(thread) },
+  ]
+
   if (!loading && !threadLoading && thread) {
     return (
       <>
@@ -2513,6 +2518,6 @@ useEffect(() => {
       </>
     )
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 })

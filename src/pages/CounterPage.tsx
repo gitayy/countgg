@@ -134,6 +134,13 @@ export const CounterPage = () => {
     }
   }
 
+  const loadingStatuses = [
+    { label: 'Counter profile', ready: !loadedCounterLoading && Boolean(loadedCounter) },
+    { label: 'Achievements', ready: !achievementsLoading },
+    { label: 'Achievement split', ready: !unearnedAchievementsLoading },
+    { label: 'Mounted', ready: isMounted.current },
+  ]
+
   if (
     loadedCounter &&
     !loadedCounterLoading &&
@@ -300,7 +307,7 @@ export const CounterPage = () => {
   } else if (loadedCounter && loadedCounter.roles.includes('banned')) {
     return <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2 }}>This user ({loadedCounter.uuid}) is banned.</Box>
   } else if (loadedCounterLoading) {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   } else if (!loadedCounterLoading && !loadedCounter) {
     return (
       <>
@@ -308,6 +315,6 @@ export const CounterPage = () => {
       </>
     )
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 }

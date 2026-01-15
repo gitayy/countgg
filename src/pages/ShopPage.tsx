@@ -21,6 +21,11 @@ export const ShopPage = () => {
   console.log('Shop Items')
   console.log(shopItems)
 
+  const loadingStatuses = [
+    { label: 'User session', ready: !loading },
+    { label: 'Shop items', ready: !shopItemsLoading },
+  ]
+
   return (
     <Box sx={{ bgcolor: 'primary.light', color: 'text.primary', flexGrow: 1, p: 2 }}>
       <Typography sx={{ mb: 1.5 }} variant="h4">
@@ -97,7 +102,7 @@ export const ShopPage = () => {
           </Grid>
         </>
       )}
-      {loading && <Loading />}
+      {loading && <Loading statuses={loadingStatuses} />}
     </Box>
   )
 }

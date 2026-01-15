@@ -65,6 +65,11 @@ export const CountersPage = () => {
     setPage(value)
   }
 
+  const loadingStatuses = [
+    { label: 'User session', ready: !loading },
+    { label: 'Counters list', ready: !countersLoading },
+  ]
+
   if (!loading && !countersLoading) {
     return (
       <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2 }}>
@@ -132,6 +137,6 @@ export const CountersPage = () => {
       </Box>
     )
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 }

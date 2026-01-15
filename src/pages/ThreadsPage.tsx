@@ -139,6 +139,11 @@ export const ThreadsPage = () => {
     )
   }
 
+  const loadingStatuses = [
+    { label: 'User session', ready: !loading },
+    { label: 'Threads list', ready: Boolean(allThreads) },
+  ]
+
   if (!loading && allThreads) {
     return (
       <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2 }}>
@@ -158,6 +163,6 @@ export const ThreadsPage = () => {
       </>
     )
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 }

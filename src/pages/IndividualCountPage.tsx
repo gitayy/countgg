@@ -106,6 +106,13 @@ export const IndividualCountPage = memo(() => {
     }
   }, [deleteComment])
 
+  const loadingStatuses = [
+    { label: 'User session', ready: !loading },
+    { label: 'Thread', ready: !threadLoading && Boolean(thread) },
+    { label: 'Counter cache', ready: Boolean(cachedCounters) },
+    { label: 'Specific count', ready: !specificCountLoading && Boolean(specificCount[0]) },
+  ]
+
   if (!loading && !threadLoading && thread && cachedCounters && specificCount[0]) {
     return (
       <Box sx={{ bgcolor: 'background.paper', display: 'flex', justifyContent: 'center', flexGrow: 1, p: 2 }}>
@@ -206,6 +213,6 @@ export const IndividualCountPage = memo(() => {
       </Box>
     )
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 })

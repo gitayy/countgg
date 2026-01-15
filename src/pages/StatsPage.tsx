@@ -272,6 +272,11 @@ export const StatsPage = () => {
     setSelectedEndDate(null)
   }
 
+  const loadingStatuses = [
+    { label: 'User session', ready: !loading },
+    { label: 'Threads list', ready: !allThreadsLoading },
+  ]
+
   if (!loading && !allThreadsLoading) {
     return (
       <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2 }}>
@@ -404,7 +409,7 @@ export const StatsPage = () => {
           <Typography variant='h6'>Query</Typography>
           <StatsQuery thread={selectedThread}></StatsQuery>
         </TabPanel> */}
-                {statsLoading && <Loading mini={true} />}
+                {statsLoading && <Loading mini={true} statuses={[{ label: 'Stats data', ready: !statsLoading }]} />}
               </Box>
             </TabContext>
             <Typography variant="body2" sx={{ mt: 1 }}>
@@ -416,6 +421,6 @@ export const StatsPage = () => {
       </Box>
     )
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 }

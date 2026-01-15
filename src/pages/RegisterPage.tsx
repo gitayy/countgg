@@ -198,6 +198,8 @@ export const RegisterPage = () => {
     }
   }, [color, name, username])
 
+  const loadingStatuses = [{ label: 'Counter profile', ready: Boolean(counter) }]
+
   if (counter) {
     return (
       <>
@@ -311,6 +313,6 @@ export const RegisterPage = () => {
       </>
     )
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 }

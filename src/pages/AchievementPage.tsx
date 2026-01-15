@@ -25,6 +25,12 @@ export const AchievementPage = () => {
     }
   }, [achievement])
 
+  const loadingStatuses = [
+    { label: 'User session', ready: !loading },
+    { label: 'Achievement', ready: !achievementLoading && Boolean(achievement) },
+    { label: 'Mounted', ready: isMounted.current },
+  ]
+
   if (!loading && achievement && !achievementLoading && isMounted.current) {
     const counter_achievement =
       counterAchievements && counter
@@ -89,6 +95,6 @@ export const AchievementPage = () => {
   } else if (!loading && !achievement && !achievementLoading && isMounted.current) {
     return <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2 }}>No achievement found :(</Box>
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 }

@@ -33,6 +33,12 @@ export const AdminApprovePage = () => {
     }
   }
 
+  const loadingStatuses = [
+    { label: 'User session', ready: !loading },
+    { label: 'Admin access', ready: Boolean(counter && counter.roles.includes('admin')) },
+    { label: 'Unapproved list', ready: !unapprovedLoading },
+  ]
+
   if (counter && counter.roles.includes('admin')) {
     return (
       <Box sx={{ bgcolor: 'primary.light', flexGrow: 1, p: 2 }}>
@@ -54,6 +60,6 @@ export const AdminApprovePage = () => {
       </Box>
     )
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 }

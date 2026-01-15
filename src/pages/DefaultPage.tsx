@@ -275,6 +275,11 @@ export const DefaultPage = () => {
 
   const isRegistered = user && counter
   const isCounter = counter && counter.roles.includes('counter')
+  const loadingStatuses = [
+    { label: 'User session', ready: !loading },
+    { label: 'Totals', ready: totalCounts > -1 },
+    { label: 'Threads list', ready: !allThreadsLoading },
+  ]
 
   if (!loading && totalCounts > -1 && !allThreadsLoading) {
     return (
@@ -964,6 +969,6 @@ export const DefaultPage = () => {
       </>
     )
   } else {
-    return <Loading />
+    return <Loading statuses={loadingStatuses} />
   }
 }

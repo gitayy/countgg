@@ -61,6 +61,10 @@ const BlogPage = () => {
   }, [location.pathname, title])
 
   console.log(fullBlog)
+  const loadingStatuses = [
+    { label: 'Blogs list', ready: !blogsLoading },
+    { label: 'Blog selected', ready: Boolean(fullBlog) },
+  ]
 
   return fullBlog ? (
     <Box sx={{ bgcolor: 'background.paper', flexGrow: 1, p: 2, color: 'text.primary' }}>
@@ -73,7 +77,7 @@ const BlogPage = () => {
     </Box>
   ) : (
     <Box sx={{ bgcolor: 'background.paper', flexGrow: 1, p: 2, color: 'text.primary' }}>
-      <Loading />
+      <Loading statuses={loadingStatuses} />
     </Box>
   )
 
