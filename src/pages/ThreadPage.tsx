@@ -336,7 +336,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
               return newCounts
             }
           })()
-          if (currentCount.hasComment) {
+          if (currentCount.hasThreeCharComment) {
             recentChatsRef.current = [...recentChatsRef.current, currentCount]
 
             if (chatsIsScrolledToNewest.current !== undefined && chatsIsScrolledToNewest.current) {
@@ -353,7 +353,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
               recentCountsRef.current = recentCountsRef.current.slice(0, 50)
             }
           }
-          if (currentCount.hasComment) {
+          if (currentCount.hasThreeCharComment) {
             recentChatsRef.current = [currentCount, ...recentChatsRef.current]
 
             if (chatsIsScrolledToNewest.current !== undefined && chatsIsScrolledToNewest.current) {
@@ -365,7 +365,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         }
       }
       setLatencyStateTest(`${currentCount.uuid}_${Date.now()}`)
-      if (currentCount.hasComment && tabValueRef.current === 'tab_2') {
+      if (currentCount.hasThreeCharComment && tabValueRef.current === 'tab_2') {
         setNewChatsLoadedState(currentCount.uuid)
       }
       if (currentCount.isValidCount) {
@@ -798,7 +798,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
                 return newCounts
               }
             })()
-            if (data.post.hasComment) {
+            if (data.post.hasThreeCharComment) {
               recentChatsRef.current = [...recentChatsRef.current, data.post]
 
               if (chatsIsScrolledToNewest.current !== undefined && chatsIsScrolledToNewest.current) {
@@ -815,7 +815,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
                 recentCountsRef.current = recentCountsRef.current.slice(0, 50)
               }
             }
-            if (data.post.hasComment) {
+            if (data.post.hasThreeCharComment) {
               recentChatsRef.current = [data.post, ...recentChatsRef.current]
 
               if (chatsIsScrolledToNewest.current !== undefined && chatsIsScrolledToNewest.current) {
@@ -829,7 +829,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         // setRenderLatencyCheck(true); //renderLatency test 1 requirement.
         // setNewRecentPostLoaded(data.post.uuid); // Only do this here.
         setLatencyStateTest(`${data.post.uuid}_${Date.now()}`)
-        if (data.post.hasComment && tabValueRef.current === 'tab_2') {
+        if (data.post.hasThreeCharComment && tabValueRef.current === 'tab_2') {
           setNewChatsLoadedState(data.post.uuid)
         }
         if (data.post.isValidCount) {

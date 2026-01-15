@@ -132,6 +132,7 @@ export type PostType = {
   stricken: boolean
   thread: string
   hasComment: boolean
+  hasThreeCharComment: boolean
   comment?: string
   authorUUID: string
   isDeleted: boolean

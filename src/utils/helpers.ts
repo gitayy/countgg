@@ -56,7 +56,8 @@ export const defaultCounter = (uuid: string) => ({
   cardStyle: '',
   cardBorderStyle: '',
   xp: 100,
-})
+  rainbow: 1,
+}) as Counter;
 
 export function isColorSuitableForBackground(textColor: string, backgroundColor: string, minContrastRatio: number = 4.5): boolean {
   const getLuminance = (color: string) => {
@@ -161,6 +162,7 @@ export const fakePost = (counter?: Counter): PostType => {
     stricken: false,
     isCount: true,
     hasComment: true,
+    hasThreeCharComment: true,
     comment: 'This is an example post.',
     countContent: '1,234,567',
     authorUUID: counter ? counter.uuid : '[SYSTEM]',
