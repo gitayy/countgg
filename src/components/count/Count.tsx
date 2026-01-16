@@ -137,7 +137,7 @@ const Count = memo((props: any) => {
   const fancyMs = convertMsToFancyTime(Math.round(props.post.timeSinceLastPost))
   const fancyMs2 = fancyTime2(0, Math.round(props.post.timeSinceLastPost), true)
 
-  const isRainbow = renderedCounter.rainbow === msSinceLastPost;
+  const isRainbow = renderedCounter.rainbow === roundedTimeSinceLastPost;
 
   const [action, setAction] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
