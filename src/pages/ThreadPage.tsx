@@ -489,6 +489,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const isMounted = useIsMounted()
 
   const userAsRef = useRef<User>()
+  const userRef = useRef<User>()
+  const preferencesRef = useRef<PreferencesType>()
 
   const latency = useRef({})
   const latencyCheck = useRef('')
@@ -499,6 +501,13 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
 
   const refScroll = useRef<any>([])
   const postScroll = useRef<any>([])
+  useEffect(() => {
+    userRef.current = user
+  }, [user])
+
+  useEffect(() => {
+    preferencesRef.current = preferences
+  }, [preferences])
   useEffect(() => {
     const scrollCheck = (event) => {
       const { key: test } = event
@@ -850,11 +859,15 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
             })
           }
         }
-        if (data.post.stricken && user && preferences && preferences.pref_sound_on_stricken !== 'Disabled') {
-          if (preferences.pref_sound_on_stricken === 'Only My Counts' && data.post.authorUUID === user.uuid) {
-            playDing()
-          } else if (preferences.pref_sound_on_stricken === 'All Stricken') {
-            playDing()
+        if (data.post.stricken) {
+          const pref = preferencesRef.current
+          const currentUser = userRef.current
+          if (pref && currentUser && pref.pref_sound_on_stricken !== 'Disabled') {
+            if (pref.pref_sound_on_stricken === 'Only My Counts' && data.post.authorUUID === currentUser.uuid) {
+              playDing()
+            } else if (pref.pref_sound_on_stricken === 'All Stricken') {
+              playDing()
+            }
           }
         }
         if (document.hidden) {
