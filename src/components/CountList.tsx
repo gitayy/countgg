@@ -1026,11 +1026,11 @@ const CountList = memo((props: any) => {
     let prevHour
     let prevKey
 
-    let highestValidCountId = 0
+    let highestValidCountNumber = 0
     props.recentCounts.current &&
       props.recentCounts.current.forEach((count, index) => {
-        if (count.isValidCount && count.id > highestValidCountId) {
-          highestValidCountId = count.id
+        if (count.isValidCount && count.validCountNumber > highestValidCountNumber) {
+          highestValidCountNumber = count.validCountNumber
         }
         const date = new Date(parseInt(count.timestamp))
         const hour = date.getHours()
@@ -1101,7 +1101,7 @@ const CountList = memo((props: any) => {
             if (isDesktop && !(count.stricken && !count.hasComment && user && preferences && preferences.pref_hide_stricken === 'Hide')) {
               return (
                 <Count
-                  mostRecentCount={count.id === highestValidCountId}
+                  mostRecentCount={count.validCountNumber === highestValidCountNumber}
                   user={user}
                   key={count.uuid}
                   thread={props.thread}
@@ -1116,7 +1116,7 @@ const CountList = memo((props: any) => {
             } else if (!(count.stricken && user && preferences && preferences.pref_hide_stricken === 'Hide')) {
               return (
                 <CountMobile
-                  mostRecentCount={count.id === highestValidCountId}
+                  mostRecentCount={count.validCountNumber === highestValidCountNumber}
                   user={user}
                   key={count.uuid}
                   thread={props.thread}
