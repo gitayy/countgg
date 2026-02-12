@@ -19,37 +19,13 @@ import { Counter, RedditPost } from '../utils/types'
 import queryString from 'query-string'
 
 interface LCPostProps {
-  // post: RedditPost;
   postString: string
-  // stricken: boolean;
   thread: string
 }
 
-//   function areEqual(prevProps: LCPostProps, nextProps: LCPostProps) {
-//     // Compare the props here
-//     const prevPost = prevProps.post;
-//     const nextPost = nextProps.post;
-//     console.log(prevPost, nextPost);
-
-//     // Implement your comparison logic
-//     // For example, compare individual properties of the post object
-//     const idEqual = prevPost.id === nextPost.id;
-//     const strickenEqual = prevPost.stricken === nextPost.stricken;
-
-//     // Compare other props if needed
-//     const detailsEqual = JSON.stringify(prevProps.thread) === JSON.stringify(nextProps.thread);
-
-//     console.log(`LCPost areEqual (${prevPost.body}, ${prevPost.author}, ${prevPost.stricken}): ${idEqual}, ${strickenEqual}, ${detailsEqual}`);
-//     // Return true if all props are equal, or false if not
-//     return idEqual && strickenEqual && detailsEqual;
-//   }
-
-// export const LCPost = memo(({ post, details }: LCPostProps ) => {
 export const LCPost = memo(({ postString, thread }: LCPostProps) => {
-  // export const LCPost = ({ post, thread }: LCPostProps ) => {
   const post = JSON.parse(postString) as RedditPost
   const { user, counter, loading, preferences } = useContext(UserContext)
-  // console.log(`LCPost rendered (${post.body}, ${post.author}, ${post.stricken})`);
 
   const apiUrl = `https://oauth.reddit.com/api/live/${thread}`
   const headers = {
@@ -59,7 +35,6 @@ export const LCPost = memo(({ postString, thread }: LCPostProps) => {
   const [action, setAction] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const handleConfirm = () => {
-    // Perform the action based on the button that was clicked
     if (action === 'delete') {
       handleDelete()
       setOpen(false)
@@ -111,7 +86,6 @@ export const LCPost = memo(({ postString, thread }: LCPostProps) => {
 
   const today = new Date()
   const yesterday = new Date(Date.now() - 86400000)
-  // const date = post.id ? new Date(uuidv1ToMs(post.id)) : new Date();
   const date = post.timestamp ? new Date(post.timestamp) : new Date()
   const hour = date.getHours()
   const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${hour}`
