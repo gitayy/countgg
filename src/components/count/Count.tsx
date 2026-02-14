@@ -124,7 +124,7 @@ const Count = memo((props: any) => {
   const roundedLatency = Math.round(Number(props.post.latency))
   const roundedProcessingLatency = Math.round(Number(props.post.processingLatency))
   const showProcessingLatency =
-    roundedLatency >= 100 &&
+    roundedProcessingLatency >= 50 &&
     Number.isFinite(roundedProcessingLatency)
   const latencyDisplayText = showProcessingLatency
     ? `${roundedLatency}ms, ${roundedProcessingLatency}ms PL`
