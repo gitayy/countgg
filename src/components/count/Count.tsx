@@ -121,6 +121,19 @@ const Count = memo((props: any) => {
   const uncachedCounter: Counter = defaultCounter(props.post.authorUUID)
 
   const renderedCounter: Counter = props.renderedCounter || uncachedCounter
+  const roundedLatency = Math.round(Number(props.post.latency))
+  const roundedProcessingLatency = Math.round(Number(props.post.processingLatency))
+  const showProcessingLatency =
+    roundedLatency >= 100 &&
+    Number.isFinite(roundedProcessingLatency)
+  const latencyDisplayText = showProcessingLatency
+    ? `${roundedLatency}ms, ${roundedProcessingLatency}ms PL`
+    : `${roundedLatency}ms`
+  const showHoverProcessingSuffix =
+    !showProcessingLatency && Number.isFinite(roundedProcessingLatency)
+  const latencyTooltip = Number.isFinite(roundedProcessingLatency)
+    ? `End-to-end latency (client send to receive): ${roundedLatency}ms. Processing latency (server receive to emit): ${roundedProcessingLatency}ms.`
+    : 'Time it took, from sending, for this post to be received from the server.'
 
   // const hoursSinceLastCount = Math.floor(props.post.timeSinceLastCount / 3600000)
   // const minutesSinceLastCount = Math.floor(props.post.timeSinceLastCount / 60000) % 60
@@ -308,15 +321,39 @@ const Count = memo((props: any) => {
                             <>
                               {' '}
                               (
-                              <Typography
-                                component={'span'}
-                                fontSize={9}
-                                sx={{ width: 'fit-content', color: 'text.secondary' }}
-                                title="Time it took, from sending, for this post to be received from the server."
-                                style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}
-                              >
-                                {props.post.latency}ms
-                              </Typography>
+                                <Typography
+                                  component={'span'}
+                                  fontSize={9}
+                                  sx={{
+                                    width: 'fit-content',
+                                    color: 'text.secondary',
+                                    '&:hover .plHoverSuffix': {
+                                      maxWidth: 160,
+                                      opacity: 1,
+                                    },
+                                  }}
+                                  title={latencyTooltip}
+                                  style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}
+                                >
+                                  {latencyDisplayText}
+                                  {showHoverProcessingSuffix && (
+                                    <Box
+                                      component="span"
+                                      className="plHoverSuffix"
+                                      sx={{
+                                        maxWidth: 0,
+                                        opacity: 0,
+                                        overflow: 'hidden',
+                                        display: 'inline-block',
+                                        whiteSpace: 'nowrap',
+                                        verticalAlign: 'bottom',
+                                        transition: 'max-width 0.18s ease, opacity 0.18s ease',
+                                      }}
+                                    >
+                                      {`, ${roundedProcessingLatency}ms PL`}
+                                    </Box>
+                                  )}
+                                </Typography>
                               )
                             </>
                           )}
@@ -658,17 +695,41 @@ const Count = memo((props: any) => {
                       </Link>
                     </Box>
                     {props.post.latency && (
-                      <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', textAlign: 'center' }}>
-                        <Typography
-                          fontSize={9}
-                          sx={{ width: 'fit-content', color: 'text.secondary' }}
-                          title="Time it took, from sending, for this post to be received from the server."
-                          style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}
-                        >
-                          {props.post.latency}ms
-                        </Typography>
-                      </Box>
-                    )}
+                        <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', textAlign: 'center' }}>
+                          <Typography
+                            fontSize={9}
+                            sx={{
+                              width: 'fit-content',
+                              color: 'text.secondary',
+                              '&:hover .plHoverSuffix': {
+                                maxWidth: 160,
+                                opacity: 1,
+                              },
+                            }}
+                            title={latencyTooltip}
+                            style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}
+                          >
+                            {latencyDisplayText}
+                            {showHoverProcessingSuffix && (
+                              <Box
+                                component="span"
+                                className="plHoverSuffix"
+                                sx={{
+                                  maxWidth: 0,
+                                  opacity: 0,
+                                  overflow: 'hidden',
+                                  display: 'inline-block',
+                                  whiteSpace: 'nowrap',
+                                  verticalAlign: 'bottom',
+                                  transition: 'max-width 0.18s ease, opacity 0.18s ease',
+                                }}
+                              >
+                                {`, ${roundedProcessingLatency}ms PL`}
+                              </Box>
+                            )}
+                          </Typography>
+                        </Box>
+                      )}
                   </Grid>
                   <Grid item xs={10}>
                     <Grid container sx={{ width: '95%' }}>
@@ -1056,14 +1117,35 @@ const Count = memo((props: any) => {
                                 // sx={{ 
                                 //   // width: 'fit-content',
                                 //    color: 'text.secondary' }}
-                                title="Time it took, from sending, for this post to be received from the server."
+                                title={latencyTooltip}
                                 sx={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative',
                                   color: 'text.secondary',
                                   fontSize: 'inherit',
+                                  '&:hover .plHoverSuffix': {
+                                    maxWidth: 160,
+                                    opacity: 1,
+                                  },
                                   
                                  }}
                               >
-                                ({props.post.latency}ms)
+                                ({latencyDisplayText})
+                                {showHoverProcessingSuffix && (
+                                  <Box
+                                    component="span"
+                                    className="plHoverSuffix"
+                                    sx={{
+                                      maxWidth: 0,
+                                      opacity: 0,
+                                      overflow: 'hidden',
+                                      display: 'inline-block',
+                                      whiteSpace: 'nowrap',
+                                      verticalAlign: 'bottom',
+                                      transition: 'max-width 0.18s ease, opacity 0.18s ease',
+                                    }}
+                                  >
+                                    {`, ${roundedProcessingLatency}ms PL`}
+                                  </Box>
+                                )}
                               </Typography>
                             </Box>
                           )}

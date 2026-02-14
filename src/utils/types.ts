@@ -140,6 +140,7 @@ export type PostType = {
   reactions: object[]
   validCountNumber: number
   latency?: number
+  processingLatency?: number
   post_hash?: string
 }
 
