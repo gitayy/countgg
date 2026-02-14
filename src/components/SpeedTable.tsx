@@ -26,6 +26,7 @@ interface Props {
 export const SpeedTable = ({ speed, thread }: Props) => {
   const rowsPerPage = 50
   const [page, setPage] = useState(0)
+  const [selectedCounters, setSelectedCounters] = useState<Counter[]>([])
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
   }
@@ -34,48 +35,47 @@ export const SpeedTable = ({ speed, thread }: Props) => {
 
   if (!speed || !thread) {
     return <></>
-  } else {
-    speed = speed.filter((obj) => Object.keys(obj).length !== 0)
+  }
 
-    // Create an object to store the best time of each counter
-    const bestTimes: Record<string, any> = {}
+  speed = speed.filter((obj) => Object.keys(obj).length !== 0)
 
-    const [selectedCounters, setSelectedCounters] = useState<Counter[]>([])
+  // Create an object to store the best time of each counter
+  const bestTimes: Record<string, any> = {}
 
-    for (const obj of speed) {
-      const timestamp1 = convertToTimestamp(obj.start)
-      const timestamp2 = convertToTimestamp(obj.end)
-      const timeDiff = timestamp1 && timestamp2 ? Math.round(Math.abs(timestamp1 - timestamp2) * 1000) / 1000 : null
-      obj.time = timeDiff === null ? Infinity : timeDiff
-      obj.timeFancy = formatTimeDiff(timestamp1, timestamp2)
-      for (const counter of obj.qualifiedCounters) {
-        const time = obj.time || Infinity
-        // if (cachedCounters[counter] && cachedCounters[counter].roles.includes('banned')) {
-        //   continue
-        // }
-        if (
-          selectedCounters.length > 0 &&
-          !selectedCounters.map((counter) => counter.username).includes(cachedCounters[counter].username)
-        ) {
-          continue
-        }
-        if (!bestTimes[counter] || time < bestTimes[counter]['time']) {
-          bestTimes[counter] = obj
-        }
+  for (const obj of speed) {
+    const timestamp1 = convertToTimestamp(obj.start)
+    const timestamp2 = convertToTimestamp(obj.end)
+    const timeDiff = timestamp1 && timestamp2 ? Math.round(Math.abs(timestamp1 - timestamp2) * 1000) / 1000 : null
+    obj.time = timeDiff === null ? Infinity : timeDiff
+    obj.timeFancy = formatTimeDiff(timestamp1, timestamp2)
+    for (const counter of obj.qualifiedCounters) {
+      const time = obj.time || Infinity
+      // if (cachedCounters[counter] && cachedCounters[counter].roles.includes('banned')) {
+      //   continue
+      // }
+      if (
+        selectedCounters.length > 0 &&
+        !selectedCounters.map((counter) => counter.username).includes(cachedCounters[counter].username)
+      ) {
+        continue
+      }
+      if (!bestTimes[counter] || time < bestTimes[counter]['time']) {
+        bestTimes[counter] = obj
       }
     }
-    selectedCounters.length > 0
-      ? (speed = speed.filter((obj) =>
-          obj.qualifiedCounters.some((counter) => selectedCounters.map((counter) => counter.uuid).includes(counter)),
-        )).sort((a, b) => a.time - b.time)
-      : (speed = speed.sort((a, b) => a.time - b.time))
+  }
+  selectedCounters.length > 0
+    ? (speed = speed.filter((obj) =>
+        obj.qualifiedCounters.some((counter) => selectedCounters.map((counter) => counter.uuid).includes(counter)),
+      )).sort((a, b) => a.time - b.time)
+    : (speed = speed.sort((a, b) => a.time - b.time))
 
-    // Sort the leaderboard based on the best time for each counter
-    const pbLeaderboard = Object.entries(bestTimes)
-      .map(([counter, obj]): { counter: string; obj: any } => ({ counter, obj }))
-      .sort((a, b) => a.obj.time - b.obj.time)
+  // Sort the leaderboard based on the best time for each counter
+  const pbLeaderboard = Object.entries(bestTimes)
+    .map(([counter, obj]): { counter: string; obj: any } => ({ counter, obj }))
+    .sort((a, b) => a.obj.time - b.obj.time)
 
-    const leaderboardRows = speed.map((obj, index) => (
+  const leaderboardRows = speed.map((obj, index) => (
       <TableRow key={index}>
         <TableCell>{index + 1}</TableCell>
         <TableCell>{obj.timeFancy}</TableCell>
@@ -156,11 +156,11 @@ export const SpeedTable = ({ speed, thread }: Props) => {
       </TableRow>
     ))
 
-    const startIdx = page * rowsPerPage
-    const endIdx = startIdx + rowsPerPage
-    const currentRows = leaderboardRows.slice(startIdx, endIdx)
+  const startIdx = page * rowsPerPage
+  const endIdx = startIdx + rowsPerPage
+  const currentRows = leaderboardRows.slice(startIdx, endIdx)
 
-    const pbLeaderboardRows = pbLeaderboard.map((row, index) => (
+  const pbLeaderboardRows = pbLeaderboard.map((row, index) => (
       <TableRow key={row.counter}>
         <TableCell>{index + 1}</TableCell>
         <TableCell>
@@ -281,60 +281,59 @@ export const SpeedTable = ({ speed, thread }: Props) => {
       </TableRow>
     ))
 
-    const sumCounts = speed.length
+  const sumCounts = speed.length
 
-    const handleCounterSelection = (selectedCounters: string[]) => {
-      const countersFromUsername = Object.values(cachedCounters).filter((counter) => selectedCounters.includes(counter.username))
-      setSelectedCounters(countersFromUsername)
-    }
-
-    return (
-      <TableContainer>
-        <Typography sx={{ mt: 2, mb: 2 }} variant="body2">
-          Hall of Speed
-        </Typography>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Rank</TableCell>
-              <TableCell>Counter</TableCell>
-              <TableCell>Time</TableCell>
-              <TableCell>Replay</TableCell>
-              <TableCell>Start</TableCell>
-              <TableCell>End</TableCell>
-              <TableCell>Partners</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>{pbLeaderboardRows}</TableBody>
-        </Table>
-        <Typography sx={{ mt: 2, mb: 2 }} variant="body2">
-          Leaderboard: {sumCounts.toLocaleString()} {sumCounts != 1 ? 'threads' : 'thread'}
-        </Typography>
-        <Box sx={{ width: '50%' }}>
-          <CounterAutocomplete onCounterSelect={handleCounterSelection} />
-        </Box>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Rank</TableCell>
-              <TableCell>Time</TableCell>
-              <TableCell>Replay</TableCell>
-              <TableCell>Start</TableCell>
-              <TableCell>End</TableCell>
-              <TableCell>Qualified Counters</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>{currentRows}</TableBody>
-        </Table>
-        <TablePagination
-          component={'div'}
-          rowsPerPageOptions={[rowsPerPage]}
-          count={leaderboardRows.length}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-        />
-      </TableContainer>
-    )
+  const handleCounterSelection = (selectedCounters: string[]) => {
+    const countersFromUsername = Object.values(cachedCounters).filter((counter) => selectedCounters.includes(counter.username))
+    setSelectedCounters(countersFromUsername)
   }
+
+  return (
+    <TableContainer>
+      <Typography sx={{ mt: 2, mb: 2 }} variant="body2">
+        Hall of Speed
+      </Typography>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Rank</TableCell>
+            <TableCell>Counter</TableCell>
+            <TableCell>Time</TableCell>
+            <TableCell>Replay</TableCell>
+            <TableCell>Start</TableCell>
+            <TableCell>End</TableCell>
+            <TableCell>Partners</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>{pbLeaderboardRows}</TableBody>
+      </Table>
+      <Typography sx={{ mt: 2, mb: 2 }} variant="body2">
+        Leaderboard: {sumCounts.toLocaleString()} {sumCounts != 1 ? 'threads' : 'thread'}
+      </Typography>
+      <Box sx={{ width: '50%' }}>
+        <CounterAutocomplete onCounterSelect={handleCounterSelection} />
+      </Box>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Rank</TableCell>
+            <TableCell>Time</TableCell>
+            <TableCell>Replay</TableCell>
+            <TableCell>Start</TableCell>
+            <TableCell>End</TableCell>
+            <TableCell>Qualified Counters</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>{currentRows}</TableBody>
+      </Table>
+      <TablePagination
+        component={'div'}
+        rowsPerPageOptions={[rowsPerPage]}
+        count={leaderboardRows.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+      />
+    </TableContainer>
+  )
 }
