@@ -204,6 +204,9 @@ export const CounterPage = () => {
                 ? `Member for: ${formatTimeDiff(convertToTimestamp(loadedCounter.uuid) as number, Date.now())}`
                 : `Error calculating join date.`}
             </Typography>
+            <Typography>
+              Pronouns: {loadedCounter.pronouns[0]}/{loadedCounter.pronouns[1]}/{loadedCounter.pronouns[2]}
+            </Typography>
             <Card>
               <div style={{ backgroundColor: loadedCounter.color, height: 100 }} />
               <CardContent>

@@ -29,6 +29,7 @@ import {
   nightModeOptions,
   postPositionOptions,
   postStyleOptions,
+  pronouns as pronounOptions,
   soundOnStrickenOptions,
   standardizeFormatOptions,
   submitShortcutOptions,
@@ -91,6 +92,10 @@ export const PrefsPage = () => {
   const [color, setColor] = useState(counter?.color || '#cccccc')
   const [title, setTitle] = useState(counter?.title || 'COUNTER')
   const [emoji, setEmoji] = useState(counter?.emoji || 'None')
+  const [selectedPronounIndex, setSelectedPronounIndex] = useState(() => {
+    const idx = pronounOptions.findIndex((set) => JSON.stringify(set) === JSON.stringify(counter?.pronouns))
+    return idx >= 0 ? idx : 2
+  })
 
   const [snackbarOpen, setSnackbarOpen] = useState(false)
   const [snackbarMessage, setSnackbarMessage] = useState('')
@@ -171,6 +176,7 @@ export const PrefsPage = () => {
       counter.cardBorderStyle = cardBorderStyle
       counter.title = title
       counter.emoji = emoji === 'None' ? undefined : emoji
+      counter.pronouns = pronounOptions[selectedPronounIndex]
       try {
         const res = await updateCounterPrefs(user, counter)
         if (res.status == 201) {
@@ -322,6 +328,23 @@ export const PrefsPage = () => {
                       return <MenuItem value={item.internal_name}>{item.name}</MenuItem>
                     }
                   })}
+              </Select>
+            </FormControl>
+            <FormControl sx={{ m: 2 }}>
+              <InputLabel id="pronouns-label">Pronouns</InputLabel>
+              <Select
+                labelId="pronouns-label"
+                id="pronouns"
+                value={selectedPronounIndex}
+                label="Pronouns"
+                onChange={(e) => setSelectedPronounIndex(parseInt((e.target as HTMLInputElement).value, 10))}
+                sx={{ width: 200 }}
+              >
+                {pronounOptions.map((set, idx) => (
+                  <MenuItem key={`${set[0]}_${set[1]}_${set[2]}`} value={idx}>
+                    {set[0]}/{set[1]}/{set[2]}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
             <FormControl sx={{ m: 2 }}>

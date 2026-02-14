@@ -28,6 +28,10 @@ export function CounterCard(props) {
   const level = parseInt(calculateLevel(props.counter.xp).level || '1')
 
   const xpToNext = calculateLevel(props.counter.xp).xpRequired
+  const pronounsLabel =
+    Array.isArray(props.counter.pronouns) && props.counter.pronouns.length >= 3
+      ? `${props.counter.pronouns[0]}/${props.counter.pronouns[1]}/${props.counter.pronouns[2]}`
+      : ''
 
   return (
     <Card elevation={8} id={`card_${props.counter.uuid}`} sx={{}}>
@@ -86,6 +90,7 @@ export function CounterCard(props) {
                           sx={{ mr: 1, bgcolor: 'lightgreen', color: 'black' }}
                         />
                       ) : null}
+                      {pronounsLabel ? <Chip component={'span'} size="small" label={pronounsLabel} sx={{ mr: 1 }} /> : null}
                       {props.counter.title}&nbsp;
                     </Typography>
 
