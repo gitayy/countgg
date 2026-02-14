@@ -35,6 +35,7 @@ import LeaderboardGraph from '../components/LeaderboardGraph'
 import { StatsQuery } from '../components/StatsQuery'
 
 export const StatsPage = () => {
+  const statsTimezone = 'America/New_York'
   const { counter, loading } = useContext(UserContext)
   const [page, setPage] = useState<number | undefined>()
   const [count, setCount] = useState(0)
@@ -72,9 +73,16 @@ export const StatsPage = () => {
   const [selectedStartDate, setSelectedStartDate] = useState<any | null>(null)
   const [selectedEndDate, setSelectedEndDate] = useState<any | null>(null)
 
+  const toStatsDayKey = (date: any): string | undefined => {
+    if (!date || !moment.isMoment(date) || !date.isValid()) {
+      return undefined
+    }
+    return date.clone().tz(statsTimezone).format('YYYY-MM-DD')
+  }
+
   const disableDates = (date: any) => {
-    const minDate = moment('2023-02-22').tz('America/New_York').startOf('day').unix()
-    const maxDate = moment().tz('America/New_York').startOf('day').unix()
+    const minDate = moment.tz('2023-02-22', 'YYYY-MM-DD', statsTimezone).startOf('day').unix()
+    const maxDate = moment().tz(statsTimezone).startOf('day').unix()
     return date.unix() < minDate || date.unix() >= maxDate
   }
 
@@ -120,12 +128,11 @@ export const StatsPage = () => {
         setStatsLoading(true)
         let startdateStr
         let enddateStr
-        // if(selectedDate && !disableDates(selectedDate)) {dateStr = selectedDate._d.toISOString().slice(0,10);}
         if (selectedStartDate && !disableDates(selectedStartDate)) {
-          startdateStr = selectedStartDate.toISOString().slice(0, 10)
+          startdateStr = toStatsDayKey(selectedStartDate)
         }
         if (selectedEndDate && !disableDates(selectedEndDate)) {
-          enddateStr = selectedEndDate.toISOString().slice(0, 10)
+          enddateStr = toStatsDayKey(selectedEndDate)
         }
         getThreadStats(name, undefined)
           .then(({ data }) => {
@@ -134,8 +141,8 @@ export const StatsPage = () => {
                 addCounterToCache(counter)
               }
 
-              setStats(getStatsBetween(startdateStr, enddateStr))
               setAllStats(data.stats)
+              setStats(getStatsBetween(startdateStr, enddateStr, data.stats))
               setStatsLoading(false)
             }
           })
@@ -163,12 +170,7 @@ export const StatsPage = () => {
     return firstDate
   }
   function getNextDate(dateStr) {
-    // const currentDate = new Date(dateStr);
-    // currentDate.setDate(currentDate.getDate() + 1);
-    const currentDate = moment(dateStr).tz('America/New_York')
-    // .startOf('day').unix() * 1000
-    currentDate.add(1, 'days')
-    return currentDate.toISOString().slice(0, 10)
+    return moment.tz(dateStr, 'YYYY-MM-DD', statsTimezone).add(1, 'days').format('YYYY-MM-DD')
   }
   function mergeStats(stats1: any, stats2: any): any {
     if (!stats1) return stats2
@@ -208,42 +210,46 @@ export const StatsPage = () => {
     return latestStats
   }
 
-  function getStatsBetween(startDateStr: string | undefined = undefined, endDateStr: string | undefined = undefined) {
-    if (!allStats) {
+  function getStatsBetween(
+    startDateStr: string | undefined = undefined,
+    endDateStr: string | undefined = undefined,
+    statsSource: any = allStats,
+  ) {
+    if (!statsSource) {
       console.error('No allStats... this is bad')
-      console.log(allStats)
+      console.log(statsSource)
       return undefined
     }
     if (startDateStr && endDateStr) {
-      let stats = allStats[startDateStr]
+      let stats = statsSource[startDateStr]
       for (let date = getNextDate(startDateStr); date <= endDateStr; date = getNextDate(date)) {
-        stats = mergeStats(stats, allStats[date])
+        stats = mergeStats(stats, statsSource[date])
       }
       return stats
     } else if (endDateStr) {
       // Only end date is defined, merge stats from the first day up to end date
-      let firstDate = getFirstDate(allStats)
+      let firstDate = getFirstDate(statsSource)
       if (firstDate === null) {
         console.error('No first date... this is bad')
         return undefined
       }
-      let stats = allStats[firstDate]
+      let stats = statsSource[firstDate]
       for (let date = getNextDate(firstDate); date <= endDateStr; date = getNextDate(date)) {
-        stats = mergeStats(stats, allStats[date])
+        stats = mergeStats(stats, statsSource[date])
       }
       return stats
     } else if (startDateStr) {
       // Only start date is defined, get stats for just that start date
-      return allStats[startDateStr]
+      return statsSource[startDateStr]
     } else {
       // Neither start nor end date is defined, use the 'all' stats
-      return allStats['all']
+      return statsSource['all']
     }
   }
 
   useEffect(() => {
-    let startDateStr = selectedStartDate && !disableDates(selectedStartDate) ? selectedStartDate._d.toISOString().slice(0, 10) : null
-    let endDateStr = selectedEndDate && !disableDates(selectedEndDate) ? selectedEndDate._d.toISOString().slice(0, 10) : null
+    let startDateStr = selectedStartDate && !disableDates(selectedStartDate) ? toStatsDayKey(selectedStartDate) : undefined
+    let endDateStr = selectedEndDate && !disableDates(selectedEndDate) ? toStatsDayKey(selectedEndDate) : undefined
 
     setStats(getStatsBetween(startDateStr, endDateStr))
     setBlud(Math.random())
@@ -298,8 +304,8 @@ export const StatsPage = () => {
             label="Start Date"
             value={selectedStartDate}
             onChange={(date) => setSelectedStartDate(date)}
-            minDate={new Date(moment('2023-02-23').tz('America/New_York').startOf('day').unix() * 1000 - 10000)}
-            maxDate={new Date(moment().tz('America/New_York').startOf('day').unix() * 1000)}
+            minDate={moment.tz('2023-02-23', 'YYYY-MM-DD', statsTimezone).startOf('day')}
+            maxDate={moment().tz(statsTimezone).startOf('day').subtract(1, 'day')}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -325,8 +331,8 @@ export const StatsPage = () => {
             label="End Date"
             value={selectedEndDate}
             onChange={(date) => setSelectedEndDate(date)}
-            minDate={new Date(moment('2023-02-23').tz('America/New_York').startOf('day').unix() * 1000 - 10000)}
-            maxDate={new Date(moment().tz('America/New_York').startOf('day').unix() * 1000)}
+            minDate={moment.tz('2023-02-23', 'YYYY-MM-DD', statsTimezone).startOf('day')}
+            maxDate={moment().tz(statsTimezone).startOf('day').subtract(1, 'day')}
             renderInput={(params) => (
               <TextField
                 {...params}
