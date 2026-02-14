@@ -1,24 +1,43 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Autocomplete from '@mui/material/Autocomplete'
 import TextField from '@mui/material/TextField'
-import { Counter } from '../utils/types'
 import { cachedCounters } from '../utils/helpers'
 
-const CounterAutocomplete = ({ onCounterSelect }) => {
-  const [selectedCounter, setSelectedCounter] = useState<string[] | undefined>()
+interface Props {
+  onCounterSelect: (users: string[]) => void
+  label?: string
+  debounceMs?: number
+  options?: string[]
+}
 
-  const counterAutocompleteOptions = Object.values(cachedCounters).map((counter) => counter.username)
+const CounterAutocomplete = ({ onCounterSelect, label = 'Select User(s)', debounceMs = 200, options }: Props) => {
+  const [selectedCounter, setSelectedCounter] = useState<string[]>([])
+  const onCounterSelectRef = useRef(onCounterSelect)
+
+  const counterAutocompleteOptions = options ?? Object.values(cachedCounters).map((counter) => counter.username)
+
+  useEffect(() => {
+    onCounterSelectRef.current = onCounterSelect
+  }, [onCounterSelect])
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      onCounterSelectRef.current(selectedCounter)
+    }, debounceMs)
+
+    return () => clearTimeout(timeout)
+  }, [selectedCounter, debounceMs])
 
   return (
     <Autocomplete
       options={counterAutocompleteOptions}
       value={selectedCounter}
       multiple
-      onChange={(event, newValue) => {
-        setSelectedCounter(newValue)
-        onCounterSelect(newValue)
+      filterSelectedOptions
+      onChange={(_event, newValue) => {
+        setSelectedCounter(newValue ?? [])
       }}
-      renderInput={(params) => <TextField {...params} label="Select User(s)" variant="outlined" />}
+      renderInput={(params) => <TextField {...params} label={label} variant="outlined" />}
     />
   )
 }

@@ -85,6 +85,7 @@ import { isEqual } from 'lodash'
 import { Preferences } from '../components/Preferences'
 import MiscInfo from '../components/thread/MiscInfo'
 import CommunityNotes from '../components/thread/CommunityNotes'
+import { ThreadStatsPanel } from '../components/thread/ThreadStatsPanel'
 
 let imsorryfortheglobalpull = 'DISABLED'
 export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
@@ -2024,8 +2025,15 @@ useEffect(() => {
     }
     return (
       <TabContext value={tabValue}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-          <TabList onChange={handleTabChange} variant={'scrollable'} allowScrollButtonsMobile scrollButtons aria-label="Counting Tabs">
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', maxWidth: '100%' }}>
+          <TabList
+            onChange={handleTabChange}
+            variant={'scrollable'}
+            allowScrollButtonsMobile
+            scrollButtons="auto"
+            aria-label="Counting Tabs"
+            sx={{ maxWidth: '100%' }}
+          >
             {!isDesktop && <Tab label="Posts" value="tab_0" />}
             <Tab label="About" value="tab_1" />
             <Tab label="Chats" value="tab_2" />
@@ -2035,7 +2043,17 @@ useEffect(() => {
             <Tab label="Prefs" value="tab_6" />
           </TabList>
         </Box>
-        <Box sx={{ flexGrow: 1, display: 'flex', bgcolor: 'background.paper', color: 'text.primary', overflowY: 'scroll' }}>
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            bgcolor: 'background.paper',
+            color: 'text.primary',
+            overflowY: 'scroll',
+            overflowX: 'hidden',
+            maxWidth: '100%',
+          }}
+        >
           {!isDesktop && (
             <TabPanel value="tab_0" sx={{ flexGrow: 1, p: 0 }}>
               {countListMemo}
@@ -2222,7 +2240,7 @@ useEffect(() => {
             )}
             <SplitsTable splits={splits}></SplitsTable>
           </TabPanel>
-          <TabPanel value="tab_4" sx={{ flexGrow: 1 }}>
+          <TabPanel value="tab_4" sx={{ flexGrow: 1, minWidth: 0, maxWidth: '100%', overflowX: 'hidden' }}>
             {lastCount && (
               <Typography sx={{ p: 0.5 }} variant="body1" color="text.secondary">
                 {lastCount.lastCount.validCountNumber.toLocaleString()} total counts
@@ -2248,6 +2266,7 @@ useEffect(() => {
               <DailyHOCTable mini={false} dailyHOC={dailyHOC} name={'Daily Leaderboard'} countName={'Counts'}></DailyHOCTable>
             )}
             {dailyRobs && thread_name === 'main' && <DailyRobTable dailyRobs={dailyRobs}></DailyRobTable>}
+            <ThreadStatsPanel threadName={thread_name} />
           </TabPanel>
           <TabPanel value="tab_5" sx={{ flexGrow: 1 }}>
             <FormControl variant="standard" sx={{}}>
