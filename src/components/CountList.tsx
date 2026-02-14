@@ -278,14 +278,22 @@ const CountList = memo((props: any) => {
       } else if (user && preferences && preferences.pref_clear === 'Custom') {
         inputRef.current.value = customInputRef.current ? customInputRef.current.value : ''
       } else if (user && preferences && preferences.pref_clear === 'No Clear') {
-        inputRef.current.value = inputRef.current.value.substring(
-          0,
-          ((noClearKeepInputRef.current !== null && !isNaN(parseInt(noClearKeepInputRef.current.value)) ? parseInt(noClearKeepInputRef.current.value) : inputRef.current.value.length) - 
-          (noClearDeleteInputRef.current !== null && !isNaN(parseInt(noClearDeleteInputRef.current.value)) ? parseInt(noClearDeleteInputRef.current.value) : 0))
-      );
-        // inputRef.current.value = inputRef.current.value.substring(0, ((noClearKeepInputRef.current !== undefined && parseInt(noClearKeepInputRef.current.value)) ?? inputRef.current.value.length) - (noClearDeleteInputRef.current !== undefined && parseInt(noClearDeleteInputRef.current.value)) ?? 0)
-        // inputRef.current.value = noClearInputRef.current && !isNaN(parseInt(noClearInputRef.current.value)) ? inputRef.current.value.substring(0, inputRef.current.value.length - parseInt(noClearInputRef.current.value)) : inputRef.current.value;
+        const currentValue = inputRef.current.value
+        const keepRaw = noClearKeepInputRef.current ? parseInt(noClearKeepInputRef.current.value, 10) : NaN
+        const deleteRaw = noClearDeleteInputRef.current ? parseInt(noClearDeleteInputRef.current.value, 10) : NaN
+        const keepCount = Number.isFinite(keepRaw) ? Math.max(0, keepRaw) : currentValue.length
+        const deleteCount = Number.isFinite(deleteRaw) ? Math.max(0, deleteRaw) : 0
+        const keptValue = currentValue.substring(0, Math.min(keepCount, currentValue.length))
+
+        const cursor = Math.max(0, Math.min(inputRef.current.selectionStart ?? keptValue.length, keptValue.length))
+        const deleteStart = Math.max(0, cursor - deleteCount)
+        const newValue = keptValue.substring(0, deleteStart) + keptValue.substring(cursor)
+
+        inputRef.current.value = newValue
+        inputRef.current.setSelectionRange(deleteStart, deleteStart)
       }
+      // inputRef.current.value = inputRef.current.value.substring(0, ((noClearKeepInputRef.current !== undefined && parseInt(noClearKeepInputRef.current.value)) ?? inputRef.current.value.length) - (noClearDeleteInputRef.current !== undefined && parseInt(noClearDeleteInputRef.current.value)) ?? 0)
+      // inputRef.current.value = noClearInputRef.current && !isNaN(parseInt(noClearInputRef.current.value)) ? inputRef.current.value.substring(0, inputRef.current.value.length - parseInt(noClearInputRef.current.value)) : inputRef.current.value;
     }
   }
 
