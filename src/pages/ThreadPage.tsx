@@ -169,6 +169,15 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [newRecentPostLoaded, setNewRecentPostLoaded] = useState('')
   const [splits, setSplits] = useState<any>([])
   const [playDing, { stop: stopDing, sound: dingSound }] = useSound(dingSfx, { interrupt: false })
+  const strickenSoundRollSuppressedThreads = useMemo(() => new Set(['1inx', 'incremental_odds']), [])
+  const shouldSuppressStrickenSoundForPost = useCallback(
+    (post?: PostType) =>
+      !!post &&
+      strickenSoundRollSuppressedThreads.has(thread_name) &&
+      (post as any).roll !== undefined &&
+      (post as any).roll !== null,
+    [thread_name, strickenSoundRollSuppressedThreads],
+  )
 
   const [mobilePickerOpen, setMobilePickerOpen] = useState(false)
   const [desktopPickerOpen, setDesktopPickerOpen] = useState(true)
@@ -372,7 +381,13 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       if (currentCount.isValidCount) {
         setLastCount({ lastCount: currentCount, lastCounter: cachedCounters[currentCount.authorUUID] })
       }
-      if (currentCount.stricken && user && preferences && preferences.pref_sound_on_stricken !== 'Disabled') {
+      if (
+        currentCount.stricken &&
+        !shouldSuppressStrickenSoundForPost(currentCount) &&
+        user &&
+        preferences &&
+        preferences.pref_sound_on_stricken !== 'Disabled'
+      ) {
         if (preferences.pref_sound_on_stricken === 'Only My Counts' && currentCount.authorUUID === user.uuid) {
           playDing()
         } else if (preferences.pref_sound_on_stricken === 'All Stricken') {
@@ -860,7 +875,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
             })
           }
         }
-        if (data.post.stricken) {
+        if (data.post.stricken && !shouldSuppressStrickenSoundForPost(data.post)) {
           const pref = preferencesRef.current
           const currentUser = userRef.current
           if (pref && currentUser && pref.pref_sound_on_stricken !== 'Disabled') {
