@@ -29,6 +29,23 @@ interface Props {
   isSplitTable?: boolean
   canModerateSplits?: boolean
   onToggleSplitFake?: (split: { start: string; end: string; isFake: boolean }) => Promise<void>
+  canLoadMore?: boolean
+  isLoadingMore?: boolean
+  onEnsurePageLoaded?: (page: number, selectedUserUUIDs: string[]) => void
+  totalCount?: number
+  onSelectedUsersChange?: (selectedUserUUIDs: string[]) => void
+  distributionStats?: Array<{
+    uuid: string
+    attempts: number
+    min: number
+    q1: number
+    median: number
+    q3: number
+    p99?: number
+    max: number
+    plotMax: number
+  }>
+  hallOfSpeedRows?: Array<{ counter: string; obj: any; rank: number }>
 }
 
 const normalizedTime = (value: number) => Number(value.toFixed(3))
@@ -51,7 +68,21 @@ const formatClockTime = (timeMs: number, maxFractionDigits = 6) => {
   return timeMs < 0 ? `-${core}` : core
 }
 
-export const SpeedTable = memo(({ speed, thread, isSplitTable = false, canModerateSplits = false, onToggleSplitFake }: Props) => {
+export const SpeedTable = memo(
+  ({
+    speed,
+    thread,
+    isSplitTable = false,
+    canModerateSplits = false,
+    onToggleSplitFake,
+    canLoadMore = false,
+    isLoadingMore = false,
+    onEnsurePageLoaded,
+    totalCount,
+    onSelectedUsersChange,
+    distributionStats,
+    hallOfSpeedRows,
+  }: Props) => {
   const rowsPerPage = 50
   const [page, setPage] = useState(0)
   const [selectedCounters, setSelectedCounters] = useState<Counter[]>([])
@@ -110,6 +141,9 @@ export const SpeedTable = memo(({ speed, thread, isSplitTable = false, canModera
   }, [sortedSpeed])
 
   const pbLeaderboard = useMemo(() => {
+    if (Array.isArray(hallOfSpeedRows)) {
+      return hallOfSpeedRows
+    }
     const bestTimes: Record<string, any> = {}
 
     for (const obj of sortedSpeed) {
@@ -171,36 +205,51 @@ export const SpeedTable = memo(({ speed, thread, isSplitTable = false, canModera
         }
       })
       .sort((a, b) => a.median - b.median)
-  }, [sortedSpeed])
+  }, [sortedSpeed, hallOfSpeedRows])
+
+  const distributionCandidates = useMemo(() => {
+    if (distributionStats && distributionStats.length > 0) {
+      return distributionStats
+    }
+    return userDistributionCandidates
+  }, [distributionStats, userDistributionCandidates])
 
   useEffect(() => {
     setSelectedDistributionUserUUIDs((prev) => {
-      if (userDistributionCandidates.length === 0) return prev.length === 0 ? prev : []
+      if (distributionCandidates.length === 0) return prev.length === 0 ? prev : []
 
-      const candidateSet = new Set(userDistributionCandidates.map((d) => d.uuid))
+      const candidateSet = new Set(distributionCandidates.map((d) => d.uuid))
       const pruned = prev.filter((uuid) => candidateSet.has(uuid))
       if (pruned.length > 0) return pruned.length === prev.length ? prev : pruned
 
-      const defaults = userDistributionCandidates.slice(0, 5).map((d) => d.uuid)
+      const defaults = distributionCandidates.slice(0, 5).map((d) => d.uuid)
       const sameDefaults = prev.length === defaults.length && prev.every((uuid, idx) => uuid === defaults[idx])
       return sameDefaults ? prev : defaults
     })
-  }, [userDistributionCandidates])
+  }, [distributionCandidates])
 
   const topUserDistributions = useMemo(() => {
-    if (userDistributionCandidates.length === 0) return []
+    if (distributionCandidates.length === 0) return []
     const selectedSet = new Set(selectedDistributionUserUUIDs)
-    const selectedRows = userDistributionCandidates.filter((row) => selectedSet.has(row.uuid))
-    return selectedRows.length > 0 ? selectedRows : userDistributionCandidates.slice(0, 5)
-  }, [selectedDistributionUserUUIDs, userDistributionCandidates])
+    const selectedRows = distributionCandidates.filter((row) => selectedSet.has(row.uuid))
+    return selectedRows.length > 0 ? selectedRows : distributionCandidates.slice(0, 5)
+  }, [selectedDistributionUserUUIDs, distributionCandidates])
 
-  const handleChangePage = (_event, newPage) => setPage(newPage)
+  const handleChangePage = (_event, newPage) => {
+    setPage(newPage)
+    if (onEnsurePageLoaded) {
+      onEnsurePageLoaded(newPage, selectedCounters.map((counter) => counter.uuid))
+    }
+  }
 
   const handleCounterSelection = (selectedCounterNames: string[]) => {
     const countersFromUsername = Object.values(cachedCounters).filter((counter) =>
       selectedCounterNames.includes(counter.username),
     )
     setSelectedCounters(countersFromUsername)
+    if (onSelectedUsersChange) {
+      onSelectedUsersChange(countersFromUsername.map((counter) => counter.uuid))
+    }
     setPage(0)
   }
 
@@ -222,14 +271,7 @@ export const SpeedTable = memo(({ speed, thread, isSplitTable = false, canModera
   }
 
   if (!thread) return <></>
-
-  if (sortedSpeed.length === 0) {
-    return (
-      <Box sx={{ mt: 1 }}>
-        <Typography variant="body2">No speed records found for this selection.</Typography>
-      </Box>
-    )
-  }
+  const hasNoRecordsForSelection = sortedSpeed.length === 0
 
   const leaderboardRows = currentRows.map((obj, index) => (
     <TableRow key={obj.uuid ?? `${obj.start}_${obj.end}_${index}`}>
@@ -474,10 +516,18 @@ export const SpeedTable = memo(({ speed, thread, isSplitTable = false, canModera
     </TableRow>
   ))
 
-  const sumCounts = sortedSpeed.length
+  const sumCounts = totalCount ?? sortedSpeed.length
 
   return (
     <TableContainer>
+      <Box sx={{ width: '50%', mb: 2 }}>
+        <CounterAutocomplete onCounterSelect={handleCounterSelection} />
+      </Box>
+      {hasNoRecordsForSelection && (
+        <Box sx={{ mt: 1, mb: 2 }}>
+          <Typography variant="body2">No speed records found for this selection.</Typography>
+        </Box>
+      )}
       <Box sx={{ mb: 2 }}>
         <Paper variant="outlined" sx={{ p: 1.5 }}>
           <Typography variant="subtitle2" sx={{ mb: 1 }}>
@@ -487,8 +537,8 @@ export const SpeedTable = memo(({ speed, thread, isSplitTable = false, canModera
             multiple
             size="small"
             disableCloseOnSelect
-            options={userDistributionCandidates}
-            value={userDistributionCandidates.filter((row) => selectedDistributionUserUUIDs.includes(row.uuid))}
+            options={distributionCandidates}
+            value={distributionCandidates.filter((row) => selectedDistributionUserUUIDs.includes(row.uuid))}
             onChange={(_event, nextValue) => setSelectedDistributionUserUUIDs(nextValue.map((row) => row.uuid))}
             getOptionLabel={(option) => {
               const counter = cachedCounters[option.uuid]
@@ -502,9 +552,10 @@ export const SpeedTable = memo(({ speed, thread, isSplitTable = false, canModera
             <Typography variant="body2">Need at least 3 attempts per user to show a distribution.</Typography>
           ) : (
             (() => {
-              const globalMin = Math.min(...topUserDistributions.map((d) => d.min))
-              const slowestMedian = Math.max(...topUserDistributions.map((d) => d.median))
-              const slowestP75 = Math.max(...topUserDistributions.map((d) => d.plotMax))
+              const plottedDistributions = topUserDistributions
+              const globalMin = Math.min(...plottedDistributions.map((d) => d.min))
+              const slowestMedian = Math.max(...plottedDistributions.map((d) => d.median))
+              const slowestP75 = Math.max(...plottedDistributions.map((d) => d.plotMax))
               const useExtendedScale = globalMin > distributionChartCutoffMs
               const globalMax = useExtendedScale
                 ? slowestMedian * 2
@@ -524,13 +575,13 @@ export const SpeedTable = memo(({ speed, thread, isSplitTable = false, canModera
                 return { percent, label: formatClockTime(value, 3) }
               })
               const rowHeight = 38
-              const chartHeight = topUserDistributions.length * rowHeight + 34
+              const chartHeight = plottedDistributions.length * rowHeight + 34
 
               return (
                 <Box>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '170px minmax(0, 1fr)', gap: 1.5, alignItems: 'start', width: '100%', minWidth: 0 }}>
                     <Box sx={{ pt: 0.5 }}>
-                      {topUserDistributions.map((dist) => {
+                      {plottedDistributions.map((dist) => {
                         const counter = cachedCounters[dist.uuid]
                         return (
                           <Box
@@ -576,7 +627,7 @@ export const SpeedTable = memo(({ speed, thread, isSplitTable = false, canModera
                         />
                       ))}
 
-                      {topUserDistributions.map((dist, idx) => {
+                      {plottedDistributions.map((dist, idx) => {
                         const counter = cachedCounters[dist.uuid]
                         const rowTop = idx * rowHeight + 8
                         const y = rowTop + 12
@@ -651,57 +702,63 @@ export const SpeedTable = memo(({ speed, thread, isSplitTable = false, canModera
           )}
         </Paper>
       </Box>
-
-      <Typography sx={{ mt: 2, mb: 2 }} variant="body2">
-        Hall of Speed
-      </Typography>
-      <Box sx={{ width: '100%', overflowX: 'auto' }}>
-        <Table size="small" stickyHeader sx={{ width: '100%', minWidth: 980, tableLayout: 'auto' }}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Rank</TableCell>
-              <TableCell>Counter</TableCell>
-              <TableCell>Time</TableCell>
-              <TableCell>Replay</TableCell>
-              <TableCell>Start</TableCell>
-              <TableCell>End</TableCell>
-              <TableCell>Partners</TableCell>
-              {isSplitTable && <TableCell>Flag</TableCell>}
-            </TableRow>
-          </TableHead>
-          <TableBody>{pbLeaderboardRows}</TableBody>
-        </Table>
-      </Box>
-      <Typography sx={{ mt: 2, mb: 2 }} variant="body2">
-        Leaderboard: {sumCounts.toLocaleString()} {sumCounts !== 1 ? 'threads' : 'thread'}
-      </Typography>
-      <Box sx={{ width: '50%' }}>
-        <CounterAutocomplete onCounterSelect={handleCounterSelection} />
-      </Box>
-      <Box sx={{ width: '100%', overflowX: 'auto' }}>
-        <Table stickyHeader sx={{ width: '100%', minWidth: 920, tableLayout: 'auto' }}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Rank</TableCell>
-              <TableCell>Time</TableCell>
-              <TableCell>Replay</TableCell>
-              <TableCell>Start</TableCell>
-              <TableCell>End</TableCell>
-              <TableCell>Qualified Counters</TableCell>
-              {isSplitTable && <TableCell>Flag</TableCell>}
-            </TableRow>
-          </TableHead>
-          <TableBody>{leaderboardRows}</TableBody>
-        </Table>
-      </Box>
-      <TablePagination
-        component={'div'}
-        rowsPerPageOptions={[rowsPerPage]}
-        count={rankedSpeed.length}
-        rowsPerPage={rowsPerPage}
-        page={page}
-        onPageChange={handleChangePage}
-      />
+      {!hasNoRecordsForSelection && (
+        <>
+          <Typography sx={{ mt: 2, mb: 2 }} variant="body2">
+            Hall of Speed
+          </Typography>
+          <Box sx={{ width: '100%', overflowX: 'auto' }}>
+            <Table size="small" stickyHeader sx={{ width: '100%', minWidth: 980, tableLayout: 'auto' }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Rank</TableCell>
+                  <TableCell>Counter</TableCell>
+                  <TableCell>Time</TableCell>
+                  <TableCell>Replay</TableCell>
+                  <TableCell>Start</TableCell>
+                  <TableCell>End</TableCell>
+                  <TableCell>Partners</TableCell>
+                  {isSplitTable && <TableCell>Flag</TableCell>}
+                </TableRow>
+              </TableHead>
+              <TableBody>{pbLeaderboardRows}</TableBody>
+            </Table>
+          </Box>
+          <Typography sx={{ mt: 2, mb: 2 }} variant="body2">
+            Leaderboard: {sumCounts.toLocaleString()} {sumCounts !== 1 ? 'threads' : 'thread'}
+          </Typography>
+          <Box sx={{ width: '100%', overflowX: 'auto' }}>
+            <Table stickyHeader sx={{ width: '100%', minWidth: 920, tableLayout: 'auto' }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Rank</TableCell>
+                  <TableCell>Time</TableCell>
+                  <TableCell>Replay</TableCell>
+                  <TableCell>Start</TableCell>
+                  <TableCell>End</TableCell>
+                  <TableCell>Qualified Counters</TableCell>
+                  {isSplitTable && <TableCell>Flag</TableCell>}
+                </TableRow>
+              </TableHead>
+              <TableBody>{leaderboardRows}</TableBody>
+            </Table>
+          </Box>
+          <TablePagination
+            component={'div'}
+            rowsPerPageOptions={[rowsPerPage]}
+            count={totalCount ?? rankedSpeed.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+          />
+          {isLoadingMore && (
+            <Box sx={{ mt: 1, display: 'flex', justifyContent: 'center' }}>
+              <Typography variant="body2">Loading more records...</Typography>
+            </Box>
+          )}
+        </>
+      )}
     </TableContainer>
   )
-})
+  },
+)

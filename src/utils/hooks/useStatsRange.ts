@@ -59,6 +59,9 @@ export const useStatsRange = (
 
       latestStats['speed'] = (stats1.speed || []).concat(stats2.speed || [])
       latestStats['splitSpeed'] = (stats1.splitSpeed || []).concat(stats2.splitSpeed || [])
+      latestStats['speedCount'] = (stats1.speedCount ?? stats1.speed?.length ?? 0) + (stats2.speedCount ?? stats2.speed?.length ?? 0)
+      latestStats['splitSpeedCount'] =
+        (stats1.splitSpeedCount ?? stats1.splitSpeed?.length ?? 0) + (stats2.splitSpeedCount ?? stats2.splitSpeed?.length ?? 0)
       return latestStats
     }
 

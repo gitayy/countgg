@@ -4,6 +4,59 @@ import { User, Counter, ThreadType, AllegianceType, Item, PostType, Blog, MiscSe
 const CONFIG: AxiosRequestConfig = { withCredentials: true }
 const API_URL = `${process.env.REACT_APP_API_HOST}/api`
 
+const STATS_LIMIT_WINDOW_MS = 10000
+const STATS_LIMIT_MAX_REQUESTS_PER_WINDOW = 30
+const STATS_LIMIT_MAX_IN_FLIGHT = 6
+const STATS_LIMIT_BLOCK_MS = 15000
+
+type StatsRateBucket = {
+  timestamps: number[]
+  inFlight: number
+  blockedUntil: number
+}
+
+const statsRateBuckets: Record<string, StatsRateBucket> = {}
+
+const getStatsRateBucket = (key: string): StatsRateBucket => {
+  if (!statsRateBuckets[key]) {
+    statsRateBuckets[key] = {
+      timestamps: [],
+      inFlight: 0,
+      blockedUntil: 0,
+    }
+  }
+  return statsRateBuckets[key]
+}
+
+const enforceStatsRateLimit = (key: string) => {
+  const now = Date.now()
+  const bucket = getStatsRateBucket(key)
+  bucket.timestamps = bucket.timestamps.filter((timestamp) => now - timestamp <= STATS_LIMIT_WINDOW_MS)
+
+  if (bucket.blockedUntil > now) {
+    throw new Error(`Stats request blocked by client safety limiter for "${key}".`)
+  }
+  if (bucket.inFlight >= STATS_LIMIT_MAX_IN_FLIGHT) {
+    throw new Error(`Too many concurrent stats requests for "${key}".`)
+  }
+  if (bucket.timestamps.length >= STATS_LIMIT_MAX_REQUESTS_PER_WINDOW) {
+    bucket.blockedUntil = now + STATS_LIMIT_BLOCK_MS
+    throw new Error(`Stats request rate exceeded for "${key}".`)
+  }
+}
+
+const withStatsRateLimit = async <T>(key: string, fn: () => Promise<T>) => {
+  enforceStatsRateLimit(key)
+  const bucket = getStatsRateBucket(key)
+  bucket.timestamps.push(Date.now())
+  bucket.inFlight += 1
+  try {
+    return await fn()
+  } finally {
+    bucket.inFlight = Math.max(0, bucket.inFlight - 1)
+  }
+}
+
 export const getAuthStatus = () =>
   axios.get<{
     user: User
@@ -57,21 +110,128 @@ export const transcribeAudio = (audio: any) => {
 export const changeMessageReadStatus = (post_uuids: string[], newReadStatus: boolean) =>
   axios.post(`${API_URL}/counter/changeMessageReadStatus`, { messageIDs: post_uuids, newReadStatus: newReadStatus }, CONFIG)
 
-export const getThreadStats = (threadName: string, dateStr: string | undefined) =>
-  axios.post<{
-    stats: {
-      gets: object[]
-      assists: object[]
-      palindromes: object[]
-      repdigits: object[]
-      speed: SpeedRecord[]
-      splitSpeed: SpeedRecord[]
-      leaderboard: object[]
-      last_updated: string
-      last_updated_uuid: string
-    }[]
-    counters: Counter[]
-  }>(`${API_URL}/thread/stats/threadStats`, { thread: threadName, dateStr: dateStr }, CONFIG)
+export const getThreadStats = (
+  threadName: string,
+  dateStr: string | undefined,
+  startDateStr?: string,
+  endDateStr?: string,
+) =>
+  withStatsRateLimit('threadStats', () =>
+    axios.post<{
+      stats: {
+        gets: object[]
+        assists: object[]
+        palindromes: object[]
+        repdigits: object[]
+        speed: SpeedRecord[]
+        splitSpeed: SpeedRecord[]
+        speedCount?: number
+        splitSpeedCount?: number
+        leaderboard: object[]
+        last_updated: string
+        last_updated_uuid: string
+      }[]
+      counters: Counter[]
+    }>(
+      `${API_URL}/thread/stats/threadStats`,
+      { thread: threadName, dateStr: dateStr, startDateStr, endDateStr, includeDetails: false },
+      CONFIG,
+    ),
+  )
+
+export const getThreadStatsDetails = (
+  threadName: string,
+  type: 'speed' | 'splitSpeed',
+  offset = 0,
+  limit = 500,
+  selectedUserUUIDs?: string[],
+  dateStr?: string,
+  startDateStr?: string,
+  endDateStr?: string,
+) =>
+  withStatsRateLimit('threadStatsDetails', () =>
+    axios.post<{
+      records: SpeedRecord[]
+      counters: Counter[]
+      offset: number
+      limit: number
+      total: number
+    hasMore: boolean
+    distributionStats?: Array<{
+      uuid: string
+      attempts: number
+      min: number
+      q1: number
+      median: number
+      q3: number
+      p99?: number
+      max: number
+      plotMax: number
+    }>
+    distributionStatsRealOnly?: Array<{
+      uuid: string
+      attempts: number
+      min: number
+      q1: number
+      median: number
+      q3: number
+      p99?: number
+      max: number
+      plotMax: number
+    }>
+    distributionStatsFakeOnly?: Array<{
+      uuid: string
+      attempts: number
+      min: number
+      q1: number
+      median: number
+      q3: number
+      p99?: number
+      max: number
+      plotMax: number
+    }>
+    hallOfSpeed?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
+    hallOfSpeedRealOnly?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
+    hallOfSpeedFakeOnly?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
+  }>(
+      `${API_URL}/thread/stats/threadStatsDetails`,
+      {
+        thread: threadName,
+        type,
+        offset,
+        limit,
+        selectedUserUUIDs,
+        dateStr,
+        startDateStr,
+        endDateStr,
+      },
+      CONFIG,
+    ),
+  )
+
+export const getThreadGraphStats = (
+  threadName: string,
+  dateStr: string | undefined,
+  startDateStr?: string,
+  endDateStr?: string,
+  selectedUserUUIDs?: string[],
+) =>
+  withStatsRateLimit('threadGraph', () =>
+    axios.post<{
+      allLeaderboard: Record<string, number>
+      points: Array<Record<string, any>>
+    }>(
+      `${API_URL}/thread/stats/threadGraph`,
+      {
+        thread: threadName,
+        dateStr,
+        startDateStr,
+        endDateStr,
+        selectedUserUUIDs,
+      },
+      CONFIG,
+    ),
+  )
 
 export const markSplitFake = (threadName: string, start: string, end: string, isFake: boolean, dateKey?: string) =>
   axios.post(`${API_URL}/thread/stats/markSplitFake`, { thread: threadName, start, end, isFake, dateKey }, CONFIG)

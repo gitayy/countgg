@@ -8,9 +8,10 @@ interface Props {
   label?: string
   debounceMs?: number
   options?: string[]
+  selectedUsers?: string[]
 }
 
-const CounterAutocomplete = ({ onCounterSelect, label = 'Select User(s)', debounceMs = 200, options }: Props) => {
+const CounterAutocomplete = ({ onCounterSelect, label = 'Select User(s)', debounceMs = 200, options, selectedUsers }: Props) => {
   const [selectedCounter, setSelectedCounter] = useState<string[]>([])
   const onCounterSelectRef = useRef(onCounterSelect)
 
@@ -19,6 +20,18 @@ const CounterAutocomplete = ({ onCounterSelect, label = 'Select User(s)', deboun
   useEffect(() => {
     onCounterSelectRef.current = onCounterSelect
   }, [onCounterSelect])
+
+  useEffect(() => {
+    if (!selectedUsers) return
+    setSelectedCounter((prev) => {
+      const current = [...prev].sort()
+      const next = [...selectedUsers].sort()
+      if (current.length === next.length && current.every((value, idx) => value === next[idx])) {
+        return prev
+      }
+      return selectedUsers
+    })
+  }, [selectedUsers])
 
   useEffect(() => {
     const timeout = setTimeout(() => {

@@ -1,9 +1,9 @@
-import { useContext, useEffect, useMemo, useState } from 'react'
-import { Alert, Box, Fab, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Skeleton, Switch, Tab, Typography } from '@mui/material'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { Alert, Box, Fab, FormControl, InputLabel, MenuItem, Select, Skeleton, Tab, Typography } from '@mui/material'
 import { Theme, useMediaQuery } from '@mui/material'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import { useLocation, useSearchParams } from 'react-router-dom'
-import { getThreadStats, markSplitFake } from '../utils/api'
+import { getThreadStats, getThreadStatsDetails, markSplitFake } from '../utils/api'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
 import { ThreadType } from '../utils/types'
 import { LeaderboardTable } from '../components/LeaderboardTable'
@@ -20,6 +20,9 @@ import { useStatsRange } from '../utils/hooks/useStatsRange'
 import { StatsFiltersBar } from '../components/stats/StatsFiltersBar'
 
 export const StatsPage = () => {
+  const defaultDetailsPageSize = 50
+  const selectedUserPageSize = 50
+  const selectedSplitPageSize = 100
   const statsTimezone = 'America/New_York'
   const { loading, counter } = useContext(UserContext)
   const isMounted = useIsMounted()
@@ -30,19 +33,45 @@ export const StatsPage = () => {
   const initialStart = searchParams.get('start')
   const initialEnd = searchParams.get('end')
   const initialThreadParam = searchParams.get('thread')
+  const initialTabParam = searchParams.get('tab')
 
   const [allStats, setAllStats] = useState<any>()
   const [statsLoading, setStatsLoading] = useState(true)
+  const [speedRecords, setSpeedRecords] = useState<any[]>([])
+  const [splitRecords, setSplitRecords] = useState<any[]>([])
+  const [speedTotal, setSpeedTotal] = useState(0)
+  const [splitTotal, setSplitTotal] = useState(0)
+  const [speedHasMore, setSpeedHasMore] = useState(false)
+  const [splitHasMore, setSplitHasMore] = useState(false)
+  const [speedLoading, setSpeedLoading] = useState(false)
+  const [splitLoading, setSplitLoading] = useState(false)
+  const [speedSelectedUserUUIDs, setSpeedSelectedUserUUIDs] = useState<string[]>([])
+  const [splitSelectedUserUUIDs, setSplitSelectedUserUUIDs] = useState<string[]>([])
+  const [speedDistributionStats, setSpeedDistributionStats] = useState<any[]>([])
+  const [splitDistributionStats, setSplitDistributionStats] = useState<any[]>([])
+  const [speedHallOfSpeedRows, setSpeedHallOfSpeedRows] = useState<any[]>([])
+  const [speedHallOfSpeedRealRows, setSpeedHallOfSpeedRealRows] = useState<any[]>([])
+  const [speedHallOfSpeedFakeRows, setSpeedHallOfSpeedFakeRows] = useState<any[]>([])
+  const [speedDistributionStatsRealOnly, setSpeedDistributionStatsRealOnly] = useState<any[]>([])
+  const [speedDistributionStatsFakeOnly, setSpeedDistributionStatsFakeOnly] = useState<any[]>([])
+  const [splitHallOfSpeedRows, setSplitHallOfSpeedRows] = useState<any[]>([])
+  const [splitHallOfSpeedRealRows, setSplitHallOfSpeedRealRows] = useState<any[]>([])
+  const [splitHallOfSpeedFakeRows, setSplitHallOfSpeedFakeRows] = useState<any[]>([])
+  const [splitDistributionStatsRealOnly, setSplitDistributionStatsRealOnly] = useState<any[]>([])
+  const [splitDistributionStatsFakeOnly, setSplitDistributionStatsFakeOnly] = useState<any[]>([])
+  const [speedQueryLoaded, setSpeedQueryLoaded] = useState(false)
+  const [splitQueryLoaded, setSplitQueryLoaded] = useState(false)
   const [selectedStartDate, setSelectedStartDate] = useState<any | null>(
     initialStart ? moment.tz(initialStart, 'YYYY-MM-DD', statsTimezone) : null,
   )
   const [selectedEndDate, setSelectedEndDate] = useState<any | null>(
     initialEnd ? moment.tz(initialEnd, 'YYYY-MM-DD', statsTimezone) : null,
   )
-  const [tabValue, setTabValue] = useState(searchParams.get('tab') || 'tab_0')
+  const [tabValue, setTabValue] = useState(initialTabParam || 'tab_0')
   const [accoladeType, setAccoladeType] = useState<'gets' | 'assists' | 'palindromes' | 'repdigits'>('gets')
   const [showBackToTop, setShowBackToTop] = useState(false)
-  const [includeFakeSplits, setIncludeFakeSplits] = useState(false)
+  const [speedViewMode, setSpeedViewMode] = useState<'real_only' | 'all' | 'fake_only'>('all')
+  const [splitViewMode, setSplitViewMode] = useState<'real_only' | 'all' | 'fake_only'>('real_only')
   const [hasResolvedInitialThreadParam, setHasResolvedInitialThreadParam] = useState(!initialThreadParam)
 
   const { allThreads, allThreadsLoading } = useFetchAllThreads()
@@ -50,6 +79,20 @@ export const StatsPage = () => {
     name: 'all',
     uuid: 'all',
   })
+  const statsRequestSeq = useRef(0)
+  const urlThreadParam = searchParams.get('thread')
+  const isUrlThreadSettled = !urlThreadParam || selectedThread.uuid === urlThreadParam
+
+  const statsDateRange = useMemo(() => {
+    const toKey = (value: any) => {
+      if (!value || !moment.isMoment(value) || !value.isValid()) return undefined
+      return value.clone().tz(statsTimezone).format('YYYY-MM-DD')
+    }
+    return {
+      startDateStr: toKey(selectedStartDate),
+      endDateStr: toKey(selectedEndDate),
+    }
+  }, [selectedStartDate, selectedEndDate, statsTimezone])
 
   useEffect(() => {
     document.title = `Stats | Counting!`
@@ -82,11 +125,17 @@ export const StatsPage = () => {
   }, [])
 
   useEffect(() => {
+    const requestId = ++statsRequestSeq.current
     async function fetchData() {
       setStatsLoading(true)
       try {
-        const { data } = await getThreadStats(selectedThread.name, undefined)
-        if (isMounted.current) {
+        const { data } = await getThreadStats(
+          selectedThread.name,
+          undefined,
+          statsDateRange.startDateStr,
+          statsDateRange.endDateStr,
+        )
+        if (isMounted.current && requestId === statsRequestSeq.current) {
           for (const counter of data.counters) {
             addCounterToCache(counter)
           }
@@ -95,19 +144,280 @@ export const StatsPage = () => {
         }
       } catch (err) {
         console.log(err)
-        setStatsLoading(false)
+        if (isMounted.current && requestId === statsRequestSeq.current) {
+          setStatsLoading(false)
+        }
       }
     }
     fetchData()
-  }, [selectedThread.name, isMounted])
+  }, [selectedThread.name, statsDateRange.startDateStr, statsDateRange.endDateStr, isMounted])
 
-  const { stats, graphStatsSource, toStatsDayKey } = useStatsRange(allStats, selectedStartDate, selectedEndDate, statsTimezone)
+  const { stats, toStatsDayKey } = useStatsRange(allStats, selectedStartDate, selectedEndDate, statsTimezone)
   const canModerateSplits = Boolean(counter && (counter.roles.includes('mod') || counter.roles.includes('admin')))
+  const hasStats = useMemo(() => !!stats, [stats])
+  const hasSpeedStats = (stats?.speedCount ?? stats?.speed?.length ?? 0) > 0
+  const hasSplitStats = (stats?.splitSpeedCount ?? stats?.splitSpeed?.length ?? 0) > 0
+  const hasAccolades =
+    (!!stats?.gets && Object.keys(stats.gets).length > 0) ||
+    (!!stats?.assists && Object.keys(stats.assists).length > 0) ||
+    (!!stats?.palindromes && Object.keys(stats.palindromes).length > 0) ||
+    (!!stats?.repdigits && Object.keys(stats.repdigits).length > 0)
+  const isTabAvailabilityResolved = !statsLoading && hasStats
+  const availableTabs = useMemo(() => {
+    const tabs = ['tab_0']
+    if (hasStats) tabs.push('tab_01')
+    if (hasStats && hasAccolades) tabs.push('tab_2')
+    if (hasStats && hasSpeedStats) tabs.push('tab_5')
+    if (hasStats && hasSplitStats) tabs.push('tab_6')
+    return tabs
+  }, [hasStats, hasAccolades, hasSpeedStats, hasSplitStats])
+  const effectiveTabValue = useMemo(() => {
+    if (!isTabAvailabilityResolved) return tabValue
+    return availableTabs.includes(tabValue) ? tabValue : 'tab_0'
+  }, [isTabAvailabilityResolved, availableTabs, tabValue])
+
+  const displayedSpeed = useMemo(() => {
+    const source = speedRecords ?? []
+    if (speedViewMode === 'all') return source
+    if (speedViewMode === 'fake_only') return source.filter((record: any) => record?.isFake)
+    return source.filter((record: any) => !record?.isFake)
+  }, [speedRecords, speedViewMode])
 
   const displayedSplitSpeed = useMemo(() => {
-    const source = stats?.splitSpeed ?? []
-    return includeFakeSplits ? source : source.filter((split: any) => !split?.isFake)
-  }, [stats?.splitSpeed, includeFakeSplits])
+    const source = splitRecords ?? []
+    if (splitViewMode === 'all') return source
+    if (splitViewMode === 'fake_only') return source.filter((split: any) => split?.isFake)
+    return source.filter((split: any) => !split?.isFake)
+  }, [splitRecords, splitViewMode])
+
+  useEffect(() => {
+    setSpeedRecords([])
+    setSplitRecords([])
+    setSpeedDistributionStats([])
+    setSpeedDistributionStatsRealOnly([])
+    setSpeedDistributionStatsFakeOnly([])
+    setSplitDistributionStats([])
+    setSpeedHallOfSpeedRows([])
+    setSpeedHallOfSpeedRealRows([])
+    setSpeedHallOfSpeedFakeRows([])
+    setSplitHallOfSpeedRows([])
+    setSplitHallOfSpeedRealRows([])
+    setSplitHallOfSpeedFakeRows([])
+    setSplitDistributionStatsRealOnly([])
+    setSplitDistributionStatsFakeOnly([])
+    setSpeedSelectedUserUUIDs([])
+    setSplitSelectedUserUUIDs([])
+    setSpeedHasMore(false)
+    setSplitHasMore(false)
+    setSpeedTotal(0)
+    setSplitTotal(0)
+    setSpeedQueryLoaded(false)
+    setSplitQueryLoaded(false)
+  }, [selectedThread.name, statsDateRange.startDateStr, statsDateRange.endDateStr])
+
+  const loadStatsDetailPage = async (type: 'speed' | 'splitSpeed', append = false, selectedUserUUIDs: string[] = []) => {
+    if (!isMounted.current) return
+    const isSpeed = type === 'speed'
+    const currentRecords = isSpeed ? speedRecords : splitRecords
+    const nextOffset = append ? currentRecords.length : 0
+    const hasSelectedUsers = selectedUserUUIDs.length > 0
+    const limit = hasSelectedUsers
+      ? isSpeed
+        ? selectedUserPageSize
+        : selectedSplitPageSize
+      : defaultDetailsPageSize
+
+    if (isSpeed) {
+      setSpeedLoading(true)
+    } else {
+      setSplitLoading(true)
+    }
+
+    try {
+      const { data } = await getThreadStatsDetails(
+        selectedThread.name,
+        type,
+        nextOffset,
+        limit,
+        selectedUserUUIDs,
+        undefined,
+        statsDateRange.startDateStr,
+        statsDateRange.endDateStr,
+      )
+      if (!isMounted.current) return
+      for (const counter of data.counters) {
+        addCounterToCache(counter)
+      }
+      if (isSpeed) {
+        setSpeedRecords((prev) => (append ? [...prev, ...data.records] : data.records))
+        setSpeedHasMore(data.hasMore)
+        setSpeedTotal(data.total)
+        setSpeedDistributionStats(data.distributionStats || [])
+        setSpeedDistributionStatsRealOnly(data.distributionStatsRealOnly || [])
+        setSpeedDistributionStatsFakeOnly(data.distributionStatsFakeOnly || [])
+        setSpeedHallOfSpeedRows(data.hallOfSpeed || [])
+        setSpeedHallOfSpeedRealRows(data.hallOfSpeedRealOnly || [])
+        setSpeedHallOfSpeedFakeRows(data.hallOfSpeedFakeOnly || [])
+        setSpeedQueryLoaded(true)
+      } else {
+        setSplitRecords((prev) => (append ? [...prev, ...data.records] : data.records))
+        setSplitHasMore(data.hasMore)
+        setSplitTotal(data.total)
+        setSplitDistributionStats(data.distributionStats || [])
+        setSplitDistributionStatsRealOnly(data.distributionStatsRealOnly || [])
+        setSplitDistributionStatsFakeOnly(data.distributionStatsFakeOnly || [])
+        setSplitHallOfSpeedRows(data.hallOfSpeed || [])
+        setSplitHallOfSpeedRealRows(data.hallOfSpeedRealOnly || [])
+        setSplitHallOfSpeedFakeRows(data.hallOfSpeedFakeOnly || [])
+        setSplitQueryLoaded(true)
+      }
+    } catch (err) {
+      console.log(err)
+    } finally {
+      if (isMounted.current) {
+        if (isSpeed) {
+          setSpeedLoading(false)
+        } else {
+          setSplitLoading(false)
+        }
+      }
+    }
+  }
+
+  const dedupeRecords = (records: any[]) => {
+    const seen = new Set<string>()
+    const deduped: any[] = []
+    for (const record of records) {
+      const key = `${record?.start || ''}|${record?.end || ''}|${Number(record?.time) || 'inf'}|${record?.isFake ? '1' : '0'}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      deduped.push(record)
+    }
+    return deduped
+  }
+
+  const ensureDetailPageLoaded = async (type: 'speed' | 'splitSpeed', page: number, selectedUserUUIDs: string[]) => {
+    if (!isMounted.current) return
+    const isSpeed = type === 'speed'
+    const rowsPerPage = 50
+    const start = page * rowsPerPage
+    const isLoading = isSpeed ? speedLoading : splitLoading
+    if (isLoading) return
+
+    if (isSpeed) {
+      setSpeedLoading(true)
+    } else {
+      setSplitLoading(true)
+    }
+
+    try {
+      const hasSelectedUsers = selectedUserUUIDs.length > 0
+      const limit = hasSelectedUsers
+        ? isSpeed
+          ? selectedUserPageSize
+          : selectedSplitPageSize
+        : rowsPerPage
+      const res = await getThreadStatsDetails(
+        selectedThread.name,
+        type,
+        start,
+        limit,
+        selectedUserUUIDs,
+        undefined,
+        statsDateRange.startDateStr,
+        statsDateRange.endDateStr,
+      )
+      const data = res.data
+
+      if (!isMounted.current) return
+      for (const counter of data.counters) {
+        addCounterToCache(counter)
+      }
+      const updateRecords = (prev: any[]) => {
+        const next = [...prev]
+        next.splice(start, limit, ...(data.records || []))
+        return dedupeRecords(next)
+      }
+
+      if (isSpeed) {
+        setSpeedRecords(updateRecords)
+        setSpeedHasMore(data.hasMore)
+        setSpeedTotal(data.total)
+        setSpeedDistributionStats(data.distributionStats || [])
+        setSpeedDistributionStatsRealOnly(data.distributionStatsRealOnly || [])
+        setSpeedDistributionStatsFakeOnly(data.distributionStatsFakeOnly || [])
+        setSpeedHallOfSpeedRows(data.hallOfSpeed || [])
+        setSpeedHallOfSpeedRealRows(data.hallOfSpeedRealOnly || [])
+        setSpeedHallOfSpeedFakeRows(data.hallOfSpeedFakeOnly || [])
+        setSpeedQueryLoaded(true)
+      } else {
+        setSplitRecords(updateRecords)
+        setSplitHasMore(data.hasMore)
+        setSplitTotal(data.total)
+        setSplitDistributionStats(data.distributionStats || [])
+        setSplitDistributionStatsRealOnly(data.distributionStatsRealOnly || [])
+        setSplitDistributionStatsFakeOnly(data.distributionStatsFakeOnly || [])
+        setSplitHallOfSpeedRows(data.hallOfSpeed || [])
+        setSplitHallOfSpeedRealRows(data.hallOfSpeedRealOnly || [])
+        setSplitHallOfSpeedFakeRows(data.hallOfSpeedFakeOnly || [])
+        setSplitQueryLoaded(true)
+      }
+    } catch (err) {
+      console.log(err)
+    } finally {
+      if (isMounted.current) {
+        if (isSpeed) setSpeedLoading(false)
+        else setSplitLoading(false)
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (effectiveTabValue === 'tab_5' && hasSpeedStats && speedRecords.length === 0 && !speedLoading && !speedQueryLoaded) {
+      loadStatsDetailPage('speed', false, speedSelectedUserUUIDs)
+    }
+    if (effectiveTabValue === 'tab_6' && hasSplitStats && splitRecords.length === 0 && !splitLoading && !splitQueryLoaded) {
+      loadStatsDetailPage('splitSpeed', false, splitSelectedUserUUIDs)
+    }
+  }, [
+    effectiveTabValue,
+    hasSpeedStats,
+    hasSplitStats,
+    speedRecords.length,
+    splitRecords.length,
+    speedLoading,
+    splitLoading,
+    speedQueryLoaded,
+    splitQueryLoaded,
+    speedSelectedUserUUIDs,
+    splitSelectedUserUUIDs,
+  ])
+
+  const handleSpeedSelectedUsersChange = (selectedUserUUIDs: string[]) => {
+    const next = [...selectedUserUUIDs].sort()
+    const prev = [...speedSelectedUserUUIDs].sort()
+    if (next.length === prev.length && next.every((uuid, idx) => uuid === prev[idx])) {
+      return
+    }
+    setSpeedSelectedUserUUIDs(next)
+    setSpeedRecords([])
+    setSpeedHasMore(false)
+    setSpeedTotal(0)
+    setSpeedQueryLoaded(false)
+  }
+
+  const handleSplitSelectedUsersChange = (selectedUserUUIDs: string[]) => {
+    const next = [...selectedUserUUIDs].sort()
+    const prev = [...splitSelectedUserUUIDs].sort()
+    if (next.length === prev.length && next.every((uuid, idx) => uuid === prev[idx])) {
+      return
+    }
+    setSplitSelectedUserUUIDs(next)
+    setSplitRecords([])
+    setSplitHasMore(false)
+    setSplitTotal(0)
+    setSplitQueryLoaded(false)
+  }
 
   const handleSplitFakeToggle = async ({ start, end, isFake }: { start: string; end: string; isFake: boolean }) => {
     await markSplitFake(selectedThread.name, start, end, isFake)
@@ -117,23 +427,21 @@ export const StatsPage = () => {
       const next = { ...prev }
       for (const key of Object.keys(next)) {
         const day = next[key]
-        if (!day || !Array.isArray(day.splitSpeed)) continue
-
-        let changed = false
-        const updatedSplits = day.splitSpeed.map((split: any) => {
-          if (split?.start === start && split?.end === end) {
-            changed = true
-            return { ...split, isFake }
-          }
-          return split
-        })
-
-        if (changed) {
-          next[key] = { ...day, splitSpeed: updatedSplits }
-        }
+        if (!day || typeof day !== 'object') continue
+        const currentCount = typeof day.splitSpeedCount === 'number' ? day.splitSpeedCount : Array.isArray(day.splitSpeed) ? day.splitSpeed.length : 0
+        next[key] = { ...day, splitSpeedCount: currentCount }
       }
       return next
     })
+
+    setSplitRecords((prev) =>
+      prev.map((split) => {
+        if (split?.start === start && split?.end === end) {
+          return { ...split, isFake }
+        }
+        return split
+      }),
+    )
   }
 
   const availableAccolades = useMemo(() => {
@@ -153,13 +461,13 @@ export const StatsPage = () => {
   }, [availableAccolades, accoladeType])
 
   useEffect(() => {
-    if (allThreadsLoading || !hasResolvedInitialThreadParam) {
+    if (allThreadsLoading || !hasResolvedInitialThreadParam || !isUrlThreadSettled) {
       return
     }
 
     const params = new URLSearchParams()
     params.set('thread', selectedThread.uuid)
-    params.set('tab', tabValue)
+    params.set('tab', effectiveTabValue)
 
     const start = toStatsDayKey(selectedStartDate)
     const end = toStatsDayKey(selectedEndDate)
@@ -167,7 +475,17 @@ export const StatsPage = () => {
     if (end) params.set('end', end)
 
     setSearchParams(params, { replace: true })
-  }, [selectedThread, tabValue, selectedStartDate, selectedEndDate, toStatsDayKey, setSearchParams, allThreadsLoading, hasResolvedInitialThreadParam])
+  }, [
+    selectedThread,
+    effectiveTabValue,
+    selectedStartDate,
+    selectedEndDate,
+    toStatsDayKey,
+    setSearchParams,
+    allThreadsLoading,
+    hasResolvedInitialThreadParam,
+    isUrlThreadSettled,
+  ])
 
   const loadingStatuses = [
     { label: 'User session', ready: !loading },
@@ -182,8 +500,6 @@ export const StatsPage = () => {
       <Skeleton variant="rectangular" height={48} />
     </Box>
   )
-
-  const hasStats = useMemo(() => !!stats, [stats])
 
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(window.location.href)
@@ -228,32 +544,52 @@ export const StatsPage = () => {
         statsTimezone={statsTimezone}
       />
 
-      <TabContext value={tabValue}>
+      <TabContext value={effectiveTabValue}>
         <Box sx={{ position: 'sticky', top: 0, zIndex: 8, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
           <TabList onChange={(_event, newValue) => setTabValue(newValue)} variant={'scrollable'} allowScrollButtonsMobile>
             <Tab label="Leaderboard" value="tab_0" />
             {hasStats && <Tab label="Graphs" value="tab_01" />}
             {hasStats && availableAccolades.length > 0 && <Tab label="Accolades" value="tab_2" />}
-            {hasStats && stats?.speed && stats.speed.length > 0 && <Tab label="Speed" value="tab_5" />}
-            {hasStats && stats?.splitSpeed && stats.splitSpeed.length > 0 && <Tab label="Splits" value="tab_6" />}
+            {hasStats && hasSpeedStats && <Tab label="Speed" value="tab_5" />}
+            {hasStats && hasSplitStats && <Tab label="Splits" value="tab_6" />}
           </TabList>
         </Box>
 
         <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', color: 'text.primary' }}>
           <TabPanel value="tab_0" sx={{ p: 0 }}>
             <Typography variant="h6">Leaderboard</Typography>
-            {tabValue === 'tab_0' && (statsLoading ? tabSkeleton : stats?.leaderboard ? <LeaderboardTable stat={stats.leaderboard} justLB={true} /> : renderEmptyState('Leaderboard'))}
+            {effectiveTabValue === 'tab_0' && (statsLoading ? tabSkeleton : stats?.leaderboard ? <LeaderboardTable stat={stats.leaderboard} justLB={true} /> : renderEmptyState('Leaderboard'))}
           </TabPanel>
 
           <TabPanel value="tab_01" sx={{ p: 0 }}>
             <Typography variant="h6">Graphs</Typography>
-            {tabValue === 'tab_01' && (statsLoading ? tabSkeleton : graphStatsSource ? <LeaderboardGraph stats={graphStatsSource} cum={true} /> : renderEmptyState('Graphs'))}
-            {tabValue === 'tab_01' && (statsLoading ? tabSkeleton : graphStatsSource ? <LeaderboardGraph stats={graphStatsSource} cum={false} /> : null)}
+            {effectiveTabValue === 'tab_01' &&
+              (statsLoading ? (
+                tabSkeleton
+              ) : (
+                <LeaderboardGraph
+                  threadName={selectedThread.name}
+                  startDateStr={statsDateRange.startDateStr}
+                  endDateStr={statsDateRange.endDateStr}
+                  cum={true}
+                />
+              ))}
+            {effectiveTabValue === 'tab_01' &&
+              (statsLoading ? (
+                tabSkeleton
+              ) : (
+                <LeaderboardGraph
+                  threadName={selectedThread.name}
+                  startDateStr={statsDateRange.startDateStr}
+                  endDateStr={statsDateRange.endDateStr}
+                  cum={false}
+                />
+              ))}
           </TabPanel>
 
           <TabPanel value="tab_2" sx={{ p: 0 }}>
             <Typography variant="h6">Accolades</Typography>
-            {tabValue === 'tab_2' &&
+            {effectiveTabValue === 'tab_2' &&
               (statsLoading ? (
                 tabSkeleton
               ) : availableAccolades.length === 0 ? (
@@ -282,27 +618,96 @@ export const StatsPage = () => {
 
           <TabPanel value="tab_5" sx={{ p: 0 }}>
             <Typography variant="h6">Speed</Typography>
-            {tabValue === 'tab_5' && (statsLoading ? tabSkeleton : <SpeedTable speed={stats?.speed} thread={selectedThread} />)}
+            {effectiveTabValue === 'tab_5' &&
+              (statsLoading ? (
+                tabSkeleton
+              ) : (
+                <>
+                  <FormControl size="small" sx={{ mb: 1, minWidth: 220 }}>
+                    <InputLabel id="speed-view-mode-label">Speed View</InputLabel>
+                    <Select
+                      labelId="speed-view-mode-label"
+                      label="Speed View"
+                      value={speedViewMode}
+                      onChange={(e) => setSpeedViewMode(e.target.value as 'real_only' | 'all' | 'fake_only')}
+                    >
+                      <MenuItem value="real_only">Real only</MenuItem>
+                      <MenuItem value="all">All</MenuItem>
+                      <MenuItem value="fake_only">Fake only</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <SpeedTable
+                    speed={displayedSpeed}
+                    thread={selectedThread}
+                    canLoadMore={speedHasMore}
+                    isLoadingMore={speedLoading}
+                    onEnsurePageLoaded={(page, selectedUserUUIDs) => ensureDetailPageLoaded('speed', page, selectedUserUUIDs)}
+                    onSelectedUsersChange={handleSpeedSelectedUsersChange}
+                    totalCount={speedTotal}
+                    distributionStats={
+                      speedViewMode === 'all'
+                        ? speedDistributionStats
+                        : speedViewMode === 'fake_only'
+                          ? speedDistributionStatsFakeOnly
+                          : speedDistributionStatsRealOnly
+                    }
+                    hallOfSpeedRows={
+                      speedViewMode === 'all'
+                        ? speedHallOfSpeedRows
+                        : speedViewMode === 'fake_only'
+                          ? speedHallOfSpeedFakeRows
+                          : speedHallOfSpeedRealRows
+                    }
+                  />
+                </>
+              ))}
           </TabPanel>
 
           <TabPanel value="tab_6" sx={{ p: 0 }}>
             <Typography variant="h6">Splits</Typography>
-            {tabValue === 'tab_6' && (
+            {effectiveTabValue === 'tab_6' && (
               statsLoading ? (
                 tabSkeleton
               ) : (
                 <>
-                  <FormControlLabel
-                    sx={{ mb: 1 }}
-                    control={<Switch checked={includeFakeSplits} onChange={(_e, checked) => setIncludeFakeSplits(checked)} />}
-                    label="Include fake splits"
-                  />
+                  <FormControl size="small" sx={{ mb: 1, minWidth: 220 }}>
+                    <InputLabel id="split-view-mode-label">Split View</InputLabel>
+                    <Select
+                      labelId="split-view-mode-label"
+                      label="Split View"
+                      value={splitViewMode}
+                      onChange={(e) => setSplitViewMode(e.target.value as 'real_only' | 'all' | 'fake_only')}
+                    >
+                      <MenuItem value="real_only">Real only</MenuItem>
+                      <MenuItem value="all">All</MenuItem>
+                      <MenuItem value="fake_only">Fake only</MenuItem>
+                    </Select>
+                  </FormControl>
                   <SpeedTable
                     speed={displayedSplitSpeed}
                     thread={selectedThread}
                     isSplitTable={true}
                     canModerateSplits={canModerateSplits}
                     onToggleSplitFake={canModerateSplits ? handleSplitFakeToggle : undefined}
+                    canLoadMore={splitHasMore}
+                    isLoadingMore={splitLoading}
+                    onEnsurePageLoaded={(page, selectedUserUUIDs) => ensureDetailPageLoaded('splitSpeed', page, selectedUserUUIDs)}
+                    onSelectedUsersChange={handleSplitSelectedUsersChange}
+                    totalCount={splitTotal}
+                    distributionStats={
+                      splitViewMode === 'all'
+                        ? splitDistributionStats
+                        : splitViewMode === 'fake_only'
+                          ? splitDistributionStatsFakeOnly
+                          : splitDistributionStatsRealOnly
+                    }
+                    hallOfSpeedRows={
+                      splitViewMode === 'all'
+                        ? splitHallOfSpeedRows
+                        : splitViewMode === 'fake_only'
+                          ? splitHallOfSpeedFakeRows
+                          : splitHallOfSpeedRealRows
+                    }
                   />
                 </>
               )
