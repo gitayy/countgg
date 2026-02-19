@@ -144,6 +144,16 @@ export type PostType = {
   post_hash?: string
 }
 
+export type SpeedRecord = {
+  start: string
+  end: string
+  time: number
+  startCount: string
+  endCount: string
+  qualifiedCounters: string[]
+  isFake?: boolean
+}
+
 export type ThreadType = {
   uuid: string
   name: string

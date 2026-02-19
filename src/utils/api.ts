@@ -1,5 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios'
-import { User, Counter, ThreadType, AllegianceType, Item, PostType, Blog, MiscSettings, ThreadPrefs } from './types'
+import { User, Counter, ThreadType, AllegianceType, Item, PostType, Blog, MiscSettings, ThreadPrefs, SpeedRecord } from './types'
 
 const CONFIG: AxiosRequestConfig = { withCredentials: true }
 const API_URL = `${process.env.REACT_APP_API_HOST}/api`
@@ -64,13 +64,17 @@ export const getThreadStats = (threadName: string, dateStr: string | undefined) 
       assists: object[]
       palindromes: object[]
       repdigits: object[]
-      speed: object[]
+      speed: SpeedRecord[]
+      splitSpeed: SpeedRecord[]
       leaderboard: object[]
       last_updated: string
       last_updated_uuid: string
     }[]
     counters: Counter[]
   }>(`${API_URL}/thread/stats/threadStats`, { thread: threadName, dateStr: dateStr }, CONFIG)
+
+export const markSplitFake = (threadName: string, start: string, end: string, isFake: boolean, dateKey?: string) =>
+  axios.post(`${API_URL}/thread/stats/markSplitFake`, { thread: threadName, start, end, isFake, dateKey }, CONFIG)
 
 export const updateCounter = (counter: Counter) => axios.post(`${API_URL}/counter/update`, { updateInfo: counter }, CONFIG)
 

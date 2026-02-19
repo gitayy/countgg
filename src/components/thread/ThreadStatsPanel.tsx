@@ -1,17 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Alert, Box, FormControl, InputLabel, MenuItem, Select, Skeleton, Tab, TextField, Typography } from '@mui/material'
+import { useContext, useEffect, useMemo, useState } from 'react'
+import { Alert, Box, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Skeleton, Switch, Tab, TextField, Typography } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers'
 import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
 import moment from 'moment-timezone'
-import { getThreadStats } from '../../utils/api'
+import { getThreadStats, markSplitFake } from '../../utils/api'
 import { addCounterToCache } from '../../utils/helpers'
 import { useIsMounted } from '../../utils/hooks/useIsMounted'
 import { useStatsRange } from '../../utils/hooks/useStatsRange'
 import { LeaderboardTable } from '../LeaderboardTable'
 import LeaderboardGraph from '../LeaderboardGraph'
 import { SpeedTable } from '../SpeedTable'
+import { UserContext } from '../../utils/contexts/UserContext'
 
 interface Props {
   threadName: string
@@ -26,6 +27,8 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
   const [selectedEndDate, setSelectedEndDate] = useState<any | null>(null)
   const [tabValue, setTabValue] = useState('stats_tab_0')
   const [accoladeType, setAccoladeType] = useState<'gets' | 'assists' | 'palindromes' | 'repdigits'>('gets')
+  const [includeFakeSplits, setIncludeFakeSplits] = useState(false)
+  const { counter } = useContext(UserContext)
 
   useEffect(() => {
     async function fetchThreadStats() {
@@ -50,6 +53,39 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
   }, [threadName, isMounted])
 
   const { stats, graphStatsSource } = useStatsRange(allStats, selectedStartDate, selectedEndDate, statsTimezone)
+  const canModerateSplits = Boolean(counter && (counter.roles.includes('mod') || counter.roles.includes('admin')))
+
+  const displayedSplitSpeed = useMemo(() => {
+    const source = stats?.splitSpeed ?? []
+    return includeFakeSplits ? source : source.filter((split: any) => !split?.isFake)
+  }, [stats?.splitSpeed, includeFakeSplits])
+
+  const handleSplitFakeToggle = async ({ start, end, isFake }: { start: string; end: string; isFake: boolean }) => {
+    await markSplitFake(threadName, start, end, isFake)
+
+    setAllStats((prev: any) => {
+      if (!prev || typeof prev !== 'object') return prev
+      const next = { ...prev }
+      for (const key of Object.keys(next)) {
+        const day = next[key]
+        if (!day || !Array.isArray(day.splitSpeed)) continue
+
+        let changed = false
+        const updatedSplits = day.splitSpeed.map((split: any) => {
+          if (split?.start === start && split?.end === end) {
+            changed = true
+            return { ...split, isFake }
+          }
+          return split
+        })
+
+        if (changed) {
+          next[key] = { ...day, splitSpeed: updatedSplits }
+        }
+      }
+      return next
+    })
+  }
 
   const availableAccolades = useMemo(() => {
     const options: Array<{ key: 'gets' | 'assists' | 'palindromes' | 'repdigits'; label: string }> = []
@@ -170,7 +206,25 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
           </TabPanel>
 
           <TabPanel value="stats_tab_6" sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
-            {tabValue === 'stats_tab_6' && (statsLoading ? tabSkeleton : <SpeedTable speed={stats?.splitSpeed} thread={scopedThread} />)}
+            {tabValue === 'stats_tab_6' &&
+              (statsLoading ? (
+                tabSkeleton
+              ) : (
+                <>
+                  <FormControlLabel
+                    sx={{ mb: 1 }}
+                    control={<Switch checked={includeFakeSplits} onChange={(_e, checked) => setIncludeFakeSplits(checked)} />}
+                    label="Include fake splits"
+                  />
+                  <SpeedTable
+                    speed={displayedSplitSpeed}
+                    thread={scopedThread}
+                    isSplitTable={true}
+                    canModerateSplits={canModerateSplits}
+                    onToggleSplitFake={canModerateSplits ? handleSplitFakeToggle : undefined}
+                  />
+                </>
+              ))}
           </TabPanel>
         </Box>
       </TabContext>

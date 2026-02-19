@@ -1,9 +1,9 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
-import { Alert, Box, Fab, FormControl, InputLabel, MenuItem, Select, Skeleton, Tab, Typography } from '@mui/material'
+import { Alert, Box, Fab, FormControl, FormControlLabel, InputLabel, MenuItem, Select, Skeleton, Switch, Tab, Typography } from '@mui/material'
 import { Theme, useMediaQuery } from '@mui/material'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import { useLocation, useSearchParams } from 'react-router-dom'
-import { getThreadStats } from '../utils/api'
+import { getThreadStats, markSplitFake } from '../utils/api'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
 import { ThreadType } from '../utils/types'
 import { LeaderboardTable } from '../components/LeaderboardTable'
@@ -21,7 +21,7 @@ import { StatsFiltersBar } from '../components/stats/StatsFiltersBar'
 
 export const StatsPage = () => {
   const statsTimezone = 'America/New_York'
-  const { loading } = useContext(UserContext)
+  const { loading, counter } = useContext(UserContext)
   const isMounted = useIsMounted()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -29,6 +29,7 @@ export const StatsPage = () => {
 
   const initialStart = searchParams.get('start')
   const initialEnd = searchParams.get('end')
+  const initialThreadParam = searchParams.get('thread')
 
   const [allStats, setAllStats] = useState<any>()
   const [statsLoading, setStatsLoading] = useState(true)
@@ -41,6 +42,8 @@ export const StatsPage = () => {
   const [tabValue, setTabValue] = useState(searchParams.get('tab') || 'tab_0')
   const [accoladeType, setAccoladeType] = useState<'gets' | 'assists' | 'palindromes' | 'repdigits'>('gets')
   const [showBackToTop, setShowBackToTop] = useState(false)
+  const [includeFakeSplits, setIncludeFakeSplits] = useState(false)
+  const [hasResolvedInitialThreadParam, setHasResolvedInitialThreadParam] = useState(!initialThreadParam)
 
   const { allThreads, allThreadsLoading } = useFetchAllThreads()
   const [selectedThread, setSelectedThread] = useState<ThreadType | { name: string; uuid: string }>({
@@ -56,15 +59,18 @@ export const StatsPage = () => {
   }, [location.pathname])
 
   useEffect(() => {
-    const threadParam = searchParams.get('thread')
-    if (!threadParam || threadParam === 'all' || allThreadsLoading) {
+    if (allThreadsLoading) {
       return
     }
 
-    const thread = allThreads.find((item) => item.uuid === threadParam)
-    if (thread) {
-      setSelectedThread(thread)
+    const threadParam = searchParams.get('thread')
+    if (threadParam && threadParam !== 'all') {
+      const thread = allThreads.find((item) => item.uuid === threadParam)
+      if (thread) {
+        setSelectedThread(thread)
+      }
     }
+    setHasResolvedInitialThreadParam(true)
   }, [searchParams, allThreads, allThreadsLoading])
 
   useEffect(() => {
@@ -96,6 +102,39 @@ export const StatsPage = () => {
   }, [selectedThread.name, isMounted])
 
   const { stats, graphStatsSource, toStatsDayKey } = useStatsRange(allStats, selectedStartDate, selectedEndDate, statsTimezone)
+  const canModerateSplits = Boolean(counter && (counter.roles.includes('mod') || counter.roles.includes('admin')))
+
+  const displayedSplitSpeed = useMemo(() => {
+    const source = stats?.splitSpeed ?? []
+    return includeFakeSplits ? source : source.filter((split: any) => !split?.isFake)
+  }, [stats?.splitSpeed, includeFakeSplits])
+
+  const handleSplitFakeToggle = async ({ start, end, isFake }: { start: string; end: string; isFake: boolean }) => {
+    await markSplitFake(selectedThread.name, start, end, isFake)
+
+    setAllStats((prev: any) => {
+      if (!prev || typeof prev !== 'object') return prev
+      const next = { ...prev }
+      for (const key of Object.keys(next)) {
+        const day = next[key]
+        if (!day || !Array.isArray(day.splitSpeed)) continue
+
+        let changed = false
+        const updatedSplits = day.splitSpeed.map((split: any) => {
+          if (split?.start === start && split?.end === end) {
+            changed = true
+            return { ...split, isFake }
+          }
+          return split
+        })
+
+        if (changed) {
+          next[key] = { ...day, splitSpeed: updatedSplits }
+        }
+      }
+      return next
+    })
+  }
 
   const availableAccolades = useMemo(() => {
     const options: Array<{ key: 'gets' | 'assists' | 'palindromes' | 'repdigits'; label: string }> = []
@@ -114,6 +153,10 @@ export const StatsPage = () => {
   }, [availableAccolades, accoladeType])
 
   useEffect(() => {
+    if (allThreadsLoading || !hasResolvedInitialThreadParam) {
+      return
+    }
+
     const params = new URLSearchParams()
     params.set('thread', selectedThread.uuid)
     params.set('tab', tabValue)
@@ -124,7 +167,7 @@ export const StatsPage = () => {
     if (end) params.set('end', end)
 
     setSearchParams(params, { replace: true })
-  }, [selectedThread, tabValue, selectedStartDate, selectedEndDate, toStatsDayKey, setSearchParams])
+  }, [selectedThread, tabValue, selectedStartDate, selectedEndDate, toStatsDayKey, setSearchParams, allThreadsLoading, hasResolvedInitialThreadParam])
 
   const loadingStatuses = [
     { label: 'User session', ready: !loading },
@@ -244,7 +287,26 @@ export const StatsPage = () => {
 
           <TabPanel value="tab_6" sx={{ p: 0 }}>
             <Typography variant="h6">Splits</Typography>
-            {tabValue === 'tab_6' && (statsLoading ? tabSkeleton : <SpeedTable speed={stats?.splitSpeed} thread={selectedThread} />)}
+            {tabValue === 'tab_6' && (
+              statsLoading ? (
+                tabSkeleton
+              ) : (
+                <>
+                  <FormControlLabel
+                    sx={{ mb: 1 }}
+                    control={<Switch checked={includeFakeSplits} onChange={(_e, checked) => setIncludeFakeSplits(checked)} />}
+                    label="Include fake splits"
+                  />
+                  <SpeedTable
+                    speed={displayedSplitSpeed}
+                    thread={selectedThread}
+                    isSplitTable={true}
+                    canModerateSplits={canModerateSplits}
+                    onToggleSplitFake={canModerateSplits ? handleSplitFakeToggle : undefined}
+                  />
+                </>
+              )
+            )}
           </TabPanel>
         </Box>
       </TabContext>

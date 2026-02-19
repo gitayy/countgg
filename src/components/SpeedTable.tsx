@@ -15,16 +15,20 @@ import {
   Tooltip as MuiTooltip,
   Autocomplete,
   TextField,
+  Button,
 } from '@mui/material'
 import { memo, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cachedCounters, convertToTimestamp, isParsable } from '../utils/helpers'
-import { Counter, ThreadType } from '../utils/types'
+import { Counter, SpeedRecord, ThreadType } from '../utils/types'
 import CounterAutocomplete from './CounterAutocomplete'
 
 interface Props {
-  speed: any
+  speed: SpeedRecord[] | undefined
   thread: ThreadType | { name: string; uuid: string }
+  isSplitTable?: boolean
+  canModerateSplits?: boolean
+  onToggleSplitFake?: (split: { start: string; end: string; isFake: boolean }) => Promise<void>
 }
 
 const normalizedTime = (value: number) => Number(value.toFixed(3))
@@ -47,11 +51,12 @@ const formatClockTime = (timeMs: number, maxFractionDigits = 6) => {
   return timeMs < 0 ? `-${core}` : core
 }
 
-export const SpeedTable = memo(({ speed, thread }: Props) => {
+export const SpeedTable = memo(({ speed, thread, isSplitTable = false, canModerateSplits = false, onToggleSplitFake }: Props) => {
   const rowsPerPage = 50
   const [page, setPage] = useState(0)
   const [selectedCounters, setSelectedCounters] = useState<Counter[]>([])
   const [selectedDistributionUserUUIDs, setSelectedDistributionUserUUIDs] = useState<string[]>([])
+  const [pendingSplitKeys, setPendingSplitKeys] = useState<string[]>([])
   const navigate = useNavigate()
 
   const selectedCounterUUIDs = useMemo(() => new Set(selectedCounters.map((counter) => counter.uuid)), [selectedCounters])
@@ -81,6 +86,7 @@ export const SpeedTable = memo(({ speed, thread }: Props) => {
           ...obj,
           time: Number.isFinite(obj.time) ? obj.time : computedTime,
           qualifiedCounters: Array.isArray(obj.qualifiedCounters) ? obj.qualifiedCounters : [],
+          isFake: Boolean(obj.isFake),
         }
       })
   }, [speed])
@@ -198,6 +204,23 @@ export const SpeedTable = memo(({ speed, thread }: Props) => {
     setPage(0)
   }
 
+  const splitKey = (start: string, end: string) => `${start}_${end}`
+
+  const handleToggleSplitFake = async (start: string, end: string, currentIsFake: boolean) => {
+    if (!onToggleSplitFake) return
+    const key = splitKey(start, end)
+    if (pendingSplitKeys.includes(key)) return
+
+    setPendingSplitKeys((prev) => [...prev, key])
+    try {
+      await onToggleSplitFake({ start, end, isFake: !currentIsFake })
+    } catch (err) {
+      console.log(err)
+    } finally {
+      setPendingSplitKeys((prev) => prev.filter((pendingKey) => pendingKey !== key))
+    }
+  }
+
   if (!thread) return <></>
 
   if (sortedSpeed.length === 0) {
@@ -289,6 +312,21 @@ export const SpeedTable = memo(({ speed, thread }: Props) => {
           </span>
         ))}
       </TableCell>
+      {isSplitTable && (
+        <TableCell>
+          {obj.isFake ? 'Fake' : 'Real'}
+          {canModerateSplits && onToggleSplitFake && (
+            <Button
+              size="small"
+              sx={{ ml: 1 }}
+              disabled={pendingSplitKeys.includes(splitKey(obj.start, obj.end))}
+              onClick={() => handleToggleSplitFake(obj.start, obj.end, Boolean(obj.isFake))}
+            >
+              {pendingSplitKeys.includes(splitKey(obj.start, obj.end)) ? 'Saving...' : obj.isFake ? 'Mark real' : 'Mark fake'}
+            </Button>
+          )}
+        </TableCell>
+      )}
     </TableRow>
   ))
 
@@ -418,6 +456,21 @@ export const SpeedTable = memo(({ speed, thread }: Props) => {
             )
           })}
       </TableCell>
+      {isSplitTable && (
+        <TableCell>
+          {row.obj.isFake ? 'Fake' : 'Real'}
+          {canModerateSplits && onToggleSplitFake && (
+            <Button
+              size="small"
+              sx={{ ml: 1 }}
+              disabled={pendingSplitKeys.includes(splitKey(row.obj.start, row.obj.end))}
+              onClick={() => handleToggleSplitFake(row.obj.start, row.obj.end, Boolean(row.obj.isFake))}
+            >
+              {pendingSplitKeys.includes(splitKey(row.obj.start, row.obj.end)) ? 'Saving...' : row.obj.isFake ? 'Mark real' : 'Mark fake'}
+            </Button>
+          )}
+        </TableCell>
+      )}
     </TableRow>
   ))
 
@@ -613,6 +666,7 @@ export const SpeedTable = memo(({ speed, thread }: Props) => {
               <TableCell>Start</TableCell>
               <TableCell>End</TableCell>
               <TableCell>Partners</TableCell>
+              {isSplitTable && <TableCell>Flag</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>{pbLeaderboardRows}</TableBody>
@@ -634,6 +688,7 @@ export const SpeedTable = memo(({ speed, thread }: Props) => {
               <TableCell>Start</TableCell>
               <TableCell>End</TableCell>
               <TableCell>Qualified Counters</TableCell>
+              {isSplitTable && <TableCell>Flag</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>{leaderboardRows}</TableBody>
