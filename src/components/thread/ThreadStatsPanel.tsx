@@ -14,6 +14,14 @@ import LeaderboardGraph from '../LeaderboardGraph'
 import { SpeedTable } from '../SpeedTable'
 import { UserContext } from '../../utils/contexts/UserContext'
 
+const THREAD_STATS_TABS = {
+  LEADERBOARD: 'leaderboard',
+  GRAPHS: 'graphs',
+  ACCOLADES: 'accolades',
+  SPEED: 'speed',
+  SPLITS: 'splits',
+} as const
+
 interface Props {
   threadName: string
 }
@@ -52,7 +60,7 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
   const [splitQueryLoaded, setSplitQueryLoaded] = useState(false)
   const [selectedStartDate, setSelectedStartDate] = useState<any | null>(null)
   const [selectedEndDate, setSelectedEndDate] = useState<any | null>(null)
-  const [tabValue, setTabValue] = useState('stats_tab_0')
+  const [tabValue, setTabValue] = useState(THREAD_STATS_TABS.LEADERBOARD)
   const [accoladeType, setAccoladeType] = useState<'gets' | 'assists' | 'palindromes' | 'repdigits'>('gets')
   const [speedViewMode, setSpeedViewMode] = useState<'real_only' | 'all' | 'fake_only'>('all')
   const [splitViewMode, setSplitViewMode] = useState<'real_only' | 'all' | 'fake_only'>('real_only')
@@ -70,15 +78,15 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
     (!!stats?.repdigits && Object.keys(stats.repdigits).length > 0)
   const isTabAvailabilityResolved = !statsLoading && !!stats
   const availableTabs = useMemo(() => {
-    const tabs = ['stats_tab_0', 'stats_tab_01']
-    if (hasAccolades) tabs.push('stats_tab_2')
-    if (hasSpeedStats) tabs.push('stats_tab_5')
-    if (hasSplitStats) tabs.push('stats_tab_6')
+    const tabs = [THREAD_STATS_TABS.LEADERBOARD, THREAD_STATS_TABS.GRAPHS]
+    if (hasAccolades) tabs.push(THREAD_STATS_TABS.ACCOLADES)
+    if (hasSpeedStats) tabs.push(THREAD_STATS_TABS.SPEED)
+    if (hasSplitStats) tabs.push(THREAD_STATS_TABS.SPLITS)
     return tabs
   }, [hasAccolades, hasSpeedStats, hasSplitStats])
   const effectiveTabValue = useMemo(() => {
     if (!isTabAvailabilityResolved) return tabValue
-    return availableTabs.includes(tabValue) ? tabValue : 'stats_tab_0'
+    return availableTabs.includes(tabValue) ? tabValue : THREAD_STATS_TABS.LEADERBOARD
   }, [isTabAvailabilityResolved, availableTabs, tabValue])
 
   const displayedSpeed = useMemo(() => {
@@ -315,10 +323,10 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
   }
 
   useEffect(() => {
-    if (effectiveTabValue === 'stats_tab_5' && hasSpeedStats && speedRecords.length === 0 && !speedLoading && !speedQueryLoaded) {
+    if (effectiveTabValue === THREAD_STATS_TABS.SPEED && hasSpeedStats && speedRecords.length === 0 && !speedLoading && !speedQueryLoaded) {
       loadStatsDetailPage('speed', false, speedSelectedUserUUIDs)
     }
-    if (effectiveTabValue === 'stats_tab_6' && hasSplitStats && splitRecords.length === 0 && !splitLoading && !splitQueryLoaded) {
+    if (effectiveTabValue === THREAD_STATS_TABS.SPLITS && hasSplitStats && splitRecords.length === 0 && !splitLoading && !splitQueryLoaded) {
       loadStatsDetailPage('splitSpeed', false, splitSelectedUserUUIDs)
     }
   }, [
@@ -453,22 +461,22 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
             scrollButtons="auto"
             sx={{ maxWidth: '100%', minWidth: 0 }}
           >
-            <Tab label="Leaderboard" value="stats_tab_0" />
-            <Tab label="Graphs" value="stats_tab_01" />
-            {availableAccolades.length > 0 && <Tab label="Accolades" value="stats_tab_2" />}
-            {hasSpeedStats && <Tab label="Speed" value="stats_tab_5" />}
-            {hasSplitStats && <Tab label="Splits" value="stats_tab_6" />}
+            <Tab label="Leaderboard" value={THREAD_STATS_TABS.LEADERBOARD} />
+            <Tab label="Graphs" value={THREAD_STATS_TABS.GRAPHS} />
+            {availableAccolades.length > 0 && <Tab label="Accolades" value={THREAD_STATS_TABS.ACCOLADES} />}
+            {hasSpeedStats && <Tab label="Speed" value={THREAD_STATS_TABS.SPEED} />}
+            {hasSplitStats && <Tab label="Splits" value={THREAD_STATS_TABS.SPLITS} />}
           </TabList>
         </Box>
 
         <Box sx={{ mt: 1, p: 2, bgcolor: 'background.paper', width: '100%', maxWidth: '100%', minWidth: 0, overflowX: 'hidden' }}>
-          <TabPanel value="stats_tab_0" sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
-            {effectiveTabValue === 'stats_tab_0' &&
+          <TabPanel value={THREAD_STATS_TABS.LEADERBOARD} sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
+            {effectiveTabValue === THREAD_STATS_TABS.LEADERBOARD &&
               (statsLoading ? tabSkeleton : stats?.leaderboard ? <LeaderboardTable stat={stats.leaderboard} justLB={true} /> : renderEmptyState('Leaderboard'))}
           </TabPanel>
 
-          <TabPanel value="stats_tab_01" sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
-            {effectiveTabValue === 'stats_tab_01' &&
+          <TabPanel value={THREAD_STATS_TABS.GRAPHS} sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
+            {effectiveTabValue === THREAD_STATS_TABS.GRAPHS &&
               (statsLoading ? (
                 tabSkeleton
               ) : (
@@ -479,7 +487,7 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
                   cum={true}
                 />
               ))}
-            {effectiveTabValue === 'stats_tab_01' &&
+            {effectiveTabValue === THREAD_STATS_TABS.GRAPHS &&
               (statsLoading ? (
                 tabSkeleton
               ) : (
@@ -492,8 +500,8 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
               ))}
           </TabPanel>
 
-          <TabPanel value="stats_tab_2" sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
-            {effectiveTabValue === 'stats_tab_2' &&
+          <TabPanel value={THREAD_STATS_TABS.ACCOLADES} sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
+            {effectiveTabValue === THREAD_STATS_TABS.ACCOLADES &&
               (statsLoading ? (
                 tabSkeleton
               ) : availableAccolades.length === 0 ? (
@@ -520,8 +528,8 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
               ))}
           </TabPanel>
 
-          <TabPanel value="stats_tab_5" sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
-            {effectiveTabValue === 'stats_tab_5' &&
+          <TabPanel value={THREAD_STATS_TABS.SPEED} sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
+            {effectiveTabValue === THREAD_STATS_TABS.SPEED &&
               (statsLoading ? (
                 tabSkeleton
               ) : (
@@ -566,8 +574,8 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
               ))}
           </TabPanel>
 
-          <TabPanel value="stats_tab_6" sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
-            {effectiveTabValue === 'stats_tab_6' &&
+          <TabPanel value={THREAD_STATS_TABS.SPLITS} sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
+            {effectiveTabValue === THREAD_STATS_TABS.SPLITS &&
               (statsLoading ? (
                 tabSkeleton
               ) : (

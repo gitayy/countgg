@@ -19,6 +19,26 @@ import LeaderboardGraph from '../components/LeaderboardGraph'
 import { useStatsRange } from '../utils/hooks/useStatsRange'
 import { StatsFiltersBar } from '../components/stats/StatsFiltersBar'
 
+const STATS_TABS = {
+  LEADERBOARD: 'leaderboard',
+  GRAPHS: 'graphs',
+  ACCOLADES: 'accolades',
+  SPEED: 'speed',
+  SPLITS: 'splits',
+} as const
+
+const normalizeStatsTabParam = (tabParam: string | null) => {
+  if (!tabParam) return null
+  const legacyMap: Record<string, string> = {
+    tab_0: STATS_TABS.LEADERBOARD,
+    tab_01: STATS_TABS.GRAPHS,
+    tab_2: STATS_TABS.ACCOLADES,
+    tab_5: STATS_TABS.SPEED,
+    tab_6: STATS_TABS.SPLITS,
+  }
+  return legacyMap[tabParam] || tabParam
+}
+
 export const StatsPage = () => {
   const defaultDetailsPageSize = 50
   const selectedUserPageSize = 50
@@ -33,7 +53,7 @@ export const StatsPage = () => {
   const initialStart = searchParams.get('start')
   const initialEnd = searchParams.get('end')
   const initialThreadParam = searchParams.get('thread')
-  const initialTabParam = searchParams.get('tab')
+  const initialTabParam = normalizeStatsTabParam(searchParams.get('tab'))
 
   const [allStats, setAllStats] = useState<any>()
   const [statsLoading, setStatsLoading] = useState(true)
@@ -67,7 +87,7 @@ export const StatsPage = () => {
   const [selectedEndDate, setSelectedEndDate] = useState<any | null>(
     initialEnd ? moment.tz(initialEnd, 'YYYY-MM-DD', statsTimezone) : null,
   )
-  const [tabValue, setTabValue] = useState(initialTabParam || 'tab_0')
+  const [tabValue, setTabValue] = useState(initialTabParam || STATS_TABS.LEADERBOARD)
   const [accoladeType, setAccoladeType] = useState<'gets' | 'assists' | 'palindromes' | 'repdigits'>('gets')
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [speedViewMode, setSpeedViewMode] = useState<'real_only' | 'all' | 'fake_only'>('all')
@@ -80,9 +100,6 @@ export const StatsPage = () => {
     uuid: 'all',
   })
   const statsRequestSeq = useRef(0)
-  const urlThreadParam = searchParams.get('thread')
-  const isUrlThreadSettled = !urlThreadParam || selectedThread.uuid === urlThreadParam
-
   const statsDateRange = useMemo(() => {
     const toKey = (value: any) => {
       if (!value || !moment.isMoment(value) || !value.isValid()) return undefined
@@ -164,16 +181,16 @@ export const StatsPage = () => {
     (!!stats?.repdigits && Object.keys(stats.repdigits).length > 0)
   const isTabAvailabilityResolved = !statsLoading && hasStats
   const availableTabs = useMemo(() => {
-    const tabs = ['tab_0']
-    if (hasStats) tabs.push('tab_01')
-    if (hasStats && hasAccolades) tabs.push('tab_2')
-    if (hasStats && hasSpeedStats) tabs.push('tab_5')
-    if (hasStats && hasSplitStats) tabs.push('tab_6')
+    const tabs = [STATS_TABS.LEADERBOARD]
+    if (hasStats) tabs.push(STATS_TABS.GRAPHS)
+    if (hasStats && hasAccolades) tabs.push(STATS_TABS.ACCOLADES)
+    if (hasStats && hasSpeedStats) tabs.push(STATS_TABS.SPEED)
+    if (hasStats && hasSplitStats) tabs.push(STATS_TABS.SPLITS)
     return tabs
   }, [hasStats, hasAccolades, hasSpeedStats, hasSplitStats])
   const effectiveTabValue = useMemo(() => {
     if (!isTabAvailabilityResolved) return tabValue
-    return availableTabs.includes(tabValue) ? tabValue : 'tab_0'
+    return availableTabs.includes(tabValue) ? tabValue : STATS_TABS.LEADERBOARD
   }, [isTabAvailabilityResolved, availableTabs, tabValue])
 
   const displayedSpeed = useMemo(() => {
@@ -373,10 +390,10 @@ export const StatsPage = () => {
   }
 
   useEffect(() => {
-    if (effectiveTabValue === 'tab_5' && hasSpeedStats && speedRecords.length === 0 && !speedLoading && !speedQueryLoaded) {
+    if (effectiveTabValue === STATS_TABS.SPEED && hasSpeedStats && speedRecords.length === 0 && !speedLoading && !speedQueryLoaded) {
       loadStatsDetailPage('speed', false, speedSelectedUserUUIDs)
     }
-    if (effectiveTabValue === 'tab_6' && hasSplitStats && splitRecords.length === 0 && !splitLoading && !splitQueryLoaded) {
+    if (effectiveTabValue === STATS_TABS.SPLITS && hasSplitStats && splitRecords.length === 0 && !splitLoading && !splitQueryLoaded) {
       loadStatsDetailPage('splitSpeed', false, splitSelectedUserUUIDs)
     }
   }, [
@@ -461,7 +478,7 @@ export const StatsPage = () => {
   }, [availableAccolades, accoladeType])
 
   useEffect(() => {
-    if (allThreadsLoading || !hasResolvedInitialThreadParam || !isUrlThreadSettled) {
+    if (allThreadsLoading || !hasResolvedInitialThreadParam) {
       return
     }
 
@@ -484,7 +501,6 @@ export const StatsPage = () => {
     setSearchParams,
     allThreadsLoading,
     hasResolvedInitialThreadParam,
-    isUrlThreadSettled,
   ])
 
   const loadingStatuses = [
@@ -547,23 +563,23 @@ export const StatsPage = () => {
       <TabContext value={effectiveTabValue}>
         <Box sx={{ position: 'sticky', top: 0, zIndex: 8, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
           <TabList onChange={(_event, newValue) => setTabValue(newValue)} variant={'scrollable'} allowScrollButtonsMobile>
-            <Tab label="Leaderboard" value="tab_0" />
-            {hasStats && <Tab label="Graphs" value="tab_01" />}
-            {hasStats && availableAccolades.length > 0 && <Tab label="Accolades" value="tab_2" />}
-            {hasStats && hasSpeedStats && <Tab label="Speed" value="tab_5" />}
-            {hasStats && hasSplitStats && <Tab label="Splits" value="tab_6" />}
+            <Tab label="Leaderboard" value={STATS_TABS.LEADERBOARD} />
+            {hasStats && <Tab label="Graphs" value={STATS_TABS.GRAPHS} />}
+            {hasStats && availableAccolades.length > 0 && <Tab label="Accolades" value={STATS_TABS.ACCOLADES} />}
+            {hasStats && hasSpeedStats && <Tab label="Speed" value={STATS_TABS.SPEED} />}
+            {hasStats && hasSplitStats && <Tab label="Splits" value={STATS_TABS.SPLITS} />}
           </TabList>
         </Box>
 
         <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', color: 'text.primary' }}>
-          <TabPanel value="tab_0" sx={{ p: 0 }}>
+          <TabPanel value={STATS_TABS.LEADERBOARD} sx={{ p: 0 }}>
             <Typography variant="h6">Leaderboard</Typography>
-            {effectiveTabValue === 'tab_0' && (statsLoading ? tabSkeleton : stats?.leaderboard ? <LeaderboardTable stat={stats.leaderboard} justLB={true} /> : renderEmptyState('Leaderboard'))}
+            {effectiveTabValue === STATS_TABS.LEADERBOARD && (statsLoading ? tabSkeleton : stats?.leaderboard ? <LeaderboardTable stat={stats.leaderboard} justLB={true} /> : renderEmptyState('Leaderboard'))}
           </TabPanel>
 
-          <TabPanel value="tab_01" sx={{ p: 0 }}>
+          <TabPanel value={STATS_TABS.GRAPHS} sx={{ p: 0 }}>
             <Typography variant="h6">Graphs</Typography>
-            {effectiveTabValue === 'tab_01' &&
+            {effectiveTabValue === STATS_TABS.GRAPHS &&
               (statsLoading ? (
                 tabSkeleton
               ) : (
@@ -574,7 +590,7 @@ export const StatsPage = () => {
                   cum={true}
                 />
               ))}
-            {effectiveTabValue === 'tab_01' &&
+            {effectiveTabValue === STATS_TABS.GRAPHS &&
               (statsLoading ? (
                 tabSkeleton
               ) : (
@@ -587,9 +603,9 @@ export const StatsPage = () => {
               ))}
           </TabPanel>
 
-          <TabPanel value="tab_2" sx={{ p: 0 }}>
+          <TabPanel value={STATS_TABS.ACCOLADES} sx={{ p: 0 }}>
             <Typography variant="h6">Accolades</Typography>
-            {effectiveTabValue === 'tab_2' &&
+            {effectiveTabValue === STATS_TABS.ACCOLADES &&
               (statsLoading ? (
                 tabSkeleton
               ) : availableAccolades.length === 0 ? (
@@ -616,9 +632,9 @@ export const StatsPage = () => {
               ))}
           </TabPanel>
 
-          <TabPanel value="tab_5" sx={{ p: 0 }}>
+          <TabPanel value={STATS_TABS.SPEED} sx={{ p: 0 }}>
             <Typography variant="h6">Speed</Typography>
-            {effectiveTabValue === 'tab_5' &&
+            {effectiveTabValue === STATS_TABS.SPEED &&
               (statsLoading ? (
                 tabSkeleton
               ) : (
@@ -663,9 +679,9 @@ export const StatsPage = () => {
               ))}
           </TabPanel>
 
-          <TabPanel value="tab_6" sx={{ p: 0 }}>
+          <TabPanel value={STATS_TABS.SPLITS} sx={{ p: 0 }}>
             <Typography variant="h6">Splits</Typography>
-            {effectiveTabValue === 'tab_6' && (
+            {effectiveTabValue === STATS_TABS.SPLITS && (
               statsLoading ? (
                 tabSkeleton
               ) : (
