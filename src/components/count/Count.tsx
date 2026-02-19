@@ -83,6 +83,7 @@ const Count = memo((props: any) => {
       'wave',
       'mayan',
       '2048',
+      'permutations',
     ].includes(props.thread.validationType) &&
     props.post.countContent &&
     props.post.rawCount
