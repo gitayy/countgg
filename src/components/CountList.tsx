@@ -411,7 +411,7 @@ const CountList = memo((props: any) => {
 
     setTimeout(function () {
       setScrollThrottle(false)
-    }, 400)
+    }, 150)
     if (old) {
       if (props.chatsOnly) {
         if (user && preferences && preferences.pref_load_from_bottom && !gotOlderUUIDs.includes(props.recentCounts.current[0].uuid)) {
