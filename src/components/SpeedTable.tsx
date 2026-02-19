@@ -272,6 +272,14 @@ export const SpeedTable = memo(
 
   if (!thread) return <></>
   const hasNoRecordsForSelection = sortedSpeed.length === 0
+  const getReplayHref = (record: any) => {
+    const startCountNumber = Number(record?.startCountNumber)
+    const endCountNumber = Number(record?.endCountNumber)
+    if (Number.isFinite(startCountNumber) && Number.isFinite(endCountNumber)) {
+      return `/thread/${thread.name}?startCountNumber=${startCountNumber}&endCountNumber=${endCountNumber}`
+    }
+    return `/thread/${thread.name}?startCountRaw=${record?.startCount ?? ''}&endCountRaw=${record?.endCount ?? ''}`
+  }
 
   const leaderboardRows = currentRows.map((obj, index) => (
     <TableRow key={obj.uuid ?? `${obj.start}_${obj.end}_${index}`}>
@@ -280,10 +288,10 @@ export const SpeedTable = memo(
       <TableCell>
         <Link
           underline="hover"
-          href={`/thread/${thread.name}?startCountRaw=${obj.startCount}&endCountRaw=${obj.endCount}`}
+          href={getReplayHref(obj)}
           onClick={(e) => {
             e.preventDefault()
-            navigate(`/thread/${thread.name}?startCountRaw=${obj.startCount}&endCountRaw=${obj.endCount}`)
+            navigate(getReplayHref(obj))
           }}
         >
           Replay
@@ -422,10 +430,10 @@ export const SpeedTable = memo(
       <TableCell>
         <Link
           underline="hover"
-          href={`/thread/${thread.name}?startCountRaw=${row.obj.startCount}&endCountRaw=${row.obj.endCount}`}
+          href={getReplayHref(row.obj)}
           onClick={(e) => {
             e.preventDefault()
-            navigate(`/thread/${thread.name}?startCountRaw=${row.obj.startCount}&endCountRaw=${row.obj.endCount}`)
+            navigate(getReplayHref(row.obj))
           }}
         >
           Replay

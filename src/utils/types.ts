@@ -152,6 +152,8 @@ export type SpeedRecord = {
   time: number
   startCount: string
   endCount: string
+  startCountNumber?: number
+  endCountNumber?: number
   qualifiedCounters: string[]
   isFake?: boolean
 }
