@@ -86,6 +86,7 @@ import { Preferences } from '../components/Preferences'
 import MiscInfo from '../components/thread/MiscInfo'
 import CommunityNotes from '../components/thread/CommunityNotes'
 import { ThreadStatsPanel } from '../components/thread/ThreadStatsPanel'
+import RollVisualizer, { RollSample } from '../components/thread/RollVisualizer'
 
 let imsorryfortheglobalpull = 'DISABLED'
 export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
@@ -177,6 +178,29 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       (post as any).roll !== undefined &&
       (post as any).roll !== null,
     [thread_name, strickenSoundRollSuppressedThreads],
+  )
+  const rollVisualizerThreads = useMemo(() => new Set(['1inx', 'russian_roulette', 'incremental_odds']), [])
+  const [rollSamples, setRollSamples] = useState<RollSample[]>([])
+  const seenRollSampleIdsRef = useRef<Set<string>>(new Set())
+  const registerRollSampleFromPost = useCallback(
+    (post?: PostType) => {
+      if (!post || !rollVisualizerThreads.has(thread_name)) return
+      const roll = Number(post.roll)
+      const chance = Number(post.chance)
+      if (!Number.isFinite(roll) || !Number.isFinite(chance) || chance <= 0) return
+      const id = post.uuid
+      if (seenRollSampleIdsRef.current.has(id)) return
+      seenRollSampleIdsRef.current.add(id)
+      const authorColor = cachedCounters[post.authorUUID]?.color
+      setRollSamples((prev) => {
+        const next = [...prev, { id, roll, chance, authorColor }]
+        if (next.length > 1000) {
+          return next.slice(next.length - 1000)
+        }
+        return next
+      })
+    },
+    [thread_name, rollVisualizerThreads],
   )
 
   const [mobilePickerOpen, setMobilePickerOpen] = useState(false)
@@ -307,6 +331,18 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     clearReplay()
   }, [threadName])
 
+  useEffect(() => {
+    seenRollSampleIdsRef.current = new Set()
+    setRollSamples([])
+  }, [thread_name])
+
+  useEffect(() => {
+    if (!rollVisualizerThreads.has(thread_name)) return
+    for (const post of recentCounts) {
+      registerRollSampleFromPost(post)
+    }
+  }, [recentCounts, thread_name, registerRollSampleFromPost, rollVisualizerThreads])
+
   async function timer(start, end) {
     // Update the count down every 1 second
     const diff = end - start
@@ -378,6 +414,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       if (currentCount.hasThreeCharComment && tabValueRef.current === 'tab_2') {
         setNewChatsLoadedState(currentCount.uuid)
       }
+      registerRollSampleFromPost(currentCount)
       if (currentCount.isValidCount) {
         setLastCount({ lastCount: currentCount, lastCounter: cachedCounters[currentCount.authorUUID] })
       }
@@ -398,7 +435,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         setFaviconCount()
       }
     }
-  }, [replayActive, thread_name, dingSound, currentCount, preferences])
+  }, [replayActive, thread_name, dingSound, currentCount, preferences, registerRollSampleFromPost])
 
   useEffect(() => {
     if (autoplay === 0 && !loading) {
@@ -809,6 +846,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         }
         addCounterToCache(data.counter)
         cache_counts(data.post)
+        registerRollSampleFromPost(data.post)
         if (loadedNewestRef.current) {
           if (user && preferences && preferences.pref_load_from_bottom) {
             recentCountsRef.current = (() => {
@@ -895,6 +933,11 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         for (const counter of data.counters) {
           addCounterToCache(counter)
         }
+        if (Array.isArray(data.recentCounts)) {
+          for (const post of data.recentCounts) {
+            registerRollSampleFromPost(post)
+          }
+        }
         recentCountsRef.current =
           user && preferences && preferences.pref_load_from_bottom
             ? [
@@ -922,6 +965,11 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       socket.on(`loadNewCounts`, function (data) {
         for (const counter of data.counters) {
           addCounterToCache(counter)
+        }
+        if (Array.isArray(data.recentCounts)) {
+          for (const post of data.recentCounts) {
+            registerRollSampleFromPost(post)
+          }
         }
         recentCountsRef.current =
           user && preferences && preferences.pref_load_from_bottom
@@ -1058,7 +1106,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         setSocketStatus('DISCONNECTED')
       }
     }
-  }, [loading, thread_name, socketStatus, dingSound])
+  }, [loading, thread_name, socketStatus, dingSound, registerRollSampleFromPost])
 
   const deleteComment = useCallback(
     (data) => {
@@ -2144,6 +2192,7 @@ useEffect(() => {
                 remarkPlugins={[remarkGfm]}
               />
             </Typography>
+            {rollVisualizerThreads.has(thread_name) && <RollVisualizer rolls={rollSamples} />}
             {/* <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
               Community Notes
             </Typography>
@@ -2460,6 +2509,7 @@ useEffect(() => {
     timerStr,
     activeTimer,
     clearCounts,
+    rollSamples,
     prefEnabled,
     prefOnline,
     prefDiscordPings,
@@ -2483,6 +2533,7 @@ useEffect(() => {
     prefHideThreadPicker,
     prefStrickenCountOpacity,
     preferences,
+    rollVisualizerThreads,
   ])
 
   const loadingStatuses = [

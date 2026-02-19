@@ -142,6 +142,8 @@ export type PostType = {
   latency?: number
   processingLatency?: number
   post_hash?: string
+  roll?: number
+  chance?: number
 }
 
 export type SpeedRecord = {
