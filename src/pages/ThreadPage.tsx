@@ -193,11 +193,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       seenRollSampleIdsRef.current.add(id)
       const authorColor = cachedCounters[post.authorUUID]?.color
       setRollSamples((prev) => {
-        const next = [...prev, { id, roll, chance, authorColor }]
-        if (next.length > 1000) {
-          return next.slice(next.length - 1000)
-        }
-        return next
+        return [...prev, { id, roll, chance, authorColor }]
       })
     },
     [thread_name, rollVisualizerThreads],
