@@ -86,7 +86,7 @@ import { Preferences } from '../components/Preferences'
 import MiscInfo from '../components/thread/MiscInfo'
 import CommunityNotes from '../components/thread/CommunityNotes'
 import { ThreadStatsPanel } from '../components/thread/ThreadStatsPanel'
-import RollVisualizer, { RollLuckStats, RollSample } from '../components/thread/RollVisualizer'
+import RollVisualizerHost, { RollVisualizerHostHandle } from '../components/thread/RollVisualizerHost'
 
 let imsorryfortheglobalpull = 'DISABLED'
 export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
@@ -180,81 +180,10 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     [thread_name, strickenSoundRollSuppressedThreads],
   )
   const rollVisualizerThreads = useMemo(() => new Set(['1inx', 'russian_roulette', 'incremental_odds']), [])
-  const rollVisualizerMaxSamples = 100
-  const rollVisualizerExtremaHistoryCap = 100
-  const [rollSamples, setRollSamples] = useState<RollSample[]>([])
-  const [rollHighSamples, setRollHighSamples] = useState<RollSample[]>([])
-  const [rollLowSamples, setRollLowSamples] = useState<RollSample[]>([])
-  const [highestRollSample, setHighestRollSample] = useState<RollSample | undefined>(undefined)
-  const [lowestRollSample, setLowestRollSample] = useState<RollSample | undefined>(undefined)
-  const [rollLuckStats, setRollLuckStats] = useState<RollLuckStats>({
-    currentPercent: 100,
-    currentProb: 1,
-    currentCount: 0,
-    lastCompletedProb: null,
-    lastCompletedCount: 0,
-  })
-  const seenRollSampleIdsRef = useRef<Set<string>>(new Set())
-  const registerRollSampleFromPost = useCallback(
-    (post?: PostType) => {
-      if (!post || !rollVisualizerThreads.has(thread_name)) return
-      const roll = Number(post.roll)
-      const chance = Number(post.chance)
-      if (!Number.isFinite(roll) || !Number.isFinite(chance) || chance <= 0) return
-      const id = post.uuid
-      if (seenRollSampleIdsRef.current.has(id)) return
-      seenRollSampleIdsRef.current.add(id)
-      const authorColor = cachedCounters[post.authorUUID]?.color
-      const sample: RollSample = { id, roll, chance, authorColor }
-      setRollSamples((prev) => {
-        const next = [...prev, sample]
-        if (next.length > rollVisualizerMaxSamples) {
-          return next.slice(next.length - rollVisualizerMaxSamples)
-        }
-        return next
-      })
-      if (roll > 0.99) {
-        setRollHighSamples((prev) => {
-          const next = [...prev, sample]
-          if (next.length > rollVisualizerExtremaHistoryCap) {
-            return next.slice(next.length - rollVisualizerExtremaHistoryCap)
-          }
-          return next
-        })
-      }
-      if (roll < 0.01) {
-        setRollLowSamples((prev) => {
-          const next = [...prev, sample]
-          if (next.length > rollVisualizerExtremaHistoryCap) {
-            return next.slice(next.length - rollVisualizerExtremaHistoryCap)
-          }
-          return next
-        })
-      }
-      setHighestRollSample((prev) => (!prev || sample.roll > prev.roll ? sample : prev))
-      setLowestRollSample((prev) => (!prev || sample.roll < prev.roll ? sample : prev))
-      if (roll > chance) {
-        setRollLuckStats((prev) => {
-          const nextProb = prev.currentProb * Math.max(0, 1 - chance)
-          return {
-            ...prev,
-            currentProb: nextProb,
-            currentCount: prev.currentCount + 1,
-            currentPercent: Math.round(nextProb * 1000) / 10,
-          }
-        })
-      } else {
-        setRollLuckStats((prev) => ({
-          currentPercent: 100,
-          currentProb: 1,
-          currentCount: 0,
-          lastCompletedProb: prev.currentCount > 0 ? prev.currentProb : prev.lastCompletedProb,
-          lastCompletedCount: prev.currentCount > 0 ? prev.currentCount : prev.lastCompletedCount,
-        }))
-      }
-    },
-    [thread_name, rollVisualizerThreads, rollVisualizerMaxSamples, rollVisualizerExtremaHistoryCap],
-  )
+  const rollVisualizerRef = useRef<RollVisualizerHostHandle | null>(null)
+  const registerRollSampleFromPost = useCallback((post?: PostType) => {
+    rollVisualizerRef.current?.registerSampleFromPost(post)
+  }, [])
 
   const [mobilePickerOpen, setMobilePickerOpen] = useState(false)
   const [desktopPickerOpen, setDesktopPickerOpen] = useState(true)
@@ -383,22 +312,6 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   useEffect(() => {
     clearReplay()
   }, [threadName])
-
-  useEffect(() => {
-    seenRollSampleIdsRef.current = new Set()
-    setRollSamples([])
-    setRollHighSamples([])
-    setRollLowSamples([])
-    setHighestRollSample(undefined)
-    setLowestRollSample(undefined)
-    setRollLuckStats({
-      currentPercent: 100,
-      currentProb: 1,
-      currentCount: 0,
-      lastCompletedProb: null,
-      lastCompletedCount: 0,
-    })
-  }, [thread_name])
 
   useEffect(() => {
     if (!rollVisualizerThreads.has(thread_name)) return
@@ -2257,14 +2170,7 @@ useEffect(() => {
               />
             </Typography>
             {rollVisualizerThreads.has(thread_name) && (
-              <RollVisualizer
-                rolls={rollSamples}
-                recentHighRollHistory={rollHighSamples}
-                recentLowRollHistory={rollLowSamples}
-                highestRoll={highestRollSample}
-                lowestRoll={lowestRollSample}
-                luckStats={rollLuckStats}
-              />
+              <RollVisualizerHost ref={rollVisualizerRef} threadName={thread_name} />
             )}
             {/* <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
               Community Notes
@@ -2582,7 +2488,6 @@ useEffect(() => {
     timerStr,
     activeTimer,
     clearCounts,
-    rollSamples,
     prefEnabled,
     prefOnline,
     prefDiscordPings,

@@ -88,6 +88,7 @@ type Props = {
   highestRoll?: RollSample
   lowestRoll?: RollSample
   luckStats?: RollLuckStats
+  animateLatestDot?: boolean
 }
 
 const getStableBand = (id: string) => {
@@ -105,6 +106,7 @@ export default function RollVisualizer({
   highestRoll: providedHighestRoll,
   lowestRoll: providedLowestRoll,
   luckStats: providedLuckStats,
+  animateLatestDot = true,
 }: Props) {
   const maxRenderedRolls = 100
   const theme = useTheme()
@@ -452,7 +454,8 @@ export default function RollVisualizer({
           const plotX = 0.04 + x * 0.92
           const age = Math.max(0, recentScopeRolls.length - 1 - idx)
           const dotAlpha = Math.max(0.08, 1 - age / 28)
-          const borderFadeProgress = Math.max(0, Math.min(1, (age - 89) / 10))
+          const fadeStartAge = Math.max(0, maxRenderedRolls - 11)
+          const borderFadeProgress = Math.max(0, Math.min(1, (age - fadeStartAge) / 10))
           const borderAlpha = Math.max(0, 1 - borderFadeProgress)
           const fillColor = alpha(sample.authorColor || theme.palette.info.main, dotAlpha)
           const yBand = getStableBand(sample.id)
@@ -472,7 +475,7 @@ export default function RollVisualizer({
                 border: '1px solid',
                 borderColor: alpha(theme.palette.grey[500], borderAlpha),
                 transform: 'translate(-50%, -50%)',
-                animation: isLatest ? `${popIn} 420ms ease-out` : 'none',
+                animation: isLatest && animateLatestDot ? `${popIn} 420ms ease-out` : 'none',
               }}
             />
           )
