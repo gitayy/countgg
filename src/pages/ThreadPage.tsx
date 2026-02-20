@@ -95,6 +95,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [searchParams, setSearchParams] = useSearchParams()
   const { context } = queryString.parse(window.location.search)
   const thread_name: string = params.thread_name || 'main'
+  const isSimMode = location.hash.toLowerCase() === '#sim'
   const { threadName, setThreadName, setFullThread } = useThread()
   const thread_ref = useRef(thread_name)
   useEffect(() => {
@@ -2170,7 +2171,7 @@ useEffect(() => {
               />
             </Typography>
             {rollVisualizerThreads.has(thread_name) && (
-              <RollVisualizerHost ref={rollVisualizerRef} threadName={thread_name} />
+              <RollVisualizerHost ref={rollVisualizerRef} threadName={thread_name} showSimControls={isSimMode} />
             )}
             {/* <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
               Community Notes
@@ -2512,6 +2513,7 @@ useEffect(() => {
     prefStrickenCountOpacity,
     preferences,
     rollVisualizerThreads,
+    isSimMode,
   ])
 
   const loadingStatuses = [

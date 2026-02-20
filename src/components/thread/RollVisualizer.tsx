@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Box, Typography, alpha, keyframes, useTheme } from '@mui/material'
+import { Box, Typography, alpha, useTheme } from '@mui/material'
 
 export type RollSample = {
   id: string
@@ -14,21 +14,6 @@ export type RollLuckStats = {
   lastCompletedProb: number | null
   lastCompletedCount: number
 }
-
-const popIn = keyframes`
-  0% {
-    transform: translate(-50%, -50%) scale(0.35);
-    opacity: 0.2;
-  }
-  70% {
-    transform: translate(-50%, -50%) scale(1.22);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
-`
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
 
@@ -89,6 +74,7 @@ type Props = {
   lowestRoll?: RollSample
   luckStats?: RollLuckStats
   animateLatestDot?: boolean
+  maxRenderedRolls?: number
 }
 
 const getStableBand = (id: string) => {
@@ -107,12 +93,14 @@ export default function RollVisualizer({
   lowestRoll: providedLowestRoll,
   luckStats: providedLuckStats,
   animateLatestDot = true,
+  maxRenderedRolls = 100,
 }: Props) {
-  const maxRenderedRolls = 100
   const theme = useTheme()
   const recentScrollRef = useRef<HTMLDivElement | null>(null)
   const recentHighScrollRef = useRef<HTMLDivElement | null>(null)
   const recentLowScrollRef = useRef<HTMLDivElement | null>(null)
+  const plotRef = useRef<HTMLDivElement | null>(null)
+  const plotCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const [showRecentFade, setShowRecentFade] = useState(false)
   const [showRecentHighFade, setShowRecentHighFade] = useState(false)
   const [showRecentLowFade, setShowRecentLowFade] = useState(false)
@@ -258,6 +246,81 @@ export default function RollVisualizer({
   const latestId = recentScopeRolls.length > 0 ? recentScopeRolls[recentScopeRolls.length - 1].id : ''
 
   useEffect(() => {
+    const canvas = plotCanvasRef.current
+    const container = plotRef.current
+    if (!canvas || !container) return
+
+    const dpr = window.devicePixelRatio || 1
+    const width = Math.max(1, container.clientWidth)
+    const height = Math.max(1, container.clientHeight)
+    const pxWidth = Math.floor(width * dpr)
+    const pxHeight = Math.floor(height * dpr)
+    if (canvas.width !== pxWidth || canvas.height !== pxHeight) {
+      canvas.width = pxWidth
+      canvas.height = pxHeight
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
+    }
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.clearRect(0, 0, width, height)
+
+    const defaultColor = theme.palette.info.main
+    const borderBaseColor = theme.palette.grey[500]
+    for (let idx = 0; idx < recentScopeRolls.length; idx += 1) {
+      const sample = recentScopeRolls[idx]
+      const x = positionByLogProbability(sample.roll, minDecade)
+      const plotX = (0.04 + x * 0.92) * width
+      const yBand = getStableBand(sample.id)
+      const plotY = height * 0.58 + yBand * 8
+      const age = Math.max(0, recentScopeRolls.length - 1 - idx)
+      const dotAlpha = Math.max(0.08, 1 - age / 28)
+      const fadeStartAge = Math.max(0, maxRenderedRolls - 11)
+      const borderFadeProgress = Math.max(0, Math.min(1, (age - fadeStartAge) / 10))
+      const borderAlpha = Math.max(0, 1 - borderFadeProgress)
+      const isLatest = sample.id === latestId
+      const radius = isLatest && animateLatestDot ? 4.5 : 4
+
+      ctx.globalAlpha = dotAlpha
+      ctx.fillStyle = sample.authorColor || defaultColor
+      ctx.beginPath()
+      ctx.arc(plotX, plotY, radius, 0, Math.PI * 2)
+      ctx.fill()
+
+      if (borderAlpha > 0) {
+        ctx.globalAlpha = borderAlpha
+        ctx.strokeStyle = borderBaseColor
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.arc(plotX, plotY, radius, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+    }
+    ctx.globalAlpha = 1
+  }, [recentScopeRolls, minDecade, latestId, animateLatestDot, theme, maxRenderedRolls])
+
+  useEffect(() => {
+    const handleResize = () => {
+      const canvas = plotCanvasRef.current
+      const container = plotRef.current
+      if (!canvas || !container) return
+      const dpr = window.devicePixelRatio || 1
+      const width = Math.max(1, container.clientWidth)
+      const height = Math.max(1, container.clientHeight)
+      canvas.width = Math.floor(width * dpr)
+      canvas.height = Math.floor(height * dpr)
+      canvas.style.width = `${width}px`
+      canvas.style.height = `${height}px`
+    }
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  useEffect(() => {
     const el = recentScrollRef.current
     if (!el) return
     const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1
@@ -362,6 +425,7 @@ export default function RollVisualizer({
         </Box>
       </Box>
       <Box
+        ref={plotRef}
         sx={{
           position: 'relative',
           width: '100%',
@@ -375,7 +439,18 @@ export default function RollVisualizer({
           pb: 1,
           overflow: 'hidden',
         }}
-      >
+        >
+          <canvas
+            ref={plotCanvasRef}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              zIndex: 1,
+            }}
+          />
         <Box
           sx={{
             position: 'absolute',
@@ -400,6 +475,7 @@ export default function RollVisualizer({
                   left: `${plotX * 100}%`,
                   borderLeft: `1px dashed ${theme.palette.grey[500]}`,
                   opacity: 0.9,
+                  zIndex: 2,
                 }}
               />
               <Typography
@@ -413,6 +489,7 @@ export default function RollVisualizer({
                   bgcolor: 'background.paper',
                   px: 0.25,
                   color: 'text.secondary',
+                  zIndex: 2,
                 }}
               >
                 {formatThreshold(threshold)}
@@ -444,42 +521,12 @@ export default function RollVisualizer({
               color: theme.palette.warning.dark,
               borderRadius: 0.5,
               fontWeight: 700,
+              zIndex: 2,
             }}
           >
             {formatOddsFromProbability(latestChance)}
           </Typography>
         </Box>
-        {recentScopeRolls.map((sample, idx) => {
-          const x = positionByLogProbability(sample.roll, minDecade)
-          const plotX = 0.04 + x * 0.92
-          const age = Math.max(0, recentScopeRolls.length - 1 - idx)
-          const dotAlpha = Math.max(0.08, 1 - age / 28)
-          const fadeStartAge = Math.max(0, maxRenderedRolls - 11)
-          const borderFadeProgress = Math.max(0, Math.min(1, (age - fadeStartAge) / 10))
-          const borderAlpha = Math.max(0, 1 - borderFadeProgress)
-          const fillColor = alpha(sample.authorColor || theme.palette.info.main, dotAlpha)
-          const yBand = getStableBand(sample.id)
-          const isLatest = sample.id === latestId
-          return (
-            <Box
-              key={sample.id}
-              title={`${sample.roll} ${sample.roll > sample.chance ? '>' : '<='} ${sample.chance}`}
-              sx={{
-                position: 'absolute',
-                left: `${plotX * 100}%`,
-                top: `calc(58% + ${yBand * 8}px)`,
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                bgcolor: fillColor,
-                border: '1px solid',
-                borderColor: alpha(theme.palette.grey[500], borderAlpha),
-                transform: 'translate(-50%, -50%)',
-                animation: isLatest && animateLatestDot ? `${popIn} 420ms ease-out` : 'none',
-              }}
-            />
-          )
-        })}
       </Box>
       <Box
         sx={{
