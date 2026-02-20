@@ -7,6 +7,13 @@ export type RollSample = {
   chance: number
   authorColor?: string
 }
+export type RollLuckStats = {
+  currentPercent: number
+  currentProb: number
+  currentCount: number
+  lastCompletedProb: number | null
+  lastCompletedCount: number
+}
 
 const popIn = keyframes`
   0% {
@@ -76,9 +83,30 @@ const positionByLogProbability = (probability: number, minDecade: number) => {
 
 type Props = {
   rolls: RollSample[]
+  recentHighRollHistory?: RollSample[]
+  recentLowRollHistory?: RollSample[]
+  highestRoll?: RollSample
+  lowestRoll?: RollSample
+  luckStats?: RollLuckStats
 }
 
-export default function RollVisualizer({ rolls }: Props) {
+const getStableBand = (id: string) => {
+  let hash = 0
+  for (let i = 0; i < id.length; i += 1) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0
+  }
+  return (hash % 9) - 4
+}
+
+export default function RollVisualizer({
+  rolls,
+  recentHighRollHistory,
+  recentLowRollHistory,
+  highestRoll: providedHighestRoll,
+  lowestRoll: providedLowestRoll,
+  luckStats: providedLuckStats,
+}: Props) {
+  const maxRenderedRolls = 100
   const theme = useTheme()
   const recentScrollRef = useRef<HTMLDivElement | null>(null)
   const recentHighScrollRef = useRef<HTMLDivElement | null>(null)
@@ -136,16 +164,17 @@ export default function RollVisualizer({ rolls }: Props) {
       </Typography>
     </Box>
   )
+  const recentScopeRolls = useMemo(() => rolls.slice(-maxRenderedRolls), [rolls, maxRenderedRolls])
   const latestChance = useMemo(() => {
-    for (let i = rolls.length - 1; i >= 0; i -= 1) {
-      const chance = Number(rolls[i]?.chance)
+    for (let i = recentScopeRolls.length - 1; i >= 0; i -= 1) {
+      const chance = Number(recentScopeRolls[i]?.chance)
       if (Number.isFinite(chance) && chance > 0) return chance
     }
     return 1
-  }, [rolls])
+  }, [recentScopeRolls])
   const rollProbabilities = useMemo(
-    () => rolls.map((sample) => safeProbability(sample.roll)).filter((value) => value > 0),
-    [rolls],
+    () => recentScopeRolls.map((sample) => safeProbability(sample.roll)).filter((value) => value > 0),
+    [recentScopeRolls],
   )
   const minDecade = useMemo(() => {
     const chanceDecade = latestChance > 0 ? Math.floor(Math.log10(latestChance)) : -4
@@ -162,21 +191,27 @@ export default function RollVisualizer({ rolls }: Props) {
     }
     return vals
   }, [minDecade])
+  const targetChancePlotX = useMemo(() => {
+    const x = positionByLogProbability(latestChance, minDecade)
+    return 0.04 + x * 0.92
+  }, [latestChance, minDecade])
   const highestRoll = useMemo(() => {
-    if (!rolls.length) return undefined
-    return rolls.reduce((best, sample) => (sample.roll > best.roll ? sample : best), rolls[0])
-  }, [rolls])
+    if (providedHighestRoll) return providedHighestRoll
+    if (!recentScopeRolls.length) return undefined
+    return recentScopeRolls.reduce((best, sample) => (sample.roll > best.roll ? sample : best), recentScopeRolls[0])
+  }, [providedHighestRoll, recentScopeRolls])
   const lowestRoll = useMemo(() => {
-    if (!rolls.length) return undefined
-    return rolls.reduce((best, sample) => (sample.roll < best.roll ? sample : best), rolls[0])
-  }, [rolls])
-  const luckStats = useMemo(() => {
+    if (providedLowestRoll) return providedLowestRoll
+    if (!recentScopeRolls.length) return undefined
+    return recentScopeRolls.reduce((best, sample) => (sample.roll < best.roll ? sample : best), recentScopeRolls[0])
+  }, [providedLowestRoll, recentScopeRolls])
+  const derivedLuckStats = useMemo(() => {
     let currentStreakProb = 1
     let currentStreakCount = 0
     let lastCompletedStreakProb: number | null = null
     let lastCompletedStreakCount = 0
 
-    for (const sample of rolls) {
+    for (const sample of recentScopeRolls) {
       const chance = Number(sample.chance)
       const roll = Number(sample.roll)
       if (!Number.isFinite(chance) || !Number.isFinite(roll) || chance < 0 || chance > 1) {
@@ -203,17 +238,22 @@ export default function RollVisualizer({ rolls }: Props) {
       lastCompletedProb: lastCompletedStreakProb,
       lastCompletedCount: lastCompletedStreakCount,
     }
-  }, [rolls])
-  const recentRolls = useMemo(() => [...rolls].reverse(), [rolls])
-  const recentHighRolls = useMemo(
-    () => [...rolls].reverse().filter((sample) => sample.roll > 0.99).slice(0, 5),
-    [rolls],
-  )
-  const recentLowRolls = useMemo(
-    () => [...rolls].reverse().filter((sample) => sample.roll < 0.01).slice(0, 5),
-    [rolls],
-  )
-  const latestId = rolls.length > 0 ? rolls[rolls.length - 1].id : ''
+  }, [recentScopeRolls])
+  const luckStats = providedLuckStats || derivedLuckStats
+  const recentRolls = useMemo(() => [...recentScopeRolls].reverse(), [recentScopeRolls])
+  const recentHighRolls = useMemo(() => {
+    if (recentHighRollHistory) {
+      return [...recentHighRollHistory].reverse().slice(0, 5)
+    }
+    return [...recentScopeRolls].reverse().filter((sample) => sample.roll > 0.99).slice(0, 5)
+  }, [recentHighRollHistory, recentScopeRolls])
+  const recentLowRolls = useMemo(() => {
+    if (recentLowRollHistory) {
+      return [...recentLowRollHistory].reverse().slice(0, 5)
+    }
+    return [...recentScopeRolls].reverse().filter((sample) => sample.roll < 0.01).slice(0, 5)
+  }, [recentLowRollHistory, recentScopeRolls])
+  const latestId = recentScopeRolls.length > 0 ? recentScopeRolls[recentScopeRolls.length - 1].id : ''
 
   useEffect(() => {
     const el = recentScrollRef.current
@@ -234,7 +274,7 @@ export default function RollVisualizer({ rolls }: Props) {
     setShowRecentLowFade(!atBottom)
   }, [recentLowRolls.length])
 
-  if (!rolls.length) {
+  if (!recentScopeRolls.length) {
     return (
       <Box sx={{ mt: 2 }}>
         <Typography variant="h6" sx={{ mb: 1 }}>
@@ -378,13 +418,44 @@ export default function RollVisualizer({ rolls }: Props) {
             </Box>
           )
         })}
-        {rolls.map((sample, idx) => {
+        <Box>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: `${targetChancePlotX * 100}%`,
+              borderLeft: `2px dotted ${theme.palette.warning.main}`,
+              opacity: 0.95,
+            }}
+          />
+          <Typography
+            variant="caption"
+            sx={{
+              position: 'absolute',
+              bottom: 2,
+              left: `${targetChancePlotX * 100}%`,
+              transform: 'translateX(-50%)',
+              fontSize: 9,
+              bgcolor: alpha(theme.palette.warning.main, 0.14),
+              px: 0.35,
+              color: theme.palette.warning.dark,
+              borderRadius: 0.5,
+              fontWeight: 700,
+            }}
+          >
+            {formatOddsFromProbability(latestChance)}
+          </Typography>
+        </Box>
+        {recentScopeRolls.map((sample, idx) => {
           const x = positionByLogProbability(sample.roll, minDecade)
           const plotX = 0.04 + x * 0.92
-          const age = Math.max(0, rolls.length - 1 - idx)
+          const age = Math.max(0, recentScopeRolls.length - 1 - idx)
           const dotAlpha = Math.max(0.08, 1 - age / 28)
+          const borderFadeProgress = Math.max(0, Math.min(1, (age - 89) / 10))
+          const borderAlpha = Math.max(0, 1 - borderFadeProgress)
           const fillColor = alpha(sample.authorColor || theme.palette.info.main, dotAlpha)
-          const yBand = (idx % 9) - 4
+          const yBand = getStableBand(sample.id)
           const isLatest = sample.id === latestId
           return (
             <Box
@@ -399,7 +470,7 @@ export default function RollVisualizer({ rolls }: Props) {
                 borderRadius: '50%',
                 bgcolor: fillColor,
                 border: '1px solid',
-                borderColor: theme.palette.grey[500],
+                borderColor: alpha(theme.palette.grey[500], borderAlpha),
                 transform: 'translate(-50%, -50%)',
                 animation: isLatest ? `${popIn} 420ms ease-out` : 'none',
               }}
