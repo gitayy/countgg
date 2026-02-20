@@ -141,7 +141,7 @@ export const SpeedTable = memo(
   }, [sortedSpeed])
 
   const pbLeaderboard = useMemo(() => {
-    if (Array.isArray(hallOfSpeedRows)) {
+    if (hallOfSpeedRows !== undefined) {
       return hallOfSpeedRows
     }
     const bestTimes: Record<string, any> = {}
@@ -167,7 +167,7 @@ export const SpeedTable = memo(
       prevRank = rank
       return { ...row, rank }
     })
-  }, [sortedSpeed])
+  }, [sortedSpeed, hallOfSpeedRows])
 
   const currentRows = useMemo(() => {
     const startIdx = page * rowsPerPage
@@ -208,7 +208,7 @@ export const SpeedTable = memo(
   }, [sortedSpeed, hallOfSpeedRows])
 
   const distributionCandidates = useMemo(() => {
-    if (distributionStats && distributionStats.length > 0) {
+    if (distributionStats !== undefined) {
       return distributionStats
     }
     return userDistributionCandidates
@@ -271,7 +271,8 @@ export const SpeedTable = memo(
   }
 
   if (!thread) return <></>
-  const hasNoRecordsForSelection = sortedSpeed.length === 0
+  const sumCounts = totalCount ?? sortedSpeed.length
+  const hasNoRecordsForSelection = sumCounts === 0
   const getReplayHref = (record: any) => {
     const startCountNumber = Number(record?.startCountNumber)
     const endCountNumber = Number(record?.endCountNumber)
@@ -523,8 +524,6 @@ export const SpeedTable = memo(
       )}
     </TableRow>
   ))
-
-  const sumCounts = totalCount ?? sortedSpeed.length
 
   return (
     <TableContainer>
