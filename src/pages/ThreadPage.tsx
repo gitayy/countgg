@@ -37,7 +37,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { Loading } from '../components/Loading'
-import { addCounterToCache, cachedCounters } from '../utils/helpers'
+import { addCounterToCache, cachedCounters, defaultCounter } from '../utils/helpers'
 import { useFetchRecentCounts } from '../utils/hooks/useFetchRecentCounts'
 import { useFetchThread } from '../utils/hooks/useFetchThread'
 import { SocketContext } from '../utils/contexts/SocketContext'
@@ -96,6 +96,11 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const { context } = queryString.parse(window.location.search)
   const thread_name: string = params.thread_name || 'main'
   const isSimMode = location.hash.toLowerCase() === '#sim'
+  const [loadSpikeSimEnabled, setLoadSpikeSimEnabled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem('cgg_load_spike_sim') === '1'
+  })
+  const [loadSpikeSimRunning, setLoadSpikeSimRunning] = useState(false)
   const { threadName, setThreadName, setFullThread } = useThread()
   const thread_ref = useRef(thread_name)
   useEffect(() => {
@@ -114,6 +119,13 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     }
   }, [thread_name, setThreadName])
   const navigate = useNavigate()
+  const navigateToThread = useCallback(
+    (nextThreadName: string) => {
+      const hashSuffix = location.hash || ''
+      navigate(`/thread/${nextThreadName}${hashSuffix}`)
+    },
+    [navigate, location.hash],
+  )
   const setFaviconCount = useFavicon()
 
   const theme = useTheme()
@@ -198,6 +210,108 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [activeTimer, setActiveTimer] = useState<ReturnType<typeof setInterval>>()
   const [clearCounts, setClearCounts] = useState(false)
   const [autoplay, setAutoplay] = useState(0)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem('cgg_load_spike_sim', loadSpikeSimEnabled ? '1' : '0')
+  }, [loadSpikeSimEnabled])
+
+  const injectSimulatedPost = useCallback(() => {
+    if (!thread) return
+
+    const fallbackCounter = counter && counter.uuid ? (counter as Counter) : undefined
+    const firstCachedCounter = Object.values(cachedCounters)[0] as Counter | undefined
+    const simCounter = fallbackCounter || firstCachedCounter || defaultCounter(`sim_counter_${thread_name}`)
+    addCounterToCache(simCounter)
+
+    const now = Date.now()
+    const highestValidCountNumber = recentCountsRef.current.reduce((highest, post) => {
+      if (post.isValidCount && typeof post.validCountNumber === 'number') {
+        return Math.max(highest, post.validCountNumber)
+      }
+      return highest
+    }, 0)
+    const highestTimestamp = recentCountsRef.current.reduce((highest, post) => {
+      const ts = Number(post.timestamp)
+      return Number.isFinite(ts) ? Math.max(highest, ts) : highest
+    }, now - 100)
+    const nextValidCountNumber = highestValidCountNumber + 1
+    const nextRawCount = nextValidCountNumber.toString()
+
+    const simulatedPost: PostType = {
+      uuid: `sim_${thread_name}_${now}_${Math.floor(Math.random() * 1000000)}`,
+      timestamp: now.toString(),
+      timeSinceLastCount: Math.max(1, now - highestTimestamp),
+      timeSinceLastPost: Math.max(1, now - highestTimestamp),
+      rawText: nextRawCount,
+      isCount: true,
+      isValidCount: true,
+      countContent: nextRawCount,
+      rawCount: nextRawCount,
+      stricken: false,
+      thread: thread.uuid,
+      hasComment: false,
+      hasThreeCharComment: false,
+      comment: '',
+      authorUUID: simCounter.uuid,
+      isDeleted: false,
+      isCommentDeleted: false,
+      reactions: [],
+      validCountNumber: nextValidCountNumber,
+      latency: 0,
+      processingLatency: 0,
+    }
+
+    cache_counts(simulatedPost)
+    registerRollSampleFromPost(simulatedPost)
+
+    if (loadedNewestRef.current) {
+      if (shouldLoadFromBottom()) {
+        recentCountsRef.current = (() => {
+          const newCounts = [...recentCountsRef.current, simulatedPost]
+          if (isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
+            if (newCounts.length > 50) {
+              return newCounts.slice(newCounts.length - 50)
+            }
+          }
+          return newCounts
+        })()
+      } else {
+        recentCountsRef.current = [simulatedPost, ...recentCountsRef.current]
+        if (isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
+          if (recentCountsRef.current.length > 50) {
+            recentCountsRef.current = recentCountsRef.current.slice(0, 50)
+          }
+        }
+      }
+    }
+
+    setLatencyStateTest(`${simulatedPost.uuid}_${Date.now()}`)
+  }, [thread, counter, thread_name, registerRollSampleFromPost])
+
+  useEffect(() => {
+    if (!isSimMode || !loadSpikeSimEnabled || loading) return
+
+    setLoadSpikeSimRunning(true)
+    const runStartedAt = Date.now()
+    const interval = setInterval(() => {
+      const elapsedMs = Date.now() - runStartedAt
+      if (elapsedMs > 12000) {
+        clearInterval(interval)
+        setLoadSpikeSimRunning(false)
+        return
+      }
+
+      for (let i = 0; i < 8; i += 1) {
+        injectSimulatedPost()
+      }
+    }, 120)
+
+    return () => {
+      clearInterval(interval)
+      setLoadSpikeSimRunning(false)
+    }
+  }, [isSimMode, loadSpikeSimEnabled, thread_name, loading, injectSimulatedPost])
   const findPost = async (countNumber, rawCount) => {
     let value
     try {
@@ -1369,7 +1483,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       }
 
       if (newThread) {
-        navigate(`/thread/${newThread.name}`);
+        navigateToThread(newThread.name);
       }
     }
 
@@ -1616,7 +1730,7 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
                                                   color: thread_name === thread.name ? 'text.primary' : 'text.secondary',
                                                   justifyContent: 'flex-start',
                                                 }}
-                                                onClick={() => navigate(`/thread/${thread.name}`)}
+                                                onClick={() => navigateToThread(thread.name)}
                                               >
                                                 {thread.threadOfTheDay && (
                                                   <LocalFireDepartmentIcon sx={{ color: 'orangered', verticalAlign: 'bottom' }} />
@@ -1691,7 +1805,7 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         </Box>
       )
     }
-  }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name, isDesktop, allThreads, categorizedThreads, preferences])
+  }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name, isDesktop, allThreads, categorizedThreads, preferences, navigateToThread])
 
   const robConfirmMemo = useMemo(() => {
     return <ConfirmDialog open={robOpen} text={`You may only rob once per day. Your ability to rob resets at midnight Eastern (US).`} handleCancel={() => robCancel()} handleConfirm={() => robConfirm()} />
@@ -2172,6 +2286,21 @@ useEffect(() => {
             </Typography>
             {rollVisualizerThreads.has(thread_name) && (
               <RollVisualizerHost ref={rollVisualizerRef} threadName={thread_name} showSimControls={isSimMode} />
+            )}
+            {isSimMode && (
+              <Box sx={{ mt: 1, mb: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <Button
+                  size="small"
+                  variant={loadSpikeSimEnabled ? 'contained' : 'outlined'}
+                  color={loadSpikeSimEnabled ? 'warning' : 'primary'}
+                  onClick={() => setLoadSpikeSimEnabled((current) => !current)}
+                >
+                  {loadSpikeSimEnabled ? 'Load Spike Sim: ON' : 'Load Spike Sim: OFF'}
+                </Button>
+                <Typography variant="caption" color="text.secondary">
+                  {loadSpikeSimRunning ? 'Injecting synthetic posts during load' : 'Idle'}
+                </Typography>
+              </Box>
             )}
             {/* <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
               Community Notes
