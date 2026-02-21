@@ -222,7 +222,7 @@ export default function RollVisualizer({
     }
 
     return {
-      currentPercent: Math.round(currentStreakProb * 1000) / 10,
+      currentPercent: currentStreakProb * 100,
       currentProb: currentStreakProb,
       currentCount: currentStreakCount,
       lastCompletedProb: lastCompletedStreakProb,
@@ -399,7 +399,7 @@ export default function RollVisualizer({
             Last win:{' '}
             {luckStats.lastCompletedProb === null
               ? 'n/a'
-              : `${formatOddsFromProbability(luckStats.lastCompletedProb)} (${luckStats.lastCompletedCount} posts)`}
+              : `${formatOddsFromProbability(luckStats.lastCompletedProb)} (${(luckStats.lastCompletedProb * 100).toPrecision(3)}%, ${luckStats.lastCompletedCount} posts)`}
           </Typography>
         </Box>
         <Box

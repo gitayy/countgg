@@ -21,6 +21,7 @@ const UI_TARGET_FPS = 170
 const UI_PUBLISH_INTERVAL_MS = Math.max(1, Math.floor(1000 / UI_TARGET_FPS))
 const DEFAULT_SIM_INTERVAL_MS = 50
 const DEFAULT_CHANCE = 1 / 4147
+const DEFAULT_SIM_ODDS_DENOMINATOR = 4147
 
 export type RollVisualizerHostHandle = {
   registerSampleFromPost: (post?: PostType) => void
@@ -56,6 +57,7 @@ function RollVisualizerHostComponent(
   const [isSimulatingRolls, setIsSimulatingRolls] = useState(false)
   const [maxRenderedRolls, setMaxRenderedRolls] = useState(DEFAULT_MAX_RENDERED_ROLLS)
   const [simIntervalMs, setSimIntervalMs] = useState(DEFAULT_SIM_INTERVAL_MS)
+  const [simOddsDenominator, setSimOddsDenominator] = useState(DEFAULT_SIM_ODDS_DENOMINATOR)
   const [uiState, setUiState] = useState<RollVisualizerUiState>({
     rolls: [],
     recentHighRollHistory: [],
@@ -68,6 +70,7 @@ function RollVisualizerHostComponent(
   const rollSamplesRef = useRef<RollSample[]>([])
   const maxRenderedRollsRef = useRef(DEFAULT_MAX_RENDERED_ROLLS)
   const simIntervalMsRef = useRef(DEFAULT_SIM_INTERVAL_MS)
+  const simOddsDenominatorRef = useRef(DEFAULT_SIM_ODDS_DENOMINATOR)
   const rollHighSamplesRef = useRef<RollSample[]>([])
   const rollLowSamplesRef = useRef<RollSample[]>([])
   const highestRollSampleRef = useRef<RollSample | undefined>(undefined)
@@ -156,7 +159,7 @@ function RollVisualizerHostComponent(
     rollLuckStatsRef.current = {
       currentProb,
       currentCount,
-      currentPercent: Math.round(currentProb * 1000) / 10,
+      currentPercent: currentProb * 100,
       lastCompletedProb,
       lastCompletedCount,
     }
@@ -218,10 +221,9 @@ function RollVisualizerHostComponent(
     setIsSimulatingRolls(true)
     rollSimulatorIntervalRef.current = setInterval(() => {
       simulationCounterRef.current += 1
-      const lastChance = rollSamplesRef.current.length
-        ? Number(rollSamplesRef.current[rollSamplesRef.current.length - 1].chance)
-        : DEFAULT_CHANCE
-      const chance = Number.isFinite(lastChance) && lastChance > 0 && lastChance <= 1 ? lastChance : DEFAULT_CHANCE
+      const denominator = simOddsDenominatorRef.current
+      const chance =
+        Number.isFinite(denominator) && denominator >= 1 ? Math.min(1, Math.max(Number.EPSILON, 1 / denominator)) : DEFAULT_CHANCE
       registerSample({
         id: `sim_${threadName}_${Date.now()}_${simulationCounterRef.current}`,
         roll: Math.random(),
@@ -253,6 +255,7 @@ function RollVisualizerHostComponent(
     simulationCounterRef.current = 0
     maxRenderedRollsRef.current = DEFAULT_MAX_RENDERED_ROLLS
     simIntervalMsRef.current = DEFAULT_SIM_INTERVAL_MS
+    simOddsDenominatorRef.current = DEFAULT_SIM_ODDS_DENOMINATOR
 
     if (rollFlushTimeoutRef.current) {
       clearTimeout(rollFlushTimeoutRef.current)
@@ -269,6 +272,7 @@ function RollVisualizerHostComponent(
     })
     setMaxRenderedRolls(DEFAULT_MAX_RENDERED_ROLLS)
     setSimIntervalMs(DEFAULT_SIM_INTERVAL_MS)
+    setSimOddsDenominator(DEFAULT_SIM_ODDS_DENOMINATOR)
   }, [stopRollSimulation])
 
   useImperativeHandle(
@@ -312,6 +316,12 @@ function RollVisualizerHostComponent(
     if (!isSimulatingRolls) return
     startRollSimulation()
   }, [simIntervalMs, isSimulatingRolls, startRollSimulation])
+
+  useEffect(() => {
+    simOddsDenominatorRef.current = simOddsDenominator
+    if (!isSimulatingRolls) return
+    startRollSimulation()
+  }, [simOddsDenominator, isSimulatingRolls, startRollSimulation])
 
   useEffect(() => {
     if (showSimControls) return
@@ -381,6 +391,19 @@ function RollVisualizerHostComponent(
             }}
             sx={{ width: 140 }}
             inputProps={{ min: 10, max: 5000, step: 10 }}
+          />
+          <TextField
+            size="small"
+            label="Sim odds (1 in N)"
+            type="number"
+            value={simOddsDenominator}
+            onChange={(event) => {
+              const next = Number(event.target.value)
+              if (!Number.isFinite(next)) return
+              setSimOddsDenominator(Math.max(1, Math.min(1000000000, Math.floor(next))))
+            }}
+            sx={{ width: 170 }}
+            inputProps={{ min: 1, max: 1000000000, step: 1 }}
           />
           <Typography variant="caption" color="text.secondary">
             Sim mode (`#sim`)
