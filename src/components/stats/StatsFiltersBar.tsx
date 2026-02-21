@@ -85,7 +85,6 @@ export const StatsFiltersBar = ({
   return (
     <Box sx={{ mb: 2, p: 2, pl: 0, display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
       <Box sx={{ minWidth: 380 }}>
-        <Typography sx={{ mb: 0.5 }}>Please select a thread:</Typography>
         <Autocomplete
           options={threadOptions}
           value={selectedThreadOption}
