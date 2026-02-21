@@ -156,6 +156,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const {
     recentCounts,
     recentCountsLoading,
+    recentCountsError,
+    recentCountsRetryInMs,
     setRecentCounts,
     loadedOldest,
     setLoadedOldest,
@@ -166,6 +168,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const {
     recentChats,
     recentChatsLoading,
+    recentChatsError,
+    recentChatsRetryInMs,
     setRecentChats,
     loadedOldestChats,
     setLoadedOldestChats,
@@ -223,6 +227,14 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [activeTimer, setActiveTimer] = useState<ReturnType<typeof setInterval>>()
   const [clearCounts, setClearCounts] = useState(false)
   const [autoplay, setAutoplay] = useState(0)
+
+  useEffect(() => {
+    recentCountsRef.current = []
+    recentChatsRef.current = []
+    setRecentCounts([])
+    setRecentChats([])
+    setCachedCounts([])
+  }, [thread_name, setRecentCounts, setRecentChats])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -1903,6 +1915,39 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
   }, [deletedCategory, deleteCategoryOpen])
 
   const countListMemo = useMemo(() => {
+    const hasCountData = recentCountsRef.current && recentCountsRef.current.length > 0
+    if (recentCountsError && !hasCountData) {
+      return (
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            bgcolor: 'background.paper',
+            minHeight: 500,
+            height: 'calc(100vh - 65px)',
+            p: 2,
+          }}
+        >
+          <Box sx={{ maxWidth: 480, textAlign: 'center' }}>
+            <Typography variant="h6" color="warning.main" sx={{ mb: 1 }}>
+              {recentCountsError.status === 429 ? 'Rate limited while loading posts' : 'Failed to load posts'}
+            </Typography>
+            {recentCountsError.status === 429 && recentCountsRetryInMs !== null ? (
+              <Typography variant="body2" color="text.secondary">
+                Retrying in {Math.max(1, Math.ceil(recentCountsRetryInMs / 1000))}s...
+              </Typography>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Please wait, then try switching threads again.
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      )
+    }
+
     return recentCountsLoading ? (
       <Box
         sx={{
@@ -1953,6 +1998,8 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
     loadedNewestRef,
     loadedNewestRef.current,
     recentCountsLoading,
+    recentCountsError,
+    recentCountsRetryInMs,
     latencyStateTest,
     loadedNewCount,
     loadedOldCount,
@@ -1965,6 +2012,39 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
   ])
 
   const chatsMemo = useMemo(() => {
+    const hasChatData = recentChatsRef.current && recentChatsRef.current.length > 0
+    if (recentChatsError && !hasChatData) {
+      return (
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            bgcolor: 'background.paper',
+            minHeight: 500,
+            height: 'calc(100vh - 65px)',
+            p: 2,
+          }}
+        >
+          <Box sx={{ maxWidth: 480, textAlign: 'center' }}>
+            <Typography variant="h6" color="warning.main" sx={{ mb: 1 }}>
+              {recentChatsError.status === 429 ? 'Rate limited while loading chats' : 'Failed to load chats'}
+            </Typography>
+            {recentChatsError.status === 429 && recentChatsRetryInMs !== null ? (
+              <Typography variant="body2" color="text.secondary">
+                Retrying in {Math.max(1, Math.ceil(recentChatsRetryInMs / 1000))}s...
+              </Typography>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Please wait, then try switching threads again.
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      )
+    }
+
     return recentChatsLoading ? (
       <Box
         sx={{
@@ -2005,6 +2085,8 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
     )
   }, [
     recentChatsLoading,
+    recentChatsError,
+    recentChatsRetryInMs,
     newChatsLoadedState,
     thread_name,
     loadedNewChat,
