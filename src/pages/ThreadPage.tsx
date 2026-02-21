@@ -89,6 +89,8 @@ import { ThreadStatsPanel } from '../components/thread/ThreadStatsPanel'
 import RollVisualizerHost, { RollVisualizerHostHandle } from '../components/thread/RollVisualizerHost'
 
 let imsorryfortheglobalpull = 'DISABLED'
+type LoadSpikeSimMode = 'baseline' | 'dup_listener' | 'post_load_overlap' | 'cache_overlap' | 'mixed_direction'
+
 export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const location = useLocation()
   const params = useParams()
@@ -99,6 +101,14 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [loadSpikeSimEnabled, setLoadSpikeSimEnabled] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
     return window.localStorage.getItem('cgg_load_spike_sim') === '1'
+  })
+  const [loadSpikeSimMode, setLoadSpikeSimMode] = useState<LoadSpikeSimMode>(() => {
+    if (typeof window === 'undefined') return 'baseline'
+    const persisted = window.localStorage.getItem('cgg_load_spike_mode')
+    if (persisted === 'dup_listener' || persisted === 'post_load_overlap' || persisted === 'cache_overlap' || persisted === 'mixed_direction') {
+      return persisted
+    }
+    return 'baseline'
   })
   const [loadSpikeSimRunning, setLoadSpikeSimRunning] = useState(false)
   const { threadName, setThreadName, setFullThread } = useThread()
@@ -136,6 +146,9 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [socketStatus, setSocketStatus] = useState('CONNECTING')
   const [socketViewers, setSocketViewers] = useState(1)
   const [threadStreak, setThreadStreak] = useState<number | undefined>(undefined)
+  const loadSpikeGeneratedDuringLoadRef = useRef<PostType[]>([])
+  const previousRecentCountsLoadingRef = useRef(false)
+  const duplicateListenerUuidRef = useRef<string | undefined>(undefined)
 
   const { user, counter, loading, challenges, setChallenges, miscSettings, setMiscSettings, preferences, setPreferences } = useContext(UserContext)
   const { allThreads, allThreadsLoading, setAllThreadsLoading } = useContext(ThreadsContext)
@@ -216,6 +229,25 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     window.localStorage.setItem('cgg_load_spike_sim', loadSpikeSimEnabled ? '1' : '0')
   }, [loadSpikeSimEnabled])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem('cgg_load_spike_mode', loadSpikeSimMode)
+  }, [loadSpikeSimMode])
+
+  const insertSimulatedPostIntoRecent = useCallback(
+    (post: PostType, strategy: 'auto' | 'prepend' | 'append' = 'auto') => {
+      const shouldAppend = strategy === 'append' || (strategy === 'auto' && user && preferences && preferences.pref_load_from_bottom)
+      if (shouldAppend) {
+        const next = [...recentCountsRef.current, post]
+        recentCountsRef.current = isScrolledToNewest.current ? next.slice(Math.max(0, next.length - 50)) : next
+        return
+      }
+      const next = [post, ...recentCountsRef.current]
+      recentCountsRef.current = isScrolledToNewest.current ? next.slice(0, 50) : next
+    },
+    [user, preferences],
+  )
+
   const injectSimulatedPost = useCallback(() => {
     if (!thread) return
 
@@ -262,32 +294,54 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       processingLatency: 0,
     }
 
-    cache_counts(simulatedPost)
-    registerRollSampleFromPost(simulatedPost)
+    if (recentCountsLoading) {
+      loadSpikeGeneratedDuringLoadRef.current = [...loadSpikeGeneratedDuringLoadRef.current, simulatedPost].slice(-300)
+    }
 
-    if (loadedNewestRef.current) {
-      if (shouldLoadFromBottom()) {
-        recentCountsRef.current = (() => {
-          const newCounts = [...recentCountsRef.current, simulatedPost]
-          if (isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
-            if (newCounts.length > 50) {
-              return newCounts.slice(newCounts.length - 50)
-            }
-          }
-          return newCounts
-        })()
-      } else {
-        recentCountsRef.current = [simulatedPost, ...recentCountsRef.current]
-        if (isScrolledToNewest.current !== undefined && isScrolledToNewest.current) {
-          if (recentCountsRef.current.length > 50) {
-            recentCountsRef.current = recentCountsRef.current.slice(0, 50)
-          }
+    if (loadSpikeSimMode === 'dup_listener') {
+      if (!duplicateListenerUuidRef.current) {
+        duplicateListenerUuidRef.current = simulatedPost.uuid
+      }
+      const dupePost = { ...simulatedPost, uuid: duplicateListenerUuidRef.current }
+      cache_counts(dupePost)
+      registerRollSampleFromPost(dupePost)
+      if (loadedNewestRef.current) {
+        insertSimulatedPostIntoRecent(dupePost, 'prepend')
+      }
+
+      const secondPass = {
+        ...dupePost,
+        timestamp: (Number(dupePost.timestamp) + 1).toString(),
+        timeSinceLastCount: Math.max(1, dupePost.timeSinceLastCount - 1),
+        timeSinceLastPost: Math.max(1, dupePost.timeSinceLastPost - 1),
+      }
+      cache_counts(secondPass)
+      if (loadedNewestRef.current) {
+        insertSimulatedPostIntoRecent(secondPass, 'append')
+      }
+    } else if (loadSpikeSimMode === 'cache_overlap') {
+      setCachedCounts((prevCounts) => [simulatedPost, ...prevCounts].slice(0, 300))
+      registerRollSampleFromPost(simulatedPost)
+      insertSimulatedPostIntoRecent(simulatedPost, 'prepend')
+    } else if (loadSpikeSimMode === 'mixed_direction') {
+      cache_counts(simulatedPost)
+      registerRollSampleFromPost(simulatedPost)
+      if (loadedNewestRef.current) {
+        insertSimulatedPostIntoRecent(simulatedPost, Math.random() < 0.5 ? 'prepend' : 'append')
+        if (Math.random() < 0.35) {
+          insertSimulatedPostIntoRecent({ ...simulatedPost, timestamp: (Number(simulatedPost.timestamp) + 2).toString() }, 'prepend')
         }
+      }
+    } else {
+      cache_counts(simulatedPost)
+      registerRollSampleFromPost(simulatedPost)
+      if (loadedNewestRef.current) {
+        insertSimulatedPostIntoRecent(simulatedPost, 'auto')
       }
     }
 
     setLatencyStateTest(`${simulatedPost.uuid}_${Date.now()}`)
-  }, [thread, counter, thread_name, registerRollSampleFromPost])
+  }, [thread, counter, thread_name, registerRollSampleFromPost, recentCountsLoading, loadSpikeSimMode, insertSimulatedPostIntoRecent])
 
   useEffect(() => {
     if (!isSimMode || !loadSpikeSimEnabled || loading) return
@@ -302,7 +356,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         return
       }
 
-      for (let i = 0; i < 8; i += 1) {
+      const burstSize = recentCountsLoading ? 8 : 2
+      for (let i = 0; i < burstSize; i += 1) {
         injectSimulatedPost()
       }
     }, 120)
@@ -311,7 +366,29 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       clearInterval(interval)
       setLoadSpikeSimRunning(false)
     }
-  }, [isSimMode, loadSpikeSimEnabled, thread_name, loading, injectSimulatedPost])
+  }, [isSimMode, loadSpikeSimEnabled, thread_name, loading, recentCountsLoading, injectSimulatedPost])
+
+  useEffect(() => {
+    loadSpikeGeneratedDuringLoadRef.current = []
+    previousRecentCountsLoadingRef.current = recentCountsLoading
+    duplicateListenerUuidRef.current = undefined
+  }, [thread_name])
+
+  useEffect(() => {
+    const justFinishedLoading = previousRecentCountsLoadingRef.current && !recentCountsLoading
+    previousRecentCountsLoadingRef.current = recentCountsLoading
+
+    if (!isSimMode || !loadSpikeSimEnabled || !justFinishedLoading) return
+    if (!['post_load_overlap', 'cache_overlap', 'baseline'].includes(loadSpikeSimMode)) return
+
+    const overlapPosts = loadSpikeGeneratedDuringLoadRef.current.slice(-30)
+    if (overlapPosts.length === 0) return
+
+    // Simulate API snapshot overlap with posts already cached via live events during load.
+    recentCountsRef.current = [...overlapPosts, ...recentCountsRef.current]
+    setLatencyStateTest(`sim-overlap-${Date.now()}`)
+    loadSpikeGeneratedDuringLoadRef.current = []
+  }, [isSimMode, loadSpikeSimEnabled, recentCountsLoading, loadSpikeSimMode])
   const findPost = async (countNumber, rawCount) => {
     let value
     try {
@@ -2300,6 +2377,41 @@ useEffect(() => {
                 <Typography variant="caption" color="text.secondary">
                   {loadSpikeSimRunning ? 'Injecting synthetic posts during load' : 'Idle'}
                 </Typography>
+                <Button
+                  size="small"
+                  variant={loadSpikeSimMode === 'baseline' ? 'contained' : 'outlined'}
+                  onClick={() => setLoadSpikeSimMode('baseline')}
+                >
+                  Baseline
+                </Button>
+                <Button
+                  size="small"
+                  variant={loadSpikeSimMode === 'dup_listener' ? 'contained' : 'outlined'}
+                  onClick={() => setLoadSpikeSimMode('dup_listener')}
+                >
+                  Dup Listener
+                </Button>
+                <Button
+                  size="small"
+                  variant={loadSpikeSimMode === 'post_load_overlap' ? 'contained' : 'outlined'}
+                  onClick={() => setLoadSpikeSimMode('post_load_overlap')}
+                >
+                  Post+Load Overlap
+                </Button>
+                <Button
+                  size="small"
+                  variant={loadSpikeSimMode === 'cache_overlap' ? 'contained' : 'outlined'}
+                  onClick={() => setLoadSpikeSimMode('cache_overlap')}
+                >
+                  Cache Overlap
+                </Button>
+                <Button
+                  size="small"
+                  variant={loadSpikeSimMode === 'mixed_direction' ? 'contained' : 'outlined'}
+                  onClick={() => setLoadSpikeSimMode('mixed_direction')}
+                >
+                  Mixed Direction
+                </Button>
               </Box>
             )}
             {/* <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>

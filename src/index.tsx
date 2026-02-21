@@ -48,13 +48,11 @@ const container = document.getElementById('root');
 const root = createRoot(container);
 
 root.render(
-  <React.StrictMode>
-    <ErrorBoundary>
-      <Router>
-        <App />
-      </Router>
-    </ErrorBoundary>
-  </React.StrictMode>
+  <ErrorBoundary>
+    <Router>
+      <App />
+    </Router>
+  </ErrorBoundary>
 );
 
 // If you want to start measuring performance in your app, pass a function
