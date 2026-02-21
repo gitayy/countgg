@@ -96,7 +96,6 @@ export const StatsFiltersBar = ({
           renderOption={(props, option) => (
             <li {...props} key={option.uuid}>
               {option.title}
-              {option.name !== 'all' ? ` (${option.name})` : ''}
             </li>
           )}
           renderInput={(params) => <TextField {...params} size="medium" placeholder="Search thread..." />}
