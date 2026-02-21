@@ -140,10 +140,23 @@ const CountList = memo((props: any) => {
 
   const handleUnfreeze = () => {
     if (props.cachedCounts && props.cachedCounts.length > 0) {
+      const seenUUIDs = new Set(
+        (props.recentCounts.current || [])
+          .map((count) => count?.uuid)
+          .filter((uuid) => typeof uuid === 'string' && uuid.length > 0),
+      )
+      const uniqueCachedCounts = props.cachedCounts.filter((count) => {
+        const uuid = count?.uuid
+        if (typeof uuid !== 'string' || uuid.length === 0) return true
+        if (seenUUIDs.has(uuid)) return false
+        seenUUIDs.add(uuid)
+        return true
+      })
+
       if (user && preferences && preferences.pref_load_from_bottom) {
         !props.chatsOnly
           ? (props.recentCounts.current = (() => {
-              const newCounts = [...props.recentCounts.current, ...props.cachedCounts]
+              const newCounts = [...props.recentCounts.current, ...uniqueCachedCounts]
               if (newCounts.length > 50) {
                 return newCounts.slice(newCounts.length - 50)
               } else {
@@ -151,7 +164,7 @@ const CountList = memo((props: any) => {
               }
             })())
           : (props.recentCounts.current = (() => {
-              const newChats = [...props.recentCounts.current, ...props.cachedCounts]
+              const newChats = [...props.recentCounts.current, ...uniqueCachedCounts]
               if (newChats.length > 50) {
                 return newChats.slice(newChats.length - 50)
               } else {
@@ -161,7 +174,7 @@ const CountList = memo((props: any) => {
       } else {
         !props.chatsOnly
           ? (props.recentCounts.current = (() => {
-              const newCounts = [...props.cachedCounts, ...props.recentCounts.current]
+              const newCounts = [...uniqueCachedCounts, ...props.recentCounts.current]
               if (newCounts.length > 50) {
                 return newCounts.slice(0, 50)
               } else {
@@ -169,7 +182,7 @@ const CountList = memo((props: any) => {
               }
             })())
           : (props.recentCounts.current = (() => {
-              const newChats = [...props.cachedCounts, ...props.recentCounts.current]
+              const newChats = [...uniqueCachedCounts, ...props.recentCounts.current]
               if (newChats.length > 50) {
                 return newChats.slice(0, 50)
               } else {
@@ -1033,10 +1046,30 @@ const CountList = memo((props: any) => {
     const yesterday = new Date(Date.now() - 86400000)
     let prevHour
     let prevKey
+    const uniqueRecentCounts = (() => {
+      const seenUUIDs = new Set<string>()
+      const dedupedCounts: any[] = []
+      for (const count of props.recentCounts.current || []) {
+        const uuid = count?.uuid
+        if (typeof uuid === 'string' && uuid.length > 0) {
+          if (seenUUIDs.has(uuid)) continue
+          seenUUIDs.add(uuid)
+        }
+        dedupedCounts.push(count)
+      }
+      return dedupedCounts
+    })()
+    const orderedRecentCounts = (() => {
+      const sortedCounts = [...uniqueRecentCounts].sort((a, b) => Number(a.timestamp) - Number(b.timestamp))
+      if (user && preferences && preferences.pref_load_from_bottom) {
+        return sortedCounts
+      }
+      return sortedCounts.reverse()
+    })()
 
     let highestValidCountNumber = 0
-    props.recentCounts.current &&
-      props.recentCounts.current.forEach((count, index) => {
+    orderedRecentCounts &&
+      orderedRecentCounts.forEach((count, index) => {
         if (count.isValidCount && count.validCountNumber > highestValidCountNumber) {
           highestValidCountNumber = count.validCountNumber
         }
@@ -1067,11 +1100,11 @@ const CountList = memo((props: any) => {
         if (
           prevKey !== key ||
           !prevKey ||
-          (index === props.recentCounts.current.length - 1 && countsByDayAndHour[key].showHourBar !== false)
+          (index === orderedRecentCounts.length - 1 && countsByDayAndHour[key].showHourBar !== false)
         ) {
           if (user && preferences && preferences.pref_load_from_bottom && index === 0) {
             countsByDayAndHour[key].showHourBar = false
-          } else if ((!preferences || (preferences && !preferences.pref_load_from_bottom)) && index === props.recentCounts.current.length - 1) {
+          } else if ((!preferences || (preferences && !preferences.pref_load_from_bottom)) && index === orderedRecentCounts.length - 1) {
             countsByDayAndHour[key].showHourBar = false
           } else {
             countsByDayAndHour[key].showHourBar = true

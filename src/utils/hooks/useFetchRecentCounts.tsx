@@ -28,8 +28,9 @@ export function useFetchRecentCounts(
             // console.log("New posts loaded!");
             // console.log(`Thread: ${thread_name}, post 0: ${data.recentCounts[0].thread}, threadRef: ${thread_ref.current} now: ${Date.now()}`);
             if (user && !loading && preferences && preferences.pref_load_from_bottom) {
-              setRecentCounts(data.recentCounts.reverse())
-              recentCountsRef.current = data.recentCounts
+              const reversedRecentCounts = [...data.recentCounts].reverse()
+              setRecentCounts(reversedRecentCounts)
+              recentCountsRef.current = reversedRecentCounts
             } else {
               recentCountsRef.current = data.recentCounts
               setRecentCounts(data.recentCounts)

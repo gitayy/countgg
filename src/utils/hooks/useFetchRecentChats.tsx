@@ -26,8 +26,9 @@ export function useFetchRecentChats(
         .then(({ data }) => {
           if (isMounted.current && data.recentCounts && thread_ref.current === thread_name) {
             if (user && !loading && preferences && preferences.pref_load_from_bottom) {
-              setRecentChats(data.recentCounts.reverse())
-              recentChatsRef.current = data.recentCounts
+              const reversedRecentChats = [...data.recentCounts].reverse()
+              setRecentChats(reversedRecentChats)
+              recentChatsRef.current = reversedRecentChats
             } else {
               setRecentChats(data.recentCounts)
               recentChatsRef.current = data.recentCounts

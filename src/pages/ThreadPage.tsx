@@ -830,9 +830,15 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   }, [counter])
 
   const cache_counts = (count) => {
+    if (recentCountsRef.current.some((existingCount) => existingCount.uuid === count.uuid)) {
+      return
+    }
     if (user && preferences && preferences.pref_load_from_bottom) {
       if (loadedNewestRef.current == false) {
         setCachedCounts((prevCounts) => {
+          if (prevCounts.some((existingCount) => existingCount.uuid === count.uuid)) {
+            return prevCounts
+          }
           const newCounts = [...prevCounts, count]
           return newCounts
         })
@@ -840,6 +846,9 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     } else {
       if (loadedNewestRef.current == false) {
         setCachedCounts((prevCounts) => {
+          if (prevCounts.some((existingCount) => existingCount.uuid === count.uuid)) {
+            return prevCounts
+          }
           const newCounts = [count, ...prevCounts]
           return newCounts
         })
