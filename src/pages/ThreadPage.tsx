@@ -51,6 +51,7 @@ import TabPanel from '@mui/lab/TabPanel'
 import { useFetchRecentChats } from '../utils/hooks/useFetchRecentChats'
 import remarkGfm from 'remark-gfm'
 import ReactMarkdown from 'react-markdown'
+import { flushSync } from 'react-dom'
 import {
   deleteThreadPrefs,
   findPostByThreadAndNumber,
@@ -227,6 +228,10 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [activeTimer, setActiveTimer] = useState<ReturnType<typeof setInterval>>()
   const [clearCounts, setClearCounts] = useState(false)
   const [autoplay, setAutoplay] = useState(0)
+  const replayDebugEnabled = useMemo(() => searchParams.get('replayDebug') === '1', [searchParams])
+  const replayEmittedCountRef = useRef(0)
+  const replayAppliedCountRef = useRef(0)
+  const replayLastAppliedValidRef = useRef<number | null>(null)
 
   useEffect(() => {
     recentCountsRef.current = []
@@ -462,6 +467,17 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     setSocketStatus('DISCONNECTED')
     let data = await loadNewerCounts(thread?.name, start.uuid, 1000, false)
     let loaded_counts = data.data.counts
+    replayEmittedCountRef.current = 0
+    replayAppliedCountRef.current = 0
+    replayLastAppliedValidRef.current = null
+    if (replayDebugEnabled) {
+      console.log('[replay] start', {
+        thread: thread?.name,
+        startUUID: start.uuid,
+        endUUID: end.uuid,
+        initialBatchSize: loaded_counts.length,
+      })
+    }
     for (const counter of data.data.counters) {
       addCounterToCache(counter)
     }
@@ -475,7 +491,18 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         setTimeout(resolve, ms)
       })
     }
-    setCurrentCount(start)
+    flushSync(() => {
+      setCurrentCount(start)
+    })
+    replayEmittedCountRef.current += 1
+    if (replayDebugEnabled) {
+      console.log('[replay] emit start', {
+        emitted: replayEmittedCountRef.current,
+        uuid: start.uuid,
+        validCountNumber: start.validCountNumber,
+        timestamp: start.timestamp,
+      })
+    }
     let broken = false
     while (!broken) {
       const res = loadNewerCounts(thread?.name, loaded_counts[loaded_counts.length - 1].uuid, 1000, false).then((data2) => {
@@ -497,13 +524,34 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
             break
           }
         }
-        setCurrentCount(loaded_counts[i])
+        flushSync(() => {
+          setCurrentCount(loaded_counts[i])
+        })
+        replayEmittedCountRef.current += 1
+        if (replayDebugEnabled) {
+          const prev = i > 0 ? loaded_counts[i - 1] : undefined
+          console.log('[replay] emit', {
+            emitted: replayEmittedCountRef.current,
+            i,
+            uuid: loaded_counts[i].uuid,
+            validCountNumber: loaded_counts[i].validCountNumber,
+            timestamp: loaded_counts[i].timestamp,
+            sameTimestampAsPrev: prev ? prev.timestamp === loaded_counts[i].timestamp : false,
+          })
+        }
         if (loaded_counts[i].uuid === end.uuid) {
           broken = true
           break
         }
       }
+      await res
       loaded_counts = data.data.counts
+    }
+    if (replayDebugEnabled) {
+      console.log('[replay] loop complete', {
+        emitted: replayEmittedCountRef.current,
+        applied: replayAppliedCountRef.current,
+      })
     }
   }
   const clearReplay = () => {
@@ -548,6 +596,28 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   }
   useEffect(() => {
     if (replayActive && currentCount !== undefined) {
+      replayAppliedCountRef.current += 1
+      if (replayDebugEnabled) {
+        const prevAppliedValid = replayLastAppliedValidRef.current
+        const currentValid = currentCount.isValidCount ? currentCount.validCountNumber : null
+        console.log('[replay] apply', {
+          applied: replayAppliedCountRef.current,
+          uuid: currentCount.uuid,
+          validCountNumber: currentCount.validCountNumber,
+          isValidCount: currentCount.isValidCount,
+          emittedSoFar: replayEmittedCountRef.current,
+          prevAppliedValidCountNumber: prevAppliedValid,
+        })
+        if (currentCount.isValidCount && prevAppliedValid !== null && typeof currentValid === 'number' && currentValid > prevAppliedValid + 1) {
+          console.warn('[replay] observed validCountNumber gap on apply', {
+            prevAppliedValidCountNumber: prevAppliedValid,
+            currentValidCountNumber: currentValid,
+          })
+        }
+        if (currentCount.isValidCount && typeof currentValid === 'number') {
+          replayLastAppliedValidRef.current = currentValid
+        }
+      }
       cache_counts(currentCount)
       if (loadedNewestRef.current) {
         if (preferences && preferences.pref_load_from_bottom) {
@@ -616,7 +686,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         setFaviconCount()
       }
     }
-  }, [replayActive, thread_name, dingSound, currentCount, preferences, registerRollSampleFromPost])
+  }, [replayActive, thread_name, dingSound, currentCount, preferences, registerRollSampleFromPost, replayDebugEnabled])
 
   useEffect(() => {
     if (autoplay === 0 && !loading) {
