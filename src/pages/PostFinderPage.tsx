@@ -329,7 +329,7 @@ export const PostFinderPage = () => {
                                   <Link
                                     onClick={(e) => {
                                       e.preventDefault()
-                                      navigate(`/thread/${associatedThread}?context=${count.uuid}`)
+                                      navigate(`/thread/${associatedThread.name}?context=${count.uuid}`)
                                     }}
                                     underline="always"
                                     color={'text.secondary'}
@@ -383,7 +383,7 @@ export const PostFinderPage = () => {
                                   <Link
                                     onClick={(e) => {
                                       e.preventDefault()
-                                      navigate(`/thread/${associatedThread}?context=${count.uuid}`)
+                                      navigate(`/thread/${associatedThread.name}?context=${count.uuid}`)
                                     }}
                                     underline="always"
                                     color={'text.secondary'}
