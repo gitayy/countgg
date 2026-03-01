@@ -13,13 +13,13 @@ import {
 } from '@mui/material'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import {
-  getMacroGroupByHandle,
-  getMacroGroupThreadUsage,
-  getMacroGroupVersion,
-  getMacroGroupVersions,
-  macroGroupsFeatureEnabled,
+  getMacroPresetByHandle,
+  getMacroPresetThreadUsage,
+  getMacroPresetVersion,
+  getMacroPresetVersions,
+  macroPresetsFeatureEnabled,
 } from '../utils/api'
-import { MacroEntry, MacroGroup, MacroGroupVersion, MacroGroupThreadUsageRow } from '../utils/types'
+import { MacroEntry, MacroPreset, MacroPresetVersion, MacroPresetThreadUsageRow } from '../utils/types'
 
 const buildEntryRows = (entries: MacroEntry[]): string[] => {
   return entries.map((entry) => {
@@ -46,12 +46,12 @@ const buildEntryRows = (entries: MacroEntry[]): string[] => {
   })
 }
 
-export const MacroGroupViewPage = () => {
+export const MacroPresetViewPage = () => {
   const { handle } = useParams<{ handle: string }>()
-  const [group, setGroup] = useState<MacroGroup | null>(null)
-  const [versions, setVersions] = useState<MacroGroupVersion[]>([])
+  const [group, setGroup] = useState<MacroPreset | null>(null)
+  const [versions, setVersions] = useState<MacroPresetVersion[]>([])
   const [latestEntries, setLatestEntries] = useState<MacroEntry[]>([])
-  const [usageRows, setUsageRows] = useState<MacroGroupThreadUsageRow[]>([])
+  const [usageRows, setUsageRows] = useState<MacroPresetThreadUsageRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -59,8 +59,8 @@ export const MacroGroupViewPage = () => {
 
   useEffect(() => {
     const load = async () => {
-      if (!macroGroupsFeatureEnabled) {
-        setError('Macro groups are currently disabled.')
+      if (!macroPresetsFeatureEnabled) {
+        setError('Macro presets are currently disabled.')
         setLoading(false)
         return
       }
@@ -72,13 +72,13 @@ export const MacroGroupViewPage = () => {
       setLoading(true)
       setError('')
       try {
-        const readRes = await getMacroGroupByHandle(handle.trim().toLowerCase())
+        const readRes = await getMacroPresetByHandle(handle.trim().toLowerCase())
         const loadedGroup = readRes.data.group
         setGroup(loadedGroup)
 
         const [versionsRes, usageRes] = await Promise.all([
-          getMacroGroupVersions(loadedGroup.id),
-          getMacroGroupThreadUsage(loadedGroup.id, 10),
+          getMacroPresetVersions(loadedGroup.id),
+          getMacroPresetThreadUsage(loadedGroup.id, 10),
         ])
         const loadedVersions = versionsRes.data || []
         setVersions(loadedVersions)
@@ -86,7 +86,7 @@ export const MacroGroupViewPage = () => {
 
         const latestVersion = loadedVersions[0]
         if (latestVersion?.versionNumber) {
-          const fullVersion = await getMacroGroupVersion(
+          const fullVersion = await getMacroPresetVersion(
             loadedGroup.id,
             latestVersion.versionNumber,
           )
@@ -95,7 +95,7 @@ export const MacroGroupViewPage = () => {
           setLatestEntries([])
         }
       } catch (err: any) {
-        setError(err?.response?.data?.message || 'Failed to load macro group.')
+        setError(err?.response?.data?.message || 'Failed to load macro preset.')
       } finally {
         setLoading(false)
       }
@@ -116,7 +116,7 @@ export const MacroGroupViewPage = () => {
   if (error || !group) {
     return (
       <Container maxWidth="md" sx={{ py: 2 }}>
-        <Alert severity="error">{error || 'Macro group not found.'}</Alert>
+        <Alert severity="error">{error || 'Macro preset not found.'}</Alert>
       </Container>
     )
   }
@@ -222,4 +222,4 @@ export const MacroGroupViewPage = () => {
   )
 }
 
-export default MacroGroupViewPage
+export default MacroPresetViewPage

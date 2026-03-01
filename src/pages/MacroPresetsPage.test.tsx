@@ -1,27 +1,27 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import MacroGroupsPage from './MacroGroupsPage'
+import MacroPresetsPage from './MacroPresetsPage'
 import { UserContext } from '../utils/contexts/UserContext'
 import { defaultPreferences } from '../utils/helpers'
 import {
-  getMacroGroupThreadUsage,
-  getMacroGroupVersion,
-  getMacroGroupVersions,
-  listMacroGroups,
+  getMacroPresetThreadUsage,
+  getMacroPresetVersion,
+  getMacroPresetVersions,
+  listMacroPresets,
 } from '../utils/api'
 
 jest.mock('../utils/api', () => ({
-  listMacroGroups: jest.fn(),
-  getMacroGroupVersions: jest.fn(),
-  getMacroGroupVersion: jest.fn(),
-  getMacroGroupThreadUsage: jest.fn(),
-  macroGroupsFeatureEnabled: true,
+  listMacroPresets: jest.fn(),
+  getMacroPresetVersions: jest.fn(),
+  getMacroPresetVersion: jest.fn(),
+  getMacroPresetThreadUsage: jest.fn(),
+  macroPresetsFeatureEnabled: true,
 }))
 
-const mockedListMacroGroups = listMacroGroups as jest.Mock
-const mockedGetMacroGroupVersions = getMacroGroupVersions as jest.Mock
-const mockedGetMacroGroupVersion = getMacroGroupVersion as jest.Mock
-const mockedGetMacroGroupThreadUsage = getMacroGroupThreadUsage as jest.Mock
+const mockedListMacroPresets = listMacroPresets as jest.Mock
+const mockedGetMacroPresetVersions = getMacroPresetVersions as jest.Mock
+const mockedGetMacroPresetVersion = getMacroPresetVersion as jest.Mock
+const mockedGetMacroPresetThreadUsage = getMacroPresetThreadUsage as jest.Mock
 
 const renderPage = () =>
   render(
@@ -33,16 +33,16 @@ const renderPage = () =>
           preferences: defaultPreferences,
         }}
       >
-        <MacroGroupsPage />
+        <MacroPresetsPage />
       </UserContext.Provider>
     </MemoryRouter>,
   )
 
-describe('MacroGroupsPage', () => {
+describe('MacroPresetsPage', () => {
   beforeEach(() => {
     jest.clearAllMocks()
 
-    mockedListMacroGroups
+    mockedListMacroPresets
       .mockResolvedValueOnce({
         data: {
           total: 1,
@@ -78,10 +78,10 @@ describe('MacroGroupsPage', () => {
         },
       })
 
-    mockedGetMacroGroupVersions.mockResolvedValue({
+    mockedGetMacroPresetVersions.mockResolvedValue({
       data: [{ id: 201, versionNumber: 6 }],
     })
-    mockedGetMacroGroupVersion.mockResolvedValue({
+    mockedGetMacroPresetVersion.mockResolvedValue({
       data: {
         id: 201,
         versionNumber: 6,
@@ -95,9 +95,9 @@ describe('MacroGroupsPage', () => {
         ],
       },
     })
-    mockedGetMacroGroupThreadUsage.mockResolvedValue({
+    mockedGetMacroPresetThreadUsage.mockResolvedValue({
       data: {
-        macroGroupId: 10,
+        macroPresetId: 10,
         total: 1,
         items: [{ threadId: 'abc', threadName: 'main', appliesCount: 44 }],
       },
@@ -125,7 +125,7 @@ describe('MacroGroupsPage', () => {
     await waitFor(() =>
       expect(screen.getByText('Copied "Main Thread Pack" into draft.')).toBeInTheDocument(),
     )
-    expect(screen.getByText('Create Macro Group')).toBeInTheDocument()
+    expect(screen.getByText('Create Macro Preset')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Main Thread Pack (copy)')).toBeInTheDocument()
   })
 })

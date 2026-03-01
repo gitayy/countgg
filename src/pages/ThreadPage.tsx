@@ -49,11 +49,11 @@ import { SocketContext } from '../utils/contexts/SocketContext'
 import {
   Category,
   Counter,
-  MacroGroup,
+  MacroPreset,
   PostType,
   PreferencesType,
   ActiveMacroRuntime,
-  ThreadMacroGroupUsageRow,
+  ThreadMacroPresetUsageRow,
   ThreadPrefs,
   ThreadType,
   User,
@@ -69,18 +69,18 @@ import remarkGfm from 'remark-gfm'
 import ReactMarkdown from 'react-markdown'
 import { flushSync } from 'react-dom'
 import {
-  applyMacroGroupForThread,
+  applyMacroPresetForThread,
   deleteThreadPrefs,
   findPostByThreadAndNumber,
   findPostByThreadAndRawCount,
   getActiveMacroRuntimeForThread,
-  getRecommendedMacroGroups,
-  listMacroGroups,
+  getRecommendedMacroPresets,
+  listMacroPresets,
   loadNewerCounts,
-  macroGroupsFeatureEnabled,
+  macroPresetsFeatureEnabled,
   modToggleSilentThreadLock,
   modToggleThreadLock,
-  setThreadMacroGroupPreference,
+  setThreadMacroPresetPreference,
   updateCommunityNotes,
   updateThreadPrefs,
 } from '../utils/api'
@@ -111,12 +111,12 @@ import CommunityNotes from '../components/thread/CommunityNotes'
 import { ThreadStatsPanel } from '../components/thread/ThreadStatsPanel'
 import RollVisualizerHost, { RollVisualizerHostHandle } from '../components/thread/RollVisualizerHost'
 import { buildMacroSubmitMetadata } from '../utils/macroRuntime'
-import { prioritizeOwnedMacroGroups } from '../utils/macroGroups'
+import { prioritizeOwnedMacroPresets } from '../utils/macroPresets'
 
 let imsorryfortheglobalpull = 'DISABLED'
 type LoadSpikeSimMode = 'baseline' | 'dup_listener' | 'post_load_overlap' | 'cache_overlap' | 'mixed_direction'
 const MACRO_TOGGLE_KEY = 'F8'
-type ThreadMacroGroupOption = MacroGroup & {
+type ThreadMacroPresetOption = MacroPreset & {
   category: 'No Macro' | 'Top 3 For This Thread' | 'Your Macros' | 'Other Macros'
   threadUsageCount: number
 }
@@ -171,110 +171,110 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const theme = useTheme()
 
   const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
-  const macroGroupsEnabled = macroGroupsFeatureEnabled
+  const macroPresetsEnabled = macroPresetsFeatureEnabled
 
   const socket = useContext(SocketContext)
   const [socketStatus, setSocketStatus] = useState('CONNECTING')
   const [socketViewers, setSocketViewers] = useState(1)
   const [threadStreak, setThreadStreak] = useState<number | undefined>(undefined)
-  const [threadMacroGroupId, setThreadMacroGroupId] = useState<number | null>(null)
-  const [availableMacroGroups, setAvailableMacroGroups] = useState<MacroGroup[]>([])
-  const [ownedMacroGroupIds, setOwnedMacroGroupIds] = useState<Set<number>>(new Set())
-  const [recommendedMacroGroups, setRecommendedMacroGroups] = useState<ThreadMacroGroupUsageRow[]>([])
+  const [threadMacroPresetId, setThreadMacroPresetId] = useState<number | null>(null)
+  const [availableMacroPresets, setAvailableMacroPresets] = useState<MacroPreset[]>([])
+  const [ownedMacroPresetIds, setOwnedMacroPresetIds] = useState<Set<number>>(new Set())
+  const [recommendedMacroPresets, setRecommendedMacroPresets] = useState<ThreadMacroPresetUsageRow[]>([])
   const [activeMacroRuntime, setActiveMacroRuntime] = useState<ActiveMacroRuntime>({
     source: 'none',
     enabled: false,
-    macroGroupId: null,
-    macroGroupVersionId: null,
-    macroGroupVersionNumber: null,
+    macroPresetId: null,
+    macroPresetVersionId: null,
+    macroPresetVersionNumber: null,
     entries: [],
   })
   const [pendingSubmitMacroMeta, setPendingSubmitMacroMeta] = useState(false)
   const [macroHotkeysEnabled, setMacroHotkeysEnabled] = useState(true)
   const [macroSelectionSaving, setMacroSelectionSaving] = useState(false)
-  const macroGroupsLoadedForUserRef = useRef<string | null>(null)
-  const activeMacroGroupName = useMemo(
+  const macroPresetsLoadedForUserRef = useRef<string | null>(null)
+  const activeMacroPresetName = useMemo(
     () =>
-      availableMacroGroups.find((group) => group.id === activeMacroRuntime.macroGroupId)?.name ||
+      availableMacroPresets.find((group) => group.id === activeMacroRuntime.macroPresetId)?.name ||
       null,
-    [availableMacroGroups, activeMacroRuntime.macroGroupId],
+    [availableMacroPresets, activeMacroRuntime.macroPresetId],
   )
-  const sortedAvailableMacroGroups = useMemo(
-    () => prioritizeOwnedMacroGroups(availableMacroGroups, ownedMacroGroupIds),
-    [availableMacroGroups, ownedMacroGroupIds],
+  const sortedAvailableMacroPresets = useMemo(
+    () => prioritizeOwnedMacroPresets(availableMacroPresets, ownedMacroPresetIds),
+    [availableMacroPresets, ownedMacroPresetIds],
   )
-  const threadUsageCountByMacroGroupId = useMemo(() => {
+  const threadUsageCountByMacroPresetId = useMemo(() => {
     const usage = new Map<number, number>()
-    for (const row of recommendedMacroGroups) {
-      const macroGroupId = row.macroGroup?.id
-      if (macroGroupId) {
-        usage.set(macroGroupId, row.appliesCount || 0)
+    for (const row of recommendedMacroPresets) {
+      const macroPresetId = row.macroPreset?.id
+      if (macroPresetId) {
+        usage.set(macroPresetId, row.appliesCount || 0)
       }
     }
     return usage
-  }, [recommendedMacroGroups])
-  const topThreadMacroGroupIds = useMemo(() => {
+  }, [recommendedMacroPresets])
+  const topThreadMacroPresetIds = useMemo(() => {
     const ids: number[] = []
-    for (const row of recommendedMacroGroups) {
-      const macroGroupId = row.macroGroup?.id
-      if (!macroGroupId || ids.includes(macroGroupId)) continue
-      ids.push(macroGroupId)
+    for (const row of recommendedMacroPresets) {
+      const macroPresetId = row.macroPreset?.id
+      if (!macroPresetId || ids.includes(macroPresetId)) continue
+      ids.push(macroPresetId)
       if (ids.length >= 3) break
     }
     return ids
-  }, [recommendedMacroGroups])
-  const effectiveThreadMacroGroupId = useMemo(() => {
-    if (threadMacroGroupId !== null) return threadMacroGroupId
+  }, [recommendedMacroPresets])
+  const effectiveThreadMacroPresetId = useMemo(() => {
+    if (threadMacroPresetId !== null) return threadMacroPresetId
     if (
       activeMacroRuntime.source === 'global' ||
       activeMacroRuntime.source === 'thread'
     ) {
-      return activeMacroRuntime.macroGroupId
+      return activeMacroRuntime.macroPresetId
     }
     return null
-  }, [threadMacroGroupId, activeMacroRuntime.source, activeMacroRuntime.macroGroupId])
+  }, [threadMacroPresetId, activeMacroRuntime.source, activeMacroRuntime.macroPresetId])
   const threadMacroSelectionSourceLabel = useMemo(() => {
     if (activeMacroRuntime.source === 'thread') return 'Thread Pref'
     if (activeMacroRuntime.source === 'global') return 'Global Pref'
     return 'None'
   }, [activeMacroRuntime.source])
-  const threadMacroGroupOptions = useMemo<ThreadMacroGroupOption[]>(() => {
-    const byUsageThenName = [...sortedAvailableMacroGroups].sort((a, b) => {
+  const threadMacroPresetOptions = useMemo<ThreadMacroPresetOption[]>(() => {
+    const byUsageThenName = [...sortedAvailableMacroPresets].sort((a, b) => {
       const usageDiff =
-        (threadUsageCountByMacroGroupId.get(b.id) || 0) -
-        (threadUsageCountByMacroGroupId.get(a.id) || 0)
+        (threadUsageCountByMacroPresetId.get(b.id) || 0) -
+        (threadUsageCountByMacroPresetId.get(a.id) || 0)
       if (usageDiff !== 0) return usageDiff
       return a.name.localeCompare(b.name)
     })
-    const topSet = new Set(topThreadMacroGroupIds)
-    const topOptions = topThreadMacroGroupIds
+    const topSet = new Set(topThreadMacroPresetIds)
+    const topOptions = topThreadMacroPresetIds
       .map((id) => byUsageThenName.find((group) => group.id === id))
       .filter(Boolean)
       .map((group) => ({
-        ...(group as MacroGroup),
+        ...(group as MacroPreset),
         category: 'Top 3 For This Thread' as const,
-        threadUsageCount: threadUsageCountByMacroGroupId.get((group as MacroGroup).id) || 0,
+        threadUsageCount: threadUsageCountByMacroPresetId.get((group as MacroPreset).id) || 0,
       }))
     const mineOptions = byUsageThenName
-      .filter((group) => ownedMacroGroupIds.has(group.id) && !topSet.has(group.id))
+      .filter((group) => ownedMacroPresetIds.has(group.id) && !topSet.has(group.id))
       .map((group) => ({
         ...group,
         category: 'Your Macros' as const,
-        threadUsageCount: threadUsageCountByMacroGroupId.get(group.id) || 0,
+        threadUsageCount: threadUsageCountByMacroPresetId.get(group.id) || 0,
       }))
     const otherOptions = byUsageThenName
-      .filter((group) => !ownedMacroGroupIds.has(group.id) && !topSet.has(group.id))
+      .filter((group) => !ownedMacroPresetIds.has(group.id) && !topSet.has(group.id))
       .map((group) => ({
         ...group,
         category: 'Other Macros' as const,
-        threadUsageCount: threadUsageCountByMacroGroupId.get(group.id) || 0,
+        threadUsageCount: threadUsageCountByMacroPresetId.get(group.id) || 0,
       }))
     return [
       {
         id: -1,
         name: 'None',
         handle: '',
-        description: 'Disable macro group for this thread',
+        description: 'Disable macro preset for this thread',
         visibility: 'PUBLIC',
         isDeleted: false,
         createdAt: '',
@@ -287,10 +287,10 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       ...otherOptions,
     ]
   }, [
-    sortedAvailableMacroGroups,
-    ownedMacroGroupIds,
-    topThreadMacroGroupIds,
-    threadUsageCountByMacroGroupId,
+    sortedAvailableMacroPresets,
+    ownedMacroPresetIds,
+    topThreadMacroPresetIds,
+    threadUsageCountByMacroPresetId,
   ])
   const hasMacroEntries = !!activeMacroRuntime.enabled && (activeMacroRuntime.entries?.length || 0) > 0
   const groupedActiveMacroEntries = useMemo(() => {
@@ -2510,7 +2510,7 @@ useEffect(() => {
     setPrefSoundOnStricken(threadPrefs?.pref_sound_on_stricken ?? user.pref_sound_on_stricken ?? 'Disabled');
     setPrefHideThreadPicker(threadPrefs?.pref_hide_thread_picker ?? user.pref_hide_thread_picker ?? false);
     setPrefStrickenCountOpacity(threadPrefs?.pref_stricken_count_opacity ?? user.pref_stricken_count_opacity ?? 1);
-    setThreadMacroGroupId(threadPrefs?.macroGroupId ?? null);
+    setThreadMacroPresetId(threadPrefs?.macroPresetId ?? null);
 
     if(threadPrefs && threadPrefs.enabled === true && setPreferences) {
       setPreferences(setPreferencesFromThreadOrUser(threadPrefs, user))
@@ -2524,68 +2524,68 @@ const [resetPrefs, setResetPrefs] = useState<boolean>(false);
 
   useEffect(() => {
     let ignore = false
-    const loadMacroGroups = async () => {
-      if (!macroGroupsEnabled || !user?.uuid) {
-        macroGroupsLoadedForUserRef.current = null
-        setAvailableMacroGroups([])
-        setOwnedMacroGroupIds(new Set())
+    const loadMacroPresets = async () => {
+      if (!macroPresetsEnabled || !user?.uuid) {
+        macroPresetsLoadedForUserRef.current = null
+        setAvailableMacroPresets([])
+        setOwnedMacroPresetIds(new Set())
         return
       }
-      if (macroGroupsLoadedForUserRef.current === user.uuid) {
+      if (macroPresetsLoadedForUserRef.current === user.uuid) {
         return
       }
       try {
         const [allRes, mineRes] = await Promise.all([
-          listMacroGroups(1, 100),
-          listMacroGroups(1, 100, undefined, true),
+          listMacroPresets(1, 100),
+          listMacroPresets(1, 100, undefined, true),
         ])
         if (!ignore) {
-          setAvailableMacroGroups(allRes.data.items || [])
-          setOwnedMacroGroupIds(new Set((mineRes.data.items || []).map((item) => item.id)))
-          macroGroupsLoadedForUserRef.current = user.uuid
+          setAvailableMacroPresets(allRes.data.items || [])
+          setOwnedMacroPresetIds(new Set((mineRes.data.items || []).map((item) => item.id)))
+          macroPresetsLoadedForUserRef.current = user.uuid
         }
       } catch (err) {
-        // Keep thread page functional if macro groups fail to load.
+        // Keep thread page functional if macro presets fail to load.
       }
     }
-    loadMacroGroups()
+    loadMacroPresets()
     return () => {
       ignore = true
     }
-  }, [macroGroupsEnabled, user?.uuid])
+  }, [macroPresetsEnabled, user?.uuid])
 
   useEffect(() => {
     let ignore = false
-    const loadRecommendedMacroGroups = async () => {
-    if (!thread?.uuid || !macroGroupsEnabled) return
+    const loadRecommendedMacroPresets = async () => {
+    if (!thread?.uuid || !macroPresetsEnabled) return
     try {
-      const res = await getRecommendedMacroGroups(thread.uuid, 10)
+      const res = await getRecommendedMacroPresets(thread.uuid, 10)
       if (!ignore) {
-        setRecommendedMacroGroups(res.data.items || [])
+        setRecommendedMacroPresets(res.data.items || [])
       }
     } catch (err) {
       if (!ignore) {
-        setRecommendedMacroGroups([])
+        setRecommendedMacroPresets([])
       }
     }
   }
-  loadRecommendedMacroGroups()
+  loadRecommendedMacroPresets()
   return () => {
     ignore = true
   }
-}, [thread?.uuid, macroGroupsEnabled])
+}, [thread?.uuid, macroPresetsEnabled])
 
   useEffect(() => {
     let ignore = false
     const loadActiveMacroRuntime = async () => {
-    if (!thread?.uuid || !user || !macroGroupsEnabled) {
+    if (!thread?.uuid || !user || !macroPresetsEnabled) {
       if (!ignore) {
         setActiveMacroRuntime({
           source: 'none',
           enabled: false,
-          macroGroupId: null,
-          macroGroupVersionId: null,
-          macroGroupVersionNumber: null,
+          macroPresetId: null,
+          macroPresetVersionId: null,
+          macroPresetVersionNumber: null,
           entries: [],
         })
       }
@@ -2601,9 +2601,9 @@ const [resetPrefs, setResetPrefs] = useState<boolean>(false);
         setActiveMacroRuntime({
           source: 'none',
           enabled: false,
-          macroGroupId: null,
-          macroGroupVersionId: null,
-          macroGroupVersionNumber: null,
+          macroPresetId: null,
+          macroPresetVersionId: null,
+          macroPresetVersionNumber: null,
           entries: [],
         })
       }
@@ -2613,7 +2613,7 @@ const [resetPrefs, setResetPrefs] = useState<boolean>(false);
   return () => {
     ignore = true
   }
-}, [thread?.uuid, user, macroGroupsEnabled])
+}, [thread?.uuid, user, macroPresetsEnabled])
 
 useEffect(() => {
   if(user && resetPrefs) {
@@ -2639,40 +2639,40 @@ useEffect(() => {
     setPrefSoundOnStricken(user.pref_sound_on_stricken);
     setPrefHideThreadPicker(user.pref_hide_thread_picker);
     setPrefStrickenCountOpacity(user.pref_stricken_count_opacity);
-    setThreadMacroGroupId(null);
+    setThreadMacroPresetId(null);
   }
   setResetPrefs(false);
 }, [resetPrefs]);
 
   const saveThreadMacroSelection = useCallback(
-    async (nextMacroGroupId: number | null) => {
-      const previousMacroGroupId = threadMacroGroupId
-      setThreadMacroGroupId(nextMacroGroupId)
+    async (nextMacroPresetId: number | null) => {
+      const previousMacroPresetId = threadMacroPresetId
+      setThreadMacroPresetId(nextMacroPresetId)
 
-      if (!macroGroupsEnabled || !thread?.uuid || !user) {
+      if (!macroPresetsEnabled || !thread?.uuid || !user) {
         return
       }
 
       setMacroSelectionSaving(true)
       try {
         const enabled = prefEnabled ?? true
-        await setThreadMacroGroupPreference(thread.uuid, enabled, nextMacroGroupId)
-        if (enabled && nextMacroGroupId !== null) {
-          await applyMacroGroupForThread(thread.uuid, nextMacroGroupId)
+        await setThreadMacroPresetPreference(thread.uuid, enabled, nextMacroPresetId)
+        if (enabled && nextMacroPresetId !== null) {
+          await applyMacroPresetForThread(thread.uuid, nextMacroPresetId)
         }
 
         const [runtimeRes, recommendedRes] = await Promise.all([
           getActiveMacroRuntimeForThread(thread.uuid),
-          getRecommendedMacroGroups(thread.uuid, 10),
+          getRecommendedMacroPresets(thread.uuid, 10),
         ])
         setActiveMacroRuntime(runtimeRes.data)
-        setRecommendedMacroGroups(recommendedRes.data.items || [])
+        setRecommendedMacroPresets(recommendedRes.data.items || [])
 
         setSnackbarSeverity('success')
         setSnackbarOpen(true)
         setSnackbarMessage('Thread macro selection saved')
       } catch (err) {
-        setThreadMacroGroupId(previousMacroGroupId)
+        setThreadMacroPresetId(previousMacroPresetId)
         setSnackbarSeverity('error')
         setSnackbarOpen(true)
         setSnackbarMessage('Failed to save thread macro selection')
@@ -2680,37 +2680,37 @@ useEffect(() => {
         setMacroSelectionSaving(false)
       }
     },
-    [macroGroupsEnabled, thread?.uuid, user, prefEnabled, threadMacroGroupId],
+    [macroPresetsEnabled, thread?.uuid, user, prefEnabled, threadMacroPresetId],
   )
 
   const clearThreadMacroOverrideToGlobal = useCallback(async () => {
-    if (!macroGroupsEnabled || !thread?.uuid || !user) {
+    if (!macroPresetsEnabled || !thread?.uuid || !user) {
       return
     }
 
-    const previousMacroGroupId = threadMacroGroupId
-    setThreadMacroGroupId(null)
+    const previousMacroPresetId = threadMacroPresetId
+    setThreadMacroPresetId(null)
     setMacroSelectionSaving(true)
     try {
-      await setThreadMacroGroupPreference(thread.uuid, false, null)
+      await setThreadMacroPresetPreference(thread.uuid, false, null)
       const [runtimeRes, recommendedRes] = await Promise.all([
         getActiveMacroRuntimeForThread(thread.uuid),
-        getRecommendedMacroGroups(thread.uuid, 10),
+        getRecommendedMacroPresets(thread.uuid, 10),
       ])
       setActiveMacroRuntime(runtimeRes.data)
-      setRecommendedMacroGroups(recommendedRes.data.items || [])
+      setRecommendedMacroPresets(recommendedRes.data.items || [])
       setSnackbarSeverity('success')
       setSnackbarOpen(true)
       setSnackbarMessage('Thread macro override cleared; using global macro selection')
     } catch (err) {
-      setThreadMacroGroupId(previousMacroGroupId)
+      setThreadMacroPresetId(previousMacroPresetId)
       setSnackbarSeverity('error')
       setSnackbarOpen(true)
       setSnackbarMessage('Failed to clear thread macro override')
     } finally {
       setMacroSelectionSaving(false)
     }
-  }, [macroGroupsEnabled, thread?.uuid, user, threadMacroGroupId])
+  }, [macroPresetsEnabled, thread?.uuid, user, threadMacroPresetId])
 
   const savePrefs = async () => {
     if (user && counter && thread) {
@@ -2745,23 +2745,23 @@ useEffect(() => {
       thisThreadPrefs.pref_highlight_last_count = prefHighlightLastCount;
       thisThreadPrefs.pref_highlight_last_count_color = prefHighlightLastCountColor;
       thisThreadPrefs.pref_stricken_count_opacity = prefStrickenCountOpacity;
-      thisThreadPrefs.macroGroupId = threadMacroGroupId;
+      thisThreadPrefs.macroPresetId = threadMacroPresetId;
       if(setPreferences) {
         setPreferences(setPreferencesFromThreadOrUser(prefEnabled ? thisThreadPrefs : undefined, user))
       }
       try {
         const res = await updateThreadPrefs(thisThreadPrefs)
-        const macroPrefRes = macroGroupsEnabled
-          ? await setThreadMacroGroupPreference(
+        const macroPrefRes = macroPresetsEnabled
+          ? await setThreadMacroPresetPreference(
               thread.uuid,
               prefEnabled ?? true,
-              threadMacroGroupId,
+              threadMacroPresetId,
             )
           : { status: 200 }
-        if (macroGroupsEnabled && (prefEnabled ?? true) && threadMacroGroupId !== null) {
-          await applyMacroGroupForThread(thread.uuid, threadMacroGroupId)
+        if (macroPresetsEnabled && (prefEnabled ?? true) && threadMacroPresetId !== null) {
+          await applyMacroPresetForThread(thread.uuid, threadMacroPresetId)
         }
-        if (macroGroupsEnabled) {
+        if (macroPresetsEnabled) {
           const runtimeRes = await getActiveMacroRuntimeForThread(thread.uuid)
           setActiveMacroRuntime(runtimeRes.data)
         }
@@ -3236,11 +3236,11 @@ useEffect(() => {
               >
                 Delete Thread Prefs
               </Button>
-          {macroGroupsEnabled && (
+          {macroPresetsEnabled && (
           <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ md: 'center' }} spacing={1} sx={{ m: 2 }}>
           <Autocomplete
             sx={{ minWidth: 320, maxWidth: 640, width: '100%' }}
-            options={threadMacroGroupOptions}
+            options={threadMacroPresetOptions}
             groupBy={(option) => option.category}
             getOptionLabel={(option) => option.name}
             filterOptions={(options, state) => {
@@ -3254,15 +3254,15 @@ useEffect(() => {
               )
             }}
             value={
-              effectiveThreadMacroGroupId === null
-                ? threadMacroGroupOptions[0]
-                : threadMacroGroupOptions.find((group) => group.id === effectiveThreadMacroGroupId) || null
+              effectiveThreadMacroPresetId === null
+                ? threadMacroPresetOptions[0]
+                : threadMacroPresetOptions.find((group) => group.id === effectiveThreadMacroPresetId) || null
             }
             onChange={(_, value) => {
               saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
             }}
             renderInput={(params) => (
-              <TextField {...params} label="Thread Macro Group" placeholder="Search macro groups" />
+              <TextField {...params} label="Thread Macro Preset" placeholder="Search macro presets" />
             )}
               renderOption={(props, option) => (
                 <li {...props} key={option.id}>
@@ -3270,7 +3270,7 @@ useEffect(() => {
                     <Typography variant="body2">{option.name}</Typography>
                     <Typography variant="caption" color="text.secondary">
                       {option.id === -1
-                        ? 'No macro group'
+                        ? 'No macro preset'
                         : `${option.threadUsageCount > 0 ? `${option.threadUsageCount} users here - ` : ''}${option.handle ? `@${option.handle} - ` : ''}${option.description || 'No description'}`}
                     </Typography>
                   </Box>
@@ -3281,13 +3281,13 @@ useEffect(() => {
             size="small"
             variant="outlined"
             onClick={() => saveThreadMacroSelection(null)}
-            disabled={threadMacroGroupId === null || macroSelectionSaving}
+            disabled={threadMacroPresetId === null || macroSelectionSaving}
           >
             Clear
           </Button>
           </Stack>
           )}
-          {macroGroupsEnabled && (
+          {macroPresetsEnabled && (
           <Box sx={{ ml: 2, mb: 1 }}>
             {activeMacroRuntime.source === 'thread' ? (
               <Chip
@@ -3306,22 +3306,22 @@ useEffect(() => {
             )}
           </Box>
           )}
-          {macroGroupsEnabled && (
+          {macroPresetsEnabled && (
           <Typography sx={{ ml: 2, mb: 1 }} variant="body2" color="text.secondary">
             Macro selection now auto-saves; usage tracking updates on selection.
           </Typography>
           )}
-          {macroGroupsEnabled && (
+          {macroPresetsEnabled && (
             <Box sx={{ m: 2, p: 1, borderRadius: '8px', border: '1px solid', borderColor: 'divider' }}>
               <Typography variant="subtitle2">Active Macro Runtime</Typography>
               <Typography variant="body2" color="text.secondary">
                 Source: {activeMacroRuntime.source}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Group: {activeMacroGroupName || 'None'}
+                Group: {activeMacroPresetName || 'None'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Version: {activeMacroRuntime.macroGroupVersionNumber ?? 'N/A'}
+                Version: {activeMacroRuntime.macroPresetVersionNumber ?? 'N/A'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Entries: {activeMacroRuntime.entries?.length || 0}
@@ -3334,12 +3334,12 @@ useEffect(() => {
               </Typography>
             </Box>
           )}
-          {macroGroupsEnabled && recommendedMacroGroups.length > 0 && (
+          {macroPresetsEnabled && recommendedMacroPresets.length > 0 && (
             <Box sx={{ m: 2, p: 1, borderRadius: '8px', border: '1px solid', borderColor: 'divider' }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Recommended Macros For This Thread
               </Typography>
-              {recommendedMacroGroups.map((row) => (
+              {recommendedMacroPresets.map((row) => (
                 <Box
                   key={row.id}
                   sx={{
@@ -3351,13 +3351,13 @@ useEffect(() => {
                   }}
                 >
                     <Typography variant="body2">
-                     {row.macroGroup?.name || 'Unknown Macro Group'} ({row.appliesCount} users)
+                     {row.macroPreset?.name || 'Unknown Macro Preset'} ({row.appliesCount} users)
                     </Typography>
                   <Button
                     size="small"
                     variant="outlined"
-                    disabled={!row.macroGroup?.id}
-                    onClick={() => row.macroGroup?.id && saveThreadMacroSelection(row.macroGroup.id)}
+                    disabled={!row.macroPreset?.id}
+                    onClick={() => row.macroPreset?.id && saveThreadMacroSelection(row.macroPreset.id)}
                   >
                     Use
                   </Button>

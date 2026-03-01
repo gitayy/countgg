@@ -18,15 +18,15 @@ import {
 import { Link as RouterLink } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
 import {
-  getMacroGroupThreadUsage,
-  getMacroGroupVersion,
-  getMacroGroupVersions,
-  listMacroGroups,
-  macroGroupsFeatureEnabled,
+  getMacroPresetThreadUsage,
+  getMacroPresetVersion,
+  getMacroPresetVersions,
+  listMacroPresets,
+  macroPresetsFeatureEnabled,
 } from '../utils/api'
-import { MacroEntry, MacroEntryDraft, MacroEntryPayload, MacroGroup } from '../utils/types'
-import MacroGroupManager from '../components/MacroGroupManager'
-import { prioritizeOwnedMacroGroups } from '../utils/macroGroups'
+import { MacroEntry, MacroEntryDraft, MacroEntryPayload, MacroPreset } from '../utils/types'
+import MacroPresetManager from '../components/MacroPresetManager'
+import { prioritizeOwnedMacroPresets } from '../utils/macroPresets'
 
 const PAGE_SIZE = 25
 
@@ -82,15 +82,15 @@ const parseMacroSearchFilters = (raw: string): MacroSearchFilters => {
   return filters
 }
 
-export const MacroGroupsPage = () => {
+export const MacroPresetsPage = () => {
   const { user } = useContext(UserContext)
   const [viewMode, setViewMode] = useState<'discover' | 'create' | 'edit'>('discover')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
-  const [macroGroups, setMacroGroups] = useState<MacroGroup[]>([])
-  const [ownedMacroGroups, setOwnedMacroGroups] = useState<MacroGroup[]>([])
+  const [macroPresets, setMacroPresets] = useState<MacroPreset[]>([])
+  const [ownedMacroPresets, setOwnedMacroPresets] = useState<MacroPreset[]>([])
   const [ownedGroupIds, setOwnedGroupIds] = useState<Set<number>>(new Set())
   const [groupPreviewById, setGroupPreviewById] = useState<
     Record<number, { versionNumber: number | null; entries: MacroEntry[] }>
@@ -111,7 +111,7 @@ export const MacroGroupsPage = () => {
   const [copyNotice, setCopyNotice] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const macroGroupsEnabled = macroGroupsFeatureEnabled
+  const macroPresetsEnabled = macroPresetsFeatureEnabled
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -123,13 +123,13 @@ export const MacroGroupsPage = () => {
   const searchFilters = useMemo(() => parseMacroSearchFilters(debouncedSearch), [debouncedSearch])
 
   useEffect(() => {
-    document.title = 'Macro Groups | Counting!'
+    document.title = 'Macro Presets | Counting!'
     return () => {
       document.title = 'Counting!'
     }
   }, [])
 
-  const hydrateGroupDetails = useCallback(async (groups: MacroGroup[]) => {
+  const hydrateGroupDetails = useCallback(async (groups: MacroPreset[]) => {
     const previews: Record<number, { versionNumber: number | null; entries: MacroEntry[] }> = {}
     const usage: Record<
       number,
@@ -139,15 +139,15 @@ export const MacroGroupsPage = () => {
     await Promise.all(
       groups.map(async (group) => {
         const [versionsResult, usageResult] = await Promise.allSettled([
-          getMacroGroupVersions(group.id),
-          getMacroGroupThreadUsage(group.id, 3),
+          getMacroPresetVersions(group.id),
+          getMacroPresetThreadUsage(group.id, 3),
         ])
 
         if (versionsResult.status === 'fulfilled') {
           const latest = versionsResult.value.data?.[0]
           if (latest?.versionNumber) {
             try {
-              const versionRes = await getMacroGroupVersion(group.id, latest.versionNumber)
+              const versionRes = await getMacroPresetVersion(group.id, latest.versionNumber)
               previews[group.id] = {
                 versionNumber: latest.versionNumber,
                 entries: versionRes.data.entries || [],
@@ -182,46 +182,46 @@ export const MacroGroupsPage = () => {
     setGroupThreadUsageById(usage)
   }, [])
 
-  const loadMacroGroups = useCallback(async () => {
-    if (!macroGroupsEnabled) return
+  const loadMacroPresets = useCallback(async () => {
+    if (!macroPresetsEnabled) return
     setLoading(true)
     setError('')
     try {
       const [groupsRes, mineRes] = await Promise.all([
-        listMacroGroups(
+        listMacroPresets(
           page,
           PAGE_SIZE,
           searchFilters.freeText || undefined,
           false,
           searchFilters.creator || undefined,
         ),
-        listMacroGroups(1, 100, undefined, true),
+        listMacroPresets(1, 100, undefined, true),
       ])
       setTotal(groupsRes.data.total || 0)
       const itemsWithPinned = groupsRes.data.items || []
       const mineItems = mineRes.data.items || []
-      setMacroGroups(itemsWithPinned)
-      setOwnedMacroGroups(mineItems)
+      setMacroPresets(itemsWithPinned)
+      setOwnedMacroPresets(mineItems)
       setOwnedGroupIds(new Set(mineItems.map((item) => item.id)))
       await hydrateGroupDetails(itemsWithPinned)
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to load macro groups')
+      setError(err?.response?.data?.message || 'Failed to load macro presets')
     } finally {
       setLoading(false)
     }
-  }, [macroGroupsEnabled, page, searchFilters, hydrateGroupDetails])
+  }, [macroPresetsEnabled, page, searchFilters, hydrateGroupDetails])
 
   useEffect(() => {
-    loadMacroGroups()
-  }, [loadMacroGroups])
+    loadMacroPresets()
+  }, [loadMacroPresets])
 
-  const sortedMacroGroups = useMemo(
-    () => prioritizeOwnedMacroGroups(macroGroups, ownedGroupIds),
-    [macroGroups, ownedGroupIds],
+  const sortedMacroPresets = useMemo(
+    () => prioritizeOwnedMacroPresets(macroPresets, ownedGroupIds),
+    [macroPresets, ownedGroupIds],
   )
 
-  const filteredMacroGroups = useMemo(() => {
-    return sortedMacroGroups.filter((group) => {
+  const filteredMacroPresets = useMemo(() => {
+    return sortedMacroPresets.filter((group) => {
       const entries = groupPreviewById[group.id]?.entries || []
       const hasUsage = (groupThreadUsageById[group.id] || []).length > 0
       const ownerName = `${group.ownerCounter?.name || ''} ${group.ownerCounter?.username || ''} ${group.ownerCounter?.uuid || ''}`.toLowerCase()
@@ -247,7 +247,7 @@ export const MacroGroupsPage = () => {
       return true
     })
   }, [
-    sortedMacroGroups,
+    sortedMacroPresets,
     searchFilters,
     groupPreviewById,
     groupThreadUsageById,
@@ -299,9 +299,9 @@ export const MacroGroupsPage = () => {
       .map(([label, items]) => `${label}: ${items.slice(0, 4).join(', ')}${items.length > 4 ? ` +${items.length - 4}` : ''}`)
   }
 
-  const copyToDraft = (group: MacroGroup) => {
+  const copyToDraft = (group: MacroPreset) => {
     if (viewMode === 'create') {
-      const confirmed = window.confirm('Replace your current draft with this copied macro group?')
+      const confirmed = window.confirm('Replace your current draft with this copied macro preset?')
       if (!confirmed) {
         return
       }
@@ -326,15 +326,15 @@ export const MacroGroupsPage = () => {
   if (!user) {
     return (
       <Container maxWidth="md" sx={{ p: 2 }}>
-        <Alert severity="info">You must be logged in to use macro groups.</Alert>
+        <Alert severity="info">You must be logged in to use macro presets.</Alert>
       </Container>
     )
   }
 
-  if (!macroGroupsEnabled) {
+  if (!macroPresetsEnabled) {
     return (
       <Container maxWidth="md" sx={{ p: 2 }}>
-        <Alert severity="info">Macro groups are currently disabled.</Alert>
+        <Alert severity="info">Macro presets are currently disabled.</Alert>
       </Container>
     )
   }
@@ -358,7 +358,7 @@ export const MacroGroupsPage = () => {
         }}
       >
       <Typography variant="h4" sx={{ mb: 1 }}>
-        Macro Groups
+        Macro Presets
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Discover public groups or build and version your own.
@@ -427,7 +427,7 @@ export const MacroGroupsPage = () => {
           <Divider sx={{ my: 2 }} />
 
           <Stack spacing={1.25}>
-            {filteredMacroGroups.map((group) => (
+            {filteredMacroPresets.map((group) => (
               (() => {
                 const entries = groupPreviewById[group.id]?.entries || []
                 const previewRows = buildGroupedPreviewRows(entries)
@@ -577,9 +577,9 @@ export const MacroGroupsPage = () => {
                 )
               })()
             ))}
-            {!loading && filteredMacroGroups.length === 0 && (
+            {!loading && filteredMacroPresets.length === 0 && (
               <Typography variant="body2" color="text.secondary">
-                No macro groups found with current search/filters.
+                No macro presets found with current search/filters.
               </Typography>
             )}
           </Stack>
@@ -603,9 +603,9 @@ export const MacroGroupsPage = () => {
               {copyNotice}
             </Alert>
           )}
-          <MacroGroupManager
-            ownedMacroGroups={ownedMacroGroups}
-            refreshMacroGroups={loadMacroGroups}
+          <MacroPresetManager
+            ownedMacroPresets={ownedMacroPresets}
+            refreshMacroPresets={loadMacroPresets}
             draftSeed={draftSeed}
             forcedMode="create"
           />
@@ -613,9 +613,9 @@ export const MacroGroupsPage = () => {
       )}
 
       {viewMode === 'edit' && (
-        <MacroGroupManager
-          ownedMacroGroups={ownedMacroGroups}
-          refreshMacroGroups={loadMacroGroups}
+        <MacroPresetManager
+          ownedMacroPresets={ownedMacroPresets}
+          refreshMacroPresets={loadMacroPresets}
           draftSeed={draftSeed}
           forcedMode="edit"
         />
@@ -625,4 +625,4 @@ export const MacroGroupsPage = () => {
   )
 }
 
-export default MacroGroupsPage
+export default MacroPresetsPage

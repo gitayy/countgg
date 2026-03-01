@@ -4,9 +4,9 @@ import { ActiveMacroRuntime, MacroEntryType } from './types'
 const runtimeWithEntries = (): ActiveMacroRuntime => ({
   source: 'thread',
   enabled: true,
-  macroGroupId: 8,
-  macroGroupVersionId: 13,
-  macroGroupVersionNumber: 2,
+  macroPresetId: 8,
+  macroPresetVersionId: 13,
+  macroPresetVersionNumber: 2,
   entries: [
     {
       id: 1,
@@ -38,8 +38,8 @@ describe('macroRuntime helpers', () => {
   it('builds submit metadata only when runtime ids are present', () => {
     const metadata = buildMacroSubmitMetadata(runtimeWithEntries(), true)
     expect(metadata).toEqual({
-      macroGroupId: 8,
-      macroGroupVersionId: 13,
+      macroPresetId: 8,
+      macroPresetVersionId: 13,
     })
   })
 

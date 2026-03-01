@@ -16,10 +16,10 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete'
 import { useEffect, useMemo, useState } from 'react'
 import {
-  createMacroGroup,
-  enqueueMacroGroupUpdate,
-  getMacroGroupVersion,
-  getMacroGroupVersions,
+  createMacroPreset,
+  enqueueMacroPresetUpdate,
+  getMacroPresetVersion,
+  getMacroPresetVersions,
 } from '../utils/api'
 import {
   MacroActionType,
@@ -27,13 +27,13 @@ import {
   MacroEntryDraft,
   MacroEntryPayload,
   MacroEntryType,
-  MacroGroup,
-  MacroGroupVersion,
+  MacroPreset,
+  MacroPresetVersion,
 } from '../utils/types'
 
 type Props = {
-  ownedMacroGroups: MacroGroup[]
-  refreshMacroGroups: () => Promise<void>
+  ownedMacroPresets: MacroPreset[]
+  refreshMacroPresets: () => Promise<void>
   forcedMode?: 'create' | 'edit'
   draftSeed?: {
     token: number
@@ -134,7 +134,7 @@ const DEFAULT_ENTRY_BY_TYPE = (macroType: MacroEntryType): MacroEntryDraft => {
   }
 }
 
-const toDraftEntries = (version: MacroGroupVersion | null): MacroEntryDraft[] => {
+const toDraftEntries = (version: MacroPresetVersion | null): MacroEntryDraft[] => {
   if (!version?.entries?.length) return []
   return version.entries.map((entry) => ({
     triggerKey: entry.triggerKey,
@@ -229,15 +229,15 @@ const validateEntries = (entries: MacroEntryDraft[]): DraftValidationResult => {
   return { rowErrors, globalErrors }
 }
 
-export const MacroGroupManager = ({
-  ownedMacroGroups,
-  refreshMacroGroups,
+export const MacroPresetManager = ({
+  ownedMacroPresets,
+  refreshMacroPresets,
   forcedMode,
   draftSeed,
 }: Props) => {
   const [mode, setMode] = useState<'create' | 'edit'>('create')
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
-  const [versions, setVersions] = useState<MacroGroupVersion[]>([])
+  const [versions, setVersions] = useState<MacroPresetVersion[]>([])
   const [selectedVersionNumber, setSelectedVersionNumber] = useState<number | null>(null)
   const [newGroupName, setNewGroupName] = useState('')
   const [newGroupHandle, setNewGroupHandle] = useState('')
@@ -251,16 +251,16 @@ export const MacroGroupManager = ({
   const [activeVersionNumber, setActiveVersionNumber] = useState<number | null>(null)
   const [showAdvancedEditOptions, setShowAdvancedEditOptions] = useState(false)
   const title =
-    mode === 'create' ? 'Create Macro Group' : 'Edit Macro Group'
+    mode === 'create' ? 'Create Macro Preset' : 'Edit Macro Preset'
 
   const selectedGroup = useMemo(
-    () => ownedMacroGroups.find((group) => group.id === selectedGroupId),
-    [ownedMacroGroups, selectedGroupId],
+    () => ownedMacroPresets.find((group) => group.id === selectedGroupId),
+    [ownedMacroPresets, selectedGroupId],
   )
   const validation = useMemo(() => validateEntries(entries), [entries])
 
-  const loadGroupVersions = async (groupId: number): Promise<MacroGroupVersion[]> => {
-    const versionsRes = await getMacroGroupVersions(groupId)
+  const loadGroupVersions = async (groupId: number): Promise<MacroPresetVersion[]> => {
+    const versionsRes = await getMacroPresetVersions(groupId)
     return versionsRes.data || []
   }
 
@@ -268,7 +268,7 @@ export const MacroGroupManager = ({
     setLoadingVersion(true)
     setError('')
     try {
-      const fullVersionRes = await getMacroGroupVersion(groupId, versionNumber)
+      const fullVersionRes = await getMacroPresetVersion(groupId, versionNumber)
       setEntries(toDraftEntries(fullVersionRes.data))
       setSelectedVersionNumber(versionNumber)
     } catch (err: any) {
@@ -293,7 +293,7 @@ export const MacroGroupManager = ({
         setSelectedVersionNumber(null)
         return
       }
-      const fullVersionRes = await getMacroGroupVersion(groupId, latest.versionNumber)
+      const fullVersionRes = await getMacroPresetVersion(groupId, latest.versionNumber)
       setEntries(toDraftEntries(fullVersionRes.data))
       setActiveVersionNumber(latest.versionNumber)
       setSelectedVersionNumber(latest.versionNumber)
@@ -360,14 +360,14 @@ export const MacroGroupManager = ({
     setError('')
     setSuccess('')
     try {
-      const created = await createMacroGroup(
+      const created = await createMacroPreset(
         newGroupName.trim(),
         newGroupHandle.trim().toLowerCase(),
         newGroupDescription.trim(),
         'Initial version',
         entries,
       )
-      await refreshMacroGroups()
+      await refreshMacroPresets()
       if (forcedMode !== 'create') {
         setSelectedGroupId(created.data.id)
         setMode('edit')
@@ -383,7 +383,7 @@ export const MacroGroupManager = ({
       setSelectedVersionNumber(1)
       setSuccess('Group created.')
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Failed to create macro group')
+      setError(err?.response?.data?.message || 'Failed to create macro preset')
     } finally {
       setSaving(false)
     }
@@ -404,7 +404,7 @@ export const MacroGroupManager = ({
     setError('')
     setSuccess('')
     try {
-      await enqueueMacroGroupUpdate(selectedGroupId, changeNote.trim(), entries)
+      await enqueueMacroPresetUpdate(selectedGroupId, changeNote.trim(), entries)
       await loadLatestVersion(selectedGroupId)
       setChangeNote('')
       setSuccess('New version saved.')
@@ -524,8 +524,8 @@ export const MacroGroupManager = ({
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }} sx={{ mb: 1.5 }}>
             <Autocomplete
               sx={{ minWidth: 320 }}
-              options={ownedMacroGroups}
-              value={ownedMacroGroups.find((group) => group.id === selectedGroupId) || null}
+              options={ownedMacroPresets}
+              value={ownedMacroPresets.find((group) => group.id === selectedGroupId) || null}
               getOptionLabel={(option) => option.name}
               filterOptions={(options, state) => {
                 const q = state.inputValue.trim().toLowerCase()
@@ -865,5 +865,5 @@ export const MacroGroupManager = ({
   )
 }
 
-export default MacroGroupManager
+export default MacroPresetManager
 

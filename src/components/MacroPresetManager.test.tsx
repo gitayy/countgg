@@ -1,40 +1,40 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import MacroGroupManager from './MacroGroupManager'
+import MacroPresetManager from './MacroPresetManager'
 import {
-  createMacroGroup,
-  getMacroGroupVersion,
-  getMacroGroupVersions,
+  createMacroPreset,
+  getMacroPresetVersion,
+  getMacroPresetVersions,
 } from '../utils/api'
 
 jest.mock('../utils/api', () => ({
-  createMacroGroup: jest.fn(),
-  enqueueMacroGroupUpdate: jest.fn(),
-  getMacroGroupVersion: jest.fn(),
-  getMacroGroupVersions: jest.fn(),
+  createMacroPreset: jest.fn(),
+  enqueueMacroPresetUpdate: jest.fn(),
+  getMacroPresetVersion: jest.fn(),
+  getMacroPresetVersions: jest.fn(),
 }))
 
-const mockedCreateMacroGroup = createMacroGroup as jest.Mock
-const mockedGetMacroGroupVersions = getMacroGroupVersions as jest.Mock
-const mockedGetMacroGroupVersion = getMacroGroupVersion as jest.Mock
+const mockedCreateMacroPreset = createMacroPreset as jest.Mock
+const mockedGetMacroPresetVersions = getMacroPresetVersions as jest.Mock
+const mockedGetMacroPresetVersion = getMacroPresetVersion as jest.Mock
 
-describe('MacroGroupManager', () => {
+describe('MacroPresetManager', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  it('creates a macro group from the UI', async () => {
-    mockedCreateMacroGroup.mockResolvedValue({
+  it('creates a macro preset from the UI', async () => {
+    mockedCreateMacroPreset.mockResolvedValue({
       data: {
         id: 42,
       },
     })
 
-    const refreshMacroGroups = jest.fn().mockResolvedValue(undefined)
+    const refreshMacroPresets = jest.fn().mockResolvedValue(undefined)
 
     render(
-      <MacroGroupManager
-        ownedMacroGroups={[]}
-        refreshMacroGroups={refreshMacroGroups}
+      <MacroPresetManager
+        ownedMacroPresets={[]}
+        refreshMacroPresets={refreshMacroPresets}
       />,
     )
 
@@ -54,7 +54,7 @@ describe('MacroGroupManager', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create Group' }))
 
     await waitFor(() =>
-      expect(mockedCreateMacroGroup).toHaveBeenCalledWith(
+      expect(mockedCreateMacroPreset).toHaveBeenCalledWith(
         'Fast Main',
         'fast-main',
         'Starter macros',
@@ -68,14 +68,14 @@ describe('MacroGroupManager', () => {
         ],
       ),
     )
-    expect(refreshMacroGroups).toHaveBeenCalled()
+    expect(refreshMacroPresets).toHaveBeenCalled()
   })
 
   it('loads the selected group latest version', async () => {
-    mockedGetMacroGroupVersions.mockResolvedValue({
+    mockedGetMacroPresetVersions.mockResolvedValue({
       data: [{ id: 501, versionNumber: 3, changeNote: 'latest' }],
     })
-    mockedGetMacroGroupVersion.mockResolvedValue({
+    mockedGetMacroPresetVersion.mockResolvedValue({
       data: {
         id: 501,
         versionNumber: 3,
@@ -85,8 +85,8 @@ describe('MacroGroupManager', () => {
     })
 
     render(
-      <MacroGroupManager
-        ownedMacroGroups={[
+      <MacroPresetManager
+        ownedMacroPresets={[
           {
             id: 7,
             name: 'Main Thread Macro Set',
@@ -98,7 +98,7 @@ describe('MacroGroupManager', () => {
             updatedAt: '2026-03-01T00:00:00.000Z',
           },
         ]}
-        refreshMacroGroups={jest.fn().mockResolvedValue(undefined)}
+        refreshMacroPresets={jest.fn().mockResolvedValue(undefined)}
       />,
     )
 
@@ -107,24 +107,24 @@ describe('MacroGroupManager', () => {
     fireEvent.click(await screen.findByText('Main Thread Macro Set'))
 
     await waitFor(() =>
-      expect(mockedGetMacroGroupVersions).toHaveBeenCalledWith(7),
+      expect(mockedGetMacroPresetVersions).toHaveBeenCalledWith(7),
     )
     await waitFor(() =>
-      expect(mockedGetMacroGroupVersion).toHaveBeenCalledWith(7, 3),
+      expect(mockedGetMacroPresetVersion).toHaveBeenCalledWith(7, 3),
     )
   })
 
   it('keeps create mode when forcedMode is create', async () => {
-    mockedCreateMacroGroup.mockResolvedValue({
+    mockedCreateMacroPreset.mockResolvedValue({
       data: {
         id: 99,
       },
     })
 
     render(
-      <MacroGroupManager
-        ownedMacroGroups={[]}
-        refreshMacroGroups={jest.fn().mockResolvedValue(undefined)}
+      <MacroPresetManager
+        ownedMacroPresets={[]}
+        refreshMacroPresets={jest.fn().mockResolvedValue(undefined)}
         forcedMode="create"
       />,
     )
@@ -142,7 +142,7 @@ describe('MacroGroupManager', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create Group' }))
 
     await waitFor(() =>
-      expect(mockedCreateMacroGroup).toHaveBeenCalledWith(
+      expect(mockedCreateMacroPreset).toHaveBeenCalledWith(
         'Copy Draft Group',
         'copy-draft-group',
         '',
@@ -157,15 +157,15 @@ describe('MacroGroupManager', () => {
       ),
     )
 
-    expect(screen.getByText('Create Macro Group')).toBeInTheDocument()
-    expect(screen.queryByText('Edit Macro Group')).not.toBeInTheDocument()
+    expect(screen.getByText('Create Macro Preset')).toBeInTheDocument()
+    expect(screen.queryByText('Edit Macro Preset')).not.toBeInTheDocument()
   })
 
   it('loads draft seed values into create form', async () => {
     render(
-      <MacroGroupManager
-        ownedMacroGroups={[]}
-        refreshMacroGroups={jest.fn().mockResolvedValue(undefined)}
+      <MacroPresetManager
+        ownedMacroPresets={[]}
+        refreshMacroPresets={jest.fn().mockResolvedValue(undefined)}
         forcedMode="create"
         draftSeed={{
           token: 1,

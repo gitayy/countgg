@@ -40,7 +40,7 @@ export type User = {
   redditRefresh: string
   timeOnline?: string
   threadPreferences?: ThreadPrefs[]
-  macroGroupId?: number | null
+  macroPresetId?: number | null
 }
 
 export interface PreferencesType {
@@ -73,7 +73,7 @@ export type ThreadPrefs = {
   user: User
   thread: ThreadType
   enabled: boolean
-  macroGroupId?: number | null
+  macroPresetId?: number | null
   pref_online: boolean
   pref_discord_pings: boolean
   pref_load_from_bottom: boolean
@@ -356,7 +356,7 @@ export type Server = {
   kickUsersAfterTheyLeaveTheDiscordServer: boolean
 }
 
-export type MacroGroupVisibility = 'PUBLIC'
+export type MacroPresetVisibility = 'PUBLIC'
 
 export type MacroEntryType =
   | 'CHAR_INSERT'
@@ -396,12 +396,12 @@ export type MacroEntryDraft = {
   payloadJson: MacroEntryPayload
 }
 
-export type MacroGroup = {
+export type MacroPreset = {
   id: number
   name: string
   handle: string | null
   description: string
-  visibility: MacroGroupVisibility
+  visibility: MacroPresetVisibility
   isDeleted: boolean
   createdAt: string
   updatedAt: string
@@ -423,7 +423,7 @@ export type MacroEntry = {
   updatedAt: string
 }
 
-export type MacroGroupVersion = {
+export type MacroPresetVersion = {
   id: number
   versionNumber: number
   changeNote: string | null
@@ -431,50 +431,50 @@ export type MacroGroupVersion = {
   entries?: MacroEntry[]
 }
 
-export type MacroGroupListResponse = {
+export type MacroPresetListResponse = {
   page: number
   limit: number
   total: number
-  items: MacroGroup[]
+  items: MacroPreset[]
 }
 
-export type MacroGroupReadResponse = {
-  group: MacroGroup
+export type MacroPresetReadResponse = {
+  group: MacroPreset
   latestVersionNumber: number | null
 }
 
 export type MacroSetPreferenceResponse = {
-  macroGroupId: number | null
+  macroPresetId: number | null
   latestVersionNumber: number | null
 }
 
 export type ThreadMacroSetPreferenceResponse = {
   threadId: string
   enabled: boolean
-  macroGroupId: number | null
+  macroPresetId: number | null
   latestVersionNumber: number | null
 }
 
 export type MacroApplyResponse = {
   threadId: string
-  macroGroupId: number
+  macroPresetId: number
   appliesCount: number
 }
 
-export type ThreadMacroGroupUsageRow = {
+export type ThreadMacroPresetUsageRow = {
   id: number
   appliesCount: number
   lastAppliedAt: string | null
-  macroGroup: MacroGroup
+  macroPreset: MacroPreset
 }
 
-export type ThreadMacroGroupUsageResponse = {
+export type ThreadMacroPresetUsageResponse = {
   threadId: string
   total: number
-  items: ThreadMacroGroupUsageRow[]
+  items: ThreadMacroPresetUsageRow[]
 }
 
-export type MacroGroupThreadUsageRow = {
+export type MacroPresetThreadUsageRow = {
   threadId: string
   threadName: string
   threadTitle: string
@@ -482,17 +482,17 @@ export type MacroGroupThreadUsageRow = {
   lastAppliedAt: string | null
 }
 
-export type MacroGroupThreadUsageResponse = {
-  macroGroupId: number
+export type MacroPresetThreadUsageResponse = {
+  macroPresetId: number
   total: number
-  items: MacroGroupThreadUsageRow[]
+  items: MacroPresetThreadUsageRow[]
 }
 
 export type ActiveMacroRuntime = {
   source: 'none' | 'global' | 'thread'
   enabled: boolean
-  macroGroupId: number | null
-  macroGroupVersionId: number | null
-  macroGroupVersionNumber: number | null
+  macroPresetId: number | null
+  macroPresetVersionId: number | null
+  macroPresetVersionNumber: number | null
   entries: MacroEntry[]
 }

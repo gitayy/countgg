@@ -11,24 +11,24 @@ import {
   ThreadPrefs,
   SpeedRecord,
   MacroEntryDraft,
-  MacroGroup,
-  MacroGroupListResponse,
-  MacroGroupReadResponse,
-  MacroGroupVersion,
+  MacroPreset,
+  MacroPresetListResponse,
+  MacroPresetReadResponse,
+  MacroPresetVersion,
   MacroSetPreferenceResponse,
   ThreadMacroSetPreferenceResponse,
   MacroApplyResponse,
-  ThreadMacroGroupUsageResponse,
+  ThreadMacroPresetUsageResponse,
   ActiveMacroRuntime,
-  MacroGroupThreadUsageResponse,
+  MacroPresetThreadUsageResponse,
 } from './types'
 
 const CONFIG: AxiosRequestConfig = { withCredentials: true }
 const API_URL = `${process.env.REACT_APP_API_HOST}/api`
-export const macroGroupsFeatureEnabled =
-  ((import.meta as any)?.env?.VITE_MACRO_GROUPS_V1 || '').toLowerCase() !== '0' &&
-  ((import.meta as any)?.env?.VITE_MACRO_GROUPS_V1 || '').toLowerCase() !== 'false' &&
-  ((import.meta as any)?.env?.VITE_MACRO_GROUPS_V1 || '').toLowerCase() !== 'off'
+export const macroPresetsFeatureEnabled =
+  ((import.meta as any)?.env?.VITE_MACRO_PRESETS_V1 || '').toLowerCase() !== '0' &&
+  ((import.meta as any)?.env?.VITE_MACRO_PRESETS_V1 || '').toLowerCase() !== 'false' &&
+  ((import.meta as any)?.env?.VITE_MACRO_PRESETS_V1 || '').toLowerCase() !== 'off'
 
 const STATS_LIMIT_WINDOW_MS = 10000
 const STATS_LIMIT_MAX_REQUESTS_PER_WINDOW = 30
@@ -275,120 +275,120 @@ export const updateThreadPrefs = (update: ThreadPrefs) =>
 export const deleteThreadPrefs = (thread: ThreadType) =>
   axios.delete(`${API_URL}/user/deleteThreadPrefs`, {...CONFIG,  params: {threadUUID: thread.uuid} })
 
-export const createMacroGroup = (
+export const createMacroPreset = (
   name: string,
   handle: string,
   description: string,
   changeNote?: string,
   entries: MacroEntryDraft[] = [],
 ) =>
-  axios.post<MacroGroup>(
-    `${API_URL}/macro-groups`,
+  axios.post<MacroPreset>(
+    `${API_URL}/macro-presets`,
     { name, handle, description, changeNote, entries },
     CONFIG,
   )
 
-export const getMacroGroup = (id: number) =>
-  axios.get<MacroGroupReadResponse>(`${API_URL}/macro-groups/${id}`, CONFIG)
+export const getMacroPreset = (id: number) =>
+  axios.get<MacroPresetReadResponse>(`${API_URL}/macro-presets/${id}`, CONFIG)
 
-export const getMacroGroupByHandle = (handle: string) =>
-  axios.get<MacroGroupReadResponse>(`${API_URL}/macro-groups/handle/${handle}`, CONFIG)
+export const getMacroPresetByHandle = (handle: string) =>
+  axios.get<MacroPresetReadResponse>(`${API_URL}/macro-presets/handle/${handle}`, CONFIG)
 
-export const updateMacroGroup = (
+export const updateMacroPreset = (
   id: number,
   update: {
     name?: string
     description?: string
   },
-) => axios.patch<MacroGroup>(`${API_URL}/macro-groups/${id}`, update, CONFIG)
+) => axios.patch<MacroPreset>(`${API_URL}/macro-presets/${id}`, update, CONFIG)
 
-export const deleteMacroGroup = (id: number) =>
-  axios.delete<{ success: boolean }>(`${API_URL}/macro-groups/${id}`, CONFIG)
+export const deleteMacroPreset = (id: number) =>
+  axios.delete<{ success: boolean }>(`${API_URL}/macro-presets/${id}`, CONFIG)
 
-export const listMacroGroups = (
+export const listMacroPresets = (
   page = 1,
   limit = 20,
   search?: string,
   mine?: boolean,
   owner?: string,
 ) =>
-  axios.get<MacroGroupListResponse>(`${API_URL}/macro-groups`, {
+  axios.get<MacroPresetListResponse>(`${API_URL}/macro-presets`, {
     params: { page, limit, search, mine: mine ? '1' : undefined, owner },
     ...CONFIG,
   })
 
-export const getMacroGroupVersions = (id: number) =>
-  axios.get<MacroGroupVersion[]>(`${API_URL}/macro-groups/${id}/versions`, CONFIG)
+export const getMacroPresetVersions = (id: number) =>
+  axios.get<MacroPresetVersion[]>(`${API_URL}/macro-presets/${id}/versions`, CONFIG)
 
-export const getMacroGroupVersion = (id: number, versionNumber: number) =>
-  axios.get<MacroGroupVersion>(
-    `${API_URL}/macro-groups/${id}/versions/${versionNumber}`,
+export const getMacroPresetVersion = (id: number, versionNumber: number) =>
+  axios.get<MacroPresetVersion>(
+    `${API_URL}/macro-presets/${id}/versions/${versionNumber}`,
     CONFIG,
   )
 
-export const getMacroGroupThreadUsage = (id: number, limit = 5) =>
-  axios.get<MacroGroupThreadUsageResponse>(
-    `${API_URL}/macro-groups/${id}/thread-usage`,
+export const getMacroPresetThreadUsage = (id: number, limit = 5) =>
+  axios.get<MacroPresetThreadUsageResponse>(
+    `${API_URL}/macro-presets/${id}/thread-usage`,
     {
       params: { limit },
       ...CONFIG,
     },
   )
 
-export const enqueueMacroGroupUpdate = (
+export const enqueueMacroPresetUpdate = (
   id: number,
   changeNote: string | undefined,
   entries: MacroEntryDraft[],
 ) =>
   axios.post(
-    `${API_URL}/macro-groups/${id}/update-requests`,
+    `${API_URL}/macro-presets/${id}/update-requests`,
     { changeNote, entries },
     CONFIG,
   )
 
-export const setGlobalMacroGroupPreference = (macroGroupId: number | null) =>
+export const setGlobalMacroPresetPreference = (macroPresetId: number | null) =>
   axios.put<MacroSetPreferenceResponse>(
-    `${API_URL}/users/me/preferences/macro-group`,
-    { macroGroupId },
+    `${API_URL}/users/me/preferences/macro-preset`,
+    { macroPresetId },
     CONFIG,
   )
 
-export const getGlobalMacroGroupPreference = () =>
+export const getGlobalMacroPresetPreference = () =>
   axios.get<MacroSetPreferenceResponse>(
-    `${API_URL}/users/me/preferences/macro-group`,
+    `${API_URL}/users/me/preferences/macro-preset`,
     CONFIG,
   )
 
-export const setThreadMacroGroupPreference = (
+export const setThreadMacroPresetPreference = (
   threadId: string,
   enabled: boolean,
-  macroGroupId: number | null,
+  macroPresetId: number | null,
 ) =>
   axios.put<ThreadMacroSetPreferenceResponse>(
-    `${API_URL}/threads/${threadId}/preferences/macro-group`,
-    { enabled, macroGroupId },
+    `${API_URL}/threads/${threadId}/preferences/macro-preset`,
+    { enabled, macroPresetId },
     CONFIG,
   )
 
-export const applyMacroGroupForThread = (threadId: string, macroGroupId: number) =>
+export const applyMacroPresetForThread = (threadId: string, macroPresetId: number) =>
   axios.post<MacroApplyResponse>(
-    `${API_URL}/threads/${threadId}/macro-groups/${macroGroupId}/apply`,
+    `${API_URL}/threads/${threadId}/macro-presets/${macroPresetId}/apply`,
     {},
     CONFIG,
   )
 
-export const getRecommendedMacroGroups = (threadId: string, limit = 10) =>
-  axios.get<ThreadMacroGroupUsageResponse>(
-    `${API_URL}/threads/${threadId}/macro-groups/recommended`,
+export const getRecommendedMacroPresets = (threadId: string, limit = 10) =>
+  axios.get<ThreadMacroPresetUsageResponse>(
+    `${API_URL}/threads/${threadId}/macro-presets/recommended`,
     {
       params: { limit },
       ...CONFIG,
     },
   )
 
-export const getPopularMacroGroups = (threadId: string, limit = 50) =>
-  axios.get<ThreadMacroGroupUsageResponse>(
-    `${API_URL}/threads/${threadId}/macro-groups/popular`,
+export const getPopularMacroPresets = (threadId: string, limit = 50) =>
+  axios.get<ThreadMacroPresetUsageResponse>(
+    `${API_URL}/threads/${threadId}/macro-presets/popular`,
     {
       params: { limit },
       ...CONFIG,
@@ -397,7 +397,7 @@ export const getPopularMacroGroups = (threadId: string, limit = 50) =>
 
 export const getActiveMacroRuntimeForThread = (threadId: string) =>
   axios.get<ActiveMacroRuntime>(
-    `${API_URL}/threads/${threadId}/macro-groups/active`,
+    `${API_URL}/threads/${threadId}/macro-presets/active`,
     CONFIG,
   )
 

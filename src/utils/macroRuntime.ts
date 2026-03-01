@@ -20,9 +20,9 @@ export const buildMacroSubmitMetadata = (
   didUseMacro: boolean,
 ) => {
   if (!runtime || !runtime.enabled || !didUseMacro) return undefined
-  if (!runtime.macroGroupId || !runtime.macroGroupVersionId) return undefined
+  if (!runtime.macroPresetId || !runtime.macroPresetVersionId) return undefined
   return {
-    macroGroupId: runtime.macroGroupId,
-    macroGroupVersionId: runtime.macroGroupVersionId,
+    macroPresetId: runtime.macroPresetId,
+    macroPresetVersionId: runtime.macroPresetVersionId,
   }
 }

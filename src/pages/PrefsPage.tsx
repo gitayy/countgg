@@ -36,20 +36,20 @@ import {
   standardizeFormatOptions,
   submitShortcutOptions,
 } from '../utils/helpers'
-import { getGlobalMacroGroupPreference, listMacroGroups, macroGroupsFeatureEnabled, setGlobalMacroGroupPreference, updateCounterPrefs } from '../utils/api'
+import { getGlobalMacroPresetPreference, listMacroPresets, macroPresetsFeatureEnabled, setGlobalMacroPresetPreference, updateCounterPrefs } from '../utils/api'
 import { CounterCard } from '../components/CounterCard'
 import { Loading } from '../components/Loading'
 import { HexColorPicker } from 'react-colorful'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Count from '../components/count/Count'
 import { Preferences } from '../components/Preferences'
-import { MacroGroup } from '../utils/types'
-import { prioritizeOwnedMacroGroups } from '../utils/macroGroups'
+import { MacroPreset } from '../utils/types'
+import { prioritizeOwnedMacroPresets } from '../utils/macroPresets'
 
 export const PrefsPage = () => {
   const { user, counter, items, loading } = useContext(UserContext)
   const isMounted = useIsMounted()
-  const macroGroupsEnabled = macroGroupsFeatureEnabled
+  const macroPresetsEnabled = macroPresetsFeatureEnabled
 
   // console.log("AYO");
   // console.log(items);
@@ -102,41 +102,41 @@ export const PrefsPage = () => {
     const idx = pronounOptions.findIndex((set) => JSON.stringify(set) === JSON.stringify(counter?.pronouns))
     return idx >= 0 ? idx : 2
   })
-  const [macroGroups, setMacroGroups] = useState<MacroGroup[]>([])
+  const [macroPresets, setMacroPresets] = useState<MacroPreset[]>([])
   const [ownedGroupIds, setOwnedGroupIds] = useState<Set<number>>(new Set())
-  const [selectedMacroGroupId, setSelectedMacroGroupId] = useState<number | null>(user?.macroGroupId ?? null)
+  const [selectedMacroPresetId, setSelectedMacroPresetId] = useState<number | null>(user?.macroPresetId ?? null)
   const [globalMacroSelectionSaving, setGlobalMacroSelectionSaving] = useState(false)
-  const sortedMacroGroups = useMemo(
-    () => prioritizeOwnedMacroGroups(macroGroups, ownedGroupIds),
-    [macroGroups, ownedGroupIds],
+  const sortedMacroPresets = useMemo(
+    () => prioritizeOwnedMacroPresets(macroPresets, ownedGroupIds),
+    [macroPresets, ownedGroupIds],
   )
-  const globalMacroGroupOptions = useMemo<MacroGroup[]>(
+  const globalMacroPresetOptions = useMemo<MacroPreset[]>(
     () => [
       {
         id: -1,
         name: 'None',
         handle: '',
-        description: 'Disable global macro group',
+        description: 'Disable global macro preset',
         visibility: 'PUBLIC',
         isDeleted: false,
         createdAt: '',
         updatedAt: '',
       },
-      ...sortedMacroGroups,
+      ...sortedMacroPresets,
     ],
-    [sortedMacroGroups],
+    [sortedMacroPresets],
   )
 
-  const loadMacroGroups = useCallback(async () => {
+  const loadMacroPresets = useCallback(async () => {
     try {
       const [allRes, mineRes] = await Promise.all([
-        listMacroGroups(1, 100),
-        listMacroGroups(1, 100, undefined, true),
+        listMacroPresets(1, 100),
+        listMacroPresets(1, 100, undefined, true),
       ])
-      setMacroGroups(allRes.data.items || [])
+      setMacroPresets(allRes.data.items || [])
       setOwnedGroupIds(new Set((mineRes.data.items || []).map((item) => item.id)))
     } catch (err) {
-      // Keep prefs page usable even if macro groups fail to load.
+      // Keep prefs page usable even if macro presets fail to load.
     }
   }, [])
 
@@ -151,29 +151,29 @@ export const PrefsPage = () => {
   }
 
   const saveGlobalMacroSelection = useCallback(
-    async (nextMacroGroupId: number | null) => {
-      setSelectedMacroGroupId(nextMacroGroupId)
-      if (!macroGroupsEnabled) return
+    async (nextMacroPresetId: number | null) => {
+      setSelectedMacroPresetId(nextMacroPresetId)
+      if (!macroPresetsEnabled) return
       setGlobalMacroSelectionSaving(true)
       try {
-        const response = await setGlobalMacroGroupPreference(nextMacroGroupId)
-        setSelectedMacroGroupId(response.data.macroGroupId ?? null)
+        const response = await setGlobalMacroPresetPreference(nextMacroPresetId)
+        setSelectedMacroPresetId(response.data.macroPresetId ?? null)
         setSnackbarSeverity('success')
         setSnackbarOpen(true)
         setSnackbarMessage(
-          (response.data.macroGroupId ?? null) === null
-            ? 'Global macro group cleared.'
-            : 'Global macro group saved.',
+          (response.data.macroPresetId ?? null) === null
+            ? 'Global macro preset cleared.'
+            : 'Global macro preset saved.',
         )
       } catch (err) {
         setSnackbarSeverity('error')
         setSnackbarOpen(true)
-        setSnackbarMessage('Failed to save global macro group.')
+        setSnackbarMessage('Failed to save global macro preset.')
       } finally {
         setGlobalMacroSelectionSaving(false)
       }
     },
-    [macroGroupsEnabled],
+    [macroPresetsEnabled],
   )
 
   const savePrefs = async () => {
@@ -248,8 +248,8 @@ export const PrefsPage = () => {
       counter.pronouns = pronounOptions[selectedPronounIndex]
       try {
         const res = await updateCounterPrefs(user, counter)
-        const macroRes = macroGroupsEnabled
-          ? await setGlobalMacroGroupPreference(selectedMacroGroupId)
+        const macroRes = macroPresetsEnabled
+          ? await setGlobalMacroPresetPreference(selectedMacroPresetId)
           : { status: 200 }
         if (res.status == 201 && macroRes.status == 200) {
           setSnackbarSeverity('success')
@@ -266,26 +266,26 @@ export const PrefsPage = () => {
 
   useEffect(() => {
     let ignore = false
-    const loadMacroGroupsSafe = async () => {
+    const loadMacroPresetsSafe = async () => {
       if (ignore) return
-      await loadMacroGroups()
+      await loadMacroPresets()
     }
-    if (user && macroGroupsEnabled) {
-      loadMacroGroupsSafe()
+    if (user && macroPresetsEnabled) {
+      loadMacroPresetsSafe()
     }
     return () => {
       ignore = true
     }
-  }, [user, macroGroupsEnabled, loadMacroGroups])
+  }, [user, macroPresetsEnabled, loadMacroPresets])
 
   useEffect(() => {
     let ignore = false
     const loadGlobalMacroPreference = async () => {
-      if (!user || !macroGroupsEnabled) return
+      if (!user || !macroPresetsEnabled) return
       try {
-        const res = await getGlobalMacroGroupPreference()
+        const res = await getGlobalMacroPresetPreference()
         if (!ignore) {
-          setSelectedMacroGroupId(res.data.macroGroupId ?? null)
+          setSelectedMacroPresetId(res.data.macroPresetId ?? null)
         }
       } catch (err) {
         // Keep page usable even if preference fetch fails.
@@ -295,7 +295,7 @@ export const PrefsPage = () => {
     return () => {
       ignore = true
     }
-  }, [user, macroGroupsEnabled])
+  }, [user, macroPresetsEnabled])
 
   let [maybeU, setMaybeU] = useState('')
   useEffect(() => {
@@ -531,15 +531,15 @@ export const PrefsPage = () => {
             prefHideThreadPicker={prefHideThreadPicker} setPrefHideThreadPicker={setPrefHideThreadPicker}
             prefStrickenCountOpacity={prefStrickenCountOpacity} setPrefStrickenCountOpacity={setPrefStrickenCountOpacity}
           >
-            {macroGroupsEnabled && (
+            {macroPresetsEnabled && (
               <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
                 <Typography variant="h6" sx={{ ml: 2 }}>
-                  Macro Group
+                  Macro Preset
                 </Typography>
                 <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ md: 'center' }} spacing={1} sx={{ m: 2 }}>
                   <Autocomplete
                     sx={{ minWidth: 320, maxWidth: 640, width: '100%' }}
-                    options={globalMacroGroupOptions}
+                    options={globalMacroPresetOptions}
                     getOptionLabel={(option) => option.name}
                     filterOptions={(options, state) => {
                       const q = state.inputValue.trim().toLowerCase()
@@ -552,13 +552,13 @@ export const PrefsPage = () => {
                       )
                     }}
                     value={
-                      selectedMacroGroupId === null
-                        ? globalMacroGroupOptions[0]
-                        : globalMacroGroupOptions.find((group) => group.id === selectedMacroGroupId) || null
+                      selectedMacroPresetId === null
+                        ? globalMacroPresetOptions[0]
+                        : globalMacroPresetOptions.find((group) => group.id === selectedMacroPresetId) || null
                     }
                     onChange={(_, value) => saveGlobalMacroSelection(!value || value.id === -1 ? null : value.id)}
                     renderInput={(params) => (
-                      <TextField {...params} label="Global Macro Group" placeholder="Search macro groups" />
+                      <TextField {...params} label="Global Macro Preset" placeholder="Search macro presets" />
                     )}
                     renderOption={(props, option) => (
                       <li {...props} key={option.id}>
@@ -566,7 +566,7 @@ export const PrefsPage = () => {
                           <Typography variant="body2">{option.name}</Typography>
                           <Typography variant="caption" color="text.secondary">
                             {option.id === -1
-                              ? 'No macro group'
+                              ? 'No macro preset'
                               : `${ownedGroupIds.has(option.id) ? 'Mine - ' : ''}${option.handle ? `@${option.handle} - ` : ''}${option.description || 'No description'}`}
                           </Typography>
                         </Box>
@@ -577,18 +577,18 @@ export const PrefsPage = () => {
                     size="small"
                     variant="outlined"
                     onClick={() => saveGlobalMacroSelection(null)}
-                    disabled={selectedMacroGroupId === null || globalMacroSelectionSaving}
+                    disabled={selectedMacroPresetId === null || globalMacroSelectionSaving}
                   >
                     Clear
                   </Button>
                 </Stack>
                 {globalMacroSelectionSaving && (
                   <Typography sx={{ ml: 2 }} variant="body2" color="text.secondary">
-                    Saving macro group...
+                    Saving macro preset...
                   </Typography>
                 )}
                 <Button sx={{ m: 2 }} variant="outlined" onClick={() => navigate('/macros')}>
-                  Open Macro Groups Page
+                  Open Macro Presets Page
                 </Button>
               </Box>
             )}
