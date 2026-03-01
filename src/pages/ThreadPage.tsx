@@ -1,4 +1,4 @@
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link as RouterLink, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
 import React, { Fragment, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -3162,7 +3162,12 @@ useEffect(() => {
                 }}
               >
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
-                  <Typography variant="subtitle2" sx={{ lineHeight: 1.2 }}>
+                  <Typography
+                    variant="subtitle2"
+                    component={RouterLink}
+                    to="/macros"
+                    sx={{ lineHeight: 1.2, textDecoration: 'none', color: 'primary.main' }}
+                  >
                     Macros
                   </Typography>
                   <Stack direction="row" spacing={0.5} alignItems="center">
