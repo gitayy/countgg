@@ -115,9 +115,9 @@ type DraftValidationResult = {
 }
 
 const MAX_ENTRIES = 100
-const MAX_REPEAT = 10
+const MAX_REPEAT = 256
 const MAX_TRIGGERS_PER_CHAR = 2
-const MAX_SUBMIT_MACROS = 2
+const MAX_SUBMIT_MACROS = 10
 const HANDLE_REGEX = /^[a-z][a-z0-9_-]{2,63}$/
 
 const DEFAULT_ENTRY_BY_TYPE = (macroType: MacroEntryType): MacroEntryDraft => {
@@ -985,7 +985,7 @@ export const MacroPresetManager = ({
                             ...entry,
                             payloadJson: {
                               ...payload,
-                              repeat: Math.max(1, Math.min(10, parseInt(e.target.value || '1', 10))),
+                              repeat: Math.max(1, Math.min(MAX_REPEAT, parseInt(e.target.value || '1', 10))),
                             },
                           })
                         }

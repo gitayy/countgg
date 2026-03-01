@@ -37,6 +37,7 @@ import {
 } from '../utils/macroRuntime'
 
 const MACRO_TOGGLE_KEY = 'F8'
+const MAX_MACRO_REPEAT = 256
 
 const CountList = memo((props: any) => {
   const { user, counter, loading, preferences } = useContext(UserContext)
@@ -264,7 +265,7 @@ const CountList = memo((props: any) => {
   }
 
   const applyActionRepeated = async (action: MacroActionType, repeat = 1) => {
-    const reps = Math.max(1, Math.min(10, Number.isFinite(repeat) ? Math.floor(repeat) : 1))
+    const reps = Math.max(1, Math.min(MAX_MACRO_REPEAT, Number.isFinite(repeat) ? Math.floor(repeat) : 1))
     for (let i = 0; i < reps; i += 1) {
       await applySingleAction(action)
     }
@@ -384,7 +385,7 @@ const CountList = memo((props: any) => {
             case 'ACTION':
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
                 const action = activeMacroEntry.payloadJson.action as MacroActionType
-                const repeat = Math.max(1, Math.min(10, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
+                const repeat = Math.max(1, Math.min(MAX_MACRO_REPEAT, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
                 await applyActionRepeated(
                   action,
                   repeat,
@@ -399,7 +400,7 @@ const CountList = memo((props: any) => {
             case 'SUBMIT_ACTION':
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
                 const action = activeMacroEntry.payloadJson.action as MacroActionType
-                const repeat = Math.max(1, Math.min(10, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
+                const repeat = Math.max(1, Math.min(MAX_MACRO_REPEAT, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
                 props.handleMacro?.(
                   activeMacroEntry.triggerKey,
                   ['Enter', ...Array.from({ length: repeat }, () => actionToKeypressToken(action))],
@@ -410,7 +411,7 @@ const CountList = memo((props: any) => {
               await handlePosting()
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
                 const action = activeMacroEntry.payloadJson.action as MacroActionType
-                const repeat = Math.max(1, Math.min(10, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
+                const repeat = Math.max(1, Math.min(MAX_MACRO_REPEAT, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
                 await applyActionRepeated(
                   action,
                   repeat,
@@ -1669,3 +1670,4 @@ const CountList = memo((props: any) => {
 })
 
 export default CountList
+
