@@ -404,6 +404,13 @@ export type MacroGroup = {
   isDeleted: boolean
   createdAt: string
   updatedAt: string
+  ownerCounter?: {
+    uuid: string
+    discordId: string
+    name: string
+    username: string
+    avatar: string
+  } | null
 }
 
 export type MacroEntry = {

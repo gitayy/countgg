@@ -306,9 +306,10 @@ export const listMacroGroups = (
   limit = 20,
   search?: string,
   mine?: boolean,
+  owner?: string,
 ) =>
   axios.get<MacroGroupListResponse>(`${API_URL}/macro-groups`, {
-    params: { page, limit, search, mine: mine ? '1' : undefined },
+    params: { page, limit, search, mine: mine ? '1' : undefined, owner },
     ...CONFIG,
   })
 

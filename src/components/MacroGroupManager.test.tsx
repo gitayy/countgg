@@ -44,6 +44,10 @@ describe('MacroGroupManager', () => {
     fireEvent.change(screen.getByLabelText('Description'), {
       target: { value: 'Starter macros' },
     })
+    fireEvent.click(screen.getByRole('button', { name: 'Add First Entry' }))
+    fireEvent.change(screen.getByLabelText('Trigger'), {
+      target: { value: 'q' },
+    })
     fireEvent.click(screen.getByRole('button', { name: 'Create Group' }))
 
     await waitFor(() =>
@@ -51,7 +55,13 @@ describe('MacroGroupManager', () => {
         'Fast Main',
         'Starter macros',
         'Initial version',
-        [],
+        [
+          {
+            triggerKey: 'q',
+            macroType: 'CHAR_INSERT',
+            payloadJson: { char: '1' },
+          },
+        ],
       ),
     )
     expect(refreshMacroGroups).toHaveBeenCalled()
@@ -87,7 +97,8 @@ describe('MacroGroupManager', () => {
       />,
     )
 
-    fireEvent.mouseDown(screen.getByLabelText('Edit My Group'))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.mouseDown(screen.getByLabelText('Your Group'))
     fireEvent.click(await screen.findByText('Main Thread Macro Set'))
 
     await waitFor(() =>
@@ -96,5 +107,67 @@ describe('MacroGroupManager', () => {
     await waitFor(() =>
       expect(mockedGetMacroGroupVersion).toHaveBeenCalledWith(7, 3),
     )
+  })
+
+  it('keeps create mode when forcedMode is create', async () => {
+    mockedCreateMacroGroup.mockResolvedValue({
+      data: {
+        id: 99,
+      },
+    })
+
+    render(
+      <MacroGroupManager
+        ownedMacroGroups={[]}
+        refreshMacroGroups={jest.fn().mockResolvedValue(undefined)}
+        forcedMode="create"
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('New Group Name'), {
+      target: { value: 'Copy Draft Group' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Add First Entry' }))
+    fireEvent.change(screen.getByLabelText('Trigger'), {
+      target: { value: 'q' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Create Group' }))
+
+    await waitFor(() =>
+      expect(mockedCreateMacroGroup).toHaveBeenCalledWith(
+        'Copy Draft Group',
+        '',
+        'Initial version',
+        [
+          {
+            triggerKey: 'q',
+            macroType: 'CHAR_INSERT',
+            payloadJson: { char: '1' },
+          },
+        ],
+      ),
+    )
+
+    expect(screen.getByText('Create Macro Group')).toBeInTheDocument()
+    expect(screen.queryByText('Edit Macro Group')).not.toBeInTheDocument()
+  })
+
+  it('loads draft seed values into create form', async () => {
+    render(
+      <MacroGroupManager
+        ownedMacroGroups={[]}
+        refreshMacroGroups={jest.fn().mockResolvedValue(undefined)}
+        forcedMode="create"
+        draftSeed={{
+          token: 1,
+          name: 'Imported Group',
+          description: 'Imported description',
+          entries: [],
+        }}
+      />,
+    )
+
+    expect(screen.getByDisplayValue('Imported Group')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Imported description')).toBeInTheDocument()
   })
 })

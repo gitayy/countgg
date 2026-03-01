@@ -72,6 +72,45 @@ const MACRO_TYPE_OPTIONS: MacroEntryType[] = [
   'COMBO',
 ]
 
+const MACRO_TYPE_LABEL: Record<MacroEntryType, string> = {
+  CHAR_INSERT: 'Character Remap',
+  ACTION: 'Action',
+  SUBMIT: 'Submit',
+  SUBMIT_ACTION: 'Submit + Action',
+  TOGGLE: 'Toggle',
+  COMBO: 'Combo',
+}
+
+const ACTION_LABEL: Record<MacroActionType, string> = {
+  BACKSPACE: 'Backspace',
+  DELETE: 'Delete',
+  CTRL_BACKSPACE: 'Ctrl+Backspace',
+  LEFT: 'Left',
+  RIGHT: 'Right',
+  UP: 'Up',
+  DOWN: 'Down',
+  HOME: 'Home',
+  END: 'End',
+  SELECT_ALL: 'Select All',
+  COPY: 'Copy',
+  PASTE: 'Paste',
+}
+
+const COMBO_LABEL: Record<MacroComboId, string> = {
+  SELECT_ALL_COPY: 'Select All + Copy',
+  SELECT_ALL_PASTE: 'Select All + Paste',
+}
+
+type DraftValidationResult = {
+  rowErrors: Record<number, string[]>
+  globalErrors: string[]
+}
+
+const MAX_ENTRIES = 64
+const MAX_REPEAT = 10
+const MAX_TRIGGERS_PER_CHAR = 2
+const MAX_SUBMIT_MACROS = 2
+
 const DEFAULT_ENTRY_BY_TYPE = (macroType: MacroEntryType): MacroEntryDraft => {
   switch (macroType) {
     case 'CHAR_INSERT':
@@ -102,6 +141,92 @@ const toDraftEntries = (version: MacroGroupVersion | null): MacroEntryDraft[] =>
   }))
 }
 
+const validateEntries = (entries: MacroEntryDraft[]): DraftValidationResult => {
+  const rowErrors: Record<number, string[]> = {}
+  const globalErrors: string[] = []
+  const seenTriggers = new Set<string>()
+  const charCounts = new Map<string, number>()
+  let submitCount = 0
+
+  if (entries.length > MAX_ENTRIES) {
+    globalErrors.push(`Too many entries (max ${MAX_ENTRIES}).`)
+  }
+
+  entries.forEach((entry, index) => {
+    const errs: string[] = []
+    const payload = (entry.payloadJson || {}) as Record<string, unknown>
+    const trigger = (entry.triggerKey || '').trim()
+
+    if (!trigger) {
+      errs.push('Trigger is required.')
+    } else {
+      const normalized = trigger.toLowerCase()
+      if (seenTriggers.has(normalized)) {
+        errs.push('Trigger is duplicated.')
+      }
+      seenTriggers.add(normalized)
+    }
+
+    if (entry.macroType === 'CHAR_INSERT') {
+      const c = typeof payload.char === 'string' ? payload.char : ''
+      if (!/^\S$/u.test(c)) {
+        errs.push('Character remap target must be one visible character.')
+      } else {
+        const next = (charCounts.get(c) || 0) + 1
+        charCounts.set(c, next)
+        if (next > MAX_TRIGGERS_PER_CHAR) {
+          errs.push(`At most ${MAX_TRIGGERS_PER_CHAR} triggers can map to "${c}".`)
+        }
+      }
+    }
+
+    if (entry.macroType === 'ACTION' || entry.macroType === 'SUBMIT_ACTION') {
+      if (!ACTION_OPTIONS.includes(payload.action as MacroActionType)) {
+        errs.push('Action is invalid.')
+      }
+      const repeatValue =
+        payload.repeat === undefined || payload.repeat === null
+          ? 1
+          : Number(payload.repeat)
+      if (!Number.isInteger(repeatValue) || repeatValue < 1 || repeatValue > MAX_REPEAT) {
+        errs.push(`Repeat must be an integer from 1 to ${MAX_REPEAT}.`)
+      }
+    }
+
+    if (entry.macroType === 'SUBMIT' || entry.macroType === 'TOGGLE') {
+      if (
+        payload.action !== undefined ||
+        payload.repeat !== undefined ||
+        payload.submit !== undefined ||
+        payload.comboId !== undefined ||
+        payload.char !== undefined
+      ) {
+        errs.push(`${entry.macroType} cannot include payload fields.`)
+      }
+    }
+
+    if (entry.macroType === 'COMBO') {
+      if (!COMBO_OPTIONS.includes(payload.comboId as MacroComboId)) {
+        errs.push('Combo is invalid.')
+      }
+    }
+
+    if (entry.macroType === 'SUBMIT' || entry.macroType === 'SUBMIT_ACTION') {
+      submitCount += 1
+    }
+
+    if (errs.length > 0) {
+      rowErrors[index] = errs
+    }
+  })
+
+  if (submitCount > MAX_SUBMIT_MACROS) {
+    globalErrors.push(`At most ${MAX_SUBMIT_MACROS} submit-related macros are allowed.`)
+  }
+
+  return { rowErrors, globalErrors }
+}
+
 export const MacroGroupManager = ({
   ownedMacroGroups,
   refreshMacroGroups,
@@ -122,11 +247,14 @@ export const MacroGroupManager = ({
   const [success, setSuccess] = useState<string>('')
   const [activeVersionNumber, setActiveVersionNumber] = useState<number | null>(null)
   const [showAdvancedEditOptions, setShowAdvancedEditOptions] = useState(false)
+  const title =
+    mode === 'create' ? 'Create Macro Group' : 'Edit Macro Group'
 
   const selectedGroup = useMemo(
     () => ownedMacroGroups.find((group) => group.id === selectedGroupId),
     [ownedMacroGroups, selectedGroupId],
   )
+  const validation = useMemo(() => validateEntries(entries), [entries])
 
   const loadGroupVersions = async (groupId: number): Promise<MacroGroupVersion[]> => {
     const versionsRes = await getMacroGroupVersions(groupId)
@@ -179,9 +307,11 @@ export const MacroGroupManager = ({
 
   useEffect(() => {
     if (!selectedGroupId) return
-    setMode('edit')
+    if (forcedMode !== 'create') {
+      setMode('edit')
+    }
     loadLatestVersion(selectedGroupId)
-  }, [selectedGroupId])
+  }, [selectedGroupId, forcedMode])
 
   useEffect(() => {
     if (!selectedGroupId) {
@@ -200,7 +330,7 @@ export const MacroGroupManager = ({
     setNewGroupDescription(draftSeed.description)
     setEntries(draftSeed.entries)
     setChangeNote(`Draft copied from "${draftSeed.name}"`)
-    setSuccess('Loaded copied macro group into draft. Edit before creating.')
+    setSuccess('Draft loaded from copied group.')
   }, [draftSeed?.token])
 
   useEffect(() => {
@@ -212,6 +342,16 @@ export const MacroGroupManager = ({
   }, [forcedMode])
 
   const onCreateGroup = async () => {
+    if (entries.length < 1) {
+      setError('At least one macro entry is required.')
+      return
+    }
+
+    if (validation.globalErrors.length > 0 || Object.keys(validation.rowErrors).length > 0) {
+      setError('Please fix macro validation errors before creating the group.')
+      return
+    }
+
     setSaving(true)
     setError('')
     setSuccess('')
@@ -223,13 +363,19 @@ export const MacroGroupManager = ({
         entries,
       )
       await refreshMacroGroups()
-      setSelectedGroupId(created.data.id)
+      if (forcedMode !== 'create') {
+        setSelectedGroupId(created.data.id)
+        setMode('edit')
+      } else {
+        setSelectedGroupId(null)
+      }
       setNewGroupName('')
       setNewGroupDescription('')
+      setEntries([])
       setActiveVersionNumber(1)
       setVersions([])
       setSelectedVersionNumber(1)
-      setSuccess('Macro group created.')
+      setSuccess('Group created.')
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to create macro group')
     } finally {
@@ -239,6 +385,15 @@ export const MacroGroupManager = ({
 
   const onSaveVersion = async () => {
     if (!selectedGroupId) return
+    if (entries.length < 1) {
+      setError('At least one macro entry is required.')
+      return
+    }
+    if (validation.globalErrors.length > 0 || Object.keys(validation.rowErrors).length > 0) {
+      setError('Please fix macro validation errors before saving.')
+      return
+    }
+
     setSaving(true)
     setError('')
     setSuccess('')
@@ -246,7 +401,7 @@ export const MacroGroupManager = ({
       await enqueueMacroGroupUpdate(selectedGroupId, changeNote.trim(), entries)
       await loadLatestVersion(selectedGroupId)
       setChangeNote('')
-      setSuccess('Saved as a new macro version.')
+      setSuccess('New version saved.')
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to save macro update')
     } finally {
@@ -272,13 +427,28 @@ export const MacroGroupManager = ({
     setEntries((prev) => prev.map((entry, idx) => (idx === index ? next : entry)))
   }
 
+  const createDisabledReason =
+    saving
+      ? 'Saving...'
+      : newGroupName.trim().length < 3
+        ? 'Group name must be at least 3 characters.'
+        : validation.globalErrors[0] || Object.values(validation.rowErrors)[0]?.[0] || ''
+
+  const saveDisabledReason =
+    saving || loadingVersion
+      ? 'Saving...'
+      : !selectedGroupId
+        ? 'Select a group first.'
+        : validation.globalErrors[0] || Object.values(validation.rowErrors)[0]?.[0] || ''
+
   return (
-    <Box sx={{ mt: 2, p: 2, borderRadius: '10px', bgcolor: 'background.paper' }}>
-      <Typography variant="h6">Macro Group Manager</Typography>
+    <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper' }}>
+      <Typography variant="h6">{title}</Typography>
 
       {!forcedMode && (
         <Stack direction="row" spacing={1} sx={{ mt: 1, mb: 2 }}>
           <Button
+            size="small"
             variant={mode === 'create' ? 'contained' : 'outlined'}
             onClick={() => {
               setMode('create')
@@ -288,6 +458,7 @@ export const MacroGroupManager = ({
             Create
           </Button>
           <Button
+            size="small"
             variant={mode === 'edit' ? 'contained' : 'outlined'}
             onClick={() => setMode('edit')}
           >
@@ -343,10 +514,12 @@ export const MacroGroupManager = ({
               onChange={(_, value) => {
                 setSelectedGroupId(value?.id ?? null)
               }}
-              renderInput={(params) => <TextField {...params} label="Edit My Group" placeholder="Search your groups" />}
+              renderInput={(params) => (
+                <TextField {...params} label="Your Group" placeholder="Search your groups" />
+              )}
             />
             {!!selectedGroupId && (
-              <Button variant="text" onClick={() => setSelectedGroupId(null)}>
+              <Button size="small" variant="text" onClick={() => setSelectedGroupId(null)}>
                 Clear
               </Button>
             )}
@@ -355,6 +528,14 @@ export const MacroGroupManager = ({
               {activeVersionNumber ? ` (latest v${activeVersionNumber})` : ''}
             </Typography>
           </Stack>
+
+          {!!selectedGroupId && !!selectedGroup && (
+            <Alert severity="info" sx={{ mb: 1.25 }}>
+              Editing <strong>{selectedGroup.name}</strong>
+              {selectedVersionNumber ? ` from v${selectedVersionNumber}` : ''}
+              {activeVersionNumber ? ` (latest is v${activeVersionNumber})` : ''}.
+            </Alert>
+          )}
 
           {!!selectedGroupId && (
             <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
@@ -389,6 +570,15 @@ export const MacroGroupManager = ({
                   ))}
                 </Select>
               </FormControl>
+              {selectedVersionNumber !== activeVersionNumber && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => selectedGroupId && loadLatestVersion(selectedGroupId)}
+                >
+                  Use Latest
+                </Button>
+              )}
             </Stack>
           )}
         </>
@@ -398,16 +588,41 @@ export const MacroGroupManager = ({
         <>
           <Divider sx={{ my: 2 }} />
 
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-            <Typography variant="subtitle1">
-              2. Entries ({entries.length})
-            </Typography>
-            <Button variant="outlined" size="small" onClick={addEntry}>
-              Add Entry
-            </Button>
-          </Stack>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+            2. Entries ({entries.length})
+          </Typography>
 
           <Stack spacing={1}>
+            {validation.globalErrors.length > 0 && (
+              <Alert severity="error">
+                {validation.globalErrors.map((msg, idx) => (
+                  <Typography key={`macro-validation-global-${idx}`} variant="body2">
+                    {msg}
+                  </Typography>
+                ))}
+              </Alert>
+            )}
+            {entries.length === 0 && (
+              <Box
+                sx={{
+                  p: 1.5,
+                  border: '1px dashed',
+                  borderColor: 'divider',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 1,
+                }}
+              >
+                <Typography variant="body2" color="text.secondary">
+                  No macro entries yet.
+                </Typography>
+                <Button variant="outlined" size="small" onClick={addEntry}>
+                  Add First Entry
+                </Button>
+              </Box>
+            )}
             {entries.map((entry, index) => {
               const payload = entry.payloadJson as any
               return (
@@ -415,15 +630,15 @@ export const MacroGroupManager = ({
                   key={`macro-entry-${index}`}
                   sx={{ p: 1, border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}
                 >
-                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
-                    <IconButton color="error" onClick={() => removeEntry(index)}>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }} flexWrap="wrap">
+                    <IconButton color="error" size="small" onClick={() => removeEntry(index)}>
                       <DeleteIcon />
                     </IconButton>
                     <TextField
                       label="Trigger"
                       value={entry.triggerKey}
                       onChange={(e) => updateEntry(index, { ...entry, triggerKey: e.target.value.slice(0, 1) })}
-                      sx={{ width: 100 }}
+                      sx={{ width: 96 }}
                     />
                     <FormControl sx={{ minWidth: 220 }}>
                       <InputLabel id={`macro-type-${index}`}>Type</InputLabel>
@@ -435,7 +650,7 @@ export const MacroGroupManager = ({
                       >
                         {MACRO_TYPE_OPTIONS.map((type) => (
                           <MenuItem key={type} value={type}>
-                            {type}
+                            {MACRO_TYPE_LABEL[type]}
                           </MenuItem>
                         ))}
                       </Select>
@@ -451,7 +666,7 @@ export const MacroGroupManager = ({
                             payloadJson: { char: e.target.value.slice(0, 1) },
                           })
                         }
-                        sx={{ width: 100 }}
+                        sx={{ width: 96 }}
                       />
                     )}
 
@@ -475,7 +690,7 @@ export const MacroGroupManager = ({
                         >
                           {ACTION_OPTIONS.map((action) => (
                             <MenuItem key={action} value={action}>
-                              {action}
+                              {ACTION_LABEL[action]}
                             </MenuItem>
                           ))}
                         </Select>
@@ -518,17 +733,38 @@ export const MacroGroupManager = ({
                         >
                           {COMBO_OPTIONS.map((comboId) => (
                             <MenuItem key={comboId} value={comboId}>
-                              {comboId}
+                              {COMBO_LABEL[comboId]}
                             </MenuItem>
                           ))}
                         </Select>
                       </FormControl>
                     )}
                   </Stack>
+                  {!!validation.rowErrors[index]?.length && (
+                    <Box sx={{ mt: 0.75 }}>
+                      {validation.rowErrors[index].map((err, errIdx) => (
+                        <Typography
+                          key={`macro-row-error-${index}-${errIdx}`}
+                          variant="caption"
+                          color="error"
+                          display="block"
+                        >
+                          {err}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
                 </Box>
               )
             })}
           </Stack>
+          {entries.length > 0 && (
+            <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1 }}>
+              <Button variant="outlined" size="small" onClick={addEntry}>
+                Add Entry
+              </Button>
+            </Stack>
+          )}
 
           {mode === 'edit' && (
             <>
@@ -543,10 +779,15 @@ export const MacroGroupManager = ({
                 fullWidth
               />
               <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
-                <Button variant="contained" onClick={onSaveVersion} disabled={saving || loadingVersion}>
+                <Button size="small" variant="contained" onClick={onSaveVersion} disabled={Boolean(saveDisabledReason)}>
                   Save New Version
                 </Button>
               </Stack>
+              {!!saveDisabledReason && (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  {saveDisabledReason}
+                </Typography>
+              )}
             </>
           )}
 
@@ -557,13 +798,19 @@ export const MacroGroupManager = ({
               </Typography>
               <Stack direction="row" justifyContent="flex-end">
                 <Button
+                  size="small"
                   variant="contained"
                   onClick={onCreateGroup}
-                  disabled={saving || newGroupName.trim().length < 3}
+                  disabled={Boolean(createDisabledReason)}
                 >
                   Create Group
                 </Button>
               </Stack>
+              {!!createDisabledReason && (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  {createDisabledReason}
+                </Typography>
+              )}
             </>
           )}
         </>
@@ -573,7 +820,7 @@ export const MacroGroupManager = ({
         <>
           <Divider sx={{ my: 2 }} />
           <Typography variant="body2" color="text.secondary">
-            Select one of your groups to edit entries and save a new version.
+            Choose one of your groups to start editing.
           </Typography>
         </>
       )}
