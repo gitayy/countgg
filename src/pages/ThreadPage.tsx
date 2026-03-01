@@ -2617,6 +2617,35 @@ useEffect(() => {
     [macroGroupsEnabled, thread?.uuid, user, prefEnabled, threadMacroGroupId],
   )
 
+  const clearThreadMacroOverrideToGlobal = useCallback(async () => {
+    if (!macroGroupsEnabled || !thread?.uuid || !user) {
+      return
+    }
+
+    const previousMacroGroupId = threadMacroGroupId
+    setThreadMacroGroupId(null)
+    setMacroSelectionSaving(true)
+    try {
+      await setThreadMacroGroupPreference(thread.uuid, false, null)
+      const [runtimeRes, recommendedRes] = await Promise.all([
+        getActiveMacroRuntimeForThread(thread.uuid),
+        getRecommendedMacroGroups(thread.uuid, 10),
+      ])
+      setActiveMacroRuntime(runtimeRes.data)
+      setRecommendedMacroGroups(recommendedRes.data.items || [])
+      setSnackbarSeverity('success')
+      setSnackbarOpen(true)
+      setSnackbarMessage('Thread macro override cleared; using global macro selection')
+    } catch (err) {
+      setThreadMacroGroupId(previousMacroGroupId)
+      setSnackbarSeverity('error')
+      setSnackbarOpen(true)
+      setSnackbarMessage('Failed to clear thread macro override')
+    } finally {
+      setMacroSelectionSaving(false)
+    }
+  }, [macroGroupsEnabled, thread?.uuid, user, threadMacroGroupId])
+
   const savePrefs = async () => {
     if (user && counter && thread) {
       if(!user.threadPreferences) {user.threadPreferences = []}
@@ -2908,7 +2937,7 @@ useEffect(() => {
                   mt: 2,
                   mb: 2,
                   p: 1,
-                  maxWidth: 360,
+                  width: '100%',
                   borderRadius: '8px',
                   border: '1px solid',
                   borderColor: 'divider',
@@ -2925,7 +2954,7 @@ useEffect(() => {
                         size="small"
                         color="primary"
                         label="Thread Pref"
-                        onDelete={() => saveThreadMacroSelection(null)}
+                        onDelete={clearThreadMacroOverrideToGlobal}
                         disabled={macroSelectionSaving}
                       />
                     ) : (
@@ -2995,23 +3024,36 @@ useEffect(() => {
                 )}
                 {activeMacroRuntime.entries?.length > 0 && (
                   <Box sx={{ mt: 0.5 }}>
-                    {groupedActiveMacroEntries.map((group) => (
-                      <Box key={group.type} sx={{ mt: 0.5 }}>
-                        <Typography
-                          variant="caption"
-                          display="block"
-                          color="text.secondary"
-                          sx={{ fontWeight: 700, lineHeight: 1.1 }}
-                        >
-                          {group.label}
-                        </Typography>
-                        {group.entries.map((entry) => (
-                          <Typography key={entry.id} variant="caption" display="block" color="text.secondary" sx={{ lineHeight: 1.1 }}>
-                            {entry.triggerKey}: {describeActiveMacroEntry(entry)}
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                          xs: '1fr',
+                          md: 'repeat(2, minmax(0, 1fr))',
+                          xl: 'repeat(3, minmax(0, 1fr))',
+                        },
+                        columnGap: 1.5,
+                        rowGap: 0.5,
+                      }}
+                    >
+                      {groupedActiveMacroEntries.map((group) => (
+                        <Box key={group.type} sx={{ mt: 0.25, minWidth: 0 }}>
+                          <Typography
+                            variant="caption"
+                            display="block"
+                            color="text.secondary"
+                            sx={{ fontWeight: 700, lineHeight: 1.1 }}
+                          >
+                            {group.label}
                           </Typography>
-                        ))}
-                      </Box>
-                    ))}
+                          {group.entries.map((entry) => (
+                            <Typography key={entry.id} variant="caption" display="block" color="text.secondary" sx={{ lineHeight: 1.1 }}>
+                              {entry.triggerKey}: {describeActiveMacroEntry(entry)}
+                            </Typography>
+                          ))}
+                        </Box>
+                      ))}
+                    </Box>
                   </Box>
                 )}
               </Box>
@@ -3312,7 +3354,7 @@ useEffect(() => {
                 size="small"
                 color="primary"
                 label="Thread Pref"
-                onDelete={() => saveThreadMacroSelection(null)}
+                onDelete={clearThreadMacroOverrideToGlobal}
                 disabled={macroSelectionSaving}
               />
             ) : (

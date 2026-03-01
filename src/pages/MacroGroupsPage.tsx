@@ -239,13 +239,6 @@ export const MacroGroupsPage = () => {
       .map(([label, items]) => `${label}: ${items.slice(0, 4).join(', ')}${items.length > 4 ? ` +${items.length - 4}` : ''}`)
   }
 
-  const computeQualityScore = (entries: MacroEntry[], usageCount: number, hasDescription: boolean) => {
-    const entryScore = Math.min(45, entries.length * 3)
-    const usageScore = Math.min(40, usageCount * 8)
-    const descriptionScore = hasDescription ? 15 : 0
-    return Math.min(100, entryScore + usageScore + descriptionScore)
-  }
-
   const copyToDraft = (group: MacroGroup) => {
     if (viewMode === 'create') {
       const confirmed = window.confirm('Replace your current draft with this copied macro group?')
@@ -417,12 +410,6 @@ export const MacroGroupsPage = () => {
                 const previewRows = buildGroupedPreviewRows(entries)
                 const usageRows = groupThreadUsageById[group.id] || []
                 const topUsage = usageRows[0]
-                const qualityScore = computeQualityScore(
-                  entries,
-                  usageRows.reduce((sum, row) => sum + row.appliesCount, 0),
-                  Boolean(group.description?.trim()),
-                )
-
                 return (
               <Box
                 key={group.id}
@@ -486,12 +473,6 @@ export const MacroGroupsPage = () => {
                         label={`v${groupPreviewById[group.id]?.versionNumber ?? '-'}`}
                       />
                       <Chip size="small" variant="outlined" label={`${entries.length} entries`} />
-                      <Chip
-                        size="small"
-                        color={qualityScore >= 80 ? 'success' : qualityScore >= 55 ? 'warning' : 'default'}
-                        variant="outlined"
-                        label={`Quality ${qualityScore}`}
-                      />
                       {ownedGroupIds.has(group.id) && (
                         <Chip size="small" color="success" variant="outlined" label="Owned" />
                       )}
