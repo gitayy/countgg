@@ -13,8 +13,14 @@ import {
 } from '@mui/material'
 import { Link as RouterLink } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
-import { listMacroGroups, macroGroupsFeatureEnabled } from '../utils/api'
-import { MacroGroup } from '../utils/types'
+import {
+  getMacroGroupThreadUsage,
+  getMacroGroupVersion,
+  getMacroGroupVersions,
+  listMacroGroups,
+  macroGroupsFeatureEnabled,
+} from '../utils/api'
+import { MacroEntry, MacroEntryDraft, MacroGroup } from '../utils/types'
 import MacroGroupManager from '../components/MacroGroupManager'
 import { prioritizeOwnedMacroGroups } from '../utils/macroGroups'
 
@@ -26,7 +32,20 @@ export const MacroGroupsPage = () => {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [macroGroups, setMacroGroups] = useState<MacroGroup[]>([])
+  const [ownedMacroGroups, setOwnedMacroGroups] = useState<MacroGroup[]>([])
   const [ownedGroupIds, setOwnedGroupIds] = useState<Set<number>>(new Set())
+  const [groupPreviewById, setGroupPreviewById] = useState<
+    Record<number, { versionNumber: number | null; entries: MacroEntry[] }>
+  >({})
+  const [groupThreadUsageById, setGroupThreadUsageById] = useState<
+    Record<number, { threadName: string; appliesCount: number }[]>
+  >({})
+  const [draftSeed, setDraftSeed] = useState<{
+    token: number
+    name: string
+    description: string
+    entries: MacroEntryDraft[]
+  } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const macroGroupsEnabled = macroGroupsFeatureEnabled
@@ -36,6 +55,47 @@ export const MacroGroupsPage = () => {
     return () => {
       document.title = 'Counting!'
     }
+  }, [])
+
+  const hydrateGroupDetails = useCallback(async (groups: MacroGroup[]) => {
+    const previews: Record<number, { versionNumber: number | null; entries: MacroEntry[] }> = {}
+    const usage: Record<number, { threadName: string; appliesCount: number }[]> = {}
+
+    await Promise.all(
+      groups.map(async (group) => {
+        try {
+          const versionsRes = await getMacroGroupVersions(group.id)
+          const latest = versionsRes.data?.[0]
+          if (latest?.versionNumber) {
+            const versionRes = await getMacroGroupVersion(group.id, latest.versionNumber)
+            previews[group.id] = {
+              versionNumber: latest.versionNumber,
+              entries: versionRes.data.entries || [],
+            }
+          } else {
+            previews[group.id] = {
+              versionNumber: null,
+              entries: [],
+            }
+          }
+        } catch {
+          previews[group.id] = { versionNumber: null, entries: [] }
+        }
+
+        try {
+          const usageRes = await getMacroGroupThreadUsage(group.id, 3)
+          usage[group.id] = (usageRes.data.items || []).map((row) => ({
+            threadName: row.threadName,
+            appliesCount: row.appliesCount,
+          }))
+        } catch {
+          usage[group.id] = []
+        }
+      }),
+    )
+
+    setGroupPreviewById(previews)
+    setGroupThreadUsageById(usage)
   }, [])
 
   const loadMacroGroups = useCallback(async () => {
@@ -48,14 +108,18 @@ export const MacroGroupsPage = () => {
         listMacroGroups(1, 100, undefined, true),
       ])
       setTotal(groupsRes.data.total || 0)
-      setMacroGroups(groupsRes.data.items || [])
-      setOwnedGroupIds(new Set((mineRes.data.items || []).map((item) => item.id)))
+      const publicItems = groupsRes.data.items || []
+      const mineItems = mineRes.data.items || []
+      setMacroGroups(publicItems)
+      setOwnedMacroGroups(mineItems)
+      setOwnedGroupIds(new Set(mineItems.map((item) => item.id)))
+      await hydrateGroupDetails(publicItems)
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to load macro groups')
     } finally {
       setLoading(false)
     }
-  }, [macroGroupsEnabled, page, search])
+  }, [macroGroupsEnabled, page, search, hydrateGroupDetails])
 
   useEffect(() => {
     loadMacroGroups()
@@ -65,6 +129,40 @@ export const MacroGroupsPage = () => {
     () => prioritizeOwnedMacroGroups(macroGroups, ownedGroupIds),
     [macroGroups, ownedGroupIds],
   )
+
+  const describeEntry = (entry: MacroEntry) => {
+    const payload = entry.payloadJson || {}
+    switch (entry.macroType) {
+      case 'CHAR_INSERT':
+        return `insert "${payload.char || ''}"`
+      case 'ACTION':
+        return `${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`
+      case 'SUBMIT':
+        return 'submit'
+      case 'SUBMIT_ACTION':
+        return `submit + ${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`
+      case 'TOGGLE':
+        return 'toggle macros'
+      case 'COMBO':
+        return String(payload.comboId || '').toLowerCase()
+      default:
+        return 'macro'
+    }
+  }
+
+  const copyToDraft = (group: MacroGroup) => {
+    const preview = groupPreviewById[group.id]
+    setDraftSeed({
+      token: Date.now(),
+      name: `${group.name} (copy)`,
+      description: group.description || '',
+      entries: (preview?.entries || []).map((entry) => ({
+        triggerKey: entry.triggerKey,
+        macroType: entry.macroType,
+        payloadJson: entry.payloadJson,
+      })),
+    })
+  }
 
   if (!user) {
     return (
@@ -108,9 +206,6 @@ export const MacroGroupsPage = () => {
             }}
             fullWidth
           />
-          <Button variant="outlined" disabled={loading} onClick={loadMacroGroups}>
-            Refresh
-          </Button>
           <Button variant="text" component={RouterLink} to="/prefs">
             Back To Prefs
           </Button>
@@ -130,9 +225,41 @@ export const MacroGroupsPage = () => {
                   <Typography variant="body2" color="text.secondary">
                     {group.description || 'No description'}
                   </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
+                    v{groupPreviewById[group.id]?.versionNumber ?? '-'} • {(groupPreviewById[group.id]?.entries || []).length} entries
+                  </Typography>
                 </Box>
-                {ownedGroupIds.has(group.id) && <Chip size="small" color="success" label="Mine" />}
+                <Stack direction="row" spacing={0.5}>
+                  <Button size="small" variant="outlined" onClick={() => copyToDraft(group)}>
+                    Copy To Draft
+                  </Button>
+                  {ownedGroupIds.has(group.id) && <Chip size="small" color="success" label="Mine" />}
+                </Stack>
               </Stack>
+              {(groupPreviewById[group.id]?.entries || []).length > 0 && (
+                <Box sx={{ mt: 1 }}>
+                  {(groupPreviewById[group.id]?.entries || []).slice(0, 6).map((entry) => (
+                    <Typography key={`${group.id}-${entry.id}`} variant="caption" display="block" color="text.secondary">
+                      {entry.triggerKey}: {describeEntry(entry)}
+                    </Typography>
+                  ))}
+                  {(groupPreviewById[group.id]?.entries || []).length > 6 && (
+                    <Typography variant="caption" color="text.secondary">
+                      +{(groupPreviewById[group.id]?.entries || []).length - 6} more
+                    </Typography>
+                  )}
+                </Box>
+              )}
+              <Box sx={{ mt: 0.75, display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                {(groupThreadUsageById[group.id] || []).map((row) => (
+                  <Chip
+                    key={`${group.id}-${row.threadName}`}
+                    size="small"
+                    variant="outlined"
+                    label={`${row.threadName} (${row.appliesCount})`}
+                  />
+                ))}
+              </Box>
             </Box>
           ))}
           {sortedMacroGroups.length === 0 && (
@@ -153,10 +280,13 @@ export const MacroGroupsPage = () => {
         )}
       </Box>
 
-      <MacroGroupManager macroGroups={sortedMacroGroups} refreshMacroGroups={loadMacroGroups} />
+      <MacroGroupManager
+        ownedMacroGroups={ownedMacroGroups}
+        refreshMacroGroups={loadMacroGroups}
+        draftSeed={draftSeed}
+      />
     </Container>
   )
 }
 
 export default MacroGroupsPage
-

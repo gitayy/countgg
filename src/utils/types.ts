@@ -466,6 +466,20 @@ export type ThreadMacroGroupUsageResponse = {
   items: ThreadMacroGroupUsageRow[]
 }
 
+export type MacroGroupThreadUsageRow = {
+  threadId: string
+  threadName: string
+  threadTitle: string
+  appliesCount: number
+  lastAppliedAt: string | null
+}
+
+export type MacroGroupThreadUsageResponse = {
+  macroGroupId: number
+  total: number
+  items: MacroGroupThreadUsageRow[]
+}
+
 export type ActiveMacroRuntime = {
   source: 'none' | 'global' | 'thread'
   enabled: boolean

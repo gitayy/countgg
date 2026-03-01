@@ -33,7 +33,7 @@ describe('MacroGroupManager', () => {
 
     render(
       <MacroGroupManager
-        macroGroups={[]}
+        ownedMacroGroups={[]}
         refreshMacroGroups={refreshMacroGroups}
       />,
     )
@@ -44,7 +44,7 @@ describe('MacroGroupManager', () => {
     fireEvent.change(screen.getByLabelText('Description'), {
       target: { value: 'Starter macros' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Group' }))
 
     await waitFor(() =>
       expect(mockedCreateMacroGroup).toHaveBeenCalledWith(
@@ -72,7 +72,7 @@ describe('MacroGroupManager', () => {
 
     render(
       <MacroGroupManager
-        macroGroups={[
+        ownedMacroGroups={[
           {
             id: 7,
             name: 'Main Thread Macro Set',
@@ -87,8 +87,8 @@ describe('MacroGroupManager', () => {
       />,
     )
 
-    fireEvent.mouseDown(screen.getByLabelText('Edit Macro Group'))
-    fireEvent.click(await screen.findByRole('option', { name: 'Main Thread Macro Set' }))
+    fireEvent.mouseDown(screen.getByLabelText('Edit My Group'))
+    fireEvent.click(await screen.findByText('Main Thread Macro Set'))
 
     await waitFor(() =>
       expect(mockedGetMacroGroupVersions).toHaveBeenCalledWith(7),
@@ -98,4 +98,3 @@ describe('MacroGroupManager', () => {
     )
   })
 })
-

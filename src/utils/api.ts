@@ -20,6 +20,7 @@ import {
   MacroApplyResponse,
   ThreadMacroGroupUsageResponse,
   ActiveMacroRuntime,
+  MacroGroupThreadUsageResponse,
 } from './types'
 
 const CONFIG: AxiosRequestConfig = { withCredentials: true }
@@ -318,6 +319,15 @@ export const getMacroGroupVersion = (id: number, versionNumber: number) =>
   axios.get<MacroGroupVersion>(
     `${API_URL}/macro-groups/${id}/versions/${versionNumber}`,
     CONFIG,
+  )
+
+export const getMacroGroupThreadUsage = (id: number, limit = 5) =>
+  axios.get<MacroGroupThreadUsageResponse>(
+    `${API_URL}/macro-groups/${id}/thread-usage`,
+    {
+      params: { limit },
+      ...CONFIG,
+    },
   )
 
 export const enqueueMacroGroupUpdate = (
