@@ -29,7 +29,7 @@ import { HourBar } from './HourBar'
 import { useNavigate } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
 import { SocketContext } from '../utils/contexts/SocketContext'
-import { MacroActionType, MacroComboId, MacroEntry, MacroEntryType } from '../utils/types'
+import { MacroActionType, MacroComboId, MacroEntry } from '../utils/types'
 import { findActiveMacroEntry } from '../utils/macroRuntime'
 
 const CountList = memo((props: any) => {
@@ -176,10 +176,6 @@ const CountList = memo((props: any) => {
         await applySingleAction('SELECT_ALL')
         await applySingleAction('PASTE')
         return
-      case 'SUBMIT_PASTE':
-        await applySingleAction('SELECT_ALL')
-        await applySingleAction('PASTE')
-        return
     }
   }
 
@@ -206,10 +202,6 @@ const CountList = memo((props: any) => {
         const activeMacroEntry = getActiveMacroEntry(event.key)
         if (activeMacroEntry) {
           event.preventDefault()
-          const macroMeta = {
-            macroTriggerKey: activeMacroEntry.triggerKey,
-            macroEntryType: activeMacroEntry.macroType as MacroEntryType,
-          }
           switch (activeMacroEntry.macroType) {
             case 'CHAR_INSERT':
               if (typeof activeMacroEntry.payloadJson?.char === 'string' && activeMacroEntry.payloadJson.char.length > 0) {
@@ -218,19 +210,17 @@ const CountList = memo((props: any) => {
               return
             case 'ACTION':
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
-                await applySingleAction(activeMacroEntry.payloadJson.action as MacroActionType)
-              }
-              return
-            case 'ACTION_REPEAT':
-              if (typeof activeMacroEntry.payloadJson?.action === 'string') {
                 await applyActionRepeated(
                   activeMacroEntry.payloadJson.action as MacroActionType,
                   Number(activeMacroEntry.payloadJson?.repeat ?? 1),
                 )
               }
               return
-            case 'SUBMIT_ACTION_REPEAT':
-              await handlePosting(macroMeta)
+            case 'SUBMIT':
+              await handlePosting(true)
+              return
+            case 'SUBMIT_ACTION':
+              await handlePosting(true)
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
                 await applyActionRepeated(
                   activeMacroEntry.payloadJson.action as MacroActionType,
@@ -240,9 +230,6 @@ const CountList = memo((props: any) => {
               return
             case 'COMBO':
               if (typeof activeMacroEntry.payloadJson?.comboId === 'string') {
-                if (activeMacroEntry.payloadJson.comboId === 'SUBMIT_PASTE') {
-                  await handlePosting(macroMeta)
-                }
                 await executeCombo(activeMacroEntry.payloadJson.comboId as MacroComboId)
               }
               return
@@ -480,7 +467,7 @@ const CountList = memo((props: any) => {
   }
 
   const handlePosting = async (
-    macroSubmitMeta?: { macroTriggerKey: string; macroEntryType: MacroEntryType },
+    usedMacroSubmit?: boolean,
   ) => {
     const throttleCheck = performance.now() - throttle.current
     let throttled;
@@ -514,8 +501,8 @@ const CountList = memo((props: any) => {
       const post_hash = (Math.random() * 100000000000000000).toString(36)
       props.handleLatencyChange(Date.now(), post_hash)
       props.handleLatencyCheckChange(inputRef.current.value.trim())
-      if (macroSubmitMeta && props.onMacroSubmitMeta) {
-        props.onMacroSubmitMeta(macroSubmitMeta)
+      if (usedMacroSubmit && props.onMacroSubmitMeta) {
+        props.onMacroSubmitMeta(true)
       }
       if (props.handleSubmit) {
         props.handleSubmit(
@@ -523,7 +510,7 @@ const CountList = memo((props: any) => {
           props.refScroll.current,
           props.postScroll.current,
           post_hash,
-          macroSubmitMeta,
+          usedMacroSubmit,
         )
       }
       throttle.current = performance.now()

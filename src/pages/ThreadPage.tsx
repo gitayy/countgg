@@ -49,7 +49,6 @@ import { SocketContext } from '../utils/contexts/SocketContext'
 import {
   Category,
   Counter,
-  MacroEntryType,
   MacroGroup,
   PostType,
   PreferencesType,
@@ -185,10 +184,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     macroGroupVersionNumber: null,
     entries: [],
   })
-  const [pendingSubmitMacroMeta, setPendingSubmitMacroMeta] = useState<{
-    macroTriggerKey: string
-    macroEntryType: MacroEntryType
-  } | null>(null)
+  const [pendingSubmitMacroMeta, setPendingSubmitMacroMeta] = useState(false)
   const [macroSelectionSaving, setMacroSelectionSaving] = useState(false)
   const activeMacroGroupName = useMemo(
     () =>
@@ -206,10 +202,10 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       case 'CHAR_INSERT':
         return `insert "${payload.char || ''}"`
       case 'ACTION':
-        return `${String(payload.action || '').toLowerCase()}`
-      case 'ACTION_REPEAT':
         return `${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`
-      case 'SUBMIT_ACTION_REPEAT':
+      case 'SUBMIT':
+        return 'submit'
+      case 'SUBMIT_ACTION':
         return `submit + ${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`
       case 'COMBO':
         return `${String(payload.comboId || '').toLowerCase()}`
@@ -1470,11 +1466,11 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     refScroll: any,
     postScroll: any,
     post_hash: string,
-    macroSubmitMeta?: { macroTriggerKey: string; macroEntryType: MacroEntryType } | null,
+    macroSubmitMeta?: boolean,
   ) => {
     const submitText = text
     if (thread_name && counter) {
-      const effectiveMacroMeta = macroSubmitMeta || pendingSubmitMacroMeta
+      const usedMacroForSubmit = Boolean(macroSubmitMeta || pendingSubmitMacroMeta)
       socket.emit('post', {
         thread_name: thread_name,
         text: submitText,
@@ -1482,10 +1478,10 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         refScroll: refScroll,
         postScroll: postScroll,
         latency: renderLatencyEnabled.current,
-        macroMetadata: buildMacroSubmitMetadata(activeMacroRuntime, effectiveMacroMeta),
+        macroMetadata: buildMacroSubmitMetadata(activeMacroRuntime, usedMacroForSubmit),
       })
       if (pendingSubmitMacroMeta) {
-        setPendingSubmitMacroMeta(null)
+        setPendingSubmitMacroMeta(false)
       }
     }
   }

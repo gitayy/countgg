@@ -361,8 +361,8 @@ export type MacroGroupVisibility = 'PUBLIC'
 export type MacroEntryType =
   | 'CHAR_INSERT'
   | 'ACTION'
-  | 'ACTION_REPEAT'
-  | 'SUBMIT_ACTION_REPEAT'
+  | 'SUBMIT'
+  | 'SUBMIT_ACTION'
   | 'COMBO'
 
 export type MacroActionType =
@@ -379,13 +379,11 @@ export type MacroActionType =
 export type MacroComboId =
   | 'SELECT_ALL_COPY'
   | 'SELECT_ALL_PASTE'
-  | 'SUBMIT_PASTE'
 
 export type MacroEntryPayload =
   | { char: string }
-  | { action: MacroActionType }
-  | { action: MacroActionType; repeat: number }
-  | { action: MacroActionType; repeat: number; submit: true }
+  | { action: MacroActionType; repeat?: number }
+  | Record<string, never>
   | { comboId: MacroComboId }
 
 export type MacroEntryDraft = {

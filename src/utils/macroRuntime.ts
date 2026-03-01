@@ -17,14 +17,12 @@ export const findActiveMacroEntry = (
 
 export const buildMacroSubmitMetadata = (
   runtime: ActiveMacroRuntime | undefined,
-  meta: { macroTriggerKey: string; macroEntryType: string } | null | undefined,
+  didUseMacro: boolean,
 ) => {
-  if (!runtime || !runtime.enabled || !meta) return undefined
+  if (!runtime || !runtime.enabled || !didUseMacro) return undefined
   if (!runtime.macroGroupId || !runtime.macroGroupVersionId) return undefined
   return {
     macroGroupId: runtime.macroGroupId,
     macroGroupVersionId: runtime.macroGroupVersionId,
-    macroTriggerKey: meta.macroTriggerKey,
-    macroEntryType: meta.macroEntryType,
   }
 }

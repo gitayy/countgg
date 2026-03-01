@@ -50,14 +50,13 @@ const ACTION_OPTIONS: MacroActionType[] = [
 const COMBO_OPTIONS: MacroComboId[] = [
   'SELECT_ALL_COPY',
   'SELECT_ALL_PASTE',
-  'SUBMIT_PASTE',
 ]
 
 const MACRO_TYPE_OPTIONS: MacroEntryType[] = [
   'CHAR_INSERT',
   'ACTION',
-  'ACTION_REPEAT',
-  'SUBMIT_ACTION_REPEAT',
+  'SUBMIT',
+  'SUBMIT_ACTION',
   'COMBO',
 ]
 
@@ -67,13 +66,13 @@ const DEFAULT_ENTRY_BY_TYPE = (macroType: MacroEntryType): MacroEntryDraft => {
       return { triggerKey: '', macroType, payloadJson: { char: '1' } }
     case 'ACTION':
       return { triggerKey: '', macroType, payloadJson: { action: 'BACKSPACE' } }
-    case 'ACTION_REPEAT':
-      return { triggerKey: '', macroType, payloadJson: { action: 'BACKSPACE', repeat: 2 } }
-    case 'SUBMIT_ACTION_REPEAT':
+    case 'SUBMIT':
+      return { triggerKey: '', macroType, payloadJson: {} }
+    case 'SUBMIT_ACTION':
       return {
         triggerKey: '',
         macroType,
-        payloadJson: { action: 'BACKSPACE', repeat: 1, submit: true },
+        payloadJson: { action: 'BACKSPACE', repeat: 1 },
       }
     case 'COMBO':
       return { triggerKey: '', macroType, payloadJson: { comboId: 'SELECT_ALL_PASTE' } }
@@ -387,8 +386,7 @@ export const MacroGroupManager = ({ macroGroups, refreshMacroGroups }: Props) =>
                     )}
 
                     {(entry.macroType === 'ACTION' ||
-                      entry.macroType === 'ACTION_REPEAT' ||
-                      entry.macroType === 'SUBMIT_ACTION_REPEAT') && (
+                      entry.macroType === 'SUBMIT_ACTION') && (
                       <FormControl sx={{ minWidth: 180 }}>
                         <InputLabel id={`macro-action-${index}`}>Action</InputLabel>
                         <Select
@@ -414,8 +412,8 @@ export const MacroGroupManager = ({ macroGroups, refreshMacroGroups }: Props) =>
                       </FormControl>
                     )}
 
-                    {(entry.macroType === 'ACTION_REPEAT' ||
-                      entry.macroType === 'SUBMIT_ACTION_REPEAT') && (
+                    {(entry.macroType === 'ACTION' ||
+                      entry.macroType === 'SUBMIT_ACTION') && (
                       <TextField
                         label="Repeat"
                         type="number"
@@ -427,7 +425,6 @@ export const MacroGroupManager = ({ macroGroups, refreshMacroGroups }: Props) =>
                             payloadJson: {
                               ...payload,
                               repeat: Math.max(1, Math.min(10, parseInt(e.target.value || '1', 10))),
-                              ...(entry.macroType === 'SUBMIT_ACTION_REPEAT' ? { submit: true } : {}),
                             },
                           })
                         }

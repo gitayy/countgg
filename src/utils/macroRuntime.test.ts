@@ -36,15 +36,10 @@ describe('macroRuntime helpers', () => {
   })
 
   it('builds submit metadata only when runtime ids are present', () => {
-    const metadata = buildMacroSubmitMetadata(runtimeWithEntries(), {
-      macroTriggerKey: 'q',
-      macroEntryType: 'CHAR_INSERT',
-    })
+    const metadata = buildMacroSubmitMetadata(runtimeWithEntries(), true)
     expect(metadata).toEqual({
       macroGroupId: 8,
       macroGroupVersionId: 13,
-      macroTriggerKey: 'q',
-      macroEntryType: 'CHAR_INSERT',
     })
   })
 
@@ -53,10 +48,7 @@ describe('macroRuntime helpers', () => {
       ...runtimeWithEntries(),
       enabled: false,
     }
-    const metadata = buildMacroSubmitMetadata(disabledRuntime, {
-      macroTriggerKey: 'q',
-      macroEntryType: 'CHAR_INSERT',
-    })
+    const metadata = buildMacroSubmitMetadata(disabledRuntime, true)
     expect(metadata).toBeUndefined()
   })
 })
