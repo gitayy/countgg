@@ -369,7 +369,7 @@ const CountList = memo((props: any) => {
               return
             case 'SUBMIT':
               props.handleMacro?.(event.key, ['Enter'])
-              await handlePosting(true)
+              await handlePosting()
               return
             case 'SUBMIT_ACTION':
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
@@ -382,7 +382,7 @@ const CountList = memo((props: any) => {
               } else {
                 props.handleMacro?.(event.key, ['Enter'])
               }
-              await handlePosting(true)
+              await handlePosting()
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
                 const action = activeMacroEntry.payloadJson.action as MacroActionType
                 const repeat = Math.max(1, Math.min(10, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
@@ -650,9 +650,7 @@ const CountList = memo((props: any) => {
     }
   }
 
-  const handlePosting = async (
-    usedMacroSubmit?: boolean,
-  ) => {
+  const handlePosting = async () => {
     const throttleCheck = performance.now() - throttle.current
     let throttled;
     if(props.thread && props.thread.validationType === 'bars') {
@@ -686,9 +684,6 @@ const CountList = memo((props: any) => {
       const post_hash = (Math.random() * 100000000000000000).toString(36)
       props.handleLatencyChange(submitAt, post_hash)
       props.handleLatencyCheckChange(inputRef.current.value.trim())
-      if (usedMacroSubmit && props.onMacroSubmitMeta) {
-        props.onMacroSubmitMeta(true)
-      }
       if (props.handleSubmit) {
         props.handleSubmit(
           inputRef.current.value,
@@ -703,7 +698,6 @@ const CountList = memo((props: any) => {
             h: props.macroHash?.current ?? [],
           },
           post_hash,
-          usedMacroSubmit,
         )
       }
       lastSubmitAtRef.current = submitAt

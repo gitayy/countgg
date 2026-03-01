@@ -35,8 +35,16 @@ describe('macroRuntime helpers', () => {
     expect(entry).toBeUndefined()
   })
 
-  it('builds submit metadata only when runtime ids are present', () => {
-    const metadata = buildMacroSubmitMetadata(runtimeWithEntries(), true)
+  it('builds submit metadata when runtime ids are present', () => {
+    const metadata = buildMacroSubmitMetadata(runtimeWithEntries())
+    expect(metadata).toEqual({
+      macroPresetId: 8,
+      macroPresetVersionId: 13,
+    })
+  })
+
+  it('still builds metadata regardless of submit trigger source', () => {
+    const metadata = buildMacroSubmitMetadata(runtimeWithEntries())
     expect(metadata).toEqual({
       macroPresetId: 8,
       macroPresetVersionId: 13,
@@ -48,7 +56,7 @@ describe('macroRuntime helpers', () => {
       ...runtimeWithEntries(),
       enabled: false,
     }
-    const metadata = buildMacroSubmitMetadata(disabledRuntime, true)
+    const metadata = buildMacroSubmitMetadata(disabledRuntime)
     expect(metadata).toBeUndefined()
   })
 })

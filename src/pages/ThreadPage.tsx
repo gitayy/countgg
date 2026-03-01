@@ -189,7 +189,6 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     macroPresetVersionNumber: null,
     entries: [],
   })
-  const [pendingSubmitMacroMeta, setPendingSubmitMacroMeta] = useState(false)
   const [macroHotkeysEnabled, setMacroHotkeysEnabled] = useState(true)
   const [macroSelectionSaving, setMacroSelectionSaving] = useState(false)
   const macroPresetsLoadedForUserRef = useRef<string | null>(null)
@@ -1645,22 +1644,17 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     text: string,
     macroHashPayload: any,
     post_hash: string,
-    macroSubmitMeta?: boolean,
   ) => {
     const submitText = text
     if (thread_name && counter) {
-      const usedMacroForSubmit = Boolean(macroSubmitMeta || pendingSubmitMacroMeta)
       socket.emit('post', {
         thread_name: thread_name,
         text: submitText,
         post_hash: post_hash,
         macroHash: macroHashPayload,
         latency: renderLatencyEnabled.current,
-        macroMetadata: buildMacroSubmitMetadata(activeMacroRuntime, usedMacroForSubmit),
+        macroMetadata: buildMacroSubmitMetadata(activeMacroRuntime),
       })
-      if (pendingSubmitMacroMeta) {
-        setPendingSubmitMacroMeta(false)
-      }
     }
   }
 
@@ -2316,7 +2310,6 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         handleSubmit={handleSubmit}
         handleMacro={handleMacro}
         activeMacroRuntime={activeMacroRuntime}
-        onMacroSubmitMeta={(meta) => setPendingSubmitMacroMeta(meta)}
         macroHotkeysEnabled={macroHotkeysEnabled}
         onMacroHotkeysEnabledChange={setMacroHotkeysEnabled}
       ></CountList>
@@ -2415,7 +2408,6 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         handleSubmit={undefined}
         handleMacro={handleMacro}
         activeMacroRuntime={activeMacroRuntime}
-        onMacroSubmitMeta={undefined}
         macroHotkeysEnabled={macroHotkeysEnabled}
         onMacroHotkeysEnabledChange={setMacroHotkeysEnabled}
       ></CountList>
