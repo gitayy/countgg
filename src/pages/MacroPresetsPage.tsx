@@ -33,7 +33,6 @@ type MacroSearchFilters = {
   name: string
   handle: string
   thread: string
-  threadMode: 'any' | 'used' | 'none'
   freeText: string
 }
 
@@ -43,7 +42,6 @@ const parseMacroSearchFilters = (raw: string): MacroSearchFilters => {
     name: '',
     handle: '',
     thread: '',
-    threadMode: 'any',
     freeText: '',
   }
 
@@ -63,16 +61,7 @@ const parseMacroSearchFilters = (raw: string): MacroSearchFilters => {
     if (token.key === 'creator') filters.creator = token.value
     if (token.key === 'name') filters.name = token.value
     if (token.key === 'handle') filters.handle = token.value
-    if (token.key === 'thread') {
-      const normalized = token.value.toLowerCase()
-      if (normalized === 'used' || normalized === 'has') {
-        filters.threadMode = 'used'
-      } else if (normalized === 'none' || normalized === 'unused') {
-        filters.threadMode = 'none'
-      } else {
-        filters.thread = token.value
-      }
-    }
+    if (token.key === 'thread') filters.thread = token.value
   }
 
   const stripRegex = /\b(creator|name|handle|thread):"([^"]+)"|\b(creator|name|handle|thread):(\S+)/gi
@@ -214,6 +203,8 @@ export const MacroPresetsPage = () => {
         searchFilters.freeText || undefined,
         false,
         searchFilters.creator || undefined,
+        undefined,
+        searchFilters.thread || undefined,
       )
       setTotal(groupsRes.data.total || 0)
       const itemsWithPinned = groupsRes.data.items || []
@@ -247,6 +238,9 @@ export const MacroPresetsPage = () => {
         PAGE_SIZE,
         editSearchFilters.freeText || undefined,
         true,
+        undefined,
+        undefined,
+        editSearchFilters.thread || undefined,
       )
       const mineItems = mineRes.data.items || []
       setEditTotal(mineRes.data.total || 0)
@@ -272,7 +266,6 @@ export const MacroPresetsPage = () => {
   const filteredMacroPresets = useMemo(() => {
     return sortedMacroPresets.filter((preset) => {
       const entries = groupPreviewById[preset.id]?.entries || []
-      const hasUsage = (groupThreadUsageById[preset.id] || []).length > 0
       const ownerName = `${preset.ownerCounter?.name || ''} ${preset.ownerCounter?.username || ''} ${preset.ownerCounter?.uuid || ''}`.toLowerCase()
       const name = (preset.name || '').toLowerCase()
       const handle = (preset.handle || '').toLowerCase()
@@ -289,9 +282,6 @@ export const MacroPresetsPage = () => {
       if (searchFilters.creator && !ownerName.includes(searchFilters.creator.toLowerCase())) return false
       if (searchFilters.name && !name.includes(searchFilters.name.toLowerCase())) return false
       if (searchFilters.handle && !handle.includes(searchFilters.handle.toLowerCase())) return false
-      if (searchFilters.threadMode === 'used' && !hasUsage) return false
-      if (searchFilters.threadMode === 'none' && hasUsage) return false
-      if (searchFilters.thread && !threadUsageNames.includes(searchFilters.thread.toLowerCase())) return false
       if (searchFilters.freeText && !freeTextHaystack.includes(searchFilters.freeText.toLowerCase())) return false
       return true
     })
@@ -479,7 +469,7 @@ export const MacroPresetsPage = () => {
           </Typography>
           <TextField
             label="Search & Filter Public Presets"
-            helperText='Use plain text or filters: creator:pull name:test1 handle:test1 thread:used thread:"main"'
+            helperText='Use plain text or filters: creator:pull name:test1 handle:test1 thread:"main"'
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
@@ -528,17 +518,28 @@ export const MacroPresetsPage = () => {
                       >
                         {preset.ownerCounter?.name?.[0]?.toUpperCase() || preset.ownerCounter?.username?.[0]?.toUpperCase() || '?'}
                       </Avatar>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      >
                         {preset.ownerCounter
                           ? `${preset.ownerCounter.name || preset.ownerCounter.username || 'Unknown'}${preset.ownerCounter.username ? ` (@${preset.ownerCounter.username})` : ''}`
                           : 'Unknown creator'}
                       </Typography>
                     </Stack>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ fontWeight: 700, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >
                       {preset.name}
                     </Typography>
                     {preset.handle && (
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      >
                         /macros/{preset.handle}
                       </Typography>
                     )}
@@ -591,7 +592,11 @@ export const MacroPresetsPage = () => {
                     <Button size="small" variant="contained" onClick={() => copyToDraft(preset)}>
                       Copy To Draft
                     </Button>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >
                       {(groupThreadUsageTotalById[preset.id] || 0) > 0
                         ? `${groupThreadUsageTotalById[preset.id]} thread${groupThreadUsageTotalById[preset.id] > 1 ? 's' : ''} using this`
                         : 'No users set this on a thread yet'}
@@ -601,7 +606,12 @@ export const MacroPresetsPage = () => {
                 <Divider sx={{ my: 1.25 }} />
                 <Stack spacing={0.4}>
                   {previewRows.map((row) => (
-                    <Typography key={`${preset.id}-${row}`} variant="caption" color="text.primary">
+                    <Typography
+                      key={`${preset.id}-${row}`}
+                      variant="caption"
+                      color="text.primary"
+                      sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >
                       {row}
                     </Typography>
                   ))}
@@ -696,7 +706,7 @@ export const MacroPresetsPage = () => {
             )}
             <TextField
               label="Search Your Presets"
-              helperText='Use plain text or filters: name:test handle:main thread:used'
+              helperText='Use plain text or filters: name:test handle:main thread:"main"'
               value={editSearch}
               onChange={(e) => {
                 setEditSearch(e.target.value)
@@ -728,10 +738,17 @@ export const MacroPresetsPage = () => {
                       spacing={1.5}
                     >
                       <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 700, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        >
                           {preset.name}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mt: 0.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        >
                           {preset.description || 'No description'}
                         </Typography>
                         <Stack direction="row" spacing={0.75} sx={{ mt: 0.85, flexWrap: 'wrap' }}>
@@ -766,7 +783,12 @@ export const MacroPresetsPage = () => {
                     <Divider sx={{ my: 1.25 }} />
                     <Stack spacing={0.4}>
                       {previewRows.map((row) => (
-                        <Typography key={`${preset.id}-${row}`} variant="caption" color="text.primary">
+                        <Typography
+                          key={`${preset.id}-${row}`}
+                          variant="caption"
+                          color="text.primary"
+                          sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        >
                           {row}
                         </Typography>
                       ))}

@@ -313,9 +313,18 @@ export const listMacroPresets = (
   mine?: boolean,
   owner?: string,
   threadId?: string,
+  thread?: string,
 ) =>
   axios.get<MacroPresetListResponse>(`${API_URL}/macro-presets`, {
-    params: { page, limit, search, mine: mine ? '1' : undefined, owner, threadId },
+    params: {
+      page,
+      limit,
+      search,
+      mine: mine ? '1' : undefined,
+      owner,
+      threadId,
+      thread,
+    },
     ...CONFIG,
   })
 
