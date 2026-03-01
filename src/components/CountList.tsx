@@ -30,7 +30,11 @@ import { useNavigate } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
 import { SocketContext } from '../utils/contexts/SocketContext'
 import { MacroActionType, MacroComboId, MacroEntry } from '../utils/types'
-import { findActiveMacroEntry, normalizeMacroTriggerKey } from '../utils/macroRuntime'
+import {
+  findActiveMacroEntry,
+  getMacroTriggerCandidates,
+  normalizeMacroTriggerKey,
+} from '../utils/macroRuntime'
 
 const MACRO_TOGGLE_KEY = 'F8'
 
@@ -76,11 +80,11 @@ const CountList = memo((props: any) => {
   const lastSubmitAtRef = useRef<number | null>(null)
   const isThrottled = useRef(false)
 
-  const getActiveMacroEntry = (key: string): MacroEntry | undefined =>
+  const getActiveMacroEntry = (key: string, code?: string): MacroEntry | undefined =>
     props.macroHotkeysEnabled
-      ? findActiveMacroEntry(props.activeMacroRuntime, key, isDesktop, !!props.chatsOnly)
+      ? findActiveMacroEntry(props.activeMacroRuntime, key, code, isDesktop, !!props.chatsOnly)
       : undefined
-  const getToggleMacroEntry = (key: string): MacroEntry | undefined => {
+  const getToggleMacroEntry = (key: string, code?: string): MacroEntry | undefined => {
     if (
       !props.activeMacroRuntime?.enabled ||
       !isDesktop ||
@@ -89,13 +93,19 @@ const CountList = memo((props: any) => {
     ) {
       return undefined
     }
-    const normalized = normalizeMacroTriggerKey(key)
+    const candidates = getMacroTriggerCandidates(key, code)
     return props.activeMacroRuntime.entries.find(
       (entry) =>
         entry.macroType === 'TOGGLE' &&
-        normalizeMacroTriggerKey(entry.triggerKey) === normalized,
+        candidates.includes(normalizeMacroTriggerKey(entry.triggerKey)),
     )
   }
+  const hasContextMenuMacro = useMemo(() => {
+    if (!props.activeMacroRuntime?.enabled || !props.activeMacroRuntime?.entries?.length) return false
+    return props.activeMacroRuntime.entries.some(
+      (entry) => normalizeMacroTriggerKey(entry.triggerKey) === 'contextmenu',
+    )
+  }, [props.activeMacroRuntime])
 
   const replaceInputSelection = (text: string) => {
     if (!inputRef.current) return
@@ -318,11 +328,24 @@ const CountList = memo((props: any) => {
         isDesktop &&
         inputRef.current &&
         inputRef.current === document.activeElement &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.altKey &&
         !event.isComposing
       ) {
+        const normalizedEventKey = String(event.key || '').toLowerCase()
+        const normalizedEventCode = String(event.code || '').toLowerCase()
+        const isStandaloneModifierTrigger =
+          normalizedEventKey === 'control' ||
+          normalizedEventKey === 'alt' ||
+          normalizedEventKey === 'meta' ||
+          normalizedEventKey === 'contextmenu' ||
+          normalizedEventCode.startsWith('control') ||
+          normalizedEventCode.startsWith('alt') ||
+          normalizedEventCode.startsWith('meta') ||
+          normalizedEventCode === 'contextmenu'
+
+        if ((event.ctrlKey || event.metaKey || event.altKey) && !isStandaloneModifierTrigger) {
+          return
+        }
+
         const hasMacroEntries =
           !!props.activeMacroRuntime?.enabled &&
           !!props.activeMacroRuntime?.entries?.length
@@ -337,23 +360,25 @@ const CountList = memo((props: any) => {
         }
 
         // TOGGLE macro keys remain active even while other macros are disabled.
-        const toggleMacroEntry = getToggleMacroEntry(event.key)
+        const toggleMacroEntry = getToggleMacroEntry(event.key, event.code)
         if (toggleMacroEntry) {
           event.preventDefault()
+          event.stopPropagation()
           props.onMacroHotkeysEnabledChange &&
             props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
           return
         }
 
-        const activeMacroEntry = getActiveMacroEntry(event.key)
+        const activeMacroEntry = getActiveMacroEntry(event.key, event.code)
         if (activeMacroEntry) {
           event.preventDefault()
+          event.stopPropagation()
           switch (activeMacroEntry.macroType) {
             case 'CHAR_INSERT':
               if (typeof activeMacroEntry.payloadJson?.char === 'string' && activeMacroEntry.payloadJson.char.length > 0) {
                 const mappedChar = activeMacroEntry.payloadJson.char.slice(0, 1)
                 replaceInputSelection(mappedChar)
-                props.handleMacro?.(event.key, [mappedChar])
+                props.handleMacro?.(activeMacroEntry.triggerKey, [mappedChar])
               }
               return
             case 'ACTION':
@@ -364,11 +389,11 @@ const CountList = memo((props: any) => {
                   action,
                   repeat,
                 )
-                props.handleMacro?.(event.key, Array.from({ length: repeat }, () => actionToKeypressToken(action)))
+                props.handleMacro?.(activeMacroEntry.triggerKey, Array.from({ length: repeat }, () => actionToKeypressToken(action)))
               }
               return
             case 'SUBMIT':
-              props.handleMacro?.(event.key, ['Enter'])
+              props.handleMacro?.(activeMacroEntry.triggerKey, ['Enter'])
               await handlePosting()
               return
             case 'SUBMIT_ACTION':
@@ -376,11 +401,11 @@ const CountList = memo((props: any) => {
                 const action = activeMacroEntry.payloadJson.action as MacroActionType
                 const repeat = Math.max(1, Math.min(10, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
                 props.handleMacro?.(
-                  event.key,
+                  activeMacroEntry.triggerKey,
                   ['Enter', ...Array.from({ length: repeat }, () => actionToKeypressToken(action))],
                 )
               } else {
-                props.handleMacro?.(event.key, ['Enter'])
+                props.handleMacro?.(activeMacroEntry.triggerKey, ['Enter'])
               }
               await handlePosting()
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
@@ -395,16 +420,16 @@ const CountList = memo((props: any) => {
             case 'TOGGLE':
               props.onMacroHotkeysEnabledChange &&
                 props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
-              props.handleMacro?.(event.key, ['ToggleMacros'])
+              props.handleMacro?.(activeMacroEntry.triggerKey, ['ToggleMacros'])
               return
             case 'COMBO':
               if (typeof activeMacroEntry.payloadJson?.comboId === 'string') {
                 const comboId = activeMacroEntry.payloadJson.comboId as MacroComboId
                 await executeCombo(comboId)
                 if (comboId === 'SELECT_ALL_COPY') {
-                  props.handleMacro?.(event.key, ['Ctrl+A', 'Ctrl+C'])
+                  props.handleMacro?.(activeMacroEntry.triggerKey, ['Ctrl+A', 'Ctrl+C'])
                 } else if (comboId === 'SELECT_ALL_PASTE') {
-                  props.handleMacro?.(event.key, ['Ctrl+A', 'Ctrl+V'])
+                  props.handleMacro?.(activeMacroEntry.triggerKey, ['Ctrl+A', 'Ctrl+V'])
                 }
               }
               return
@@ -438,7 +463,26 @@ const CountList = memo((props: any) => {
     props.chatsOnly,
     props.macroHotkeysEnabled,
     props.onMacroHotkeysEnabledChange,
+    hasContextMenuMacro,
   ])
+
+  useEffect(() => {
+    const blockContextMenuIfMacroBound = (event: MouseEvent) => {
+      if (
+        isDesktop &&
+        hasContextMenuMacro &&
+        inputRef.current &&
+        document.activeElement === inputRef.current
+      ) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+    }
+    window.addEventListener('contextmenu', blockContextMenuIfMacroBound, true)
+    return () => {
+      window.removeEventListener('contextmenu', blockContextMenuIfMacroBound, true)
+    }
+  }, [isDesktop, hasContextMenuMacro])
 
   //Scroll to bottom upon isDesktop change
   useEffect(() => {

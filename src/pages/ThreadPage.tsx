@@ -111,7 +111,7 @@ import MiscInfo from '../components/thread/MiscInfo'
 import CommunityNotes from '../components/thread/CommunityNotes'
 import { ThreadStatsPanel } from '../components/thread/ThreadStatsPanel'
 import RollVisualizerHost, { RollVisualizerHostHandle } from '../components/thread/RollVisualizerHost'
-import { buildMacroSubmitMetadata } from '../utils/macroRuntime'
+import { buildMacroSubmitMetadata, normalizeMacroTriggerKey } from '../utils/macroRuntime'
 
 let imsorryfortheglobalpull = 'DISABLED'
 type LoadSpikeSimMode = 'baseline' | 'dup_listener' | 'post_load_overlap' | 'cache_overlap' | 'mixed_direction'
@@ -1096,6 +1096,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         ...(macroHash.current || []),
         {
           physicalKey: test,
+          physicalCode: event?.code,
           mappedKeys: [test],
           timestamp: Date.now(),
         },
@@ -1678,14 +1679,16 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   }, [deleteComment])
 
   const handleMacro = useCallback((triggerKey: string, mappedKeys: string[]) => {
-    const normalizedTrigger = String(triggerKey || '').toLowerCase()
+    const normalizedTrigger = normalizeMacroTriggerKey(triggerKey || '')
     const next = [...(macroHash.current || [])]
     for (let i = next.length - 1; i >= 0; i -= 1) {
       const item = next[i]
+      const normalizedPhysicalKey = normalizeMacroTriggerKey(String(item?.physicalKey || ''))
+      const normalizedPhysicalCode = normalizeMacroTriggerKey(String(item?.physicalCode || ''))
       if (
         item &&
         typeof item === 'object' &&
-        String(item.physicalKey || '').toLowerCase() === normalizedTrigger
+        (normalizedPhysicalKey === normalizedTrigger || normalizedPhysicalCode === normalizedTrigger)
       ) {
         item.mappedKeys = (mappedKeys || []).filter((key) => typeof key === 'string' && key.length > 0)
         break

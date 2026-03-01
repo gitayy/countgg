@@ -15,7 +15,9 @@ import {
   Typography,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
+import type { KeyboardEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
+import { normalizeMacroTriggerKey } from '../utils/macroRuntime'
 import {
   createMacroPreset,
   enqueueMacroPresetUpdate,
@@ -541,6 +543,28 @@ export const MacroPresetManager = ({
     setEntries((prev) => prev.map((entry, idx) => (idx === index ? next : entry)))
   }
 
+  const captureTriggerKey = (
+    index: number,
+    entry: MacroEntryDraft,
+    event: KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (event.key === 'Tab') return
+    event.preventDefault()
+    event.stopPropagation()
+    const rawKey = String(event.key || '')
+    const rawCode = String(event.code || '')
+    const keyLower = rawKey.toLowerCase()
+    const shouldPreferCode =
+      keyLower === 'shift' ||
+      keyLower === 'control' ||
+      keyLower === 'alt' ||
+      keyLower === 'meta' ||
+      rawCode.toLowerCase().startsWith('numpad')
+    const normalized = normalizeMacroTriggerKey(shouldPreferCode ? rawCode : rawKey)
+    if (!normalized) return
+    updateEntry(index, { ...entry, triggerKey: normalized.slice(0, 64) })
+  }
+
   const createDisabledReason =
     saving
       ? 'Saving...'
@@ -885,8 +909,12 @@ export const MacroPresetManager = ({
                     <TextField
                       label="Key"
                       value={entry.triggerKey}
-                      onChange={(e) => updateEntry(index, { ...entry, triggerKey: e.target.value.slice(0, 1) })}
-                      sx={{ width: 96 }}
+                      onKeyDown={(event) => captureTriggerKey(index, entry, event)}
+                      onChange={() => {}}
+                      inputProps={{ maxLength: 64 }}
+                      placeholder="Press a key..."
+                      InputProps={{ readOnly: true }}
+                      sx={{ width: 180 }}
                     />
                     <FormControl sx={{ minWidth: 220 }}>
                       <InputLabel id={`macro-type-${index}`}>Action Type</InputLabel>
