@@ -38,8 +38,11 @@ type Props = {
 const ACTION_OPTIONS: MacroActionType[] = [
   'BACKSPACE',
   'DELETE',
+  'CTRL_BACKSPACE',
   'LEFT',
   'RIGHT',
+  'UP',
+  'DOWN',
   'HOME',
   'END',
   'SELECT_ALL',

@@ -32,6 +32,9 @@ import { SocketContext } from '../utils/contexts/SocketContext'
 import { MacroActionType, MacroComboId, MacroEntry } from '../utils/types'
 import { findActiveMacroEntry } from '../utils/macroRuntime'
 
+const MACRO_TOGGLE_ON_KEY = 'F7'
+const MACRO_TOGGLE_OFF_KEY = 'F8'
+
 const CountList = memo((props: any) => {
   const { user, counter, loading, preferences } = useContext(UserContext)
   const socket = useContext(SocketContext)
@@ -74,7 +77,9 @@ const CountList = memo((props: any) => {
   const isThrottled = useRef(false)
 
   const getActiveMacroEntry = (key: string): MacroEntry | undefined =>
-    findActiveMacroEntry(props.activeMacroRuntime, key, isDesktop, !!props.chatsOnly)
+    props.macroHotkeysEnabled
+      ? findActiveMacroEntry(props.activeMacroRuntime, key, isDesktop, !!props.chatsOnly)
+      : undefined
 
   const replaceInputSelection = (text: string) => {
     if (!inputRef.current) return
@@ -84,6 +89,68 @@ const CountList = memo((props: any) => {
     element.value = `${element.value.slice(0, start)}${text}${element.value.slice(end)}`
     const nextPos = start + text.length
     element.setSelectionRange(nextPos, nextPos)
+  }
+
+  const moveCursorVertical = (direction: -1 | 1) => {
+    if (!inputRef.current) return
+    const element = inputRef.current
+    const value = element.value || ''
+    const start = element.selectionStart ?? value.length
+
+    // Match native textarea behavior for single-line content.
+    if (!value.includes('\n')) {
+      const nextPos = direction < 0 ? 0 : value.length
+      element.setSelectionRange(nextPos, nextPos)
+      return
+    }
+
+    const lineStarts = [0]
+    for (let i = 0; i < value.length; i += 1) {
+      if (value[i] === '\n') {
+        lineStarts.push(i + 1)
+      }
+    }
+    const lineEnds = lineStarts.map((lineStart, index) =>
+      index + 1 < lineStarts.length ? lineStarts[index + 1] - 1 : value.length,
+    )
+
+    let currentLineIndex = lineStarts.length - 1
+    for (let i = 0; i < lineStarts.length; i += 1) {
+      if (start >= lineStarts[i] && start <= lineEnds[i]) {
+        currentLineIndex = i
+        break
+      }
+    }
+
+    const targetLineIndex = Math.max(0, Math.min(lineStarts.length - 1, currentLineIndex + direction))
+    const column = start - lineStarts[currentLineIndex]
+    const targetLineLength = lineEnds[targetLineIndex] - lineStarts[targetLineIndex]
+    const nextPos = lineStarts[targetLineIndex] + Math.max(0, Math.min(column, targetLineLength))
+    element.setSelectionRange(nextPos, nextPos)
+  }
+
+  const applyCtrlBackspace = () => {
+    if (!inputRef.current) return
+    const element = inputRef.current
+    const start = element.selectionStart ?? 0
+    const end = element.selectionEnd ?? 0
+    if (end > start) {
+      element.value = `${element.value.slice(0, start)}${element.value.slice(end)}`
+      element.setSelectionRange(start, start)
+      return
+    }
+    if (start <= 0) return
+
+    let cutStart = start
+    while (cutStart > 0 && /\s/u.test(element.value[cutStart - 1])) {
+      cutStart -= 1
+    }
+    while (cutStart > 0 && !/\s/u.test(element.value[cutStart - 1])) {
+      cutStart -= 1
+    }
+
+    element.value = `${element.value.slice(0, cutStart)}${element.value.slice(start)}`
+    element.setSelectionRange(cutStart, cutStart)
   }
 
   const applySingleAction = async (action: MacroActionType) => {
@@ -114,6 +181,10 @@ const CountList = memo((props: any) => {
         }
         return
       }
+      case 'CTRL_BACKSPACE': {
+        applyCtrlBackspace()
+        return
+      }
       case 'LEFT': {
         const next = Math.max(0, start - 1)
         element.setSelectionRange(next, next)
@@ -122,6 +193,14 @@ const CountList = memo((props: any) => {
       case 'RIGHT': {
         const next = Math.min(element.value.length, end + 1)
         element.setSelectionRange(next, next)
+        return
+      }
+      case 'UP': {
+        moveCursorVertical(-1)
+        return
+      }
+      case 'DOWN': {
+        moveCursorVertical(1)
         return
       }
       case 'HOME': {
@@ -199,6 +278,23 @@ const CountList = memo((props: any) => {
         !event.altKey &&
         !event.isComposing
       ) {
+        const hasMacroEntries =
+          !!props.activeMacroRuntime?.enabled &&
+          !!props.activeMacroRuntime?.entries?.length
+        if (hasMacroEntries) {
+          const normalizedKey = String(event.key || '').toUpperCase()
+          if (normalizedKey === MACRO_TOGGLE_ON_KEY) {
+            event.preventDefault()
+            props.onMacroHotkeysEnabledChange && props.onMacroHotkeysEnabledChange(true)
+            return
+          }
+          if (normalizedKey === MACRO_TOGGLE_OFF_KEY) {
+            event.preventDefault()
+            props.onMacroHotkeysEnabledChange && props.onMacroHotkeysEnabledChange(false)
+            return
+          }
+        }
+
         const activeMacroEntry = getActiveMacroEntry(event.key)
         if (activeMacroEntry) {
           event.preventDefault()
@@ -254,7 +350,16 @@ const CountList = memo((props: any) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [user, inputRef, preferences, isDesktop, props.activeMacroRuntime, props.chatsOnly])
+  }, [
+    user,
+    inputRef,
+    preferences,
+    isDesktop,
+    props.activeMacroRuntime,
+    props.chatsOnly,
+    props.macroHotkeysEnabled,
+    props.onMacroHotkeysEnabledChange,
+  ])
 
   //Scroll to bottom upon isDesktop change
   useEffect(() => {

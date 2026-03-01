@@ -115,6 +115,8 @@ import { prioritizeOwnedMacroGroups } from '../utils/macroGroups'
 
 let imsorryfortheglobalpull = 'DISABLED'
 type LoadSpikeSimMode = 'baseline' | 'dup_listener' | 'post_load_overlap' | 'cache_overlap' | 'mixed_direction'
+const MACRO_TOGGLE_ON_KEY = 'F7'
+const MACRO_TOGGLE_OFF_KEY = 'F8'
 
 export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const location = useLocation()
@@ -185,6 +187,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     entries: [],
   })
   const [pendingSubmitMacroMeta, setPendingSubmitMacroMeta] = useState(false)
+  const [macroHotkeysEnabled, setMacroHotkeysEnabled] = useState(true)
   const [macroSelectionSaving, setMacroSelectionSaving] = useState(false)
   const activeMacroGroupName = useMemo(
     () =>
@@ -196,6 +199,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     () => prioritizeOwnedMacroGroups(availableMacroGroups, ownedMacroGroupIds),
     [availableMacroGroups, ownedMacroGroupIds],
   )
+  const hasMacroEntries = !!activeMacroRuntime.enabled && (activeMacroRuntime.entries?.length || 0) > 0
   const describeActiveMacroEntry = useCallback((entry: any) => {
     const payload = entry?.payloadJson || {}
     switch (entry?.macroType) {
@@ -306,6 +310,12 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     setRecentChats([])
     setCachedCounts([])
   }, [thread_name, setRecentCounts, setRecentChats])
+
+  useEffect(() => {
+    if (!hasMacroEntries) {
+      setMacroHotkeysEnabled(true)
+    }
+  }, [hasMacroEntries])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -2138,6 +2148,8 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         handleSubmit={handleSubmit}
         activeMacroRuntime={activeMacroRuntime}
         onMacroSubmitMeta={(meta) => setPendingSubmitMacroMeta(meta)}
+        macroHotkeysEnabled={macroHotkeysEnabled}
+        onMacroHotkeysEnabledChange={setMacroHotkeysEnabled}
       ></CountList>
     )
   }, [
@@ -2158,6 +2170,8 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
     isScrolledToNewest,
     loading,
     preferences,
+    activeMacroRuntime,
+    macroHotkeysEnabled,
   ])
 
   const chatsMemo = useMemo(() => {
@@ -2232,6 +2246,8 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         handleSubmit={undefined}
         activeMacroRuntime={activeMacroRuntime}
         onMacroSubmitMeta={undefined}
+        macroHotkeysEnabled={macroHotkeysEnabled}
+        onMacroHotkeysEnabledChange={setMacroHotkeysEnabled}
       ></CountList>
     )
   }, [
@@ -2248,6 +2264,8 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
     chatsIsScrolledToNewest,
     loading,
     preferences,
+    activeMacroRuntime,
+    macroHotkeysEnabled,
   ])
 
   // const threadPrefs = user?.threadPrefs?.find(prefs => prefs.thread.uuid === thread?.uuid)
@@ -2886,8 +2904,25 @@ useEffect(() => {
                 )}
                 {activeMacroRuntime.entries?.length > 0 && (
                   <Box sx={{ mt: 0.5 }}>
+                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mb: 0.25 }}>
+                      <Chip
+                        size="small"
+                        color={macroHotkeysEnabled ? 'success' : 'default'}
+                        label={macroHotkeysEnabled ? 'Enabled' : 'Disabled'}
+                      />
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => setMacroHotkeysEnabled((prev) => !prev)}
+                      >
+                        Toggle
+                      </Button>
+                    </Stack>
                     <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.1 }}>
                       {activeMacroGroupName || 'Macro Group'} (v{activeMacroRuntime.macroGroupVersionNumber ?? '?'})
+                    </Typography>
+                    <Typography variant="caption" display="block" color="text.secondary" sx={{ lineHeight: 1.1 }}>
+                      {MACRO_TOGGLE_ON_KEY} on, {MACRO_TOGGLE_OFF_KEY} off
                     </Typography>
                     {activeMacroRuntime.entries.map((entry) => (
                       <Typography key={entry.id} variant="caption" display="block" color="text.secondary" sx={{ lineHeight: 1.1 }}>
@@ -3191,6 +3226,9 @@ useEffect(() => {
               <Typography variant="body2" color="text.secondary">
                 Entries: {activeMacroRuntime.entries?.length || 0}
               </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Hotkeys: {hasMacroEntries ? (macroHotkeysEnabled ? 'Enabled' : 'Disabled') : 'N/A'}
+              </Typography>
               <Typography variant="caption" color="text.secondary">
                 Runtime executes only in desktop mode.
               </Typography>
@@ -3319,6 +3357,9 @@ useEffect(() => {
     preferences,
     rollVisualizerThreads,
     isSimMode,
+    activeMacroRuntime,
+    hasMacroEntries,
+    macroHotkeysEnabled,
   ])
 
   const loadingStatuses = [

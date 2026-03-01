@@ -368,8 +368,11 @@ export type MacroEntryType =
 export type MacroActionType =
   | 'BACKSPACE'
   | 'DELETE'
+  | 'CTRL_BACKSPACE'
   | 'LEFT'
   | 'RIGHT'
+  | 'UP'
+  | 'DOWN'
   | 'HOME'
   | 'END'
   | 'SELECT_ALL'
