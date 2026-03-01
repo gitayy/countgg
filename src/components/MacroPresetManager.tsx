@@ -23,6 +23,7 @@ import {
   getMacroPresetVersion,
   getMacroPresetVersions,
   listMacroPresets,
+  updateMacroPreset,
 } from '../utils/api'
 import {
   MacroActionType,
@@ -247,8 +248,9 @@ export const MacroPresetManager = ({
   const [newPresetName, setNewPresetName] = useState('')
   const [newPresetHandle, setNewPresetHandle] = useState('')
   const [newPresetDescription, setNewPresetDescription] = useState('')
+  const [editPresetName, setEditPresetName] = useState('')
+  const [editPresetDescription, setEditPresetDescription] = useState('')
   const [entries, setEntries] = useState<MacroEntryDraft[]>([])
-  const [changeNote, setChangeNote] = useState('')
   const [loadingVersion, setLoadingVersion] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showValidationHints, setShowValidationHints] = useState(false)
@@ -311,6 +313,17 @@ export const MacroPresetManager = ({
       })
       .catch(() => {})
   }, [selectedPresetId, ownedPresetOptions])
+
+  useEffect(() => {
+    if (!selectedPresetId || mode !== 'edit') {
+      setEditPresetName('')
+      setEditPresetDescription('')
+      return
+    }
+    if (!selectedPreset) return
+    setEditPresetName(selectedPreset.name || '')
+    setEditPresetDescription(selectedPreset.description || '')
+  }, [selectedPresetId, selectedPreset, mode])
 
   const loadPresetVersions = async (presetId: number): Promise<MacroPresetVersion[]> => {
     const versionsRes = await getMacroPresetVersions(presetId)
@@ -386,7 +399,6 @@ export const MacroPresetManager = ({
     setNewPresetHandle(draftSeed.handle || '')
     setNewPresetDescription(draftSeed.description)
     setEntries(draftSeed.entries)
-    setChangeNote(`Draft copied from "${draftSeed.name}"`)
     setSuccess('Draft loaded from copied preset.')
   }, [draftSeed?.token])
 
@@ -468,13 +480,44 @@ export const MacroPresetManager = ({
     setError('')
     setSuccess('')
     try {
-      await enqueueMacroPresetUpdate(selectedPresetId, changeNote.trim(), entries)
+      await enqueueMacroPresetUpdate(selectedPresetId, undefined, entries)
       await loadLatestVersion(selectedPresetId)
-      setChangeNote('')
       setShowValidationHints(false)
       setSuccess('New version saved.')
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to save macro update')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const onSavePresetDetails = async () => {
+    if (!selectedPresetId || !selectedPreset) return
+    const nextName = editPresetName.trim()
+    const nextDescription = editPresetDescription.trim()
+    if (nextName.length < 3) {
+      setError('Preset name must be at least 3 characters.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    setSuccess('')
+    try {
+      await updateMacroPreset(selectedPresetId, {
+        name: nextName,
+        description: nextDescription,
+      })
+      setOwnedPresetOptions((prev) =>
+        prev.map((preset) =>
+          preset.id === selectedPresetId
+            ? { ...preset, name: nextName, description: nextDescription }
+            : preset,
+        ),
+      )
+      await refreshMacroPresets()
+      setSuccess('Preset details updated.')
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to update preset details')
     } finally {
       setSaving(false)
     }
@@ -520,6 +563,18 @@ export const MacroPresetManager = ({
 
   const activeValidationReason =
     mode === 'create' ? createDisabledReason : saveDisabledReason
+
+  const saveDetailsDisabledReason =
+    saving
+      ? 'Saving...'
+      : !selectedPresetId || !selectedPreset
+        ? 'Select a preset first.'
+        : editPresetName.trim().length < 3
+          ? 'Preset name must be at least 3 characters.'
+          : editPresetName.trim() === (selectedPreset.name || '') &&
+              editPresetDescription.trim() === (selectedPreset.description || '')
+            ? 'No changes to save.'
+            : ''
 
   return (
     <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper' }}>
@@ -667,6 +722,33 @@ export const MacroPresetManager = ({
               {selectedVersionNumber ? ` from v${selectedVersionNumber}` : ''}
               {activeVersionNumber ? ` (latest is v${activeVersionNumber})` : ''}.
             </Alert>
+          )}
+
+          {!!selectedPresetId && (
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ mb: 1.5 }}>
+              <TextField
+                label="Display Name"
+                value={editPresetName}
+                onChange={(e) => setEditPresetName(e.target.value)}
+                inputProps={{ maxLength: 64 }}
+                fullWidth
+              />
+              <TextField
+                label="Description"
+                value={editPresetDescription}
+                onChange={(e) => setEditPresetDescription(e.target.value)}
+                inputProps={{ maxLength: 280 }}
+                fullWidth
+              />
+              <Button
+                variant="outlined"
+                onClick={onSavePresetDetails}
+                disabled={Boolean(saveDetailsDisabledReason)}
+                sx={{ minWidth: 140, alignSelf: { xs: 'stretch', md: 'center' } }}
+              >
+                Save Details
+              </Button>
+            </Stack>
           )}
 
           {!!selectedPresetId && (
@@ -968,21 +1050,23 @@ export const MacroPresetManager = ({
 
           {mode === 'edit' && (
             <>
-              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-                Save New Version
-              </Typography>
-              <TextField
-                label="Change Note"
-                value={changeNote}
-                onChange={(e) => setChangeNote(e.target.value)}
-                inputProps={{ maxLength: 280 }}
-                fullWidth
-              />
-              <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
-                <Button size="small" variant="contained" onClick={onSaveVersion} disabled={Boolean(saveDisabledReason)}>
+              <Box
+                sx={{
+                  borderRadius: '8px',
+                  p: 1,
+                }}
+              >
+                <Button
+                  fullWidth
+                  variant="contained"
+                  size="large"
+                  onClick={onSaveVersion}
+                  disabled={Boolean(saveDisabledReason)}
+                  sx={{ minHeight: 48, fontWeight: 700 }}
+                >
                   Save New Version
                 </Button>
-              </Stack>
+              </Box>
             </>
           )}
 
