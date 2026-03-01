@@ -363,6 +363,7 @@ export type MacroEntryType =
   | 'ACTION'
   | 'SUBMIT'
   | 'SUBMIT_ACTION'
+  | 'TOGGLE'
   | 'COMBO'
 
 export type MacroActionType =

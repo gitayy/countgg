@@ -115,8 +115,7 @@ import { prioritizeOwnedMacroGroups } from '../utils/macroGroups'
 
 let imsorryfortheglobalpull = 'DISABLED'
 type LoadSpikeSimMode = 'baseline' | 'dup_listener' | 'post_load_overlap' | 'cache_overlap' | 'mixed_direction'
-const MACRO_TOGGLE_ON_KEY = 'F7'
-const MACRO_TOGGLE_OFF_KEY = 'F8'
+const MACRO_TOGGLE_KEY = 'F8'
 
 export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const location = useLocation()
@@ -211,6 +210,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         return 'submit'
       case 'SUBMIT_ACTION':
         return `submit + ${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`
+      case 'TOGGLE':
+        return 'toggle macros'
       case 'COMBO':
         return `${String(payload.comboId || '').toLowerCase()}`
       default:
@@ -2922,7 +2923,7 @@ useEffect(() => {
                       {activeMacroGroupName || 'Macro Group'} (v{activeMacroRuntime.macroGroupVersionNumber ?? '?'})
                     </Typography>
                     <Typography variant="caption" display="block" color="text.secondary" sx={{ lineHeight: 1.1 }}>
-                      {MACRO_TOGGLE_ON_KEY} on, {MACRO_TOGGLE_OFF_KEY} off
+                      {MACRO_TOGGLE_KEY} toggles macros
                     </Typography>
                     {activeMacroRuntime.entries.map((entry) => (
                       <Typography key={entry.id} variant="caption" display="block" color="text.secondary" sx={{ lineHeight: 1.1 }}>

@@ -30,10 +30,9 @@ import { useNavigate } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
 import { SocketContext } from '../utils/contexts/SocketContext'
 import { MacroActionType, MacroComboId, MacroEntry } from '../utils/types'
-import { findActiveMacroEntry } from '../utils/macroRuntime'
+import { findActiveMacroEntry, normalizeMacroTriggerKey } from '../utils/macroRuntime'
 
-const MACRO_TOGGLE_ON_KEY = 'F7'
-const MACRO_TOGGLE_OFF_KEY = 'F8'
+const MACRO_TOGGLE_KEY = 'F8'
 
 const CountList = memo((props: any) => {
   const { user, counter, loading, preferences } = useContext(UserContext)
@@ -80,6 +79,22 @@ const CountList = memo((props: any) => {
     props.macroHotkeysEnabled
       ? findActiveMacroEntry(props.activeMacroRuntime, key, isDesktop, !!props.chatsOnly)
       : undefined
+  const getToggleMacroEntry = (key: string): MacroEntry | undefined => {
+    if (
+      !props.activeMacroRuntime?.enabled ||
+      !isDesktop ||
+      !!props.chatsOnly ||
+      !props.activeMacroRuntime?.entries?.length
+    ) {
+      return undefined
+    }
+    const normalized = normalizeMacroTriggerKey(key)
+    return props.activeMacroRuntime.entries.find(
+      (entry) =>
+        entry.macroType === 'TOGGLE' &&
+        normalizeMacroTriggerKey(entry.triggerKey) === normalized,
+    )
+  }
 
   const replaceInputSelection = (text: string) => {
     if (!inputRef.current) return
@@ -283,16 +298,21 @@ const CountList = memo((props: any) => {
           !!props.activeMacroRuntime?.entries?.length
         if (hasMacroEntries) {
           const normalizedKey = String(event.key || '').toUpperCase()
-          if (normalizedKey === MACRO_TOGGLE_ON_KEY) {
+          if (normalizedKey === MACRO_TOGGLE_KEY) {
             event.preventDefault()
-            props.onMacroHotkeysEnabledChange && props.onMacroHotkeysEnabledChange(true)
+            props.onMacroHotkeysEnabledChange &&
+              props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
             return
           }
-          if (normalizedKey === MACRO_TOGGLE_OFF_KEY) {
-            event.preventDefault()
-            props.onMacroHotkeysEnabledChange && props.onMacroHotkeysEnabledChange(false)
-            return
-          }
+        }
+
+        // TOGGLE macro keys remain active even while other macros are disabled.
+        const toggleMacroEntry = getToggleMacroEntry(event.key)
+        if (toggleMacroEntry) {
+          event.preventDefault()
+          props.onMacroHotkeysEnabledChange &&
+            props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
+          return
         }
 
         const activeMacroEntry = getActiveMacroEntry(event.key)
@@ -323,6 +343,10 @@ const CountList = memo((props: any) => {
                   Number(activeMacroEntry.payloadJson?.repeat ?? 1),
                 )
               }
+              return
+            case 'TOGGLE':
+              props.onMacroHotkeysEnabledChange &&
+                props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
               return
             case 'COMBO':
               if (typeof activeMacroEntry.payloadJson?.comboId === 'string') {

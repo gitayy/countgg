@@ -60,6 +60,7 @@ const MACRO_TYPE_OPTIONS: MacroEntryType[] = [
   'ACTION',
   'SUBMIT',
   'SUBMIT_ACTION',
+  'TOGGLE',
   'COMBO',
 ]
 
@@ -77,6 +78,8 @@ const DEFAULT_ENTRY_BY_TYPE = (macroType: MacroEntryType): MacroEntryDraft => {
         macroType,
         payloadJson: { action: 'BACKSPACE', repeat: 1 },
       }
+    case 'TOGGLE':
+      return { triggerKey: '', macroType, payloadJson: {} }
     case 'COMBO':
       return { triggerKey: '', macroType, payloadJson: { comboId: 'SELECT_ALL_PASTE' } }
   }
