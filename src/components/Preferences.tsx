@@ -30,6 +30,7 @@ export const Preferences = (props) => {
         prefHideThreadPicker, setPrefHideThreadPicker,
         prefStrickenCountOpacity, setPrefStrickenCountOpacity,
         enabled, setEnabled,
+        children,
       } = props;
 
     return (
@@ -366,6 +367,7 @@ export const Preferences = (props) => {
               value={prefStrickenCountOpacity}
             />
             {/* </FormGroup>  */}
+            {children}
           </Box>
     )
 }
