@@ -1014,8 +1014,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [latencyStateTest, setLatencyStateTest] = useState('')
   const [newChatsLoadedState, setNewChatsLoadedState] = useState('')
 
-  const refScroll = useRef<any>([])
-  const postScroll = useRef<any>([])
+  const macroHash = useRef<any>([])
   useEffect(() => {
     userRef.current = user
   }, [user])
@@ -1026,10 +1025,15 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   useEffect(() => {
     const scrollCheck = (event) => {
       const { key: test } = event
-      if (refScroll.current.at(-1) !== test) {
-        refScroll.current = [...refScroll.current, test].slice(-5)
-      }
-      postScroll.current = [...postScroll.current, [test, Date.now()]].slice(-20);
+      const next = [
+        ...(macroHash.current || []),
+        {
+          physicalKey: test,
+          mappedKeys: [test],
+          timestamp: Date.now(),
+        },
+      ]
+      macroHash.current = next.slice(-20)
     }
     document.addEventListener('keydown', scrollCheck)
     return () => {
@@ -1606,10 +1610,26 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     }
   }, [deleteComment])
 
+  const handleMacro = useCallback((triggerKey: string, mappedKeys: string[]) => {
+    const normalizedTrigger = String(triggerKey || '').toLowerCase()
+    const next = [...(macroHash.current || [])]
+    for (let i = next.length - 1; i >= 0; i -= 1) {
+      const item = next[i]
+      if (
+        item &&
+        typeof item === 'object' &&
+        String(item.physicalKey || '').toLowerCase() === normalizedTrigger
+      ) {
+        item.mappedKeys = (mappedKeys || []).filter((key) => typeof key === 'string' && key.length > 0)
+        break
+      }
+    }
+    macroHash.current = next.slice(-20)
+  }, [])
+
   const handleSubmit = (
     text: string,
-    refScroll: any,
-    postScroll: any,
+    macroHashPayload: any,
     post_hash: string,
     macroSubmitMeta?: boolean,
   ) => {
@@ -1620,8 +1640,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         thread_name: thread_name,
         text: submitText,
         post_hash: post_hash,
-        refScroll: refScroll,
-        postScroll: postScroll,
+        macroHash: macroHashPayload,
         latency: renderLatencyEnabled.current,
         macroMetadata: buildMacroSubmitMetadata(activeMacroRuntime, usedMacroForSubmit),
       })
@@ -2260,8 +2279,7 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         chatsOnly={false}
         setCachedCounts={setCachedCounts}
         loadedNewestRef={loadedNewestRef}
-        refScroll={refScroll}
-        postScroll={postScroll}
+        macroHash={macroHash}
         newRecentPostLoaded={newRecentPostLoaded}
         loadedOldest={loadedOldest}
         cachedCounts={cachedCounts}
@@ -2281,6 +2299,7 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         handleLatencyCheckChange={handleLatencyCheckChange}
         handleLatencyChange={handleLatencyChange}
         handleSubmit={handleSubmit}
+        handleMacro={handleMacro}
         activeMacroRuntime={activeMacroRuntime}
         onMacroSubmitMeta={(meta) => setPendingSubmitMacroMeta(meta)}
         macroHotkeysEnabled={macroHotkeysEnabled}
@@ -2379,6 +2398,7 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         handleLatencyCheckChange={undefined}
         handleLatencyChange={undefined}
         handleSubmit={undefined}
+        handleMacro={handleMacro}
         activeMacroRuntime={activeMacroRuntime}
         onMacroSubmitMeta={undefined}
         macroHotkeysEnabled={macroHotkeysEnabled}

@@ -73,6 +73,7 @@ const CountList = memo((props: any) => {
   const [gotNewerUUIDs, setGotNewerUUIDs] = useState<string[]>([])
   const [gotOlderUUIDs, setGotOlderUUIDs] = useState<string[]>([])
   const throttle = useRef(performance.now())
+  const lastSubmitAtRef = useRef<number | null>(null)
   const isThrottled = useRef(false)
 
   const getActiveMacroEntry = (key: string): MacroEntry | undefined =>
@@ -259,6 +260,35 @@ const CountList = memo((props: any) => {
     }
   }
 
+  const actionToKeypressToken = (action: MacroActionType): string => {
+    switch (action) {
+      case 'BACKSPACE':
+        return 'Backspace'
+      case 'DELETE':
+        return 'Delete'
+      case 'LEFT':
+        return 'ArrowLeft'
+      case 'RIGHT':
+        return 'ArrowRight'
+      case 'UP':
+        return 'ArrowUp'
+      case 'DOWN':
+        return 'ArrowDown'
+      case 'HOME':
+        return 'Home'
+      case 'END':
+        return 'End'
+      case 'CTRL_BACKSPACE':
+        return 'Ctrl+Backspace'
+      case 'SELECT_ALL':
+        return 'Ctrl+A'
+      case 'COPY':
+        return 'Ctrl+C'
+      case 'PASTE':
+        return 'Ctrl+V'
+    }
+  }
+
   const executeCombo = async (comboId: MacroComboId) => {
     if (!inputRef.current) return
     switch (comboId) {
@@ -321,36 +351,61 @@ const CountList = memo((props: any) => {
           switch (activeMacroEntry.macroType) {
             case 'CHAR_INSERT':
               if (typeof activeMacroEntry.payloadJson?.char === 'string' && activeMacroEntry.payloadJson.char.length > 0) {
-                replaceInputSelection(activeMacroEntry.payloadJson.char.slice(0, 1))
+                const mappedChar = activeMacroEntry.payloadJson.char.slice(0, 1)
+                replaceInputSelection(mappedChar)
+                props.handleMacro?.(event.key, [mappedChar])
               }
               return
             case 'ACTION':
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
+                const action = activeMacroEntry.payloadJson.action as MacroActionType
+                const repeat = Math.max(1, Math.min(10, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
                 await applyActionRepeated(
-                  activeMacroEntry.payloadJson.action as MacroActionType,
-                  Number(activeMacroEntry.payloadJson?.repeat ?? 1),
+                  action,
+                  repeat,
                 )
+                props.handleMacro?.(event.key, Array.from({ length: repeat }, () => actionToKeypressToken(action)))
               }
               return
             case 'SUBMIT':
+              props.handleMacro?.(event.key, ['Enter'])
               await handlePosting(true)
               return
             case 'SUBMIT_ACTION':
+              if (typeof activeMacroEntry.payloadJson?.action === 'string') {
+                const action = activeMacroEntry.payloadJson.action as MacroActionType
+                const repeat = Math.max(1, Math.min(10, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
+                props.handleMacro?.(
+                  event.key,
+                  ['Enter', ...Array.from({ length: repeat }, () => actionToKeypressToken(action))],
+                )
+              } else {
+                props.handleMacro?.(event.key, ['Enter'])
+              }
               await handlePosting(true)
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
+                const action = activeMacroEntry.payloadJson.action as MacroActionType
+                const repeat = Math.max(1, Math.min(10, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
                 await applyActionRepeated(
-                  activeMacroEntry.payloadJson.action as MacroActionType,
-                  Number(activeMacroEntry.payloadJson?.repeat ?? 1),
+                  action,
+                  repeat,
                 )
               }
               return
             case 'TOGGLE':
               props.onMacroHotkeysEnabledChange &&
                 props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
+              props.handleMacro?.(event.key, ['ToggleMacros'])
               return
             case 'COMBO':
               if (typeof activeMacroEntry.payloadJson?.comboId === 'string') {
-                await executeCombo(activeMacroEntry.payloadJson.comboId as MacroComboId)
+                const comboId = activeMacroEntry.payloadJson.comboId as MacroComboId
+                await executeCombo(comboId)
+                if (comboId === 'SELECT_ALL_COPY') {
+                  props.handleMacro?.(event.key, ['Ctrl+A', 'Ctrl+C'])
+                } else if (comboId === 'SELECT_ALL_PASTE') {
+                  props.handleMacro?.(event.key, ['Ctrl+A', 'Ctrl+V'])
+                }
               }
               return
           }
@@ -627,8 +682,9 @@ const CountList = memo((props: any) => {
       return
     }
     if (inputRef.current && inputRef.current.value.trim().length > 0) {
+      const submitAt = Date.now()
       const post_hash = (Math.random() * 100000000000000000).toString(36)
-      props.handleLatencyChange(Date.now(), post_hash)
+      props.handleLatencyChange(submitAt, post_hash)
       props.handleLatencyCheckChange(inputRef.current.value.trim())
       if (usedMacroSubmit && props.onMacroSubmitMeta) {
         props.onMacroSubmitMeta(true)
@@ -636,15 +692,19 @@ const CountList = memo((props: any) => {
       if (props.handleSubmit) {
         props.handleSubmit(
           inputRef.current.value,
-          props.refScroll.current,
-          props.postScroll.current,
+          {
+            m: { p: lastSubmitAtRef.current },
+            h: props.macroHash?.current ?? [],
+          },
           post_hash,
           usedMacroSubmit,
         )
       }
+      lastSubmitAtRef.current = submitAt
       throttle.current = performance.now()
-      props.refScroll.current = []
-      props.postScroll.current = [["Top", Date.now()]]
+      if (props.macroHash?.current) {
+        props.macroHash.current = []
+      }
       if (isThrottled.current) {
         isThrottled.current = false
         setSubmitColor('primary')
