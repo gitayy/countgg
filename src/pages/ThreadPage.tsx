@@ -74,6 +74,7 @@ import {
   findPostByThreadAndNumber,
   findPostByThreadAndRawCount,
   getActiveMacroRuntimeForThread,
+  getMacroPreset,
   getRecommendedMacroPresets,
   listMacroPresets,
   loadNewerCounts,
@@ -181,6 +182,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [availableMacroPresets, setAvailableMacroPresets] = useState<MacroPreset[]>([])
   const [visibleMacroPresetIds, setVisibleMacroPresetIds] = useState<number[]>([])
   const [macroPresetSearchInput, setMacroPresetSearchInput] = useState('')
+  const [macroPresetInputValue, setMacroPresetInputValue] = useState('')
+  const [macroPresetInputFocused, setMacroPresetInputFocused] = useState(false)
   const [macroPresetSearchLoading, setMacroPresetSearchLoading] = useState(false)
   const [recommendedMacroPresets, setRecommendedMacroPresets] = useState<ThreadMacroPresetUsageRow[]>([])
   const [activeMacroRuntime, setActiveMacroRuntime] = useState<ActiveMacroRuntime>({
@@ -339,6 +342,10 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       threadUsageCount: 0,
     }
   }, [effectiveThreadMacroPresetId, threadMacroPresetOptions, activeMacroPresetName])
+  useEffect(() => {
+    if (macroPresetInputFocused) return
+    setMacroPresetInputValue(selectedThreadMacroPresetValue?.id === -1 ? '' : selectedThreadMacroPresetValue?.name || '')
+  }, [selectedThreadMacroPresetValue, macroPresetInputFocused])
   const hasMacroEntries = !!activeMacroRuntime.enabled && (activeMacroRuntime.entries?.length || 0) > 0
   const groupedActiveMacroEntries = useMemo(() => {
     const grouped = new Map<string, typeof activeMacroRuntime.entries>()
@@ -2674,6 +2681,51 @@ const [resetPrefs, setResetPrefs] = useState<boolean>(false);
 
   useEffect(() => {
     let ignore = false
+    const preloadSelectedMacroPresets = async () => {
+      if (!macroPresetsEnabled || !user?.uuid) return
+      const idsToEnsure = Array.from(
+        new Set(
+          [threadMacroPresetId, activeMacroRuntime.macroPresetId].filter(
+            (id): id is number => typeof id === 'number' && id > 0,
+          ),
+        ),
+      )
+      if (idsToEnsure.length === 0) return
+      const missingIds = idsToEnsure.filter(
+        (id) => !availableMacroPresets.some((preset) => preset.id === id),
+      )
+      if (missingIds.length === 0) return
+      try {
+        const loaded = await Promise.all(
+          missingIds.map((id) => getMacroPreset(id).then((res) => res.data?.preset).catch(() => null)),
+        )
+        if (ignore) return
+        const validLoaded = loaded.filter((preset): preset is MacroPreset => !!preset?.id)
+        if (validLoaded.length === 0) return
+        setAvailableMacroPresets((prev) => {
+          const byId = new Map<number, MacroPreset>()
+          prev.forEach((preset) => byId.set(preset.id, preset))
+          validLoaded.forEach((preset) => byId.set(preset.id, preset))
+          return Array.from(byId.values())
+        })
+      } catch {
+        // Non-critical preload; ignore fetch errors.
+      }
+    }
+    preloadSelectedMacroPresets()
+    return () => {
+      ignore = true
+    }
+  }, [
+    macroPresetsEnabled,
+    user?.uuid,
+    threadMacroPresetId,
+    activeMacroRuntime.macroPresetId,
+    availableMacroPresets,
+  ])
+
+  useEffect(() => {
+    let ignore = false
     const loadActiveMacroRuntime = async () => {
     if (!thread?.uuid || !user || !macroPresetsEnabled) {
       if (!ignore) {
@@ -3150,20 +3202,31 @@ useEffect(() => {
                   groupBy={(option) => option.category}
                   getOptionLabel={(option) => option.name}
                   filterOptions={(options) => options}
-                  inputValue={macroPresetSearchInput}
+                  inputValue={macroPresetInputValue}
                   onInputChange={(_, value, reason) => {
-                    // Ignore programmatic resets from selected value ("None"),
-                    // so typing/backspace in the search box remains fully controllable.
                     if (reason === 'input' || reason === 'clear') {
+                      setMacroPresetInputValue(value)
                       setMacroPresetSearchInput(value)
                     }
                   }}
                   value={selectedThreadMacroPresetValue}
-                  onChange={(_, value) => {
-                    saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
+                  onChange={(_, value, reason) => {
+                    const nextLabel = !value || value.id === -1 ? '' : value.name
+                    setMacroPresetInputValue(nextLabel)
+                    setMacroPresetSearchInput('')
+                    if (reason === 'selectOption') {
+                      saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
+                    }
                   }}
                   renderInput={(params) => (
-                    <TextField {...params} label="Preset" placeholder="Search" size="small" />
+                    <TextField
+                      {...params}
+                      label="Preset"
+                      placeholder="Search"
+                      size="small"
+                      onFocus={() => setMacroPresetInputFocused(true)}
+                      onBlur={() => setMacroPresetInputFocused(false)}
+                    />
                   )}
                   renderOption={(props, option) => (
                     <li {...props} key={option.id}>
@@ -3455,18 +3518,30 @@ useEffect(() => {
             groupBy={(option) => option.category}
             getOptionLabel={(option) => option.name}
             filterOptions={(options) => options}
-            inputValue={macroPresetSearchInput}
+            inputValue={macroPresetInputValue}
             onInputChange={(_, value, reason) => {
               if (reason === 'input' || reason === 'clear') {
+                setMacroPresetInputValue(value)
                 setMacroPresetSearchInput(value)
               }
             }}
             value={selectedThreadMacroPresetValue}
-            onChange={(_, value) => {
-              saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
+            onChange={(_, value, reason) => {
+              const nextLabel = !value || value.id === -1 ? '' : value.name
+              setMacroPresetInputValue(nextLabel)
+              setMacroPresetSearchInput('')
+              if (reason === 'selectOption') {
+                saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
+              }
             }}
             renderInput={(params) => (
-              <TextField {...params} label="Thread Macro Preset" placeholder="Search macro presets" />
+              <TextField
+                {...params}
+                label="Thread Macro Preset"
+                placeholder="Search macro presets"
+                onFocus={() => setMacroPresetInputFocused(true)}
+                onBlur={() => setMacroPresetInputFocused(false)}
+              />
             )}
               renderOption={(props, option) => (
                 <li {...props} key={option.id}>
