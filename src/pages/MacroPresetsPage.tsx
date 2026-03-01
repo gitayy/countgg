@@ -129,7 +129,7 @@ export const MacroPresetsPage = () => {
     }
   }, [])
 
-  const hydrateGroupDetails = useCallback(async (groups: MacroPreset[]) => {
+  const hydrateGroupDetails = useCallback(async (presets: MacroPreset[]) => {
     const previews: Record<number, { versionNumber: number | null; entries: MacroEntry[] }> = {}
     const usage: Record<
       number,
@@ -137,43 +137,43 @@ export const MacroPresetsPage = () => {
     > = {}
 
     await Promise.all(
-      groups.map(async (group) => {
+      presets.map(async (preset) => {
         const [versionsResult, usageResult] = await Promise.allSettled([
-          getMacroPresetVersions(group.id),
-          getMacroPresetThreadUsage(group.id, 3),
+          getMacroPresetVersions(preset.id),
+          getMacroPresetThreadUsage(preset.id, 3),
         ])
 
         if (versionsResult.status === 'fulfilled') {
           const latest = versionsResult.value.data?.[0]
           if (latest?.versionNumber) {
             try {
-              const versionRes = await getMacroPresetVersion(group.id, latest.versionNumber)
-              previews[group.id] = {
+              const versionRes = await getMacroPresetVersion(preset.id, latest.versionNumber)
+              previews[preset.id] = {
                 versionNumber: latest.versionNumber,
                 entries: versionRes.data.entries || [],
               }
             } catch {
-              previews[group.id] = { versionNumber: null, entries: [] }
+              previews[preset.id] = { versionNumber: null, entries: [] }
             }
           } else {
-            previews[group.id] = {
+            previews[preset.id] = {
               versionNumber: null,
               entries: [],
             }
           }
         } else {
-          previews[group.id] = { versionNumber: null, entries: [] }
+          previews[preset.id] = { versionNumber: null, entries: [] }
         }
 
         if (usageResult.status === 'fulfilled') {
-          usage[group.id] = (usageResult.value.data.items || []).map((row) => ({
+          usage[preset.id] = (usageResult.value.data.items || []).map((row) => ({
             threadId: row.threadId,
             threadName: row.threadName,
             threadTitle: row.threadTitle,
             appliesCount: row.appliesCount,
           }))
         } else {
-          usage[group.id] = []
+          usage[preset.id] = []
         }
       }),
     )
@@ -221,13 +221,13 @@ export const MacroPresetsPage = () => {
   )
 
   const filteredMacroPresets = useMemo(() => {
-    return sortedMacroPresets.filter((group) => {
-      const entries = groupPreviewById[group.id]?.entries || []
-      const hasUsage = (groupThreadUsageById[group.id] || []).length > 0
-      const ownerName = `${group.ownerCounter?.name || ''} ${group.ownerCounter?.username || ''} ${group.ownerCounter?.uuid || ''}`.toLowerCase()
-      const name = (group.name || '').toLowerCase()
-      const handle = (group.handle || '').toLowerCase()
-      const threadUsageNames = (groupThreadUsageById[group.id] || [])
+    return sortedMacroPresets.filter((preset) => {
+      const entries = groupPreviewById[preset.id]?.entries || []
+      const hasUsage = (groupThreadUsageById[preset.id] || []).length > 0
+      const ownerName = `${preset.ownerCounter?.name || ''} ${preset.ownerCounter?.username || ''} ${preset.ownerCounter?.uuid || ''}`.toLowerCase()
+      const name = (preset.name || '').toLowerCase()
+      const handle = (preset.handle || '').toLowerCase()
+      const threadUsageNames = (groupThreadUsageById[preset.id] || [])
         .map((row) => `${row.threadName || ''} ${row.threadTitle || ''}`.toLowerCase())
         .join(' ')
       const previewText = entries
@@ -235,7 +235,7 @@ export const MacroPresetsPage = () => {
         .join(' ')
         .toLowerCase()
       const freeTextHaystack =
-        `${name} ${handle} ${(group.description || '').toLowerCase()} ${ownerName} ${threadUsageNames} ${previewText}`.trim()
+        `${name} ${handle} ${(preset.description || '').toLowerCase()} ${ownerName} ${threadUsageNames} ${previewText}`.trim()
 
       if (searchFilters.creator && !ownerName.includes(searchFilters.creator.toLowerCase())) return false
       if (searchFilters.name && !name.includes(searchFilters.name.toLowerCase())) return false
@@ -254,7 +254,7 @@ export const MacroPresetsPage = () => {
   ])
 
   const buildGroupedPreviewRows = (entries: MacroEntry[]) => {
-    const groups: Record<string, string[]> = {
+    const presets: Record<string, string[]> = {
       'Character remaps': [],
       Submit: [],
       Actions: [],
@@ -265,41 +265,41 @@ export const MacroPresetsPage = () => {
     entries.forEach((entry) => {
       const payload = entry.payloadJson || {}
       if (entry.macroType === 'CHAR_INSERT') {
-        groups['Character remaps'].push(`${entry.triggerKey}->${payload.char || ''}`)
+        presets['Character remaps'].push(`${entry.triggerKey}->${payload.char || ''}`)
         return
       }
       if (entry.macroType === 'SUBMIT') {
-        groups.Submit.push(entry.triggerKey)
+        presets.Submit.push(entry.triggerKey)
         return
       }
       if (entry.macroType === 'SUBMIT_ACTION') {
-        groups.Submit.push(
+        presets.Submit.push(
           `${entry.triggerKey}+${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`,
         )
         return
       }
       if (entry.macroType === 'ACTION') {
-        groups.Actions.push(
+        presets.Actions.push(
           `${entry.triggerKey}:${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`,
         )
         return
       }
       if (entry.macroType === 'COMBO') {
-        groups.Combos.push(`${entry.triggerKey}:${String(payload.comboId || '').toLowerCase()}`)
+        presets.Combos.push(`${entry.triggerKey}:${String(payload.comboId || '').toLowerCase()}`)
         return
       }
       if (entry.macroType === 'TOGGLE') {
-        groups.Toggle.push(entry.triggerKey)
+        presets.Toggle.push(entry.triggerKey)
       }
     })
 
-    return Object.entries(groups)
+    return Object.entries(presets)
       .filter(([, items]) => items.length > 0)
       .slice(0, 4)
       .map(([label, items]) => `${label}: ${items.slice(0, 4).join(', ')}${items.length > 4 ? ` +${items.length - 4}` : ''}`)
   }
 
-  const copyToDraft = (group: MacroPreset) => {
+  const copyToDraft = (preset: MacroPreset) => {
     if (viewMode === 'create') {
       const confirmed = window.confirm('Replace your current draft with this copied macro preset?')
       if (!confirmed) {
@@ -307,19 +307,19 @@ export const MacroPresetsPage = () => {
       }
     }
 
-    const preview = groupPreviewById[group.id]
+    const preview = groupPreviewById[preset.id]
     setDraftSeed({
       token: Date.now(),
-      name: `${group.name} (copy)`,
+      name: `${preset.name} (copy)`,
       handle: '',
-      description: group.description || '',
+      description: preset.description || '',
       entries: (preview?.entries || []).map((entry) => ({
         triggerKey: entry.triggerKey,
         macroType: entry.macroType,
         payloadJson: entry.payloadJson as MacroEntryPayload,
       })),
     })
-    setCopyNotice(`Copied "${group.name}" into draft.`)
+    setCopyNotice(`Copied "${preset.name}" into draft.`)
     setViewMode('create')
   }
 
@@ -361,7 +361,7 @@ export const MacroPresetsPage = () => {
         Macro Presets
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Discover public groups or build and version your own.
+        Discover public presets or build and version your own.
       </Typography>
 
       {error && (
@@ -410,10 +410,10 @@ export const MacroPresetsPage = () => {
       {viewMode === 'discover' && (
         <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper', mb: 2 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Public Groups
+            Public Presets
           </Typography>
           <TextField
-            label="Search & Filter Public Groups"
+            label="Search & Filter Public Presets"
             helperText='Use plain text or filters: creator:pull name:test1 handle:test1 thread:used thread:"main"'
             value={search}
             onChange={(e) => {
@@ -427,15 +427,15 @@ export const MacroPresetsPage = () => {
           <Divider sx={{ my: 2 }} />
 
           <Stack spacing={1.25}>
-            {filteredMacroPresets.map((group) => (
+            {filteredMacroPresets.map((preset) => (
               (() => {
-                const entries = groupPreviewById[group.id]?.entries || []
+                const entries = groupPreviewById[preset.id]?.entries || []
                 const previewRows = buildGroupedPreviewRows(entries)
-                const usageRows = groupThreadUsageById[group.id] || []
+                const usageRows = groupThreadUsageById[preset.id] || []
                 const topUsage = usageRows[0]
                 return (
               <Box
-                key={group.id}
+                key={preset.id}
                 sx={{
                   p: 1.5,
                   border: '1px solid',
@@ -455,26 +455,26 @@ export const MacroPresetsPage = () => {
                       <Avatar
                         sx={{ width: 28, height: 28, fontSize: 13 }}
                         src={
-                          (group.ownerCounter?.avatar &&
-                            group.ownerCounter.avatar.length > 5 &&
-                            `https://cdn.discordapp.com/avatars/${group.ownerCounter.discordId}/${group.ownerCounter.avatar}`) ||
+                          (preset.ownerCounter?.avatar &&
+                            preset.ownerCounter.avatar.length > 5 &&
+                            `https://cdn.discordapp.com/avatars/${preset.ownerCounter.discordId}/${preset.ownerCounter.avatar}`) ||
                           'https://cdn.discordapp.com/embed/avatars/0.png'
                         }
                       >
-                        {group.ownerCounter?.name?.[0]?.toUpperCase() || group.ownerCounter?.username?.[0]?.toUpperCase() || '?'}
+                        {preset.ownerCounter?.name?.[0]?.toUpperCase() || preset.ownerCounter?.username?.[0]?.toUpperCase() || '?'}
                       </Avatar>
                       <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                        {group.ownerCounter
-                          ? `${group.ownerCounter.name || group.ownerCounter.username || 'Unknown'}${group.ownerCounter.username ? ` (@${group.ownerCounter.username})` : ''}`
+                        {preset.ownerCounter
+                          ? `${preset.ownerCounter.name || preset.ownerCounter.username || 'Unknown'}${preset.ownerCounter.username ? ` (@${preset.ownerCounter.username})` : ''}`
                           : 'Unknown creator'}
                       </Typography>
                     </Stack>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-                      {group.name}
+                      {preset.name}
                     </Typography>
-                    {group.handle && (
+                    {preset.handle && (
                       <Typography variant="caption" color="text.secondary">
-                        /macros/{group.handle}
+                        /macros/{preset.handle}
                       </Typography>
                     )}
                     <Typography
@@ -487,16 +487,16 @@ export const MacroPresetsPage = () => {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {group.description || 'No description'}
+                      {preset.description || 'No description'}
                     </Typography>
                     <Stack direction="row" spacing={0.75} sx={{ mt: 0.85, flexWrap: 'wrap' }}>
                       <Chip
                         size="small"
                         variant="outlined"
-                        label={`v${groupPreviewById[group.id]?.versionNumber ?? '-'}`}
+                        label={`v${groupPreviewById[preset.id]?.versionNumber ?? '-'}`}
                       />
                       <Chip size="small" variant="outlined" label={`${entries.length} entries`} />
-                      {ownedGroupIds.has(group.id) && (
+                      {ownedGroupIds.has(preset.id) && (
                         <Chip size="small" color="success" variant="outlined" label="Owned" />
                       )}
                       {topUsage && (
@@ -513,17 +513,17 @@ export const MacroPresetsPage = () => {
                     </Stack>
                   </Box>
                   <Stack direction={{ xs: 'row', lg: 'column' }} spacing={0.75} alignItems={{ xs: 'center', lg: 'flex-end' }}>
-                    {group.handle && (
+                    {preset.handle && (
                       <Button
                         size="small"
                         variant="outlined"
                         component={RouterLink}
-                        to={`/macros/${group.handle}`}
+                        to={`/macros/${preset.handle}`}
                       >
                         Open
                       </Button>
                     )}
-                    <Button size="small" variant="contained" onClick={() => copyToDraft(group)}>
+                    <Button size="small" variant="contained" onClick={() => copyToDraft(preset)}>
                       Copy To Draft
                     </Button>
                     <Typography variant="caption" color="text.secondary">
@@ -536,7 +536,7 @@ export const MacroPresetsPage = () => {
                 <Divider sx={{ my: 1.25 }} />
                 <Stack spacing={0.4}>
                   {previewRows.map((row) => (
-                    <Typography key={`${group.id}-${row}`} variant="caption" color="text.primary">
+                    <Typography key={`${preset.id}-${row}`} variant="caption" color="text.primary">
                       {row}
                     </Typography>
                   ))}
@@ -550,7 +550,7 @@ export const MacroPresetsPage = () => {
                   {usageRows.slice(topUsage ? 1 : 0).map((row) =>
                     row.threadId ? (
                       <Chip
-                        key={`${group.id}-${row.threadId}`}
+                        key={`${preset.id}-${row.threadId}`}
                         size="small"
                         variant="outlined"
                         component={RouterLink}
@@ -560,7 +560,7 @@ export const MacroPresetsPage = () => {
                       />
                     ) : (
                       <Chip
-                        key={`${group.id}-${row.threadName}`}
+                        key={`${preset.id}-${row.threadName}`}
                         size="small"
                         variant="outlined"
                         label={`${row.threadTitle || row.threadName} (${row.appliesCount})`}

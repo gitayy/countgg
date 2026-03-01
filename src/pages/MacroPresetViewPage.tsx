@@ -48,7 +48,7 @@ const buildEntryRows = (entries: MacroEntry[]): string[] => {
 
 export const MacroPresetViewPage = () => {
   const { handle } = useParams<{ handle: string }>()
-  const [group, setGroup] = useState<MacroPreset | null>(null)
+  const [preset, setGroup] = useState<MacroPreset | null>(null)
   const [versions, setVersions] = useState<MacroPresetVersion[]>([])
   const [latestEntries, setLatestEntries] = useState<MacroEntry[]>([])
   const [usageRows, setUsageRows] = useState<MacroPresetThreadUsageRow[]>([])
@@ -73,7 +73,7 @@ export const MacroPresetViewPage = () => {
       setError('')
       try {
         const readRes = await getMacroPresetByHandle(handle.trim().toLowerCase())
-        const loadedGroup = readRes.data.group
+        const loadedGroup = readRes.data.preset
         setGroup(loadedGroup)
 
         const [versionsRes, usageRes] = await Promise.all([
@@ -113,7 +113,7 @@ export const MacroPresetViewPage = () => {
     )
   }
 
-  if (error || !group) {
+  if (error || !preset) {
     return (
       <Container maxWidth="md" sx={{ py: 2 }}>
         <Alert severity="error">{error || 'Macro preset not found.'}</Alert>
@@ -139,26 +139,26 @@ export const MacroPresetViewPage = () => {
                 <Avatar
                   sx={{ width: 30, height: 30 }}
                   src={
-                    (group.ownerCounter?.avatar &&
-                      group.ownerCounter.avatar.length > 5 &&
-                      `https://cdn.discordapp.com/avatars/${group.ownerCounter.discordId}/${group.ownerCounter.avatar}`) ||
+                    (preset.ownerCounter?.avatar &&
+                      preset.ownerCounter.avatar.length > 5 &&
+                      `https://cdn.discordapp.com/avatars/${preset.ownerCounter.discordId}/${preset.ownerCounter.avatar}`) ||
                     'https://cdn.discordapp.com/embed/avatars/0.png'
                   }
                 />
                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                  {group.ownerCounter
-                    ? `${group.ownerCounter.name || group.ownerCounter.username || 'Unknown'}${group.ownerCounter.username ? ` (@${group.ownerCounter.username})` : ''}`
+                  {preset.ownerCounter
+                    ? `${preset.ownerCounter.name || preset.ownerCounter.username || 'Unknown'}${preset.ownerCounter.username ? ` (@${preset.ownerCounter.username})` : ''}`
                     : 'Unknown creator'}
                 </Typography>
               </Stack>
               <Typography variant="h5" sx={{ lineHeight: 1.1 }}>
-                {group.name}
+                {preset.name}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                {group.description || 'No description'}
+                {preset.description || 'No description'}
               </Typography>
               <Stack direction="row" spacing={0.75} sx={{ mt: 1, flexWrap: 'wrap' }}>
-                <Chip size="small" variant="outlined" label={`ID ${group.id}`} />
+                <Chip size="small" variant="outlined" label={`ID ${preset.id}`} />
                 <Chip size="small" variant="outlined" label={`${latestEntries.length} entries`} />
                 <Chip
                   size="small"

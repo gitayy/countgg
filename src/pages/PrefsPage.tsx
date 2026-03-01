@@ -554,7 +554,7 @@ export const PrefsPage = () => {
                     value={
                       selectedMacroPresetId === null
                         ? globalMacroPresetOptions[0]
-                        : globalMacroPresetOptions.find((group) => group.id === selectedMacroPresetId) || null
+                        : globalMacroPresetOptions.find((preset) => preset.id === selectedMacroPresetId) || null
                     }
                     onChange={(_, value) => saveGlobalMacroSelection(!value || value.id === -1 ? null : value.id)}
                     renderInput={(params) => (

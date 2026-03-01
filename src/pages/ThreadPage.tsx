@@ -195,7 +195,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const macroPresetsLoadedForUserRef = useRef<string | null>(null)
   const activeMacroPresetName = useMemo(
     () =>
-      availableMacroPresets.find((group) => group.id === activeMacroRuntime.macroPresetId)?.name ||
+      availableMacroPresets.find((preset) => preset.id === activeMacroRuntime.macroPresetId)?.name ||
       null,
     [availableMacroPresets, activeMacroRuntime.macroPresetId],
   )
@@ -248,26 +248,26 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     })
     const topSet = new Set(topThreadMacroPresetIds)
     const topOptions = topThreadMacroPresetIds
-      .map((id) => byUsageThenName.find((group) => group.id === id))
+      .map((id) => byUsageThenName.find((preset) => preset.id === id))
       .filter(Boolean)
-      .map((group) => ({
-        ...(group as MacroPreset),
+      .map((preset) => ({
+        ...(preset as MacroPreset),
         category: 'Top 3 For This Thread' as const,
-        threadUsageCount: threadUsageCountByMacroPresetId.get((group as MacroPreset).id) || 0,
+        threadUsageCount: threadUsageCountByMacroPresetId.get((preset as MacroPreset).id) || 0,
       }))
     const mineOptions = byUsageThenName
-      .filter((group) => ownedMacroPresetIds.has(group.id) && !topSet.has(group.id))
-      .map((group) => ({
-        ...group,
+      .filter((preset) => ownedMacroPresetIds.has(preset.id) && !topSet.has(preset.id))
+      .map((preset) => ({
+        ...preset,
         category: 'Your Macros' as const,
-        threadUsageCount: threadUsageCountByMacroPresetId.get(group.id) || 0,
+        threadUsageCount: threadUsageCountByMacroPresetId.get(preset.id) || 0,
       }))
     const otherOptions = byUsageThenName
-      .filter((group) => !ownedMacroPresetIds.has(group.id) && !topSet.has(group.id))
-      .map((group) => ({
-        ...group,
+      .filter((preset) => !ownedMacroPresetIds.has(preset.id) && !topSet.has(preset.id))
+      .map((preset) => ({
+        ...preset,
         category: 'Other Macros' as const,
-        threadUsageCount: threadUsageCountByMacroPresetId.get(group.id) || 0,
+        threadUsageCount: threadUsageCountByMacroPresetId.get(preset.id) || 0,
       }))
     return [
       {
@@ -3256,7 +3256,7 @@ useEffect(() => {
             value={
               effectiveThreadMacroPresetId === null
                 ? threadMacroPresetOptions[0]
-                : threadMacroPresetOptions.find((group) => group.id === effectiveThreadMacroPresetId) || null
+                : threadMacroPresetOptions.find((preset) => preset.id === effectiveThreadMacroPresetId) || null
             }
             onChange={(_, value) => {
               saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
@@ -3318,7 +3318,7 @@ useEffect(() => {
                 Source: {activeMacroRuntime.source}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Group: {activeMacroPresetName || 'None'}
+                Preset: {activeMacroPresetName || 'None'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Version: {activeMacroRuntime.macroPresetVersionNumber ?? 'N/A'}

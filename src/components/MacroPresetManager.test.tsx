@@ -51,7 +51,7 @@ describe('MacroPresetManager', () => {
     fireEvent.change(screen.getByLabelText('Trigger'), {
       target: { value: 'q' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Create Group' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Preset' }))
 
     await waitFor(() =>
       expect(mockedCreateMacroPreset).toHaveBeenCalledWith(
@@ -71,7 +71,7 @@ describe('MacroPresetManager', () => {
     expect(refreshMacroPresets).toHaveBeenCalled()
   })
 
-  it('loads the selected group latest version', async () => {
+  it('loads the selected preset latest version', async () => {
     mockedGetMacroPresetVersions.mockResolvedValue({
       data: [{ id: 501, versionNumber: 3, changeNote: 'latest' }],
     })
@@ -103,7 +103,7 @@ describe('MacroPresetManager', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
-    fireEvent.mouseDown(screen.getByLabelText('Your Group'))
+    fireEvent.mouseDown(screen.getByLabelText('Your Preset'))
     fireEvent.click(await screen.findByText('Main Thread Macro Set'))
 
     await waitFor(() =>
@@ -130,21 +130,21 @@ describe('MacroPresetManager', () => {
     )
 
     fireEvent.change(screen.getByLabelText('Display Name'), {
-      target: { value: 'Copy Draft Group' },
+      target: { value: 'Copy Draft Preset' },
     })
     fireEvent.change(screen.getByLabelText('Handle (URL Name)'), {
-      target: { value: 'copy-draft-group' },
+      target: { value: 'copy-draft-preset' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Add First Entry' }))
     fireEvent.change(screen.getByLabelText('Trigger'), {
       target: { value: 'q' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Create Group' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Create Preset' }))
 
     await waitFor(() =>
       expect(mockedCreateMacroPreset).toHaveBeenCalledWith(
-        'Copy Draft Group',
-        'copy-draft-group',
+        'Copy Draft Preset',
+        'copy-draft-preset',
         '',
         'Initial version',
         [
@@ -169,14 +169,14 @@ describe('MacroPresetManager', () => {
         forcedMode="create"
         draftSeed={{
           token: 1,
-          name: 'Imported Group',
+          name: 'Imported Preset',
           description: 'Imported description',
           entries: [],
         }}
       />,
     )
 
-    expect(screen.getByDisplayValue('Imported Group')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('Imported Preset')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Imported description')).toBeInTheDocument()
   })
 })

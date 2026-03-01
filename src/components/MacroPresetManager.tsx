@@ -236,12 +236,12 @@ export const MacroPresetManager = ({
   draftSeed,
 }: Props) => {
   const [mode, setMode] = useState<'create' | 'edit'>('create')
-  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
+  const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null)
   const [versions, setVersions] = useState<MacroPresetVersion[]>([])
   const [selectedVersionNumber, setSelectedVersionNumber] = useState<number | null>(null)
-  const [newGroupName, setNewGroupName] = useState('')
-  const [newGroupHandle, setNewGroupHandle] = useState('')
-  const [newGroupDescription, setNewGroupDescription] = useState('')
+  const [newPresetName, setNewPresetName] = useState('')
+  const [newPresetHandle, setNewPresetHandle] = useState('')
+  const [newPresetDescription, setNewPresetDescription] = useState('')
   const [entries, setEntries] = useState<MacroEntryDraft[]>([])
   const [changeNote, setChangeNote] = useState('')
   const [loadingVersion, setLoadingVersion] = useState(false)
@@ -253,22 +253,22 @@ export const MacroPresetManager = ({
   const title =
     mode === 'create' ? 'Create Macro Preset' : 'Edit Macro Preset'
 
-  const selectedGroup = useMemo(
-    () => ownedMacroPresets.find((group) => group.id === selectedGroupId),
-    [ownedMacroPresets, selectedGroupId],
+  const selectedPreset = useMemo(
+    () => ownedMacroPresets.find((preset) => preset.id === selectedPresetId),
+    [ownedMacroPresets, selectedPresetId],
   )
   const validation = useMemo(() => validateEntries(entries), [entries])
 
-  const loadGroupVersions = async (groupId: number): Promise<MacroPresetVersion[]> => {
-    const versionsRes = await getMacroPresetVersions(groupId)
+  const loadPresetVersions = async (presetId: number): Promise<MacroPresetVersion[]> => {
+    const versionsRes = await getMacroPresetVersions(presetId)
     return versionsRes.data || []
   }
 
-  const loadVersion = async (groupId: number, versionNumber: number) => {
+  const loadVersion = async (presetId: number, versionNumber: number) => {
     setLoadingVersion(true)
     setError('')
     try {
-      const fullVersionRes = await getMacroPresetVersion(groupId, versionNumber)
+      const fullVersionRes = await getMacroPresetVersion(presetId, versionNumber)
       setEntries(toDraftEntries(fullVersionRes.data))
       setSelectedVersionNumber(versionNumber)
     } catch (err: any) {
@@ -280,11 +280,11 @@ export const MacroPresetManager = ({
     }
   }
 
-  const loadLatestVersion = async (groupId: number) => {
+  const loadLatestVersion = async (presetId: number) => {
     setLoadingVersion(true)
     setError('')
     try {
-      const fetchedVersions = await loadGroupVersions(groupId)
+      const fetchedVersions = await loadPresetVersions(presetId)
       setVersions(fetchedVersions)
       const latest = fetchedVersions[0]
       if (!latest) {
@@ -293,7 +293,7 @@ export const MacroPresetManager = ({
         setSelectedVersionNumber(null)
         return
       }
-      const fullVersionRes = await getMacroPresetVersion(groupId, latest.versionNumber)
+      const fullVersionRes = await getMacroPresetVersion(presetId, latest.versionNumber)
       setEntries(toDraftEntries(fullVersionRes.data))
       setActiveVersionNumber(latest.versionNumber)
       setSelectedVersionNumber(latest.versionNumber)
@@ -309,50 +309,50 @@ export const MacroPresetManager = ({
   }
 
   useEffect(() => {
-    if (!selectedGroupId) return
+    if (!selectedPresetId) return
     if (forcedMode !== 'create') {
       setMode('edit')
     }
-    loadLatestVersion(selectedGroupId)
-  }, [selectedGroupId, forcedMode])
+    loadLatestVersion(selectedPresetId)
+  }, [selectedPresetId, forcedMode])
 
   useEffect(() => {
-    if (!selectedGroupId) {
+    if (!selectedPresetId) {
       setShowAdvancedEditOptions(false)
     }
-  }, [selectedGroupId])
+  }, [selectedPresetId])
 
   useEffect(() => {
     if (!draftSeed) return
     setMode('create')
-    setSelectedGroupId(null)
+    setSelectedPresetId(null)
     setVersions([])
     setSelectedVersionNumber(null)
     setActiveVersionNumber(null)
-    setNewGroupName(draftSeed.name)
-    setNewGroupHandle(draftSeed.handle || '')
-    setNewGroupDescription(draftSeed.description)
+    setNewPresetName(draftSeed.name)
+    setNewPresetHandle(draftSeed.handle || '')
+    setNewPresetDescription(draftSeed.description)
     setEntries(draftSeed.entries)
     setChangeNote(`Draft copied from "${draftSeed.name}"`)
-    setSuccess('Draft loaded from copied group.')
+    setSuccess('Draft loaded from copied preset.')
   }, [draftSeed?.token])
 
   useEffect(() => {
     if (!forcedMode) return
     setMode(forcedMode)
     if (forcedMode === 'create') {
-      setSelectedGroupId(null)
+      setSelectedPresetId(null)
     }
   }, [forcedMode])
 
-  const onCreateGroup = async () => {
+  const onCreatePreset = async () => {
     if (entries.length < 1) {
       setError('At least one macro entry is required.')
       return
     }
 
     if (validation.globalErrors.length > 0 || Object.keys(validation.rowErrors).length > 0) {
-      setError('Please fix macro validation errors before creating the group.')
+      setError('Please fix macro validation errors before creating the preset.')
       return
     }
 
@@ -361,27 +361,27 @@ export const MacroPresetManager = ({
     setSuccess('')
     try {
       const created = await createMacroPreset(
-        newGroupName.trim(),
-        newGroupHandle.trim().toLowerCase(),
-        newGroupDescription.trim(),
+        newPresetName.trim(),
+        newPresetHandle.trim().toLowerCase(),
+        newPresetDescription.trim(),
         'Initial version',
         entries,
       )
       await refreshMacroPresets()
       if (forcedMode !== 'create') {
-        setSelectedGroupId(created.data.id)
+        setSelectedPresetId(created.data.id)
         setMode('edit')
       } else {
-        setSelectedGroupId(null)
+        setSelectedPresetId(null)
       }
-      setNewGroupName('')
-      setNewGroupHandle('')
-      setNewGroupDescription('')
+      setNewPresetName('')
+      setNewPresetHandle('')
+      setNewPresetDescription('')
       setEntries([])
       setActiveVersionNumber(1)
       setVersions([])
       setSelectedVersionNumber(1)
-      setSuccess('Group created.')
+      setSuccess('Preset created.')
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to create macro preset')
     } finally {
@@ -390,7 +390,7 @@ export const MacroPresetManager = ({
   }
 
   const onSaveVersion = async () => {
-    if (!selectedGroupId) return
+    if (!selectedPresetId) return
     if (entries.length < 1) {
       setError('At least one macro entry is required.')
       return
@@ -404,8 +404,8 @@ export const MacroPresetManager = ({
     setError('')
     setSuccess('')
     try {
-      await enqueueMacroPresetUpdate(selectedGroupId, changeNote.trim(), entries)
-      await loadLatestVersion(selectedGroupId)
+      await enqueueMacroPresetUpdate(selectedPresetId, changeNote.trim(), entries)
+      await loadLatestVersion(selectedPresetId)
       setChangeNote('')
       setSuccess('New version saved.')
     } catch (err: any) {
@@ -436,17 +436,17 @@ export const MacroPresetManager = ({
   const createDisabledReason =
     saving
       ? 'Saving...'
-      : newGroupName.trim().length < 3
-        ? 'Group name must be at least 3 characters.'
-        : !HANDLE_REGEX.test(newGroupHandle.trim().toLowerCase())
+      : newPresetName.trim().length < 3
+        ? 'Preset name must be at least 3 characters.'
+        : !HANDLE_REGEX.test(newPresetHandle.trim().toLowerCase())
           ? 'Handle must be 3-64 chars: lowercase letters, numbers, underscores, or hyphens.'
         : validation.globalErrors[0] || Object.values(validation.rowErrors)[0]?.[0] || ''
 
   const saveDisabledReason =
     saving || loadingVersion
       ? 'Saving...'
-      : !selectedGroupId
-        ? 'Select a group first.'
+      : !selectedPresetId
+        ? 'Select a preset first.'
         : validation.globalErrors[0] || Object.values(validation.rowErrors)[0]?.[0] || ''
 
   return (
@@ -460,7 +460,7 @@ export const MacroPresetManager = ({
             variant={mode === 'create' ? 'contained' : 'outlined'}
             onClick={() => {
               setMode('create')
-              setSelectedGroupId(null)
+              setSelectedPresetId(null)
             }}
           >
             Create
@@ -489,28 +489,28 @@ export const MacroPresetManager = ({
       {mode === 'create' ? (
         <>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            1. Group Details
+            1. Preset Details
           </Typography>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 1.5 }}>
             <TextField
               label="Display Name"
-              value={newGroupName}
-              onChange={(e) => setNewGroupName(e.target.value)}
+              value={newPresetName}
+              onChange={(e) => setNewPresetName(e.target.value)}
               inputProps={{ maxLength: 64 }}
               fullWidth
             />
             <TextField
               label="Handle (URL Name)"
-              value={newGroupHandle}
-              onChange={(e) => setNewGroupHandle(e.target.value.toLowerCase())}
+              value={newPresetHandle}
+              onChange={(e) => setNewPresetHandle(e.target.value.toLowerCase())}
               inputProps={{ maxLength: 64 }}
               helperText='Used in the URL: /macros/<handle>. Permanent and unique.'
               fullWidth
             />
             <TextField
               label="Description"
-              value={newGroupDescription}
-              onChange={(e) => setNewGroupDescription(e.target.value)}
+              value={newPresetDescription}
+              onChange={(e) => setNewPresetDescription(e.target.value)}
               inputProps={{ maxLength: 280 }}
               fullWidth
             />
@@ -519,13 +519,13 @@ export const MacroPresetManager = ({
       ) : (
         <>
           <Typography variant="subtitle1" sx={{ mb: 1.25 }}>
-            1. Select Group
+            1. Select Preset
           </Typography>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }} sx={{ mb: 1.5 }}>
             <Autocomplete
               sx={{ minWidth: 320 }}
               options={ownedMacroPresets}
-              value={ownedMacroPresets.find((group) => group.id === selectedGroupId) || null}
+              value={ownedMacroPresets.find((preset) => preset.id === selectedPresetId) || null}
               getOptionLabel={(option) => option.name}
               filterOptions={(options, state) => {
                 const q = state.inputValue.trim().toLowerCase()
@@ -538,10 +538,10 @@ export const MacroPresetManager = ({
                 )
               }}
               onChange={(_, value) => {
-                setSelectedGroupId(value?.id ?? null)
+                setSelectedPresetId(value?.id ?? null)
               }}
               renderInput={(params) => (
-                <TextField {...params} label="Your Group" placeholder="Search your groups" />
+                <TextField {...params} label="Your Preset" placeholder="Search your presets" />
               )}
               renderOption={(props, option) => (
                 <li {...props} key={option.id}>
@@ -555,26 +555,26 @@ export const MacroPresetManager = ({
                 </li>
               )}
             />
-            {!!selectedGroupId && (
-              <Button size="small" variant="text" onClick={() => setSelectedGroupId(null)}>
+            {!!selectedPresetId && (
+              <Button size="small" variant="text" onClick={() => setSelectedPresetId(null)}>
                 Clear
               </Button>
             )}
             <Typography variant="body2" color="text.secondary">
-              {selectedGroup ? `Editing ${selectedGroup.name}` : 'No group selected'}
+              {selectedPreset ? `Editing ${selectedPreset.name}` : 'No preset selected'}
               {activeVersionNumber ? ` (latest v${activeVersionNumber})` : ''}
             </Typography>
           </Stack>
 
-          {!!selectedGroupId && !!selectedGroup && (
+          {!!selectedPresetId && !!selectedPreset && (
             <Alert severity="info" sx={{ mb: 1.25 }}>
-              Editing <strong>{selectedGroup.name}</strong>
+              Editing <strong>{selectedPreset.name}</strong>
               {selectedVersionNumber ? ` from v${selectedVersionNumber}` : ''}
               {activeVersionNumber ? ` (latest is v${activeVersionNumber})` : ''}.
             </Alert>
           )}
 
-          {!!selectedGroupId && (
+          {!!selectedPresetId && (
             <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
               <Button
                 variant="text"
@@ -585,7 +585,7 @@ export const MacroPresetManager = ({
               </Button>
             </Stack>
           )}
-          {!!selectedGroupId && showAdvancedEditOptions && (
+          {!!selectedPresetId && showAdvancedEditOptions && (
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }}>
               <FormControl sx={{ minWidth: 260 }}>
                 <InputLabel id="edit-version-label">Base Version</InputLabel>
@@ -595,8 +595,8 @@ export const MacroPresetManager = ({
                   label="Base Version"
                   onChange={(e) => {
                     const next = Number((e.target as HTMLInputElement).value)
-                    if (!Number.isFinite(next) || !selectedGroupId) return
-                    loadVersion(selectedGroupId, next)
+                    if (!Number.isFinite(next) || !selectedPresetId) return
+                    loadVersion(selectedPresetId, next)
                   }}
                 >
                   {versions.map((version) => (
@@ -611,7 +611,7 @@ export const MacroPresetManager = ({
                 <Button
                   size="small"
                   variant="outlined"
-                  onClick={() => selectedGroupId && loadLatestVersion(selectedGroupId)}
+                  onClick={() => selectedPresetId && loadLatestVersion(selectedPresetId)}
                 >
                   Use Latest
                 </Button>
@@ -621,7 +621,7 @@ export const MacroPresetManager = ({
         </>
       )}
 
-      {(mode === 'create' || !!selectedGroupId) && (
+      {(mode === 'create' || !!selectedPresetId) && (
         <>
           <Divider sx={{ my: 2 }} />
 
@@ -831,16 +831,16 @@ export const MacroPresetManager = ({
           {mode === 'create' && (
             <>
               <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-                3. Create Group
+                3. Create Preset
               </Typography>
               <Stack direction="row" justifyContent="flex-end">
                 <Button
                   size="small"
                   variant="contained"
-                  onClick={onCreateGroup}
+                  onClick={onCreatePreset}
                   disabled={Boolean(createDisabledReason)}
                 >
-                  Create Group
+                  Create Preset
                 </Button>
               </Stack>
               {!!createDisabledReason && (
@@ -853,11 +853,11 @@ export const MacroPresetManager = ({
         </>
       )}
 
-      {mode === 'edit' && !selectedGroupId && (
+      {mode === 'edit' && !selectedPresetId && (
         <>
           <Divider sx={{ my: 2 }} />
           <Typography variant="body2" color="text.secondary">
-            Choose one of your groups to start editing.
+            Choose one of your presets to start editing.
           </Typography>
         </>
       )}

@@ -439,7 +439,7 @@ export type MacroPresetListResponse = {
 }
 
 export type MacroPresetReadResponse = {
-  group: MacroPreset
+  preset: MacroPreset
   latestVersionNumber: number | null
 }
 

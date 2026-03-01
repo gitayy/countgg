@@ -116,7 +116,7 @@ describe('MacroPresetsPage', () => {
     expect(screen.getAllByText('Owned').length).toBeGreaterThan(0)
   })
 
-  it('copies a group into draft and switches to create view', async () => {
+  it('copies a preset into draft and switches to create view', async () => {
     renderPage()
 
     await waitFor(() => expect(screen.getByText('Main Thread Pack')).toBeInTheDocument())
