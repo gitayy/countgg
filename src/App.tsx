@@ -310,7 +310,8 @@ function App() {
                         <Route path="/servers" element={<ServersPage />} />
                         {user && counter && <Route path="/prefs" element={<PrefsPage />} />}
                         {user && counter && <Route path="/macros" element={<MacroPresetsPage />} />}
-                        {user && counter && <Route path="/macros/:presetRef/:versionNumber?" element={<MacroPresetViewPage />} />}
+                        <Route path="/macros/:presetRef" element={<MacroPresetViewPage />} />
+                        <Route path="/macros/:presetRef/:versionNumber" element={<MacroPresetViewPage />} />
                         {user && counter && <Route path="/mentions" element={<MentionsPage />} />}
                         {user && counter && <Route path="/shop" element={<ShopPage />} />}
                       </Routes>

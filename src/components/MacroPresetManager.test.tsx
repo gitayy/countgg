@@ -2,24 +2,36 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import MacroPresetManager from './MacroPresetManager'
 import {
   createMacroPreset,
+  getMacroPreset,
   getMacroPresetVersion,
   getMacroPresetVersions,
+  listMacroPresets,
 } from '../utils/api'
 
 jest.mock('../utils/api', () => ({
   createMacroPreset: jest.fn(),
   enqueueMacroPresetUpdate: jest.fn(),
+  getMacroPreset: jest.fn(),
   getMacroPresetVersion: jest.fn(),
   getMacroPresetVersions: jest.fn(),
+  listMacroPresets: jest.fn(),
 }))
 
 const mockedCreateMacroPreset = createMacroPreset as jest.Mock
+const mockedGetMacroPreset = getMacroPreset as jest.Mock
 const mockedGetMacroPresetVersions = getMacroPresetVersions as jest.Mock
 const mockedGetMacroPresetVersion = getMacroPresetVersion as jest.Mock
+const mockedListMacroPresets = listMacroPresets as jest.Mock
 
 describe('MacroPresetManager', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockedListMacroPresets.mockResolvedValue({
+      data: {
+        items: [],
+      },
+    })
+    mockedGetMacroPreset.mockResolvedValue({ data: { preset: null } })
   })
 
   it('creates a macro preset from the UI', async () => {
@@ -33,7 +45,6 @@ describe('MacroPresetManager', () => {
 
     render(
       <MacroPresetManager
-        ownedMacroPresets={[]}
         refreshMacroPresets={refreshMacroPresets}
       />,
     )
@@ -72,6 +83,22 @@ describe('MacroPresetManager', () => {
   })
 
   it('loads the selected preset latest version', async () => {
+    mockedListMacroPresets.mockResolvedValue({
+      data: {
+        items: [
+          {
+            id: 7,
+            name: 'Main Thread Macro Set',
+            handle: 'main-thread-macro-set',
+            description: '',
+            visibility: 'PUBLIC',
+            isDeleted: false,
+            createdAt: '2026-03-01T00:00:00.000Z',
+            updatedAt: '2026-03-01T00:00:00.000Z',
+          },
+        ],
+      },
+    })
     mockedGetMacroPresetVersions.mockResolvedValue({
       data: [{ id: 501, versionNumber: 3, changeNote: 'latest' }],
     })
@@ -86,18 +113,6 @@ describe('MacroPresetManager', () => {
 
     render(
       <MacroPresetManager
-        ownedMacroPresets={[
-          {
-            id: 7,
-            name: 'Main Thread Macro Set',
-            handle: 'main-thread-macro-set',
-            description: '',
-            visibility: 'PUBLIC',
-            isDeleted: false,
-            createdAt: '2026-03-01T00:00:00.000Z',
-            updatedAt: '2026-03-01T00:00:00.000Z',
-          },
-        ]}
         refreshMacroPresets={jest.fn().mockResolvedValue(undefined)}
       />,
     )
@@ -123,7 +138,6 @@ describe('MacroPresetManager', () => {
 
     render(
       <MacroPresetManager
-        ownedMacroPresets={[]}
         refreshMacroPresets={jest.fn().mockResolvedValue(undefined)}
         forcedMode="create"
       />,
@@ -164,7 +178,6 @@ describe('MacroPresetManager', () => {
   it('loads draft seed values into create form', async () => {
     render(
       <MacroPresetManager
-        ownedMacroPresets={[]}
         refreshMacroPresets={jest.fn().mockResolvedValue(undefined)}
         forcedMode="create"
         draftSeed={{

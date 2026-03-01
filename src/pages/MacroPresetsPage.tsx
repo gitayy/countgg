@@ -88,7 +88,6 @@ export const MacroPresetsPage = () => {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [macroPresets, setMacroPresets] = useState<MacroPreset[]>([])
-  const [ownedMacroPresets, setOwnedMacroPresets] = useState<MacroPreset[]>([])
   const [ownedGroupIds, setOwnedGroupIds] = useState<Set<number>>(new Set())
   const [groupPreviewById, setGroupPreviewById] = useState<
     Record<number, { versionNumber: number | null; entries: MacroEntry[] }>
@@ -172,29 +171,30 @@ export const MacroPresetsPage = () => {
     setLoading(true)
     setError('')
     try {
-      const [groupsRes, mineRes] = await Promise.all([
-        listMacroPresets(
-          page,
-          PAGE_SIZE,
-          searchFilters.freeText || undefined,
-          false,
-          searchFilters.creator || undefined,
-        ),
-        listMacroPresets(1, 100, undefined, true),
-      ])
+      const groupsRes = await listMacroPresets(
+        page,
+        PAGE_SIZE,
+        searchFilters.freeText || undefined,
+        false,
+        searchFilters.creator || undefined,
+      )
       setTotal(groupsRes.data.total || 0)
       const itemsWithPinned = groupsRes.data.items || []
-      const mineItems = mineRes.data.items || []
       setMacroPresets(itemsWithPinned)
-      setOwnedMacroPresets(mineItems)
-      setOwnedGroupIds(new Set(mineItems.map((item) => item.id)))
+      setOwnedGroupIds(
+        new Set(
+          itemsWithPinned
+            .filter((item) => item.ownerCounter?.discordId === user?.discordId)
+            .map((item) => item.id),
+        ),
+      )
       await hydrateGroupDetails(itemsWithPinned)
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to load macro presets')
     } finally {
       setLoading(false)
     }
-  }, [macroPresetsEnabled, page, searchFilters, hydrateGroupDetails])
+  }, [macroPresetsEnabled, page, searchFilters, hydrateGroupDetails, user?.discordId])
 
   useEffect(() => {
     loadMacroPresets()
@@ -585,7 +585,6 @@ export const MacroPresetsPage = () => {
             </Alert>
           )}
           <MacroPresetManager
-            ownedMacroPresets={ownedMacroPresets}
             refreshMacroPresets={loadMacroPresets}
             draftSeed={draftSeed}
             forcedMode="create"
@@ -595,7 +594,6 @@ export const MacroPresetsPage = () => {
 
       {viewMode === 'edit' && (
         <MacroPresetManager
-          ownedMacroPresets={ownedMacroPresets}
           refreshMacroPresets={loadMacroPresets}
           draftSeed={draftSeed}
           forcedMode="edit"

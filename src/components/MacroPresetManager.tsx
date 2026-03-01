@@ -3,6 +3,7 @@ import {
   Autocomplete,
   Box,
   Button,
+  CircularProgress,
   Divider,
   FormControl,
   IconButton,
@@ -18,8 +19,10 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   createMacroPreset,
   enqueueMacroPresetUpdate,
+  getMacroPreset,
   getMacroPresetVersion,
   getMacroPresetVersions,
+  listMacroPresets,
 } from '../utils/api'
 import {
   MacroActionType,
@@ -32,7 +35,6 @@ import {
 } from '../utils/types'
 
 type Props = {
-  ownedMacroPresets: MacroPreset[]
   refreshMacroPresets: () => Promise<void>
   forcedMode?: 'create' | 'edit'
   draftSeed?: {
@@ -230,7 +232,6 @@ const validateEntries = (entries: MacroEntryDraft[]): DraftValidationResult => {
 }
 
 export const MacroPresetManager = ({
-  ownedMacroPresets,
   refreshMacroPresets,
   forcedMode,
   draftSeed,
@@ -251,14 +252,61 @@ export const MacroPresetManager = ({
   const [success, setSuccess] = useState<string>('')
   const [activeVersionNumber, setActiveVersionNumber] = useState<number | null>(null)
   const [showAdvancedEditOptions, setShowAdvancedEditOptions] = useState(false)
+  const [ownedPresetSearch, setOwnedPresetSearch] = useState('')
+  const [debouncedOwnedPresetSearch, setDebouncedOwnedPresetSearch] = useState('')
+  const [ownedPresetOptions, setOwnedPresetOptions] = useState<MacroPreset[]>([])
+  const [loadingOwnedPresetOptions, setLoadingOwnedPresetOptions] = useState(false)
   const title =
     mode === 'create' ? 'Create Macro Preset' : 'Edit Macro Preset'
 
   const selectedPreset = useMemo(
-    () => ownedMacroPresets.find((preset) => preset.id === selectedPresetId),
-    [ownedMacroPresets, selectedPresetId],
+    () => ownedPresetOptions.find((preset) => preset.id === selectedPresetId),
+    [ownedPresetOptions, selectedPresetId],
   )
   const validation = useMemo(() => validateEntries(entries), [entries])
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedOwnedPresetSearch(ownedPresetSearch.trim())
+    }, 250)
+    return () => window.clearTimeout(timeout)
+  }, [ownedPresetSearch])
+
+  useEffect(() => {
+    if (mode !== 'edit') return
+    let cancelled = false
+    setLoadingOwnedPresetOptions(true)
+    listMacroPresets(1, 50, debouncedOwnedPresetSearch || undefined, true)
+      .then((res) => {
+        if (cancelled) return
+        setOwnedPresetOptions(res.data.items || [])
+      })
+      .catch(() => {
+        if (cancelled) return
+        setOwnedPresetOptions([])
+      })
+      .finally(() => {
+        if (cancelled) return
+        setLoadingOwnedPresetOptions(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [mode, debouncedOwnedPresetSearch])
+
+  useEffect(() => {
+    if (!selectedPresetId) return
+    if (ownedPresetOptions.some((preset) => preset.id === selectedPresetId)) return
+    getMacroPreset(selectedPresetId)
+      .then((res) => {
+        const preset = res.data?.preset
+        if (!preset) return
+        setOwnedPresetOptions((prev) =>
+          prev.some((p) => p.id === preset.id) ? prev : [preset, ...prev],
+        )
+      })
+      .catch(() => {})
+  }, [selectedPresetId, ownedPresetOptions])
 
   const loadPresetVersions = async (presetId: number): Promise<MacroPresetVersion[]> => {
     const versionsRes = await getMacroPresetVersions(presetId)
@@ -543,24 +591,37 @@ export const MacroPresetManager = ({
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }} sx={{ mb: 1.5 }}>
             <Autocomplete
               sx={{ minWidth: 320 }}
-              options={ownedMacroPresets}
-              value={ownedMacroPresets.find((preset) => preset.id === selectedPresetId) || null}
+              options={ownedPresetOptions}
+              loading={loadingOwnedPresetOptions}
+              value={ownedPresetOptions.find((preset) => preset.id === selectedPresetId) || null}
               getOptionLabel={(option) => option.name}
-              filterOptions={(options, state) => {
-                const q = state.inputValue.trim().toLowerCase()
-                if (!q) return options
-                return options.filter(
-                  (opt) =>
-                    opt.name.toLowerCase().includes(q) ||
-                    (opt.handle || '').toLowerCase().includes(q) ||
-                    opt.description.toLowerCase().includes(q),
-                )
-              }}
+              filterOptions={(options) => options}
               onChange={(_, value) => {
                 setSelectedPresetId(value?.id ?? null)
               }}
+              inputValue={ownedPresetSearch}
+              onInputChange={(_, value, reason) => {
+                if (reason === 'input' || reason === 'clear') {
+                  setOwnedPresetSearch(value)
+                }
+              }}
               renderInput={(params) => (
-                <TextField {...params} label="Your Preset" placeholder="Search your presets" />
+                <TextField
+                  {...params}
+                  label="Your Preset"
+                  placeholder="Search your presets"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingOwnedPresetOptions ? (
+                          <CircularProgress color="inherit" size={16} sx={{ mr: 1 }} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
               )}
               renderOption={(props, option) => (
                 <li {...props} key={option.id}>
