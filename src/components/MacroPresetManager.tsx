@@ -37,6 +37,8 @@ import {
 type Props = {
   refreshMacroPresets: () => Promise<void>
   forcedMode?: 'create' | 'edit'
+  initialSelectedPresetId?: number | null
+  hidePresetSelector?: boolean
   draftSeed?: {
     token: number
     name: string
@@ -234,6 +236,8 @@ const validateEntries = (entries: MacroEntryDraft[]): DraftValidationResult => {
 export const MacroPresetManager = ({
   refreshMacroPresets,
   forcedMode,
+  initialSelectedPresetId,
+  hidePresetSelector,
   draftSeed,
 }: Props) => {
   const [mode, setMode] = useState<'create' | 'edit'>('create')
@@ -273,10 +277,10 @@ export const MacroPresetManager = ({
   }, [ownedPresetSearch])
 
   useEffect(() => {
-    if (mode !== 'edit') return
+    if (mode !== 'edit' || hidePresetSelector) return
     let cancelled = false
     setLoadingOwnedPresetOptions(true)
-    listMacroPresets(1, 50, debouncedOwnedPresetSearch || undefined, true)
+    listMacroPresets(1, 100, debouncedOwnedPresetSearch || undefined, true)
       .then((res) => {
         if (cancelled) return
         setOwnedPresetOptions(res.data.items || [])
@@ -292,7 +296,7 @@ export const MacroPresetManager = ({
     return () => {
       cancelled = true
     }
-  }, [mode, debouncedOwnedPresetSearch])
+  }, [mode, debouncedOwnedPresetSearch, hidePresetSelector])
 
   useEffect(() => {
     if (!selectedPresetId) return
@@ -393,6 +397,12 @@ export const MacroPresetManager = ({
       setSelectedPresetId(null)
     }
   }, [forcedMode])
+
+  useEffect(() => {
+    if (!initialSelectedPresetId || forcedMode !== 'edit') return
+    setMode('edit')
+    setSelectedPresetId(initialSelectedPresetId)
+  }, [initialSelectedPresetId, forcedMode])
 
   const onCreatePreset = async () => {
     if (entries.length < 1) {
@@ -585,66 +595,71 @@ export const MacroPresetManager = ({
         </>
       ) : (
         <>
-          <Typography variant="subtitle1" sx={{ mb: 1.25 }}>
-            Select Preset
-          </Typography>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }} sx={{ mb: 1.5 }}>
-            <Autocomplete
-              sx={{ minWidth: 320 }}
-              options={ownedPresetOptions}
-              loading={loadingOwnedPresetOptions}
-              value={ownedPresetOptions.find((preset) => preset.id === selectedPresetId) || null}
-              getOptionLabel={(option) => option.name}
-              filterOptions={(options) => options}
-              onChange={(_, value) => {
-                setSelectedPresetId(value?.id ?? null)
-              }}
-              inputValue={ownedPresetSearch}
-              onInputChange={(_, value, reason) => {
-                if (reason === 'input' || reason === 'clear') {
-                  setOwnedPresetSearch(value)
-                }
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Your Preset"
-                  placeholder="Search your presets"
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <>
-                        {loadingOwnedPresetOptions ? (
-                          <CircularProgress color="inherit" size={16} sx={{ mr: 1 }} />
-                        ) : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                />
-              )}
-              renderOption={(props, option) => (
-                <li {...props} key={option.id}>
-                  <Box>
-                    <Typography variant="body2">{option.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {option.handle ? `@${option.handle} - ` : ''}
-                      {option.description || 'No description'}
-                    </Typography>
-                  </Box>
-                </li>
-              )}
-            />
-            {!!selectedPresetId && (
-              <Button size="small" variant="text" onClick={() => setSelectedPresetId(null)}>
-                Clear
-              </Button>
-            )}
-            <Typography variant="body2" color="text.secondary">
-              {selectedPreset ? `Editing ${selectedPreset.name}` : 'No preset selected'}
-              {activeVersionNumber ? ` (latest v${activeVersionNumber})` : ''}
-            </Typography>
-          </Stack>
+          {!hidePresetSelector && (
+            <>
+              <Typography variant="subtitle1" sx={{ mb: 1.25 }}>
+                Select Preset
+              </Typography>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }} sx={{ mb: 1.5 }}>
+                <Box sx={{ minWidth: 320 }}>
+                  <Autocomplete
+                    options={ownedPresetOptions}
+                    loading={loadingOwnedPresetOptions}
+                    value={ownedPresetOptions.find((preset) => preset.id === selectedPresetId) || null}
+                    getOptionLabel={(option) => option.name}
+                    filterOptions={(options) => options}
+                    onChange={(_, value) => {
+                      setSelectedPresetId(value?.id ?? null)
+                    }}
+                    inputValue={ownedPresetSearch}
+                    onInputChange={(_, value, reason) => {
+                      if (reason === 'input' || reason === 'clear') {
+                        setOwnedPresetSearch(value)
+                      }
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Your Preset"
+                        placeholder="Search your presets"
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <>
+                              {loadingOwnedPresetOptions ? (
+                                <CircularProgress color="inherit" size={16} sx={{ mr: 1 }} />
+                              ) : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <li {...props} key={option.id}>
+                        <Box>
+                          <Typography variant="body2">{option.name}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {option.handle ? `@${option.handle} - ` : ''}
+                            {option.description || 'No description'}
+                          </Typography>
+                        </Box>
+                      </li>
+                    )}
+                  />
+                </Box>
+                {!!selectedPresetId && (
+                  <Button size="small" variant="text" onClick={() => setSelectedPresetId(null)}>
+                    Clear
+                  </Button>
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  {selectedPreset ? `Editing ${selectedPreset.name}` : 'No preset selected'}
+                  {activeVersionNumber ? ` (latest v${activeVersionNumber})` : ''}
+                </Typography>
+              </Stack>
+            </>
+          )}
 
           {!!selectedPresetId && !!selectedPreset && (
             <Alert severity="info" sx={{ mb: 1.25 }}>

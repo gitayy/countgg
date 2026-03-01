@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import {
   Alert,
   Avatar,
@@ -21,6 +21,7 @@ import {
   macroPresetsFeatureEnabled,
 } from '../utils/api'
 import { MacroEntry, MacroPreset, MacroPresetVersion, MacroPresetThreadUsageRow } from '../utils/types'
+import { UserContext } from '../utils/contexts/UserContext'
 
 const buildEntryRows = (entries: MacroEntry[]): string[] => {
   return entries.map((entry) => {
@@ -48,6 +49,7 @@ const buildEntryRows = (entries: MacroEntry[]): string[] => {
 }
 
 export const MacroPresetViewPage = () => {
+  const { counter } = useContext(UserContext)
   const { presetRef, versionNumber } = useParams<{ presetRef: string; versionNumber?: string }>()
   const [preset, setPreset] = useState<MacroPreset | null>(null)
   const [versions, setVersions] = useState<MacroPresetVersion[]>([])
@@ -57,6 +59,10 @@ export const MacroPresetViewPage = () => {
   const [error, setError] = useState('')
 
   const macroRows = useMemo(() => buildEntryRows(latestEntries), [latestEntries])
+  const isOwner =
+    !!counter?.discordId &&
+    !!preset?.ownerCounter?.discordId &&
+    counter.discordId === preset.ownerCounter.discordId
 
   useEffect(() => {
     const load = async () => {
@@ -182,6 +188,16 @@ export const MacroPresetViewPage = () => {
               </Stack>
             </Box>
             <Stack direction="row" spacing={1} sx={{ alignSelf: 'flex-start' }}>
+              {isOwner && (
+                <Button
+                  size="small"
+                  variant="contained"
+                  component={RouterLink}
+                  to={`/macros?tab=edit&preset=${preset.id}`}
+                >
+                  Edit Preset
+                </Button>
+              )}
               <Button size="small" variant="outlined" component={RouterLink} to="/macros">
                 Back To Macros
               </Button>

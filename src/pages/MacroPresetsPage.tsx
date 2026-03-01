@@ -15,7 +15,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { Link as RouterLink } from 'react-router-dom'
+import { Link as RouterLink, useSearchParams } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
 import {
   getMacroPresetSummaries,
@@ -82,7 +82,9 @@ const parseMacroSearchFilters = (raw: string): MacroSearchFilters => {
 
 export const MacroPresetsPage = () => {
   const { user } = useContext(UserContext)
+  const [searchParams, setSearchParams] = useSearchParams()
   const [viewMode, setViewMode] = useState<'discover' | 'create' | 'edit'>('discover')
+  const [editPresetIdFromUrl, setEditPresetIdFromUrl] = useState<number | null>(null)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [page, setPage] = useState(1)
@@ -108,7 +110,15 @@ export const MacroPresetsPage = () => {
   } | null>(null)
   const [copyNotice, setCopyNotice] = useState('')
   const [loading, setLoading] = useState(false)
+  const [editLoading, setEditLoading] = useState(false)
   const [error, setError] = useState('')
+  const [editError, setEditError] = useState('')
+  const [editSearch, setEditSearch] = useState('')
+  const [debouncedEditSearch, setDebouncedEditSearch] = useState('')
+  const [editPage, setEditPage] = useState(1)
+  const [editTotal, setEditTotal] = useState(0)
+  const [editMacroPresets, setEditMacroPresets] = useState<MacroPreset[]>([])
+  const [selectedEditPresetId, setSelectedEditPresetId] = useState<number | null>(null)
   const macroPresetsEnabled = macroPresetsFeatureEnabled
 
   useEffect(() => {
@@ -118,7 +128,18 @@ export const MacroPresetsPage = () => {
     return () => window.clearTimeout(timeout)
   }, [search])
 
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedEditSearch(editSearch.trim())
+    }, 250)
+    return () => window.clearTimeout(timeout)
+  }, [editSearch])
+
   const searchFilters = useMemo(() => parseMacroSearchFilters(debouncedSearch), [debouncedSearch])
+  const editSearchFilters = useMemo(
+    () => parseMacroSearchFilters(debouncedEditSearch),
+    [debouncedEditSearch],
+  )
 
   useEffect(() => {
     document.title = 'Macro Presets | Counting!'
@@ -126,6 +147,22 @@ export const MacroPresetsPage = () => {
       document.title = 'Counting!'
     }
   }, [])
+
+  useEffect(() => {
+    const tab = (searchParams.get('tab') || '').toLowerCase()
+    if (tab === 'discover' || tab === 'create' || tab === 'edit') {
+      setViewMode(tab)
+    }
+    const presetRaw = (searchParams.get('preset') || '').trim()
+    if (/^\d+$/.test(presetRaw)) {
+      const presetId = parseInt(presetRaw, 10)
+      setEditPresetIdFromUrl(presetId)
+      setSelectedEditPresetId(presetId)
+    } else {
+      setEditPresetIdFromUrl(null)
+      setSelectedEditPresetId(null)
+    }
+  }, [searchParams])
 
   const hydrateGroupDetails = useCallback(async (presets: MacroPreset[]) => {
     const presetIds = presets.map((preset) => preset.id)
@@ -199,6 +236,33 @@ export const MacroPresetsPage = () => {
   useEffect(() => {
     loadMacroPresets()
   }, [loadMacroPresets])
+
+  const loadOwnedMacroPresets = useCallback(async () => {
+    if (!macroPresetsEnabled) return
+    setEditLoading(true)
+    setEditError('')
+    try {
+      const mineRes = await listMacroPresets(
+        editPage,
+        PAGE_SIZE,
+        editSearchFilters.freeText || undefined,
+        true,
+      )
+      const mineItems = mineRes.data.items || []
+      setEditTotal(mineRes.data.total || 0)
+      setEditMacroPresets(mineItems)
+      await hydrateGroupDetails(mineItems)
+    } catch (err: any) {
+      setEditError(err?.response?.data?.message || 'Failed to load your macro presets')
+    } finally {
+      setEditLoading(false)
+    }
+  }, [macroPresetsEnabled, editPage, editSearchFilters, hydrateGroupDetails])
+
+  useEffect(() => {
+    if (viewMode !== 'edit') return
+    loadOwnedMacroPresets()
+  }, [viewMode, loadOwnedMacroPresets])
 
   const sortedMacroPresets = useMemo(
     () => prioritizeOwnedMacroPresets(macroPresets, ownedGroupIds),
@@ -306,6 +370,18 @@ export const MacroPresetsPage = () => {
     })
     setCopyNotice(`Copied "${preset.name}" into draft.`)
     setViewMode('create')
+    const next = new URLSearchParams(searchParams)
+    next.set('tab', 'create')
+    next.delete('preset')
+    setSearchParams(next, { replace: true })
+  }
+
+  const selectPresetForEdit = (presetId: number) => {
+    setSelectedEditPresetId(presetId)
+    const next = new URLSearchParams(searchParams)
+    next.set('tab', 'edit')
+    next.set('preset', String(presetId))
+    setSearchParams(next, { replace: true })
   }
 
   if (!user) {
@@ -358,7 +434,15 @@ export const MacroPresetsPage = () => {
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }} sx={{ mb: 0.5 }}>
         <Tabs
           value={viewMode}
-          onChange={(_, value) => setViewMode(value)}
+          onChange={(_, value) => {
+            setViewMode(value)
+            const next = new URLSearchParams(searchParams)
+            next.set('tab', value)
+            if (value !== 'edit') {
+              next.delete('preset')
+            }
+            setSearchParams(next, { replace: true })
+          }}
           sx={{
             minHeight: 36,
             '& .MuiTabs-indicator': { display: 'none' },
@@ -593,11 +677,143 @@ export const MacroPresetsPage = () => {
       )}
 
       {viewMode === 'edit' && (
-        <MacroPresetManager
-          refreshMacroPresets={loadMacroPresets}
-          draftSeed={draftSeed}
-          forcedMode="edit"
-        />
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) minmax(0, 1fr)' },
+            gap: 2,
+            alignItems: 'start',
+          }}
+        >
+          <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper' }}>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Your Presets
+            </Typography>
+            {editError && (
+              <Alert severity="error" sx={{ mb: 1.5 }}>
+                {editError}
+              </Alert>
+            )}
+            <TextField
+              label="Search Your Presets"
+              helperText='Use plain text or filters: name:test handle:main thread:used'
+              value={editSearch}
+              onChange={(e) => {
+                setEditSearch(e.target.value)
+                setEditPage(1)
+              }}
+              fullWidth
+            />
+            {editLoading && <LinearProgress sx={{ mt: 1.5 }} />}
+            <Divider sx={{ my: 2 }} />
+            <Stack spacing={1.25}>
+              {editMacroPresets.map((preset) => {
+                const entries = groupPreviewById[preset.id]?.entries || []
+                const previewRows = buildGroupedPreviewRows(entries)
+                return (
+                  <Box
+                    key={`edit-${preset.id}`}
+                    sx={{
+                      p: 1.5,
+                      border: '1px solid',
+                      borderColor:
+                        selectedEditPresetId === preset.id ? 'primary.main' : 'divider',
+                      borderRadius: '10px',
+                      bgcolor: 'background.default',
+                    }}
+                  >
+                    <Stack
+                      direction={{ xs: 'column', lg: 'row' }}
+                      justifyContent="space-between"
+                      spacing={1.5}
+                    >
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                          {preset.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                          {preset.description || 'No description'}
+                        </Typography>
+                        <Stack direction="row" spacing={0.75} sx={{ mt: 0.85, flexWrap: 'wrap' }}>
+                          <Chip
+                            size="small"
+                            variant="outlined"
+                            label={`v${groupPreviewById[preset.id]?.versionNumber ?? '-'}`}
+                          />
+                          <Chip size="small" variant="outlined" label={`${entries.length} mappings`} />
+                        </Stack>
+                      </Box>
+                      <Stack direction={{ xs: 'row', lg: 'column' }} spacing={0.75}>
+                        <Button
+                          size="small"
+                          variant={selectedEditPresetId === preset.id ? 'contained' : 'outlined'}
+                          onClick={() => selectPresetForEdit(preset.id)}
+                        >
+                          Edit
+                        </Button>
+                        {preset.handle && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            component={RouterLink}
+                            to={`/macros/${preset.handle}`}
+                          >
+                            Open
+                          </Button>
+                        )}
+                      </Stack>
+                    </Stack>
+                    <Divider sx={{ my: 1.25 }} />
+                    <Stack spacing={0.4}>
+                      {previewRows.map((row) => (
+                        <Typography key={`${preset.id}-${row}`} variant="caption" color="text.primary">
+                          {row}
+                        </Typography>
+                      ))}
+                      {previewRows.length === 0 && (
+                        <Typography variant="caption" color="text.secondary">
+                          No mappings in latest version.
+                        </Typography>
+                      )}
+                    </Stack>
+                  </Box>
+                )
+              })}
+            </Stack>
+            {!editLoading && editMacroPresets.length === 0 && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                No presets found.
+              </Typography>
+            )}
+            {editTotal > PAGE_SIZE && (
+              <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                <Pagination
+                  count={Math.max(1, Math.ceil(editTotal / PAGE_SIZE))}
+                  page={editPage}
+                  onChange={(_, value) => setEditPage(value)}
+                />
+              </Box>
+            )}
+          </Box>
+          <Box
+            sx={{
+              position: { xs: 'static', lg: 'sticky' },
+              top: { xs: 'auto', lg: 16 },
+              alignSelf: 'start',
+              maxHeight: { xs: 'none', lg: 'calc(100vh - 32px)' },
+              overflowY: { xs: 'visible', lg: 'auto' },
+              pr: { xs: 0, lg: 0.5 },
+            }}
+          >
+            <MacroPresetManager
+              refreshMacroPresets={loadOwnedMacroPresets}
+              draftSeed={draftSeed}
+              forcedMode="edit"
+              initialSelectedPresetId={editPresetIdFromUrl ?? selectedEditPresetId}
+              hidePresetSelector
+            />
+          </Box>
+        </Box>
       )}
       </Container>
     </Box>
