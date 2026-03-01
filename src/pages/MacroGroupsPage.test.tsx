@@ -110,7 +110,7 @@ describe('MacroGroupsPage', () => {
     await waitFor(() => expect(screen.getByText('Main Thread Pack')).toBeInTheDocument())
 
     expect(
-      screen.getByText(/Search by display name, handle, description, trigger key, or behavior/i),
+      screen.getByText(/Use plain text or filters: creator:pull name:test1 handle:test1 thread:used/i),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Copy To Draft' })).toBeInTheDocument()
     expect(screen.getAllByText('Owned').length).toBeGreaterThan(0)

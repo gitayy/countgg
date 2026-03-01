@@ -206,15 +206,15 @@ export const MacroGroupViewPage = () => {
                 variant="outlined"
                 component={RouterLink}
                 clickable
-                to={row.threadId ? `/thread/${row.threadId}` : '/threads'}
-                label={`${row.threadName} (${row.appliesCount})`}
+                to={row.threadName ? `/thread/${encodeURIComponent(row.threadName)}` : '/threads'}
+                label={`${row.threadTitle || row.threadName} (${row.appliesCount})`}
               />
             ))}
             {usageRows.length === 0 && (
-              <Typography variant="body2" color="text.secondary">
-                No thread usage tracked yet.
-              </Typography>
-            )}
+                <Typography variant="body2" color="text.secondary">
+                  No thread users tracked yet.
+                </Typography>
+              )}
           </Box>
         </Box>
       </Container>

@@ -116,6 +116,10 @@ import { prioritizeOwnedMacroGroups } from '../utils/macroGroups'
 let imsorryfortheglobalpull = 'DISABLED'
 type LoadSpikeSimMode = 'baseline' | 'dup_listener' | 'post_load_overlap' | 'cache_overlap' | 'mixed_direction'
 const MACRO_TOGGLE_KEY = 'F8'
+type ThreadMacroGroupOption = MacroGroup & {
+  category: 'No Macro' | 'Top 3 For This Thread' | 'Your Macros' | 'Other Macros'
+  threadUsageCount: number
+}
 
 export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const location = useLocation()
@@ -188,6 +192,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [pendingSubmitMacroMeta, setPendingSubmitMacroMeta] = useState(false)
   const [macroHotkeysEnabled, setMacroHotkeysEnabled] = useState(true)
   const [macroSelectionSaving, setMacroSelectionSaving] = useState(false)
+  const macroGroupsLoadedForUserRef = useRef<string | null>(null)
   const activeMacroGroupName = useMemo(
     () =>
       availableMacroGroups.find((group) => group.id === activeMacroRuntime.macroGroupId)?.name ||
@@ -198,6 +203,26 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     () => prioritizeOwnedMacroGroups(availableMacroGroups, ownedMacroGroupIds),
     [availableMacroGroups, ownedMacroGroupIds],
   )
+  const threadUsageCountByMacroGroupId = useMemo(() => {
+    const usage = new Map<number, number>()
+    for (const row of recommendedMacroGroups) {
+      const macroGroupId = row.macroGroup?.id
+      if (macroGroupId) {
+        usage.set(macroGroupId, row.appliesCount || 0)
+      }
+    }
+    return usage
+  }, [recommendedMacroGroups])
+  const topThreadMacroGroupIds = useMemo(() => {
+    const ids: number[] = []
+    for (const row of recommendedMacroGroups) {
+      const macroGroupId = row.macroGroup?.id
+      if (!macroGroupId || ids.includes(macroGroupId)) continue
+      ids.push(macroGroupId)
+      if (ids.length >= 3) break
+    }
+    return ids
+  }, [recommendedMacroGroups])
   const effectiveThreadMacroGroupId = useMemo(() => {
     if (threadMacroGroupId !== null) return threadMacroGroupId
     if (
@@ -213,8 +238,38 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     if (activeMacroRuntime.source === 'global') return 'Global Pref'
     return 'None'
   }, [activeMacroRuntime.source])
-  const threadMacroGroupOptions = useMemo<MacroGroup[]>(
-    () => [
+  const threadMacroGroupOptions = useMemo<ThreadMacroGroupOption[]>(() => {
+    const byUsageThenName = [...sortedAvailableMacroGroups].sort((a, b) => {
+      const usageDiff =
+        (threadUsageCountByMacroGroupId.get(b.id) || 0) -
+        (threadUsageCountByMacroGroupId.get(a.id) || 0)
+      if (usageDiff !== 0) return usageDiff
+      return a.name.localeCompare(b.name)
+    })
+    const topSet = new Set(topThreadMacroGroupIds)
+    const topOptions = topThreadMacroGroupIds
+      .map((id) => byUsageThenName.find((group) => group.id === id))
+      .filter(Boolean)
+      .map((group) => ({
+        ...(group as MacroGroup),
+        category: 'Top 3 For This Thread' as const,
+        threadUsageCount: threadUsageCountByMacroGroupId.get((group as MacroGroup).id) || 0,
+      }))
+    const mineOptions = byUsageThenName
+      .filter((group) => ownedMacroGroupIds.has(group.id) && !topSet.has(group.id))
+      .map((group) => ({
+        ...group,
+        category: 'Your Macros' as const,
+        threadUsageCount: threadUsageCountByMacroGroupId.get(group.id) || 0,
+      }))
+    const otherOptions = byUsageThenName
+      .filter((group) => !ownedMacroGroupIds.has(group.id) && !topSet.has(group.id))
+      .map((group) => ({
+        ...group,
+        category: 'Other Macros' as const,
+        threadUsageCount: threadUsageCountByMacroGroupId.get(group.id) || 0,
+      }))
+    return [
       {
         id: -1,
         name: 'None',
@@ -224,11 +279,19 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         isDeleted: false,
         createdAt: '',
         updatedAt: '',
+        category: 'No Macro',
+        threadUsageCount: 0,
       },
-      ...sortedAvailableMacroGroups,
-    ],
-    [sortedAvailableMacroGroups],
-  )
+      ...topOptions,
+      ...mineOptions,
+      ...otherOptions,
+    ]
+  }, [
+    sortedAvailableMacroGroups,
+    ownedMacroGroupIds,
+    topThreadMacroGroupIds,
+    threadUsageCountByMacroGroupId,
+  ])
   const hasMacroEntries = !!activeMacroRuntime.enabled && (activeMacroRuntime.entries?.length || 0) > 0
   const groupedActiveMacroEntries = useMemo(() => {
     const grouped = new Map<string, typeof activeMacroRuntime.entries>()
@@ -2462,31 +2525,34 @@ const [resetPrefs, setResetPrefs] = useState<boolean>(false);
   useEffect(() => {
     let ignore = false
     const loadMacroGroups = async () => {
-      if (!macroGroupsEnabled) {
+      if (!macroGroupsEnabled || !user?.uuid) {
+        macroGroupsLoadedForUserRef.current = null
         setAvailableMacroGroups([])
         setOwnedMacroGroupIds(new Set())
         return
       }
-      try {
-      const [allRes, mineRes] = await Promise.all([
-        listMacroGroups(1, 100),
-        listMacroGroups(1, 100, undefined, true),
-      ])
-      if (!ignore) {
-        setAvailableMacroGroups(allRes.data.items || [])
-        setOwnedMacroGroupIds(new Set((mineRes.data.items || []).map((item) => item.id)))
+      if (macroGroupsLoadedForUserRef.current === user.uuid) {
+        return
       }
-    } catch (err) {
-      // Keep thread page functional if macro groups fail to load.
+      try {
+        const [allRes, mineRes] = await Promise.all([
+          listMacroGroups(1, 100),
+          listMacroGroups(1, 100, undefined, true),
+        ])
+        if (!ignore) {
+          setAvailableMacroGroups(allRes.data.items || [])
+          setOwnedMacroGroupIds(new Set((mineRes.data.items || []).map((item) => item.id)))
+          macroGroupsLoadedForUserRef.current = user.uuid
+        }
+      } catch (err) {
+        // Keep thread page functional if macro groups fail to load.
+      }
     }
-  }
-  if (!loading) {
     loadMacroGroups()
-  }
-  return () => {
-    ignore = true
-  }
-  }, [loading, macroGroupsEnabled])
+    return () => {
+      ignore = true
+    }
+  }, [macroGroupsEnabled, user?.uuid])
 
   useEffect(() => {
     let ignore = false
@@ -2979,20 +3045,21 @@ useEffect(() => {
                   </Stack>
                 </Stack>
                 <Autocomplete
-                  size="small"
-                  sx={{ mb: 0.5 }}
-                  options={threadMacroGroupOptions}
-                  getOptionLabel={(option) => option.name}
-                  filterOptions={(options, state) => {
-                    const q = state.inputValue.trim().toLowerCase()
-                    if (!q) return options
-                    return options.filter(
-                      (opt) =>
-                        opt.name.toLowerCase().includes(q) ||
-                        (opt.handle || '').toLowerCase().includes(q) ||
-                        opt.description.toLowerCase().includes(q),
-                    )
-                  }}
+                    size="small"
+                    sx={{ mb: 0.5 }}
+                    options={threadMacroGroupOptions}
+                    groupBy={(option) => option.category}
+                    getOptionLabel={(option) => option.name}
+                    filterOptions={(options, state) => {
+                      const q = state.inputValue.trim().toLowerCase()
+                      if (!q) return options
+                      return options.filter(
+                        (opt) =>
+                          opt.name.toLowerCase().includes(q) ||
+                          (opt.handle || '').toLowerCase().includes(q) ||
+                          opt.description.toLowerCase().includes(q),
+                      )
+                    }}
                   value={
                     effectiveThreadMacroGroupId === null
                       ? threadMacroGroupOptions[0]
@@ -3004,19 +3071,19 @@ useEffect(() => {
                   renderInput={(params) => (
                     <TextField {...params} label="Group" placeholder="Search" size="small" />
                   )}
-                  renderOption={(props, option) => (
-                    <li {...props} key={option.id}>
-                      <Box>
-                        <Typography variant="body2">{option.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {option.id === -1
-                            ? 'No macro group'
-                            : `${ownedMacroGroupIds.has(option.id) ? 'Mine - ' : ''}${option.handle ? `@${option.handle} - ` : ''}${option.description || 'No description'}`}
-                        </Typography>
-                      </Box>
-                    </li>
-                  )}
-                />
+                    renderOption={(props, option) => (
+                      <li {...props} key={option.id}>
+                        <Box>
+                          <Typography variant="body2">{option.name}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {option.id === -1
+                              ? 'No macro group'
+                              : `${option.threadUsageCount > 0 ? `${option.threadUsageCount} users here - ` : ''}${option.handle ? `@${option.handle} - ` : ''}${option.description || 'No description'}`}
+                          </Typography>
+                        </Box>
+                      </li>
+                    )}
+                  />
                 {macroSelectionSaving && (
                   <Typography variant="caption" color="text.secondary">
                     Saving...
@@ -3302,6 +3369,7 @@ useEffect(() => {
           <Autocomplete
             sx={{ minWidth: 320, maxWidth: 640, width: '100%' }}
             options={threadMacroGroupOptions}
+            groupBy={(option) => option.category}
             getOptionLabel={(option) => option.name}
             filterOptions={(options, state) => {
               const q = state.inputValue.trim().toLowerCase()
@@ -3324,19 +3392,19 @@ useEffect(() => {
             renderInput={(params) => (
               <TextField {...params} label="Thread Macro Group" placeholder="Search macro groups" />
             )}
-            renderOption={(props, option) => (
-              <li {...props} key={option.id}>
-                <Box>
-                  <Typography variant="body2">{option.name}</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {option.id === -1
-                      ? 'No macro group'
-                      : `${ownedMacroGroupIds.has(option.id) ? 'Mine - ' : ''}${option.handle ? `@${option.handle} - ` : ''}${option.description || 'No description'}`}
-                  </Typography>
-                </Box>
-              </li>
-            )}
-          />
+              renderOption={(props, option) => (
+                <li {...props} key={option.id}>
+                  <Box>
+                    <Typography variant="body2">{option.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.id === -1
+                        ? 'No macro group'
+                        : `${option.threadUsageCount > 0 ? `${option.threadUsageCount} users here - ` : ''}${option.handle ? `@${option.handle} - ` : ''}${option.description || 'No description'}`}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
+            />
           <Button
             size="small"
             variant="outlined"
@@ -3410,9 +3478,9 @@ useEffect(() => {
                     p: 0.5,
                   }}
                 >
-                  <Typography variant="body2">
-                    {row.macroGroup?.name || 'Unknown Macro Group'} ({row.appliesCount} applies)
-                  </Typography>
+                    <Typography variant="body2">
+                     {row.macroGroup?.name || 'Unknown Macro Group'} ({row.appliesCount} users)
+                    </Typography>
                   <Button
                     size="small"
                     variant="outlined"

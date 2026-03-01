@@ -30,13 +30,63 @@ import { prioritizeOwnedMacroGroups } from '../utils/macroGroups'
 
 const PAGE_SIZE = 25
 
+type MacroSearchFilters = {
+  creator: string
+  name: string
+  handle: string
+  thread: string
+  threadMode: 'any' | 'used' | 'none'
+  freeText: string
+}
+
+const parseMacroSearchFilters = (raw: string): MacroSearchFilters => {
+  const filters: MacroSearchFilters = {
+    creator: '',
+    name: '',
+    handle: '',
+    thread: '',
+    threadMode: 'any',
+    freeText: '',
+  }
+
+  const tokenRegex = /\b(creator|name|handle|thread):"([^"]+)"|\b(creator|name|handle|thread):(\S+)/gi
+  const tokenPairs: Array<{ key: string; value: string }> = []
+  let match: RegExpExecArray | null = tokenRegex.exec(raw)
+  while (match) {
+    const key = (match[1] || match[3] || '').toLowerCase()
+    const value = (match[2] || match[4] || '').trim()
+    if (key && value) {
+      tokenPairs.push({ key, value })
+    }
+    match = tokenRegex.exec(raw)
+  }
+
+  for (const token of tokenPairs) {
+    if (token.key === 'creator') filters.creator = token.value
+    if (token.key === 'name') filters.name = token.value
+    if (token.key === 'handle') filters.handle = token.value
+    if (token.key === 'thread') {
+      const normalized = token.value.toLowerCase()
+      if (normalized === 'used' || normalized === 'has') {
+        filters.threadMode = 'used'
+      } else if (normalized === 'none' || normalized === 'unused') {
+        filters.threadMode = 'none'
+      } else {
+        filters.thread = token.value
+      }
+    }
+  }
+
+  const stripRegex = /\b(creator|name|handle|thread):"([^"]+)"|\b(creator|name|handle|thread):(\S+)/gi
+  filters.freeText = raw.replace(stripRegex, ' ').replace(/\s+/g, ' ').trim()
+  return filters
+}
+
 export const MacroGroupsPage = () => {
   const { user } = useContext(UserContext)
   const [viewMode, setViewMode] = useState<'discover' | 'create' | 'edit'>('discover')
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [creatorSearch, setCreatorSearch] = useState('')
-  const [debouncedCreatorSearch, setDebouncedCreatorSearch] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [macroGroups, setMacroGroups] = useState<MacroGroup[]>([])
@@ -46,7 +96,10 @@ export const MacroGroupsPage = () => {
     Record<number, { versionNumber: number | null; entries: MacroEntry[] }>
   >({})
   const [groupThreadUsageById, setGroupThreadUsageById] = useState<
-    Record<number, { threadId: string; threadName: string; appliesCount: number }[]>
+    Record<
+      number,
+      { threadId: string; threadName: string; threadTitle?: string; appliesCount: number }[]
+    >
   >({})
   const [draftSeed, setDraftSeed] = useState<{
     token: number
@@ -56,9 +109,6 @@ export const MacroGroupsPage = () => {
     entries: MacroEntryDraft[]
   } | null>(null)
   const [copyNotice, setCopyNotice] = useState('')
-  const [ownedOnlyFilter, setOwnedOnlyFilter] = useState(false)
-  const [hasUsageFilter, setHasUsageFilter] = useState(false)
-  const [hasSubmitFilter, setHasSubmitFilter] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const macroGroupsEnabled = macroGroupsFeatureEnabled
@@ -70,12 +120,7 @@ export const MacroGroupsPage = () => {
     return () => window.clearTimeout(timeout)
   }, [search])
 
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      setDebouncedCreatorSearch(creatorSearch.trim())
-    }, 250)
-    return () => window.clearTimeout(timeout)
-  }, [creatorSearch])
+  const searchFilters = useMemo(() => parseMacroSearchFilters(debouncedSearch), [debouncedSearch])
 
   useEffect(() => {
     document.title = 'Macro Groups | Counting!'
@@ -86,7 +131,10 @@ export const MacroGroupsPage = () => {
 
   const hydrateGroupDetails = useCallback(async (groups: MacroGroup[]) => {
     const previews: Record<number, { versionNumber: number | null; entries: MacroEntry[] }> = {}
-    const usage: Record<number, { threadId: string; threadName: string; appliesCount: number }[]> = {}
+    const usage: Record<
+      number,
+      { threadId: string; threadName: string; threadTitle?: string; appliesCount: number }[]
+    > = {}
 
     await Promise.all(
       groups.map(async (group) => {
@@ -121,6 +169,7 @@ export const MacroGroupsPage = () => {
           usage[group.id] = (usageResult.value.data.items || []).map((row) => ({
             threadId: row.threadId,
             threadName: row.threadName,
+            threadTitle: row.threadTitle,
             appliesCount: row.appliesCount,
           }))
         } else {
@@ -142,9 +191,9 @@ export const MacroGroupsPage = () => {
         listMacroGroups(
           page,
           PAGE_SIZE,
-          debouncedSearch || undefined,
+          searchFilters.freeText || undefined,
           false,
-          debouncedCreatorSearch || undefined,
+          searchFilters.creator || undefined,
         ),
         listMacroGroups(1, 100, undefined, true),
       ])
@@ -160,7 +209,7 @@ export const MacroGroupsPage = () => {
     } finally {
       setLoading(false)
     }
-  }, [macroGroupsEnabled, page, debouncedSearch, debouncedCreatorSearch, hydrateGroupDetails])
+  }, [macroGroupsEnabled, page, searchFilters, hydrateGroupDetails])
 
   useEffect(() => {
     loadMacroGroups()
@@ -175,22 +224,33 @@ export const MacroGroupsPage = () => {
     return sortedMacroGroups.filter((group) => {
       const entries = groupPreviewById[group.id]?.entries || []
       const hasUsage = (groupThreadUsageById[group.id] || []).length > 0
-      const hasSubmit = entries.some(
-        (entry) => entry.macroType === 'SUBMIT' || entry.macroType === 'SUBMIT_ACTION',
-      )
-      if (ownedOnlyFilter && !ownedGroupIds.has(group.id)) return false
-      if (hasUsageFilter && !hasUsage) return false
-      if (hasSubmitFilter && !hasSubmit) return false
+      const ownerName = `${group.ownerCounter?.name || ''} ${group.ownerCounter?.username || ''} ${group.ownerCounter?.uuid || ''}`.toLowerCase()
+      const name = (group.name || '').toLowerCase()
+      const handle = (group.handle || '').toLowerCase()
+      const threadUsageNames = (groupThreadUsageById[group.id] || [])
+        .map((row) => `${row.threadName || ''} ${row.threadTitle || ''}`.toLowerCase())
+        .join(' ')
+      const previewText = entries
+        .map((entry) => `${entry.triggerKey} ${entry.macroType} ${JSON.stringify(entry.payloadJson || {})}`)
+        .join(' ')
+        .toLowerCase()
+      const freeTextHaystack =
+        `${name} ${handle} ${(group.description || '').toLowerCase()} ${ownerName} ${threadUsageNames} ${previewText}`.trim()
+
+      if (searchFilters.creator && !ownerName.includes(searchFilters.creator.toLowerCase())) return false
+      if (searchFilters.name && !name.includes(searchFilters.name.toLowerCase())) return false
+      if (searchFilters.handle && !handle.includes(searchFilters.handle.toLowerCase())) return false
+      if (searchFilters.threadMode === 'used' && !hasUsage) return false
+      if (searchFilters.threadMode === 'none' && hasUsage) return false
+      if (searchFilters.thread && !threadUsageNames.includes(searchFilters.thread.toLowerCase())) return false
+      if (searchFilters.freeText && !freeTextHaystack.includes(searchFilters.freeText.toLowerCase())) return false
       return true
     })
   }, [
     sortedMacroGroups,
+    searchFilters,
     groupPreviewById,
     groupThreadUsageById,
-    ownedOnlyFilter,
-    hasUsageFilter,
-    hasSubmitFilter,
-    ownedGroupIds,
   ])
 
   const buildGroupedPreviewRows = (entries: MacroEntry[]) => {
@@ -353,8 +413,8 @@ export const MacroGroupsPage = () => {
             Public Groups
           </Typography>
           <TextField
-            label="Search Public Groups"
-            helperText='Search by display name, handle, description, trigger key, or behavior (e.g. "submit", "backspace").'
+            label="Search & Filter Public Groups"
+            helperText='Use plain text or filters: creator:pull name:test1 handle:test1 thread:used thread:"main"'
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
@@ -362,45 +422,8 @@ export const MacroGroupsPage = () => {
             }}
             fullWidth
           />
-          <TextField
-            sx={{ mt: 1.25 }}
-            label="Filter By Creator"
-            placeholder="display name, username, or uuid"
-            value={creatorSearch}
-            onChange={(e) => {
-              setCreatorSearch(e.target.value)
-              setPage(1)
-            }}
-            fullWidth
-          />
 
           {loading && <LinearProgress sx={{ mt: 1.5 }} />}
-          <Stack direction="row" spacing={0.75} sx={{ mt: 1.25, flexWrap: 'wrap' }}>
-            <Chip
-              size="small"
-              label="Owned"
-              clickable
-              color={ownedOnlyFilter ? 'primary' : 'default'}
-              variant={ownedOnlyFilter ? 'filled' : 'outlined'}
-              onClick={() => setOwnedOnlyFilter((prev) => !prev)}
-            />
-            <Chip
-              size="small"
-              label="Has Usage"
-              clickable
-              color={hasUsageFilter ? 'primary' : 'default'}
-              variant={hasUsageFilter ? 'filled' : 'outlined'}
-              onClick={() => setHasUsageFilter((prev) => !prev)}
-            />
-            <Chip
-              size="small"
-              label="Has Submit"
-              clickable
-              color={hasSubmitFilter ? 'primary' : 'default'}
-              variant={hasSubmitFilter ? 'filled' : 'outlined'}
-              onClick={() => setHasSubmitFilter((prev) => !prev)}
-            />
-          </Stack>
           <Divider sx={{ my: 2 }} />
 
           <Stack spacing={1.25}>
@@ -483,8 +506,8 @@ export const MacroGroupsPage = () => {
                           variant="outlined"
                           component={RouterLink}
                           clickable
-                          to={`/thread/${topUsage.threadId}`}
-                          label={`Top thread: ${topUsage.threadName} (${topUsage.appliesCount})`}
+                          to={`/thread/${encodeURIComponent(topUsage.threadName || topUsage.threadId)}`}
+                          label={`Top thread: ${topUsage.threadTitle || topUsage.threadName} (${topUsage.appliesCount})`}
                         />
                       )}
                     </Stack>
@@ -506,7 +529,7 @@ export const MacroGroupsPage = () => {
                     <Typography variant="caption" color="text.secondary">
                       {usageRows.length > 0
                         ? `${usageRows.length} thread${usageRows.length > 1 ? 's' : ''} using this`
-                        : 'No tracked usage'}
+                        : 'No users set this on a thread yet'}
                     </Typography>
                   </Stack>
                 </Stack>
@@ -532,21 +555,21 @@ export const MacroGroupsPage = () => {
                         variant="outlined"
                         component={RouterLink}
                         clickable
-                        to={`/thread/${row.threadId}`}
-                        label={`${row.threadName} (${row.appliesCount})`}
+                        to={`/thread/${encodeURIComponent(row.threadName || row.threadId)}`}
+                        label={`${row.threadTitle || row.threadName} (${row.appliesCount})`}
                       />
                     ) : (
                       <Chip
                         key={`${group.id}-${row.threadName}`}
                         size="small"
                         variant="outlined"
-                        label={`${row.threadName} (${row.appliesCount})`}
+                        label={`${row.threadTitle || row.threadName} (${row.appliesCount})`}
                       />
                     ),
                   )}
                   {usageRows.length === 0 && (
                     <Typography variant="caption" color="text.secondary">
-                      No thread usage yet
+                      No thread users yet
                     </Typography>
                   )}
                 </Box>
