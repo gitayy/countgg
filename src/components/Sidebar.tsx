@@ -70,6 +70,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown'
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
 import MailIcon from '@mui/icons-material/Mail'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
+import KeyboardIcon from '@mui/icons-material/Keyboard'
 
 export const Sidebar = () => {
   const navigate = useNavigate()
@@ -613,6 +614,26 @@ export const Sidebar = () => {
           <Link
             color={'inherit'}
             underline="none"
+            href={`/macros`}
+            onClick={(e) => {
+              e.preventDefault()
+              navigate(`/macros`)
+            }}
+          >
+            <ListItem onClick={handleDrawerToggle} key={'macros'} disablePadding>
+              <ListItemButton>
+                <ListItemIcon>
+                  <KeyboardIcon />
+                </ListItemIcon>
+                <ListItemText primary={'Macros'} />
+              </ListItemButton>
+            </ListItem>
+          </Link>
+        )}
+        {counter && counter.roles.includes('counter') && (
+          <Link
+            color={'inherit'}
+            underline="none"
             href={`/rewards`}
             onClick={(e) => {
               e.preventDefault()
@@ -1052,6 +1073,20 @@ export const Sidebar = () => {
                       }}
                     >
                       <MenuItem>Preferences</MenuItem>
+                    </Link>
+                    ,
+                    <Link
+                      color={'inherit'}
+                      underline="none"
+                      href={`/macros`}
+                      key={'macrosKey'}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        navigate(`/macros`)
+                        handleClose()
+                      }}
+                    >
+                      <MenuItem>Macros</MenuItem>
                     </Link>
                   ]
                 }

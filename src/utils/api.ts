@@ -1,8 +1,33 @@
 import axios, { AxiosRequestConfig } from 'axios'
-import { User, Counter, ThreadType, AllegianceType, Item, PostType, Blog, MiscSettings, ThreadPrefs, SpeedRecord } from './types'
+import {
+  User,
+  Counter,
+  ThreadType,
+  AllegianceType,
+  Item,
+  PostType,
+  Blog,
+  MiscSettings,
+  ThreadPrefs,
+  SpeedRecord,
+  MacroEntryDraft,
+  MacroGroup,
+  MacroGroupListResponse,
+  MacroGroupReadResponse,
+  MacroGroupVersion,
+  MacroSetPreferenceResponse,
+  ThreadMacroSetPreferenceResponse,
+  MacroApplyResponse,
+  ThreadMacroGroupUsageResponse,
+  ActiveMacroRuntime,
+} from './types'
 
 const CONFIG: AxiosRequestConfig = { withCredentials: true }
 const API_URL = `${process.env.REACT_APP_API_HOST}/api`
+export const macroGroupsFeatureEnabled =
+  ((import.meta as any)?.env?.VITE_MACRO_GROUPS_V1 || '').toLowerCase() !== '0' &&
+  ((import.meta as any)?.env?.VITE_MACRO_GROUPS_V1 || '').toLowerCase() !== 'false' &&
+  ((import.meta as any)?.env?.VITE_MACRO_GROUPS_V1 || '').toLowerCase() !== 'off'
 
 const STATS_LIMIT_WINDOW_MS = 10000
 const STATS_LIMIT_MAX_REQUESTS_PER_WINDOW = 30
@@ -248,6 +273,112 @@ export const updateThreadPrefs = (update: ThreadPrefs) =>
 
 export const deleteThreadPrefs = (thread: ThreadType) =>
   axios.delete(`${API_URL}/user/deleteThreadPrefs`, {...CONFIG,  params: {threadUUID: thread.uuid} })
+
+export const createMacroGroup = (
+  name: string,
+  description: string,
+  changeNote?: string,
+  entries: MacroEntryDraft[] = [],
+) =>
+  axios.post<MacroGroup>(
+    `${API_URL}/macro-groups`,
+    { name, description, changeNote, entries },
+    CONFIG,
+  )
+
+export const getMacroGroup = (id: number) =>
+  axios.get<MacroGroupReadResponse>(`${API_URL}/macro-groups/${id}`, CONFIG)
+
+export const updateMacroGroup = (
+  id: number,
+  update: {
+    name?: string
+    description?: string
+  },
+) => axios.patch<MacroGroup>(`${API_URL}/macro-groups/${id}`, update, CONFIG)
+
+export const deleteMacroGroup = (id: number) =>
+  axios.delete<{ success: boolean }>(`${API_URL}/macro-groups/${id}`, CONFIG)
+
+export const listMacroGroups = (
+  page = 1,
+  limit = 20,
+  search?: string,
+  mine?: boolean,
+) =>
+  axios.get<MacroGroupListResponse>(`${API_URL}/macro-groups`, {
+    params: { page, limit, search, mine: mine ? '1' : undefined },
+    ...CONFIG,
+  })
+
+export const getMacroGroupVersions = (id: number) =>
+  axios.get<MacroGroupVersion[]>(`${API_URL}/macro-groups/${id}/versions`, CONFIG)
+
+export const getMacroGroupVersion = (id: number, versionNumber: number) =>
+  axios.get<MacroGroupVersion>(
+    `${API_URL}/macro-groups/${id}/versions/${versionNumber}`,
+    CONFIG,
+  )
+
+export const enqueueMacroGroupUpdate = (
+  id: number,
+  changeNote: string | undefined,
+  entries: MacroEntryDraft[],
+) =>
+  axios.post(
+    `${API_URL}/macro-groups/${id}/update-requests`,
+    { changeNote, entries },
+    CONFIG,
+  )
+
+export const setGlobalMacroGroupPreference = (macroGroupId: number | null) =>
+  axios.put<MacroSetPreferenceResponse>(
+    `${API_URL}/users/me/preferences/macro-group`,
+    { macroGroupId },
+    CONFIG,
+  )
+
+export const setThreadMacroGroupPreference = (
+  threadId: string,
+  enabled: boolean,
+  macroGroupId: number | null,
+) =>
+  axios.put<ThreadMacroSetPreferenceResponse>(
+    `${API_URL}/threads/${threadId}/preferences/macro-group`,
+    { enabled, macroGroupId },
+    CONFIG,
+  )
+
+export const applyMacroGroupForThread = (threadId: string, macroGroupId: number) =>
+  axios.post<MacroApplyResponse>(
+    `${API_URL}/threads/${threadId}/macro-groups/${macroGroupId}/apply`,
+    {},
+    CONFIG,
+  )
+
+export const getRecommendedMacroGroups = (threadId: string, limit = 10) =>
+  axios.get<ThreadMacroGroupUsageResponse>(
+    `${API_URL}/threads/${threadId}/macro-groups/recommended`,
+    {
+      params: { limit },
+      ...CONFIG,
+    },
+  )
+
+export const getPopularMacroGroups = (threadId: string, limit = 50) =>
+  axios.get<ThreadMacroGroupUsageResponse>(
+    `${API_URL}/threads/${threadId}/macro-groups/popular`,
+    {
+      params: { limit },
+      ...CONFIG,
+    },
+  )
+
+export const getActiveMacroRuntimeForThread = (threadId: string) =>
+  axios.get<ActiveMacroRuntime>(
+    `${API_URL}/threads/${threadId}/macro-groups/active`,
+    CONFIG,
+  )
 
 export const updateCommunityNotes = (thread: ThreadType, update: string) =>
   axios.post(`${API_URL}/thread/updateCommunityNotes`, { threadUUID: thread.uuid, update: update }, CONFIG)

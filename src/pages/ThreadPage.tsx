@@ -5,6 +5,7 @@ import {
   Alert,
   AlertColor,
   alpha,
+  Autocomplete,
   Box,
   Button,
   Chip,
@@ -26,10 +27,13 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  MenuItem,
   Paper,
+  Select,
   Skeleton,
   Snackbar,
   Tab,
+  TextField,
   Theme,
   Tooltip,
   Typography,
@@ -41,7 +45,19 @@ import { addCounterToCache, cachedCounters, defaultCounter } from '../utils/help
 import { useFetchRecentCounts } from '../utils/hooks/useFetchRecentCounts'
 import { useFetchThread } from '../utils/hooks/useFetchThread'
 import { SocketContext } from '../utils/contexts/SocketContext'
-import { Category, Counter, PostType, PreferencesType, ThreadPrefs, ThreadType, User } from '../utils/types'
+import {
+  Category,
+  Counter,
+  MacroEntryType,
+  MacroGroup,
+  PostType,
+  PreferencesType,
+  ActiveMacroRuntime,
+  ThreadMacroGroupUsageRow,
+  ThreadPrefs,
+  ThreadType,
+  User,
+} from '../utils/types'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
 import CountList from '../components/CountList'
 import queryString from 'query-string'
@@ -53,12 +69,18 @@ import remarkGfm from 'remark-gfm'
 import ReactMarkdown from 'react-markdown'
 import { flushSync } from 'react-dom'
 import {
+  applyMacroGroupForThread,
   deleteThreadPrefs,
   findPostByThreadAndNumber,
   findPostByThreadAndRawCount,
+  getActiveMacroRuntimeForThread,
+  getRecommendedMacroGroups,
+  listMacroGroups,
   loadNewerCounts,
+  macroGroupsFeatureEnabled,
   modToggleSilentThreadLock,
   modToggleThreadLock,
+  setThreadMacroGroupPreference,
   updateCommunityNotes,
   updateThreadPrefs,
 } from '../utils/api'
@@ -88,6 +110,8 @@ import MiscInfo from '../components/thread/MiscInfo'
 import CommunityNotes from '../components/thread/CommunityNotes'
 import { ThreadStatsPanel } from '../components/thread/ThreadStatsPanel'
 import RollVisualizerHost, { RollVisualizerHostHandle } from '../components/thread/RollVisualizerHost'
+import { buildMacroSubmitMetadata } from '../utils/macroRuntime'
+import { prioritizeOwnedMacroGroups } from '../utils/macroGroups'
 
 let imsorryfortheglobalpull = 'DISABLED'
 type LoadSpikeSimMode = 'baseline' | 'dup_listener' | 'post_load_overlap' | 'cache_overlap' | 'mixed_direction'
@@ -142,11 +166,38 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const theme = useTheme()
 
   const isDesktop = useMediaQuery((theme: Theme) => theme.breakpoints.up('lg'))
+  const macroGroupsEnabled = macroGroupsFeatureEnabled
 
   const socket = useContext(SocketContext)
   const [socketStatus, setSocketStatus] = useState('CONNECTING')
   const [socketViewers, setSocketViewers] = useState(1)
   const [threadStreak, setThreadStreak] = useState<number | undefined>(undefined)
+  const [threadMacroGroupId, setThreadMacroGroupId] = useState<number | null>(null)
+  const [availableMacroGroups, setAvailableMacroGroups] = useState<MacroGroup[]>([])
+  const [ownedMacroGroupIds, setOwnedMacroGroupIds] = useState<Set<number>>(new Set())
+  const [recommendedMacroGroups, setRecommendedMacroGroups] = useState<ThreadMacroGroupUsageRow[]>([])
+  const [activeMacroRuntime, setActiveMacroRuntime] = useState<ActiveMacroRuntime>({
+    source: 'none',
+    enabled: false,
+    macroGroupId: null,
+    macroGroupVersionId: null,
+    macroGroupVersionNumber: null,
+    entries: [],
+  })
+  const [pendingSubmitMacroMeta, setPendingSubmitMacroMeta] = useState<{
+    macroTriggerKey: string
+    macroEntryType: MacroEntryType
+  } | null>(null)
+  const activeMacroGroupName = useMemo(
+    () =>
+      availableMacroGroups.find((group) => group.id === activeMacroRuntime.macroGroupId)?.name ||
+      null,
+    [availableMacroGroups, activeMacroRuntime.macroGroupId],
+  )
+  const sortedAvailableMacroGroups = useMemo(
+    () => prioritizeOwnedMacroGroups(availableMacroGroups, ownedMacroGroupIds),
+    [availableMacroGroups, ownedMacroGroupIds],
+  )
   const loadSpikeGeneratedDuringLoadRef = useRef<PostType[]>([])
   const previousRecentCountsLoadingRef = useRef(false)
   const duplicateListenerUuidRef = useRef<string | undefined>(undefined)
@@ -1395,9 +1446,16 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     }
   }, [deleteComment])
 
-  const handleSubmit = (text: string, refScroll: any, postScroll: any, post_hash: string) => {
+  const handleSubmit = (
+    text: string,
+    refScroll: any,
+    postScroll: any,
+    post_hash: string,
+    macroSubmitMeta?: { macroTriggerKey: string; macroEntryType: MacroEntryType } | null,
+  ) => {
     const submitText = text
     if (thread_name && counter) {
+      const effectiveMacroMeta = macroSubmitMeta || pendingSubmitMacroMeta
       socket.emit('post', {
         thread_name: thread_name,
         text: submitText,
@@ -1405,7 +1463,11 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         refScroll: refScroll,
         postScroll: postScroll,
         latency: renderLatencyEnabled.current,
+        macroMetadata: buildMacroSubmitMetadata(activeMacroRuntime, effectiveMacroMeta),
       })
+      if (pendingSubmitMacroMeta) {
+        setPendingSubmitMacroMeta(null)
+      }
     }
   }
 
@@ -2059,6 +2121,8 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         handleLatencyCheckChange={handleLatencyCheckChange}
         handleLatencyChange={handleLatencyChange}
         handleSubmit={handleSubmit}
+        activeMacroRuntime={activeMacroRuntime}
+        onMacroSubmitMeta={(meta) => setPendingSubmitMacroMeta(meta)}
       ></CountList>
     )
   }, [
@@ -2151,6 +2215,8 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         handleLatencyCheckChange={undefined}
         handleLatencyChange={undefined}
         handleSubmit={undefined}
+        activeMacroRuntime={activeMacroRuntime}
+        onMacroSubmitMeta={undefined}
       ></CountList>
     )
   }, [
@@ -2276,6 +2342,7 @@ useEffect(() => {
     setPrefSoundOnStricken(threadPrefs?.pref_sound_on_stricken ?? user.pref_sound_on_stricken ?? 'Disabled');
     setPrefHideThreadPicker(threadPrefs?.pref_hide_thread_picker ?? user.pref_hide_thread_picker ?? false);
     setPrefStrickenCountOpacity(threadPrefs?.pref_stricken_count_opacity ?? user.pref_stricken_count_opacity ?? 1);
+    setThreadMacroGroupId(threadPrefs?.macroGroupId ?? null);
 
     if(threadPrefs && threadPrefs.enabled === true && setPreferences) {
       setPreferences(setPreferencesFromThreadOrUser(threadPrefs, user))
@@ -2286,6 +2353,96 @@ useEffect(() => {
 }, [loading, thread]);
 
 const [resetPrefs, setResetPrefs] = useState<boolean>(false);
+
+  useEffect(() => {
+    let ignore = false
+    const loadMacroGroups = async () => {
+      if (!macroGroupsEnabled) {
+        setAvailableMacroGroups([])
+        setOwnedMacroGroupIds(new Set())
+        return
+      }
+      try {
+      const [allRes, mineRes] = await Promise.all([
+        listMacroGroups(1, 100),
+        listMacroGroups(1, 100, undefined, true),
+      ])
+      if (!ignore) {
+        setAvailableMacroGroups(allRes.data.items || [])
+        setOwnedMacroGroupIds(new Set((mineRes.data.items || []).map((item) => item.id)))
+      }
+    } catch (err) {
+      // Keep thread page functional if macro groups fail to load.
+    }
+  }
+  if (!loading) {
+    loadMacroGroups()
+  }
+  return () => {
+    ignore = true
+  }
+  }, [loading, macroGroupsEnabled])
+
+  useEffect(() => {
+    let ignore = false
+    const loadRecommendedMacroGroups = async () => {
+    if (!thread?.uuid || !macroGroupsEnabled) return
+    try {
+      const res = await getRecommendedMacroGroups(thread.uuid, 10)
+      if (!ignore) {
+        setRecommendedMacroGroups(res.data.items || [])
+      }
+    } catch (err) {
+      if (!ignore) {
+        setRecommendedMacroGroups([])
+      }
+    }
+  }
+  loadRecommendedMacroGroups()
+  return () => {
+    ignore = true
+  }
+}, [thread?.uuid, macroGroupsEnabled])
+
+  useEffect(() => {
+    let ignore = false
+    const loadActiveMacroRuntime = async () => {
+    if (!thread?.uuid || !user || !macroGroupsEnabled) {
+      if (!ignore) {
+        setActiveMacroRuntime({
+          source: 'none',
+          enabled: false,
+          macroGroupId: null,
+          macroGroupVersionId: null,
+          macroGroupVersionNumber: null,
+          entries: [],
+        })
+      }
+      return
+    }
+    try {
+      const res = await getActiveMacroRuntimeForThread(thread.uuid)
+      if (!ignore) {
+        setActiveMacroRuntime(res.data)
+      }
+    } catch (err) {
+      if (!ignore) {
+        setActiveMacroRuntime({
+          source: 'none',
+          enabled: false,
+          macroGroupId: null,
+          macroGroupVersionId: null,
+          macroGroupVersionNumber: null,
+          entries: [],
+        })
+      }
+    }
+  }
+  loadActiveMacroRuntime()
+  return () => {
+    ignore = true
+  }
+}, [thread?.uuid, user, macroGroupsEnabled])
 
 useEffect(() => {
   if(user && resetPrefs) {
@@ -2311,6 +2468,7 @@ useEffect(() => {
     setPrefSoundOnStricken(user.pref_sound_on_stricken);
     setPrefHideThreadPicker(user.pref_hide_thread_picker);
     setPrefStrickenCountOpacity(user.pref_stricken_count_opacity);
+    setThreadMacroGroupId(null);
   }
   setResetPrefs(false);
 }, [resetPrefs]);
@@ -2348,12 +2506,27 @@ useEffect(() => {
       thisThreadPrefs.pref_highlight_last_count = prefHighlightLastCount;
       thisThreadPrefs.pref_highlight_last_count_color = prefHighlightLastCountColor;
       thisThreadPrefs.pref_stricken_count_opacity = prefStrickenCountOpacity;
+      thisThreadPrefs.macroGroupId = threadMacroGroupId;
       if(setPreferences) {
         setPreferences(setPreferencesFromThreadOrUser(prefEnabled ? thisThreadPrefs : undefined, user))
       }
       try {
         const res = await updateThreadPrefs(thisThreadPrefs)
-        if (res.status == 201) {
+        const macroPrefRes = macroGroupsEnabled
+          ? await setThreadMacroGroupPreference(
+              thread.uuid,
+              prefEnabled ?? true,
+              threadMacroGroupId,
+            )
+          : { status: 200 }
+        if (macroGroupsEnabled && (prefEnabled ?? true) && threadMacroGroupId !== null) {
+          await applyMacroGroupForThread(thread.uuid, threadMacroGroupId)
+        }
+        if (macroGroupsEnabled) {
+          const runtimeRes = await getActiveMacroRuntimeForThread(thread.uuid)
+          setActiveMacroRuntime(runtimeRes.data)
+        }
+        if (res.status == 201 && macroPrefRes.status == 200) {
           setSnackbarSeverity('success')
           setSnackbarOpen(true)
           setSnackbarMessage('Changes made successfully')
@@ -2813,7 +2986,7 @@ useEffect(() => {
               >
                 Set to Global Prefs
               </Button>
-              <Button
+          <Button
                 sx={{ m: 2 }}
                 size="large"
                 color="error"
@@ -2824,6 +2997,94 @@ useEffect(() => {
               >
                 Delete Thread Prefs
               </Button>
+          {macroGroupsEnabled && (
+          <Autocomplete
+            sx={{ m: 2, minWidth: 320, maxWidth: 640 }}
+            options={sortedAvailableMacroGroups}
+            getOptionLabel={(option) => option.name}
+            filterOptions={(options, state) => {
+              const q = state.inputValue.trim().toLowerCase()
+              if (!q) return options
+              return options.filter(
+                (opt) =>
+                  opt.name.toLowerCase().includes(q) ||
+                  opt.description.toLowerCase().includes(q),
+              )
+            }}
+            value={sortedAvailableMacroGroups.find((group) => group.id === threadMacroGroupId) || null}
+            onChange={(_, value) => setThreadMacroGroupId(value?.id ?? null)}
+            renderInput={(params) => (
+              <TextField {...params} label="Thread Macro Group" placeholder="Search macro groups" />
+            )}
+            renderOption={(props, option) => (
+              <li {...props} key={option.id}>
+                <Box>
+                  <Typography variant="body2">{option.name}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {ownedMacroGroupIds.has(option.id) ? 'Mine - ' : ''}
+                    {option.description || 'No description'}
+                  </Typography>
+                </Box>
+              </li>
+            )}
+          />
+          )}
+          {macroGroupsEnabled && (
+          <Typography sx={{ ml: 2, mb: 1 }} variant="body2" color="text.secondary">
+            Applied usage tracking is recorded when you save thread prefs with a macro group selected.
+          </Typography>
+          )}
+          {macroGroupsEnabled && (
+            <Box sx={{ m: 2, p: 1, borderRadius: '8px', border: '1px solid', borderColor: 'divider' }}>
+              <Typography variant="subtitle2">Active Macro Runtime</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Source: {activeMacroRuntime.source}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Group: {activeMacroGroupName || 'None'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Version: {activeMacroRuntime.macroGroupVersionNumber ?? 'N/A'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Entries: {activeMacroRuntime.entries?.length || 0}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Runtime executes only in desktop mode.
+              </Typography>
+            </Box>
+          )}
+          {macroGroupsEnabled && recommendedMacroGroups.length > 0 && (
+            <Box sx={{ m: 2, p: 1, borderRadius: '8px', border: '1px solid', borderColor: 'divider' }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Recommended Macros For This Thread
+              </Typography>
+              {recommendedMacroGroups.map((row) => (
+                <Box
+                  key={row.id}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 1,
+                    p: 0.5,
+                  }}
+                >
+                  <Typography variant="body2">
+                    {row.macroGroup?.name || 'Unknown Macro Group'} ({row.appliesCount} applies)
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={!row.macroGroup?.id}
+                    onClick={() => row.macroGroup?.id && setThreadMacroGroupId(row.macroGroup.id)}
+                  >
+                    Use
+                  </Button>
+                </Box>
+              ))}
+            </Box>
+          )}
           {/* </>}  */}
           
           <Preferences

@@ -29,6 +29,8 @@ import { HourBar } from './HourBar'
 import { useNavigate } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
 import { SocketContext } from '../utils/contexts/SocketContext'
+import { MacroActionType, MacroComboId, MacroEntry, MacroEntryType } from '../utils/types'
+import { findActiveMacroEntry } from '../utils/macroRuntime'
 
 const CountList = memo((props: any) => {
   const { user, counter, loading, preferences } = useContext(UserContext)
@@ -71,9 +73,119 @@ const CountList = memo((props: any) => {
   const throttle = useRef(performance.now())
   const isThrottled = useRef(false)
 
+  const getActiveMacroEntry = (key: string): MacroEntry | undefined =>
+    findActiveMacroEntry(props.activeMacroRuntime, key, isDesktop, !!props.chatsOnly)
+
+  const replaceInputSelection = (text: string) => {
+    if (!inputRef.current) return
+    const element = inputRef.current
+    const start = element.selectionStart ?? element.value.length
+    const end = element.selectionEnd ?? element.value.length
+    element.value = `${element.value.slice(0, start)}${text}${element.value.slice(end)}`
+    const nextPos = start + text.length
+    element.setSelectionRange(nextPos, nextPos)
+  }
+
+  const applySingleAction = async (action: MacroActionType) => {
+    if (!inputRef.current) return
+    const element = inputRef.current
+    const start = element.selectionStart ?? 0
+    const end = element.selectionEnd ?? 0
+    const hasSelection = end > start
+
+    switch (action) {
+      case 'BACKSPACE': {
+        if (hasSelection) {
+          element.value = `${element.value.slice(0, start)}${element.value.slice(end)}`
+          element.setSelectionRange(start, start)
+        } else if (start > 0) {
+          element.value = `${element.value.slice(0, start - 1)}${element.value.slice(end)}`
+          element.setSelectionRange(start - 1, start - 1)
+        }
+        return
+      }
+      case 'DELETE': {
+        if (hasSelection) {
+          element.value = `${element.value.slice(0, start)}${element.value.slice(end)}`
+          element.setSelectionRange(start, start)
+        } else if (start < element.value.length) {
+          element.value = `${element.value.slice(0, start)}${element.value.slice(start + 1)}`
+          element.setSelectionRange(start, start)
+        }
+        return
+      }
+      case 'LEFT': {
+        const next = Math.max(0, start - 1)
+        element.setSelectionRange(next, next)
+        return
+      }
+      case 'RIGHT': {
+        const next = Math.min(element.value.length, end + 1)
+        element.setSelectionRange(next, next)
+        return
+      }
+      case 'HOME': {
+        element.setSelectionRange(0, 0)
+        return
+      }
+      case 'END': {
+        const len = element.value.length
+        element.setSelectionRange(len, len)
+        return
+      }
+      case 'SELECT_ALL': {
+        element.setSelectionRange(0, element.value.length)
+        return
+      }
+      case 'COPY': {
+        const selected = hasSelection ? element.value.slice(start, end) : element.value
+        try {
+          await navigator.clipboard.writeText(selected)
+        } catch (err) {
+          // Clipboard permissions may block this operation.
+        }
+        return
+      }
+      case 'PASTE': {
+        try {
+          const clipboardText = await navigator.clipboard.readText()
+          replaceInputSelection(clipboardText)
+        } catch (err) {
+          // Clipboard permissions may block this operation.
+        }
+        return
+      }
+    }
+  }
+
+  const applyActionRepeated = async (action: MacroActionType, repeat = 1) => {
+    const reps = Math.max(1, Math.min(10, Number.isFinite(repeat) ? Math.floor(repeat) : 1))
+    for (let i = 0; i < reps; i += 1) {
+      await applySingleAction(action)
+    }
+  }
+
+  const executeCombo = async (comboId: MacroComboId) => {
+    if (!inputRef.current) return
+    switch (comboId) {
+      case 'SELECT_ALL_COPY':
+        await applySingleAction('SELECT_ALL')
+        await applySingleAction('COPY')
+        return
+      case 'SELECT_ALL_PASTE':
+        await applySingleAction('SELECT_ALL')
+        await applySingleAction('PASTE')
+        return
+      case 'SUBMIT_PASTE':
+        await applySingleAction('SELECT_ALL')
+        await applySingleAction('PASTE')
+        return
+    }
+  }
+
   //Add Ctrl+Enter submit shortcut
   useEffect(() => {
-    function handleKeyDown(event) {
+    async function handleKeyDown(event) {
       //Prevent Ctrl+0-9 from switching tabs (including numpad numbers)
       if (
         (event.ctrlKey || event.metaKey) &&
@@ -81,16 +193,73 @@ const CountList = memo((props: any) => {
       ) {
         event.preventDefault()
       }
+
+      if (
+        isDesktop &&
+        inputRef.current &&
+        inputRef.current === document.activeElement &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey &&
+        !event.isComposing
+      ) {
+        const activeMacroEntry = getActiveMacroEntry(event.key)
+        if (activeMacroEntry) {
+          event.preventDefault()
+          const macroMeta = {
+            macroTriggerKey: activeMacroEntry.triggerKey,
+            macroEntryType: activeMacroEntry.macroType as MacroEntryType,
+          }
+          switch (activeMacroEntry.macroType) {
+            case 'CHAR_INSERT':
+              if (typeof activeMacroEntry.payloadJson?.char === 'string' && activeMacroEntry.payloadJson.char.length > 0) {
+                replaceInputSelection(activeMacroEntry.payloadJson.char.slice(0, 1))
+              }
+              return
+            case 'ACTION':
+              if (typeof activeMacroEntry.payloadJson?.action === 'string') {
+                await applySingleAction(activeMacroEntry.payloadJson.action as MacroActionType)
+              }
+              return
+            case 'ACTION_REPEAT':
+              if (typeof activeMacroEntry.payloadJson?.action === 'string') {
+                await applyActionRepeated(
+                  activeMacroEntry.payloadJson.action as MacroActionType,
+                  Number(activeMacroEntry.payloadJson?.repeat ?? 1),
+                )
+              }
+              return
+            case 'SUBMIT_ACTION_REPEAT':
+              await handlePosting(macroMeta)
+              if (typeof activeMacroEntry.payloadJson?.action === 'string') {
+                await applyActionRepeated(
+                  activeMacroEntry.payloadJson.action as MacroActionType,
+                  Number(activeMacroEntry.payloadJson?.repeat ?? 1),
+                )
+              }
+              return
+            case 'COMBO':
+              if (typeof activeMacroEntry.payloadJson?.comboId === 'string') {
+                if (activeMacroEntry.payloadJson.comboId === 'SUBMIT_PASTE') {
+                  await handlePosting(macroMeta)
+                }
+                await executeCombo(activeMacroEntry.payloadJson.comboId as MacroComboId)
+              }
+              return
+          }
+        }
+      }
+
       if (inputRef.current && inputRef.current === document.activeElement && user && preferences && preferences.pref_submit_shortcut === 'Enter') {
         if (event.key === 'Enter' && !event.shiftKey && !event.altKey) {
           event.preventDefault()
-          handlePosting()
+          await handlePosting()
         }
       } else if (user && preferences && preferences.pref_submit_shortcut === 'Off') {
         return
       } else if (inputRef.current && inputRef.current === document.activeElement) {
         if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-          handlePosting()
+          await handlePosting()
         }
       }
     }
@@ -98,7 +267,7 @@ const CountList = memo((props: any) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [user, inputRef])
+  }, [user, inputRef, preferences, isDesktop, props.activeMacroRuntime, props.chatsOnly])
 
   //Scroll to bottom upon isDesktop change
   useEffect(() => {
@@ -310,7 +479,9 @@ const CountList = memo((props: any) => {
     }
   }
 
-  const handlePosting = async () => {
+  const handlePosting = async (
+    macroSubmitMeta?: { macroTriggerKey: string; macroEntryType: MacroEntryType },
+  ) => {
     const throttleCheck = performance.now() - throttle.current
     let throttled;
     if(props.thread && props.thread.validationType === 'bars') {
@@ -343,7 +514,18 @@ const CountList = memo((props: any) => {
       const post_hash = (Math.random() * 100000000000000000).toString(36)
       props.handleLatencyChange(Date.now(), post_hash)
       props.handleLatencyCheckChange(inputRef.current.value.trim())
-      props.handleSubmit(inputRef.current.value, props.refScroll.current, props.postScroll.current, post_hash)
+      if (macroSubmitMeta && props.onMacroSubmitMeta) {
+        props.onMacroSubmitMeta(macroSubmitMeta)
+      }
+      if (props.handleSubmit) {
+        props.handleSubmit(
+          inputRef.current.value,
+          props.refScroll.current,
+          props.postScroll.current,
+          post_hash,
+          macroSubmitMeta,
+        )
+      }
       throttle.current = performance.now()
       props.refScroll.current = []
       props.postScroll.current = [["Top", Date.now()]]

@@ -1,7 +1,8 @@
-import { useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
 import {
   Alert,
+  Autocomplete,
   Box,
   Button,
   Container,
@@ -34,22 +35,26 @@ import {
   standardizeFormatOptions,
   submitShortcutOptions,
 } from '../utils/helpers'
-import { updateCounterPrefs } from '../utils/api'
+import { listMacroGroups, macroGroupsFeatureEnabled, setGlobalMacroGroupPreference, updateCounterPrefs } from '../utils/api'
 import { CounterCard } from '../components/CounterCard'
 import { Loading } from '../components/Loading'
 import { HexColorPicker } from 'react-colorful'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Count from '../components/count/Count'
 import { Preferences } from '../components/Preferences'
+import { MacroGroup } from '../utils/types'
+import { prioritizeOwnedMacroGroups } from '../utils/macroGroups'
 
 export const PrefsPage = () => {
   const { user, counter, items, loading } = useContext(UserContext)
   const isMounted = useIsMounted()
+  const macroGroupsEnabled = macroGroupsFeatureEnabled
 
   // console.log("AYO");
   // console.log(items);
 
   const location = useLocation()
+  const navigate = useNavigate()
   useEffect(() => {
     document.title = `Preferences | Counting!`
     return () => {
@@ -96,6 +101,26 @@ export const PrefsPage = () => {
     const idx = pronounOptions.findIndex((set) => JSON.stringify(set) === JSON.stringify(counter?.pronouns))
     return idx >= 0 ? idx : 2
   })
+  const [macroGroups, setMacroGroups] = useState<MacroGroup[]>([])
+  const [ownedGroupIds, setOwnedGroupIds] = useState<Set<number>>(new Set())
+  const [selectedMacroGroupId, setSelectedMacroGroupId] = useState<number | null>(user?.macroGroupId ?? null)
+  const sortedMacroGroups = useMemo(
+    () => prioritizeOwnedMacroGroups(macroGroups, ownedGroupIds),
+    [macroGroups, ownedGroupIds],
+  )
+
+  const loadMacroGroups = useCallback(async () => {
+    try {
+      const [allRes, mineRes] = await Promise.all([
+        listMacroGroups(1, 100),
+        listMacroGroups(1, 100, undefined, true),
+      ])
+      setMacroGroups(allRes.data.items || [])
+      setOwnedGroupIds(new Set((mineRes.data.items || []).map((item) => item.id)))
+    } catch (err) {
+      // Keep prefs page usable even if macro groups fail to load.
+    }
+  }, [])
 
   const [snackbarOpen, setSnackbarOpen] = useState(false)
   const [snackbarMessage, setSnackbarMessage] = useState('')
@@ -179,7 +204,10 @@ export const PrefsPage = () => {
       counter.pronouns = pronounOptions[selectedPronounIndex]
       try {
         const res = await updateCounterPrefs(user, counter)
-        if (res.status == 201) {
+        const macroRes = macroGroupsEnabled
+          ? await setGlobalMacroGroupPreference(selectedMacroGroupId)
+          : { status: 200 }
+        if (res.status == 201 && macroRes.status == 200) {
           setSnackbarSeverity('success')
           setSnackbarOpen(true)
           setSnackbarMessage('Changes made successfully')
@@ -191,6 +219,20 @@ export const PrefsPage = () => {
       }
     }
   }
+
+  useEffect(() => {
+    let ignore = false
+    const loadMacroGroupsSafe = async () => {
+      if (ignore) return
+      await loadMacroGroups()
+    }
+    if (user && macroGroupsEnabled) {
+      loadMacroGroupsSafe()
+    }
+    return () => {
+      ignore = true
+    }
+  }, [user, macroGroupsEnabled, loadMacroGroups])
 
   let [maybeU, setMaybeU] = useState('')
   useEffect(() => {
@@ -426,6 +468,47 @@ export const PrefsPage = () => {
             prefHideThreadPicker={prefHideThreadPicker} setPrefHideThreadPicker={setPrefHideThreadPicker}
             prefStrickenCountOpacity={prefStrickenCountOpacity} setPrefStrickenCountOpacity={setPrefStrickenCountOpacity}
           />
+          {macroGroupsEnabled && (
+          <Box sx={{ mt: 2, p: 1, borderRadius: '10px', bgcolor: 'background.paper', color: 'text.primary' }}>
+            <Typography variant="h6">Macro Group</Typography>
+            <Autocomplete
+              sx={{ m: 2, minWidth: 320, maxWidth: 640 }}
+              options={sortedMacroGroups}
+              getOptionLabel={(option) => option.name}
+              filterOptions={(options, state) => {
+                const q = state.inputValue.trim().toLowerCase()
+                if (!q) return options
+                return options.filter(
+                  (opt) =>
+                    opt.name.toLowerCase().includes(q) ||
+                    opt.description.toLowerCase().includes(q),
+                )
+              }}
+              value={sortedMacroGroups.find((group) => group.id === selectedMacroGroupId) || null}
+              onChange={(_, value) => setSelectedMacroGroupId(value?.id ?? null)}
+              renderInput={(params) => (
+                <TextField {...params} label="Global Macro Group" placeholder="Search macro groups" />
+              )}
+              renderOption={(props, option) => (
+                <li {...props} key={option.id}>
+                  <Box>
+                    <Typography variant="body2">{option.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {ownedGroupIds.has(option.id) ? 'Mine - ' : ''}
+                      {option.description || 'No description'}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
+            />
+            <Typography sx={{ ml: 2 }} variant="body2" color="text.secondary">
+              Public macro groups only. Your groups are shown first.
+            </Typography>
+            <Button sx={{ m: 2 }} variant="outlined" onClick={() => navigate('/macros')}>
+              Open Macro Groups Page
+            </Button>
+          </Box>
+          )}
         </Container>
       </>
     )

@@ -40,6 +40,7 @@ export type User = {
   redditRefresh: string
   timeOnline?: string
   threadPreferences?: ThreadPrefs[]
+  macroGroupId?: number | null
 }
 
 export interface PreferencesType {
@@ -72,6 +73,7 @@ export type ThreadPrefs = {
   user: User
   thread: ThreadType
   enabled: boolean
+  macroGroupId?: number | null
   pref_online: boolean
   pref_discord_pings: boolean
   pref_load_from_bottom: boolean
@@ -352,4 +354,121 @@ export type Server = {
   canUsersJoinWithoutApproval: boolean
   canUsersNotInTheServerJoin: boolean
   kickUsersAfterTheyLeaveTheDiscordServer: boolean
+}
+
+export type MacroGroupVisibility = 'PUBLIC'
+
+export type MacroEntryType =
+  | 'CHAR_INSERT'
+  | 'ACTION'
+  | 'ACTION_REPEAT'
+  | 'SUBMIT_ACTION_REPEAT'
+  | 'COMBO'
+
+export type MacroActionType =
+  | 'BACKSPACE'
+  | 'DELETE'
+  | 'LEFT'
+  | 'RIGHT'
+  | 'HOME'
+  | 'END'
+  | 'SELECT_ALL'
+  | 'COPY'
+  | 'PASTE'
+
+export type MacroComboId =
+  | 'SELECT_ALL_COPY'
+  | 'SELECT_ALL_PASTE'
+  | 'SUBMIT_PASTE'
+
+export type MacroEntryPayload =
+  | { char: string }
+  | { action: MacroActionType }
+  | { action: MacroActionType; repeat: number }
+  | { action: MacroActionType; repeat: number; submit: true }
+  | { comboId: MacroComboId }
+
+export type MacroEntryDraft = {
+  triggerKey: string
+  macroType: MacroEntryType
+  payloadJson: MacroEntryPayload
+}
+
+export type MacroGroup = {
+  id: number
+  name: string
+  description: string
+  visibility: MacroGroupVisibility
+  isDeleted: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type MacroEntry = {
+  id: number
+  triggerKey: string
+  macroType: MacroEntryType
+  payloadJson: Record<string, any>
+  createdAt: string
+  updatedAt: string
+}
+
+export type MacroGroupVersion = {
+  id: number
+  versionNumber: number
+  changeNote: string | null
+  createdAt: string
+  entries?: MacroEntry[]
+}
+
+export type MacroGroupListResponse = {
+  page: number
+  limit: number
+  total: number
+  items: MacroGroup[]
+}
+
+export type MacroGroupReadResponse = {
+  group: MacroGroup
+  latestVersionNumber: number | null
+}
+
+export type MacroSetPreferenceResponse = {
+  macroGroupId: number | null
+  latestVersionNumber: number | null
+}
+
+export type ThreadMacroSetPreferenceResponse = {
+  threadId: string
+  enabled: boolean
+  macroGroupId: number | null
+  latestVersionNumber: number | null
+}
+
+export type MacroApplyResponse = {
+  threadId: string
+  macroGroupId: number
+  appliesCount: number
+}
+
+export type ThreadMacroGroupUsageRow = {
+  id: number
+  appliesCount: number
+  lastAppliedAt: string | null
+  macroGroup: MacroGroup
+}
+
+export type ThreadMacroGroupUsageResponse = {
+  threadId: string
+  total: number
+  items: ThreadMacroGroupUsageRow[]
+}
+
+export type ActiveMacroRuntime = {
+  source: 'none' | 'global' | 'thread'
+  enabled: boolean
+  macroGroupId: number | null
+  macroGroupVersionId: number | null
+  macroGroupVersionNumber: number | null
+  entries: MacroEntry[]
 }
