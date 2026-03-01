@@ -3148,7 +3148,6 @@ useEffect(() => {
             <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
               <ReactMarkdown children={thread ? thread.rules : 'Loading...'} components={{ p: 'span' }} remarkPlugins={[remarkGfm]} />
             </Typography> */}
-            <CommunityNotes thread={thread} setThread={setThread} counter={counter} onSave={saveCommunityNotes} />
             {macroPresetsEnabled && (
               <Box
                 sx={{
@@ -3272,6 +3271,7 @@ useEffect(() => {
                 )}
               </Box>
             )}
+            <CommunityNotes thread={thread} setThread={setThread} counter={counter} onSave={saveCommunityNotes} />
             {counter && thread && counter.roles.includes('mod') && (
               <Button variant="contained" onClick={lockThread}>
                 {thread.locked ? 'Unlock Thread' : 'Lock Thread'}
