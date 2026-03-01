@@ -50,6 +50,7 @@ describe('MacroGroupsPage', () => {
             {
               id: 10,
               name: 'Main Thread Pack',
+              handle: 'main-thread-pack',
               description: 'submit + backspace helpers',
               visibility: 'PUBLIC',
               isDeleted: false,
@@ -66,6 +67,7 @@ describe('MacroGroupsPage', () => {
             {
               id: 10,
               name: 'Main Thread Pack',
+              handle: 'main-thread-pack',
               description: 'submit + backspace helpers',
               visibility: 'PUBLIC',
               isDeleted: false,
@@ -108,7 +110,7 @@ describe('MacroGroupsPage', () => {
     await waitFor(() => expect(screen.getByText('Main Thread Pack')).toBeInTheDocument())
 
     expect(
-      screen.getByText(/Search by name, description, trigger key, or behavior/i),
+      screen.getByText(/Search by display name, handle, description, trigger key, or behavior/i),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Copy To Draft' })).toBeInTheDocument()
     expect(screen.getAllByText('Owned').length).toBeGreaterThan(0)

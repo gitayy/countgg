@@ -277,18 +277,22 @@ export const deleteThreadPrefs = (thread: ThreadType) =>
 
 export const createMacroGroup = (
   name: string,
+  handle: string,
   description: string,
   changeNote?: string,
   entries: MacroEntryDraft[] = [],
 ) =>
   axios.post<MacroGroup>(
     `${API_URL}/macro-groups`,
-    { name, description, changeNote, entries },
+    { name, handle, description, changeNote, entries },
     CONFIG,
   )
 
 export const getMacroGroup = (id: number) =>
   axios.get<MacroGroupReadResponse>(`${API_URL}/macro-groups/${id}`, CONFIG)
+
+export const getMacroGroupByHandle = (handle: string) =>
+  axios.get<MacroGroupReadResponse>(`${API_URL}/macro-groups/handle/${handle}`, CONFIG)
 
 export const updateMacroGroup = (
   id: number,
@@ -346,6 +350,12 @@ export const setGlobalMacroGroupPreference = (macroGroupId: number | null) =>
   axios.put<MacroSetPreferenceResponse>(
     `${API_URL}/users/me/preferences/macro-group`,
     { macroGroupId },
+    CONFIG,
+  )
+
+export const getGlobalMacroGroupPreference = () =>
+  axios.get<MacroSetPreferenceResponse>(
+    `${API_URL}/users/me/preferences/macro-group`,
     CONFIG,
   )
 

@@ -399,6 +399,7 @@ export type MacroEntryDraft = {
 export type MacroGroup = {
   id: number
   name: string
+  handle: string | null
   description: string
   visibility: MacroGroupVisibility
   isDeleted: boolean

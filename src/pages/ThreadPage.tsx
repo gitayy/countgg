@@ -198,6 +198,37 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     () => prioritizeOwnedMacroGroups(availableMacroGroups, ownedMacroGroupIds),
     [availableMacroGroups, ownedMacroGroupIds],
   )
+  const effectiveThreadMacroGroupId = useMemo(() => {
+    if (threadMacroGroupId !== null) return threadMacroGroupId
+    if (
+      activeMacroRuntime.source === 'global' ||
+      activeMacroRuntime.source === 'thread'
+    ) {
+      return activeMacroRuntime.macroGroupId
+    }
+    return null
+  }, [threadMacroGroupId, activeMacroRuntime.source, activeMacroRuntime.macroGroupId])
+  const threadMacroSelectionSourceLabel = useMemo(() => {
+    if (activeMacroRuntime.source === 'thread') return 'Thread Pref'
+    if (activeMacroRuntime.source === 'global') return 'Global Pref'
+    return 'None'
+  }, [activeMacroRuntime.source])
+  const threadMacroGroupOptions = useMemo<MacroGroup[]>(
+    () => [
+      {
+        id: -1,
+        name: 'None',
+        handle: '',
+        description: 'Disable macro group for this thread',
+        visibility: 'PUBLIC',
+        isDeleted: false,
+        createdAt: '',
+        updatedAt: '',
+      },
+      ...sortedAvailableMacroGroups,
+    ],
+    [sortedAvailableMacroGroups],
+  )
   const hasMacroEntries = !!activeMacroRuntime.enabled && (activeMacroRuntime.entries?.length || 0) > 0
   const groupedActiveMacroEntries = useMemo(() => {
     const grouped = new Map<string, typeof activeMacroRuntime.entries>()
@@ -2889,26 +2920,39 @@ useEffect(() => {
                     Macros
                   </Typography>
                   <Stack direction="row" spacing={0.5} alignItems="center">
-                    {activeMacroRuntime.entries?.length > 0 && (
-                      <Chip size="small" label={`${activeMacroRuntime.entries.length} active`} />
-                    )}
-                    {threadMacroGroupId !== null && (
-                      <Button
+                    {activeMacroRuntime.source === 'thread' ? (
+                      <Chip
                         size="small"
-                        color="error"
-                        variant="text"
-                        onClick={() => saveThreadMacroSelection(null)}
+                        color="primary"
+                        label="Thread Pref"
+                        onDelete={() => saveThreadMacroSelection(null)}
                         disabled={macroSelectionSaving}
-                      >
-                        Remove
-                      </Button>
+                      />
+                    ) : (
+                      <Chip size="small" variant="outlined" label={threadMacroSelectionSourceLabel} />
                     )}
+                    <Tooltip title={`Toggle hotkeys (${toggleHotkeySummary})`}>
+                      <span>
+                        <IconButton
+                          size="small"
+                          onClick={() => setMacroHotkeysEnabled((prev) => !prev)}
+                          disabled={!hasMacroEntries}
+                          sx={{
+                            border: '1px solid',
+                            borderColor: macroHotkeysEnabled ? 'success.main' : 'divider',
+                            color: macroHotkeysEnabled ? 'success.main' : 'text.disabled',
+                          }}
+                        >
+                          {macroHotkeysEnabled ? <CheckIcon fontSize="small" /> : <ClearIcon fontSize="small" />}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                   </Stack>
                 </Stack>
                 <Autocomplete
                   size="small"
                   sx={{ mb: 0.5 }}
-                  options={sortedAvailableMacroGroups}
+                  options={threadMacroGroupOptions}
                   getOptionLabel={(option) => option.name}
                   filterOptions={(options, state) => {
                     const q = state.inputValue.trim().toLowerCase()
@@ -2916,12 +2960,17 @@ useEffect(() => {
                     return options.filter(
                       (opt) =>
                         opt.name.toLowerCase().includes(q) ||
+                        (opt.handle || '').toLowerCase().includes(q) ||
                         opt.description.toLowerCase().includes(q),
                     )
                   }}
-                  value={sortedAvailableMacroGroups.find((group) => group.id === threadMacroGroupId) || null}
+                  value={
+                    effectiveThreadMacroGroupId === null
+                      ? threadMacroGroupOptions[0]
+                      : threadMacroGroupOptions.find((group) => group.id === effectiveThreadMacroGroupId) || null
+                  }
                   onChange={(_, value) => {
-                    saveThreadMacroSelection(value?.id ?? null)
+                    saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
                   }}
                   renderInput={(params) => (
                     <TextField {...params} label="Group" placeholder="Search" size="small" />
@@ -2931,8 +2980,9 @@ useEffect(() => {
                       <Box>
                         <Typography variant="body2">{option.name}</Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {ownedMacroGroupIds.has(option.id) ? 'Mine - ' : ''}
-                          {option.description || 'No description'}
+                          {option.id === -1
+                            ? 'No macro group'
+                            : `${ownedMacroGroupIds.has(option.id) ? 'Mine - ' : ''}${option.handle ? `@${option.handle} - ` : ''}${option.description || 'No description'}`}
                         </Typography>
                       </Box>
                     </li>
@@ -2945,23 +2995,6 @@ useEffect(() => {
                 )}
                 {activeMacroRuntime.entries?.length > 0 && (
                   <Box sx={{ mt: 0.5 }}>
-                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mb: 0.25 }}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => setMacroHotkeysEnabled((prev) => !prev)}
-                      >
-                        Toggle ({toggleHotkeySummary})
-                      </Button>
-                      <Chip
-                        size="small"
-                        color={macroHotkeysEnabled ? 'success' : 'default'}
-                        label={macroHotkeysEnabled ? 'Enabled' : 'Disabled'}
-                      />
-                    </Stack>
-                    <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.1 }}>
-                      {activeMacroGroupName || 'Macro Group'} (v{activeMacroRuntime.macroGroupVersionNumber ?? '?'})
-                    </Typography>
                     {groupedActiveMacroEntries.map((group) => (
                       <Box key={group.type} sx={{ mt: 0.5 }}>
                         <Typography
@@ -3223,9 +3256,10 @@ useEffect(() => {
                 Delete Thread Prefs
               </Button>
           {macroGroupsEnabled && (
+          <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ md: 'center' }} spacing={1} sx={{ m: 2 }}>
           <Autocomplete
-            sx={{ m: 2, minWidth: 320, maxWidth: 640 }}
-            options={sortedAvailableMacroGroups}
+            sx={{ minWidth: 320, maxWidth: 640, width: '100%' }}
+            options={threadMacroGroupOptions}
             getOptionLabel={(option) => option.name}
             filterOptions={(options, state) => {
               const q = state.inputValue.trim().toLowerCase()
@@ -3233,12 +3267,17 @@ useEffect(() => {
               return options.filter(
                 (opt) =>
                   opt.name.toLowerCase().includes(q) ||
+                  (opt.handle || '').toLowerCase().includes(q) ||
                   opt.description.toLowerCase().includes(q),
               )
             }}
-            value={sortedAvailableMacroGroups.find((group) => group.id === threadMacroGroupId) || null}
+            value={
+              effectiveThreadMacroGroupId === null
+                ? threadMacroGroupOptions[0]
+                : threadMacroGroupOptions.find((group) => group.id === effectiveThreadMacroGroupId) || null
+            }
             onChange={(_, value) => {
-              saveThreadMacroSelection(value?.id ?? null)
+              saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
             }}
             renderInput={(params) => (
               <TextField {...params} label="Thread Macro Group" placeholder="Search macro groups" />
@@ -3248,13 +3287,42 @@ useEffect(() => {
                 <Box>
                   <Typography variant="body2">{option.name}</Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {ownedMacroGroupIds.has(option.id) ? 'Mine - ' : ''}
-                    {option.description || 'No description'}
+                    {option.id === -1
+                      ? 'No macro group'
+                      : `${ownedMacroGroupIds.has(option.id) ? 'Mine - ' : ''}${option.handle ? `@${option.handle} - ` : ''}${option.description || 'No description'}`}
                   </Typography>
                 </Box>
               </li>
             )}
           />
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => saveThreadMacroSelection(null)}
+            disabled={threadMacroGroupId === null || macroSelectionSaving}
+          >
+            Clear
+          </Button>
+          </Stack>
+          )}
+          {macroGroupsEnabled && (
+          <Box sx={{ ml: 2, mb: 1 }}>
+            {activeMacroRuntime.source === 'thread' ? (
+              <Chip
+                size="small"
+                color="primary"
+                label="Thread Pref"
+                onDelete={() => saveThreadMacroSelection(null)}
+                disabled={macroSelectionSaving}
+              />
+            ) : (
+              <Chip
+                size="small"
+                variant="outlined"
+                label={threadMacroSelectionSourceLabel}
+              />
+            )}
+          </Box>
           )}
           {macroGroupsEnabled && (
           <Typography sx={{ ml: 2, mb: 1 }} variant="body2" color="text.secondary">

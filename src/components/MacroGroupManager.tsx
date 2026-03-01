@@ -38,6 +38,7 @@ type Props = {
   draftSeed?: {
     token: number
     name: string
+    handle?: string
     description: string
     entries: MacroEntryDraft[]
   } | null
@@ -110,6 +111,7 @@ const MAX_ENTRIES = 64
 const MAX_REPEAT = 10
 const MAX_TRIGGERS_PER_CHAR = 2
 const MAX_SUBMIT_MACROS = 2
+const HANDLE_REGEX = /^[a-z0-9](?:[a-z0-9_-]{1,62}[a-z0-9])?$/
 
 const DEFAULT_ENTRY_BY_TYPE = (macroType: MacroEntryType): MacroEntryDraft => {
   switch (macroType) {
@@ -238,6 +240,7 @@ export const MacroGroupManager = ({
   const [versions, setVersions] = useState<MacroGroupVersion[]>([])
   const [selectedVersionNumber, setSelectedVersionNumber] = useState<number | null>(null)
   const [newGroupName, setNewGroupName] = useState('')
+  const [newGroupHandle, setNewGroupHandle] = useState('')
   const [newGroupDescription, setNewGroupDescription] = useState('')
   const [entries, setEntries] = useState<MacroEntryDraft[]>([])
   const [changeNote, setChangeNote] = useState('')
@@ -327,6 +330,7 @@ export const MacroGroupManager = ({
     setSelectedVersionNumber(null)
     setActiveVersionNumber(null)
     setNewGroupName(draftSeed.name)
+    setNewGroupHandle(draftSeed.handle || '')
     setNewGroupDescription(draftSeed.description)
     setEntries(draftSeed.entries)
     setChangeNote(`Draft copied from "${draftSeed.name}"`)
@@ -358,6 +362,7 @@ export const MacroGroupManager = ({
     try {
       const created = await createMacroGroup(
         newGroupName.trim(),
+        newGroupHandle.trim().toLowerCase(),
         newGroupDescription.trim(),
         'Initial version',
         entries,
@@ -370,6 +375,7 @@ export const MacroGroupManager = ({
         setSelectedGroupId(null)
       }
       setNewGroupName('')
+      setNewGroupHandle('')
       setNewGroupDescription('')
       setEntries([])
       setActiveVersionNumber(1)
@@ -432,6 +438,8 @@ export const MacroGroupManager = ({
       ? 'Saving...'
       : newGroupName.trim().length < 3
         ? 'Group name must be at least 3 characters.'
+        : !HANDLE_REGEX.test(newGroupHandle.trim().toLowerCase())
+          ? 'Handle must be 3-64 chars: lowercase letters, numbers, underscores, or hyphens.'
         : validation.globalErrors[0] || Object.values(validation.rowErrors)[0]?.[0] || ''
 
   const saveDisabledReason =
@@ -485,10 +493,18 @@ export const MacroGroupManager = ({
           </Typography>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 1.5 }}>
             <TextField
-              label="New Group Name"
+              label="Display Name"
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
               inputProps={{ maxLength: 64 }}
+              fullWidth
+            />
+            <TextField
+              label="Handle (URL Name)"
+              value={newGroupHandle}
+              onChange={(e) => setNewGroupHandle(e.target.value.toLowerCase())}
+              inputProps={{ maxLength: 64 }}
+              helperText='Used in the URL: /macros/<handle>. Permanent and unique.'
               fullWidth
             />
             <TextField
@@ -511,11 +527,32 @@ export const MacroGroupManager = ({
               options={ownedMacroGroups}
               value={ownedMacroGroups.find((group) => group.id === selectedGroupId) || null}
               getOptionLabel={(option) => option.name}
+              filterOptions={(options, state) => {
+                const q = state.inputValue.trim().toLowerCase()
+                if (!q) return options
+                return options.filter(
+                  (opt) =>
+                    opt.name.toLowerCase().includes(q) ||
+                    (opt.handle || '').toLowerCase().includes(q) ||
+                    opt.description.toLowerCase().includes(q),
+                )
+              }}
               onChange={(_, value) => {
                 setSelectedGroupId(value?.id ?? null)
               }}
               renderInput={(params) => (
                 <TextField {...params} label="Your Group" placeholder="Search your groups" />
+              )}
+              renderOption={(props, option) => (
+                <li {...props} key={option.id}>
+                  <Box>
+                    <Typography variant="body2">{option.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.handle ? `@${option.handle} - ` : ''}
+                      {option.description || 'No description'}
+                    </Typography>
+                  </Box>
+                </li>
               )}
             />
             {!!selectedGroupId && (

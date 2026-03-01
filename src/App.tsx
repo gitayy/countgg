@@ -56,6 +56,7 @@ import { ThreadProvider } from './utils/contexts/ThreadContext'
 import { NumberShufflePage } from './pages/NumberShufflePage'
 import ServersPage from './pages/ServersPage'
 import MacroGroupsPage from './pages/MacroGroupsPage'
+import MacroGroupViewPage from './pages/MacroGroupViewPage'
 import './utils/styles/wavy.scss'
 
 function App() {
@@ -309,6 +310,7 @@ function App() {
                         <Route path="/servers" element={<ServersPage />} />
                         {user && counter && <Route path="/prefs" element={<PrefsPage />} />}
                         {user && counter && <Route path="/macros" element={<MacroGroupsPage />} />}
+                        {user && counter && <Route path="/macros/:handle" element={<MacroGroupViewPage />} />}
                         {user && counter && <Route path="/mentions" element={<MentionsPage />} />}
                         {user && counter && <Route path="/shop" element={<ShopPage />} />}
                       </Routes>

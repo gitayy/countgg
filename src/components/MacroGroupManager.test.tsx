@@ -38,8 +38,11 @@ describe('MacroGroupManager', () => {
       />,
     )
 
-    fireEvent.change(screen.getByLabelText('New Group Name'), {
+    fireEvent.change(screen.getByLabelText('Display Name'), {
       target: { value: 'Fast Main' },
+    })
+    fireEvent.change(screen.getByLabelText('Handle (URL Name)'), {
+      target: { value: 'fast-main' },
     })
     fireEvent.change(screen.getByLabelText('Description'), {
       target: { value: 'Starter macros' },
@@ -53,6 +56,7 @@ describe('MacroGroupManager', () => {
     await waitFor(() =>
       expect(mockedCreateMacroGroup).toHaveBeenCalledWith(
         'Fast Main',
+        'fast-main',
         'Starter macros',
         'Initial version',
         [
@@ -86,6 +90,7 @@ describe('MacroGroupManager', () => {
           {
             id: 7,
             name: 'Main Thread Macro Set',
+            handle: 'main-thread-macro-set',
             description: '',
             visibility: 'PUBLIC',
             isDeleted: false,
@@ -124,8 +129,11 @@ describe('MacroGroupManager', () => {
       />,
     )
 
-    fireEvent.change(screen.getByLabelText('New Group Name'), {
+    fireEvent.change(screen.getByLabelText('Display Name'), {
       target: { value: 'Copy Draft Group' },
+    })
+    fireEvent.change(screen.getByLabelText('Handle (URL Name)'), {
+      target: { value: 'copy-draft-group' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Add First Entry' }))
     fireEvent.change(screen.getByLabelText('Trigger'), {
@@ -136,6 +144,7 @@ describe('MacroGroupManager', () => {
     await waitFor(() =>
       expect(mockedCreateMacroGroup).toHaveBeenCalledWith(
         'Copy Draft Group',
+        'copy-draft-group',
         '',
         'Initial version',
         [

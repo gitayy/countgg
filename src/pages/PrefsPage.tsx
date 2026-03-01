@@ -18,6 +18,7 @@ import {
   AlertColor,
   Tooltip,
   TextField,
+  Stack,
 } from '@mui/material'
 import { UserContext } from '../utils/contexts/UserContext'
 import {
@@ -35,7 +36,7 @@ import {
   standardizeFormatOptions,
   submitShortcutOptions,
 } from '../utils/helpers'
-import { listMacroGroups, macroGroupsFeatureEnabled, setGlobalMacroGroupPreference, updateCounterPrefs } from '../utils/api'
+import { getGlobalMacroGroupPreference, listMacroGroups, macroGroupsFeatureEnabled, setGlobalMacroGroupPreference, updateCounterPrefs } from '../utils/api'
 import { CounterCard } from '../components/CounterCard'
 import { Loading } from '../components/Loading'
 import { HexColorPicker } from 'react-colorful'
@@ -104,9 +105,26 @@ export const PrefsPage = () => {
   const [macroGroups, setMacroGroups] = useState<MacroGroup[]>([])
   const [ownedGroupIds, setOwnedGroupIds] = useState<Set<number>>(new Set())
   const [selectedMacroGroupId, setSelectedMacroGroupId] = useState<number | null>(user?.macroGroupId ?? null)
+  const [globalMacroSelectionSaving, setGlobalMacroSelectionSaving] = useState(false)
   const sortedMacroGroups = useMemo(
     () => prioritizeOwnedMacroGroups(macroGroups, ownedGroupIds),
     [macroGroups, ownedGroupIds],
+  )
+  const globalMacroGroupOptions = useMemo<MacroGroup[]>(
+    () => [
+      {
+        id: -1,
+        name: 'None',
+        handle: '',
+        description: 'Disable global macro group',
+        visibility: 'PUBLIC',
+        isDeleted: false,
+        createdAt: '',
+        updatedAt: '',
+      },
+      ...sortedMacroGroups,
+    ],
+    [sortedMacroGroups],
   )
 
   const loadMacroGroups = useCallback(async () => {
@@ -131,6 +149,32 @@ export const PrefsPage = () => {
     }
     setSnackbarOpen(false)
   }
+
+  const saveGlobalMacroSelection = useCallback(
+    async (nextMacroGroupId: number | null) => {
+      setSelectedMacroGroupId(nextMacroGroupId)
+      if (!macroGroupsEnabled) return
+      setGlobalMacroSelectionSaving(true)
+      try {
+        const response = await setGlobalMacroGroupPreference(nextMacroGroupId)
+        setSelectedMacroGroupId(response.data.macroGroupId ?? null)
+        setSnackbarSeverity('success')
+        setSnackbarOpen(true)
+        setSnackbarMessage(
+          (response.data.macroGroupId ?? null) === null
+            ? 'Global macro group cleared.'
+            : 'Global macro group saved.',
+        )
+      } catch (err) {
+        setSnackbarSeverity('error')
+        setSnackbarOpen(true)
+        setSnackbarMessage('Failed to save global macro group.')
+      } finally {
+        setGlobalMacroSelectionSaving(false)
+      }
+    },
+    [macroGroupsEnabled],
+  )
 
   const savePrefs = async () => {
     if (user && counter) {
@@ -233,6 +277,25 @@ export const PrefsPage = () => {
       ignore = true
     }
   }, [user, macroGroupsEnabled, loadMacroGroups])
+
+  useEffect(() => {
+    let ignore = false
+    const loadGlobalMacroPreference = async () => {
+      if (!user || !macroGroupsEnabled) return
+      try {
+        const res = await getGlobalMacroGroupPreference()
+        if (!ignore) {
+          setSelectedMacroGroupId(res.data.macroGroupId ?? null)
+        }
+      } catch (err) {
+        // Keep page usable even if preference fetch fails.
+      }
+    }
+    loadGlobalMacroPreference()
+    return () => {
+      ignore = true
+    }
+  }, [user, macroGroupsEnabled])
 
   let [maybeU, setMaybeU] = useState('')
   useEffect(() => {
@@ -471,36 +534,57 @@ export const PrefsPage = () => {
           {macroGroupsEnabled && (
           <Box sx={{ mt: 2, p: 1, borderRadius: '10px', bgcolor: 'background.paper', color: 'text.primary' }}>
             <Typography variant="h6">Macro Group</Typography>
-            <Autocomplete
-              sx={{ m: 2, minWidth: 320, maxWidth: 640 }}
-              options={sortedMacroGroups}
-              getOptionLabel={(option) => option.name}
-              filterOptions={(options, state) => {
-                const q = state.inputValue.trim().toLowerCase()
-                if (!q) return options
-                return options.filter(
-                  (opt) =>
-                    opt.name.toLowerCase().includes(q) ||
-                    opt.description.toLowerCase().includes(q),
-                )
-              }}
-              value={sortedMacroGroups.find((group) => group.id === selectedMacroGroupId) || null}
-              onChange={(_, value) => setSelectedMacroGroupId(value?.id ?? null)}
-              renderInput={(params) => (
-                <TextField {...params} label="Global Macro Group" placeholder="Search macro groups" />
-              )}
-              renderOption={(props, option) => (
-                <li {...props} key={option.id}>
-                  <Box>
-                    <Typography variant="body2">{option.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {ownedGroupIds.has(option.id) ? 'Mine - ' : ''}
-                      {option.description || 'No description'}
-                    </Typography>
-                  </Box>
-                </li>
-              )}
-            />
+            <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ md: 'center' }} spacing={1} sx={{ m: 2 }}>
+              <Autocomplete
+                sx={{ minWidth: 320, maxWidth: 640, width: '100%' }}
+                options={globalMacroGroupOptions}
+                getOptionLabel={(option) => option.name}
+                filterOptions={(options, state) => {
+                  const q = state.inputValue.trim().toLowerCase()
+                  if (!q) return options
+                  return options.filter(
+                    (opt) =>
+                      opt.name.toLowerCase().includes(q) ||
+                      (opt.handle || '').toLowerCase().includes(q) ||
+                      opt.description.toLowerCase().includes(q),
+                  )
+                }}
+                value={
+                  selectedMacroGroupId === null
+                    ? globalMacroGroupOptions[0]
+                    : globalMacroGroupOptions.find((group) => group.id === selectedMacroGroupId) || null
+                }
+                onChange={(_, value) => saveGlobalMacroSelection(!value || value.id === -1 ? null : value.id)}
+                renderInput={(params) => (
+                  <TextField {...params} label="Global Macro Group" placeholder="Search macro groups" />
+                )}
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    <Box>
+                      <Typography variant="body2">{option.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {option.id === -1
+                          ? 'No macro group'
+                          : `${ownedGroupIds.has(option.id) ? 'Mine - ' : ''}${option.handle ? `@${option.handle} - ` : ''}${option.description || 'No description'}`}
+                      </Typography>
+                    </Box>
+                  </li>
+                )}
+              />
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => saveGlobalMacroSelection(null)}
+                disabled={selectedMacroGroupId === null || globalMacroSelectionSaving}
+              >
+                Clear
+              </Button>
+            </Stack>
+            {globalMacroSelectionSaving && (
+              <Typography sx={{ ml: 2 }} variant="body2" color="text.secondary">
+                Saving macro group...
+              </Typography>
+            )}
             <Typography sx={{ ml: 2 }} variant="body2" color="text.secondary">
               Public macro groups only. Your groups are shown first.
             </Typography>

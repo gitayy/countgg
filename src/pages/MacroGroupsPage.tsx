@@ -51,6 +51,7 @@ export const MacroGroupsPage = () => {
   const [draftSeed, setDraftSeed] = useState<{
     token: number
     name: string
+    handle?: string
     description: string
     entries: MacroEntryDraft[]
   } | null>(null)
@@ -148,12 +149,12 @@ export const MacroGroupsPage = () => {
         listMacroGroups(1, 100, undefined, true),
       ])
       setTotal(groupsRes.data.total || 0)
-      const publicItems = groupsRes.data.items || []
+      const itemsWithPinned = groupsRes.data.items || []
       const mineItems = mineRes.data.items || []
-      setMacroGroups(publicItems)
+      setMacroGroups(itemsWithPinned)
       setOwnedMacroGroups(mineItems)
       setOwnedGroupIds(new Set(mineItems.map((item) => item.id)))
-      await hydrateGroupDetails(publicItems)
+      await hydrateGroupDetails(itemsWithPinned)
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to load macro groups')
     } finally {
@@ -257,6 +258,7 @@ export const MacroGroupsPage = () => {
     setDraftSeed({
       token: Date.now(),
       name: `${group.name} (copy)`,
+      handle: '',
       description: group.description || '',
       entries: (preview?.entries || []).map((entry) => ({
         triggerKey: entry.triggerKey,
@@ -359,7 +361,7 @@ export const MacroGroupsPage = () => {
           </Typography>
           <TextField
             label="Search Public Groups"
-            helperText='Search by name, description, trigger key, or behavior (e.g. "submit", "backspace").'
+            helperText='Search by display name, handle, description, trigger key, or behavior (e.g. "submit", "backspace").'
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
@@ -460,6 +462,11 @@ export const MacroGroupsPage = () => {
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
                       {group.name}
                     </Typography>
+                    {group.handle && (
+                      <Typography variant="caption" color="text.secondary">
+                        /macros/{group.handle}
+                      </Typography>
+                    )}
                     <Typography
                       variant="body2"
                       color="text.secondary"
@@ -502,6 +509,16 @@ export const MacroGroupsPage = () => {
                     </Stack>
                   </Box>
                   <Stack direction={{ xs: 'row', lg: 'column' }} spacing={0.75} alignItems={{ xs: 'center', lg: 'flex-end' }}>
+                    {group.handle && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        component={RouterLink}
+                        to={`/macros/${group.handle}`}
+                      >
+                        Open
+                      </Button>
+                    )}
                     <Button size="small" variant="contained" onClick={() => copyToDraft(group)}>
                       Copy To Draft
                     </Button>
