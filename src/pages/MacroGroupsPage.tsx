@@ -6,6 +6,7 @@ import {
   Chip,
   Container,
   Divider,
+  LinearProgress,
   Pagination,
   Stack,
   TextField,
@@ -20,7 +21,7 @@ import {
   listMacroGroups,
   macroGroupsFeatureEnabled,
 } from '../utils/api'
-import { MacroEntry, MacroEntryDraft, MacroGroup } from '../utils/types'
+import { MacroEntry, MacroEntryDraft, MacroEntryPayload, MacroGroup } from '../utils/types'
 import MacroGroupManager from '../components/MacroGroupManager'
 import { prioritizeOwnedMacroGroups } from '../utils/macroGroups'
 
@@ -28,6 +29,7 @@ const PAGE_SIZE = 25
 
 export const MacroGroupsPage = () => {
   const { user } = useContext(UserContext)
+  const [viewMode, setViewMode] = useState<'discover' | 'create' | 'edit'>('discover')
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
@@ -159,9 +161,10 @@ export const MacroGroupsPage = () => {
       entries: (preview?.entries || []).map((entry) => ({
         triggerKey: entry.triggerKey,
         macroType: entry.macroType,
-        payloadJson: entry.payloadJson,
+        payloadJson: entry.payloadJson as MacroEntryPayload,
       })),
     })
+    setViewMode('create')
   }
 
   if (!user) {
@@ -186,7 +189,7 @@ export const MacroGroupsPage = () => {
         Macro Groups
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Browse public groups and manage your own macro versions.
+        Discover public groups or build and version your own.
       </Typography>
 
       {error && (
@@ -195,8 +198,33 @@ export const MacroGroupsPage = () => {
         </Alert>
       )}
 
-      <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper', mb: 2 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} sx={{ mb: 2 }}>
+        <Button
+          variant={viewMode === 'discover' ? 'contained' : 'outlined'}
+          onClick={() => setViewMode('discover')}
+        >
+          Discover
+        </Button>
+        <Button
+          variant={viewMode === 'create' ? 'contained' : 'outlined'}
+          onClick={() => setViewMode('create')}
+        >
+          Create
+        </Button>
+        <Button
+          variant={viewMode === 'edit' ? 'contained' : 'outlined'}
+          onClick={() => setViewMode('edit')}
+        >
+          Edit Mine
+        </Button>
+        <Box sx={{ flexGrow: 1 }} />
+        <Button variant="text" component={RouterLink} to="/prefs">
+          Back To Prefs
+        </Button>
+      </Stack>
+
+      {viewMode === 'discover' && (
+        <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper', mb: 2 }}>
           <TextField
             label="Search Public Groups"
             value={search}
@@ -206,85 +234,106 @@ export const MacroGroupsPage = () => {
             }}
             fullWidth
           />
-          <Button variant="text" component={RouterLink} to="/prefs">
-            Back To Prefs
-          </Button>
-        </Stack>
 
-        <Divider sx={{ my: 2 }} />
+          {loading && <LinearProgress sx={{ mt: 1.5 }} />}
+          <Divider sx={{ my: 2 }} />
 
-        <Stack spacing={1.25}>
-          {sortedMacroGroups.map((group) => (
-            <Box
-              key={group.id}
-              sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}
-            >
-              <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-                <Box>
-                  <Typography variant="subtitle2">{group.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {group.description || 'No description'}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
-                    v{groupPreviewById[group.id]?.versionNumber ?? '-'} • {(groupPreviewById[group.id]?.entries || []).length} entries
-                  </Typography>
-                </Box>
-                <Stack direction="row" spacing={0.5}>
-                  <Button size="small" variant="outlined" onClick={() => copyToDraft(group)}>
-                    Copy To Draft
-                  </Button>
-                  {ownedGroupIds.has(group.id) && <Chip size="small" color="success" label="Mine" />}
-                </Stack>
-              </Stack>
-              {(groupPreviewById[group.id]?.entries || []).length > 0 && (
-                <Box sx={{ mt: 1 }}>
-                  {(groupPreviewById[group.id]?.entries || []).slice(0, 6).map((entry) => (
-                    <Typography key={`${group.id}-${entry.id}`} variant="caption" display="block" color="text.secondary">
-                      {entry.triggerKey}: {describeEntry(entry)}
+          <Stack spacing={1.25}>
+            {sortedMacroGroups.map((group) => (
+              <Box
+                key={group.id}
+                sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}
+              >
+                <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+                  <Box>
+                    <Typography variant="subtitle2">{group.name}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {group.description || 'No description'}
                     </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
+                      v{groupPreviewById[group.id]?.versionNumber ?? '-'} |{' '}
+                      {(groupPreviewById[group.id]?.entries || []).length} entries
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={0.5}>
+                    <Button size="small" variant="outlined" onClick={() => copyToDraft(group)}>
+                      Copy To Draft
+                    </Button>
+                    {ownedGroupIds.has(group.id) && <Chip size="small" color="success" label="Mine" />}
+                  </Stack>
+                </Stack>
+                {(groupPreviewById[group.id]?.entries || []).length > 0 && (
+                  <Box sx={{ mt: 1 }}>
+                    {(groupPreviewById[group.id]?.entries || []).slice(0, 6).map((entry) => (
+                      <Typography
+                        key={`${group.id}-${entry.id}`}
+                        variant="caption"
+                        display="block"
+                        color="text.secondary"
+                      >
+                        {entry.triggerKey}: {describeEntry(entry)}
+                      </Typography>
+                    ))}
+                    {(groupPreviewById[group.id]?.entries || []).length > 6 && (
+                      <Typography variant="caption" color="text.secondary">
+                        +{(groupPreviewById[group.id]?.entries || []).length - 6} more
+                      </Typography>
+                    )}
+                  </Box>
+                )}
+                <Box sx={{ mt: 0.75, display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                  {(groupThreadUsageById[group.id] || []).map((row) => (
+                    <Chip
+                      key={`${group.id}-${row.threadName}`}
+                      size="small"
+                      variant="outlined"
+                      label={`${row.threadName} (${row.appliesCount})`}
+                    />
                   ))}
-                  {(groupPreviewById[group.id]?.entries || []).length > 6 && (
+                  {(groupThreadUsageById[group.id] || []).length === 0 && (
                     <Typography variant="caption" color="text.secondary">
-                      +{(groupPreviewById[group.id]?.entries || []).length - 6} more
+                      No thread usage tracked yet
                     </Typography>
                   )}
                 </Box>
-              )}
-              <Box sx={{ mt: 0.75, display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-                {(groupThreadUsageById[group.id] || []).map((row) => (
-                  <Chip
-                    key={`${group.id}-${row.threadName}`}
-                    size="small"
-                    variant="outlined"
-                    label={`${row.threadName} (${row.appliesCount})`}
-                  />
-                ))}
               </Box>
+            ))}
+            {!loading && sortedMacroGroups.length === 0 && (
+              <Typography variant="body2" color="text.secondary">
+                No macro groups found.
+              </Typography>
+            )}
+          </Stack>
+
+          {total > PAGE_SIZE && (
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+              <Pagination
+                count={Math.max(1, Math.ceil(total / PAGE_SIZE))}
+                page={page}
+                onChange={(_, value) => setPage(value)}
+              />
             </Box>
-          ))}
-          {sortedMacroGroups.length === 0 && (
-            <Typography variant="body2" color="text.secondary">
-              No macro groups found.
-            </Typography>
           )}
-        </Stack>
+        </Box>
+      )}
 
-        {total > PAGE_SIZE && (
-          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-            <Pagination
-              count={Math.max(1, Math.ceil(total / PAGE_SIZE))}
-              page={page}
-              onChange={(_, value) => setPage(value)}
-            />
-          </Box>
-        )}
-      </Box>
+      {viewMode === 'create' && (
+        <MacroGroupManager
+          ownedMacroGroups={ownedMacroGroups}
+          refreshMacroGroups={loadMacroGroups}
+          draftSeed={draftSeed}
+          forcedMode="create"
+        />
+      )}
 
-      <MacroGroupManager
-        ownedMacroGroups={ownedMacroGroups}
-        refreshMacroGroups={loadMacroGroups}
-        draftSeed={draftSeed}
-      />
+      {viewMode === 'edit' && (
+        <MacroGroupManager
+          ownedMacroGroups={ownedMacroGroups}
+          refreshMacroGroups={loadMacroGroups}
+          draftSeed={draftSeed}
+          forcedMode="edit"
+        />
+      )}
     </Container>
   )
 }

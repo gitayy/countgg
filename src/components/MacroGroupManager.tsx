@@ -34,6 +34,7 @@ import {
 type Props = {
   ownedMacroGroups: MacroGroup[]
   refreshMacroGroups: () => Promise<void>
+  forcedMode?: 'create' | 'edit'
   draftSeed?: {
     token: number
     name: string
@@ -101,7 +102,12 @@ const toDraftEntries = (version: MacroGroupVersion | null): MacroEntryDraft[] =>
   }))
 }
 
-export const MacroGroupManager = ({ ownedMacroGroups, refreshMacroGroups, draftSeed }: Props) => {
+export const MacroGroupManager = ({
+  ownedMacroGroups,
+  refreshMacroGroups,
+  forcedMode,
+  draftSeed,
+}: Props) => {
   const [mode, setMode] = useState<'create' | 'edit'>('create')
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
   const [versions, setVersions] = useState<MacroGroupVersion[]>([])
@@ -115,6 +121,7 @@ export const MacroGroupManager = ({ ownedMacroGroups, refreshMacroGroups, draftS
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
   const [activeVersionNumber, setActiveVersionNumber] = useState<number | null>(null)
+  const [showAdvancedEditOptions, setShowAdvancedEditOptions] = useState(false)
 
   const selectedGroup = useMemo(
     () => ownedMacroGroups.find((group) => group.id === selectedGroupId),
@@ -177,6 +184,12 @@ export const MacroGroupManager = ({ ownedMacroGroups, refreshMacroGroups, draftS
   }, [selectedGroupId])
 
   useEffect(() => {
+    if (!selectedGroupId) {
+      setShowAdvancedEditOptions(false)
+    }
+  }, [selectedGroupId])
+
+  useEffect(() => {
     if (!draftSeed) return
     setMode('create')
     setSelectedGroupId(null)
@@ -189,6 +202,14 @@ export const MacroGroupManager = ({ ownedMacroGroups, refreshMacroGroups, draftS
     setChangeNote(`Draft copied from "${draftSeed.name}"`)
     setSuccess('Loaded copied macro group into draft. Edit before creating.')
   }, [draftSeed?.token])
+
+  useEffect(() => {
+    if (!forcedMode) return
+    setMode(forcedMode)
+    if (forcedMode === 'create') {
+      setSelectedGroupId(null)
+    }
+  }, [forcedMode])
 
   const onCreateGroup = async () => {
     setSaving(true)
@@ -255,23 +276,25 @@ export const MacroGroupManager = ({ ownedMacroGroups, refreshMacroGroups, draftS
     <Box sx={{ mt: 2, p: 2, borderRadius: '10px', bgcolor: 'background.paper' }}>
       <Typography variant="h6">Macro Group Manager</Typography>
 
-      <Stack direction="row" spacing={1} sx={{ mt: 1, mb: 2 }}>
-        <Button
-          variant={mode === 'create' ? 'contained' : 'outlined'}
-          onClick={() => {
-            setMode('create')
-            setSelectedGroupId(null)
-          }}
-        >
-          Create
-        </Button>
-        <Button
-          variant={mode === 'edit' ? 'contained' : 'outlined'}
-          onClick={() => setMode('edit')}
-        >
-          Edit
-        </Button>
-      </Stack>
+      {!forcedMode && (
+        <Stack direction="row" spacing={1} sx={{ mt: 1, mb: 2 }}>
+          <Button
+            variant={mode === 'create' ? 'contained' : 'outlined'}
+            onClick={() => {
+              setMode('create')
+              setSelectedGroupId(null)
+            }}
+          >
+            Create
+          </Button>
+          <Button
+            variant={mode === 'edit' ? 'contained' : 'outlined'}
+            onClick={() => setMode('edit')}
+          >
+            Edit
+          </Button>
+        </Stack>
+      )}
 
       {error && (
         <Alert sx={{ mb: 2 }} severity="error">
@@ -287,7 +310,7 @@ export const MacroGroupManager = ({ ownedMacroGroups, refreshMacroGroups, draftS
       {mode === 'create' ? (
         <>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Create New Group
+            1. Group Details
           </Typography>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 1.5 }}>
             <TextField
@@ -304,19 +327,12 @@ export const MacroGroupManager = ({ ownedMacroGroups, refreshMacroGroups, draftS
               inputProps={{ maxLength: 280 }}
               fullWidth
             />
-            <Button
-              variant="contained"
-              onClick={onCreateGroup}
-              disabled={saving || newGroupName.trim().length < 3}
-            >
-              Create Group
-            </Button>
           </Stack>
         </>
       ) : (
         <>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Edit Existing Group
+          <Typography variant="subtitle1" sx={{ mb: 1.25 }}>
+            1. Select Group
           </Typography>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }} sx={{ mb: 1.5 }}>
             <Autocomplete
@@ -341,6 +357,17 @@ export const MacroGroupManager = ({ ownedMacroGroups, refreshMacroGroups, draftS
           </Stack>
 
           {!!selectedGroupId && (
+            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+              <Button
+                variant="text"
+                size="small"
+                onClick={() => setShowAdvancedEditOptions((prev) => !prev)}
+              >
+                {showAdvancedEditOptions ? 'Hide Advanced' : 'Show Advanced'}
+              </Button>
+            </Stack>
+          )}
+          {!!selectedGroupId && showAdvancedEditOptions && (
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }}>
               <FormControl sx={{ minWidth: 260 }}>
                 <InputLabel id="edit-version-label">Base Version</InputLabel>
@@ -362,154 +389,194 @@ export const MacroGroupManager = ({ ownedMacroGroups, refreshMacroGroups, draftS
                   ))}
                 </Select>
               </FormControl>
-              <Button variant="contained" onClick={onSaveVersion} disabled={saving || loadingVersion}>
-                Save New Version
-              </Button>
             </Stack>
           )}
         </>
       )}
 
-      <Divider sx={{ my: 2 }} />
+      {(mode === 'create' || !!selectedGroupId) && (
+        <>
+          <Divider sx={{ my: 2 }} />
 
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-        <Typography variant="subtitle1">Entries ({entries.length})</Typography>
-        <Button variant="outlined" size="small" onClick={addEntry}>
-          Add Entry
-        </Button>
-      </Stack>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+            <Typography variant="subtitle1">
+              2. Entries ({entries.length})
+            </Typography>
+            <Button variant="outlined" size="small" onClick={addEntry}>
+              Add Entry
+            </Button>
+          </Stack>
 
-      <Stack spacing={1}>
-        {entries.map((entry, index) => {
-          const payload = entry.payloadJson as any
-          return (
-            <Box
-              key={`macro-entry-${index}`}
-              sx={{ p: 1, border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}
-            >
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
-                <IconButton color="error" onClick={() => removeEntry(index)}>
-                  <DeleteIcon />
-                </IconButton>
-                <TextField
-                  label="Trigger"
-                  value={entry.triggerKey}
-                  onChange={(e) => updateEntry(index, { ...entry, triggerKey: e.target.value.slice(0, 1) })}
-                  sx={{ width: 100 }}
-                />
-                <FormControl sx={{ minWidth: 220 }}>
-                  <InputLabel id={`macro-type-${index}`}>Type</InputLabel>
-                  <Select
-                    labelId={`macro-type-${index}`}
-                    value={entry.macroType}
-                    label="Type"
-                    onChange={(e) => updateEntryType(index, (e.target as HTMLInputElement).value as MacroEntryType)}
-                  >
-                    {MACRO_TYPE_OPTIONS.map((type) => (
-                      <MenuItem key={type} value={type}>
-                        {type}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+          <Stack spacing={1}>
+            {entries.map((entry, index) => {
+              const payload = entry.payloadJson as any
+              return (
+                <Box
+                  key={`macro-entry-${index}`}
+                  sx={{ p: 1, border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}
+                >
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
+                    <IconButton color="error" onClick={() => removeEntry(index)}>
+                      <DeleteIcon />
+                    </IconButton>
+                    <TextField
+                      label="Trigger"
+                      value={entry.triggerKey}
+                      onChange={(e) => updateEntry(index, { ...entry, triggerKey: e.target.value.slice(0, 1) })}
+                      sx={{ width: 100 }}
+                    />
+                    <FormControl sx={{ minWidth: 220 }}>
+                      <InputLabel id={`macro-type-${index}`}>Type</InputLabel>
+                      <Select
+                        labelId={`macro-type-${index}`}
+                        value={entry.macroType}
+                        label="Type"
+                        onChange={(e) => updateEntryType(index, (e.target as HTMLInputElement).value as MacroEntryType)}
+                      >
+                        {MACRO_TYPE_OPTIONS.map((type) => (
+                          <MenuItem key={type} value={type}>
+                            {type}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
 
-                {entry.macroType === 'CHAR_INSERT' && (
-                  <TextField
-                    label="Char"
-                    value={payload.char || ''}
-                    onChange={(e) =>
-                      updateEntry(index, {
-                        ...entry,
-                        payloadJson: { char: e.target.value.slice(0, 1) },
-                      })
-                    }
-                    sx={{ width: 100 }}
-                  />
-                )}
+                    {entry.macroType === 'CHAR_INSERT' && (
+                      <TextField
+                        label="Char"
+                        value={payload.char || ''}
+                        onChange={(e) =>
+                          updateEntry(index, {
+                            ...entry,
+                            payloadJson: { char: e.target.value.slice(0, 1) },
+                          })
+                        }
+                        sx={{ width: 100 }}
+                      />
+                    )}
 
-                {(entry.macroType === 'ACTION' ||
-                  entry.macroType === 'SUBMIT_ACTION') && (
-                  <FormControl sx={{ minWidth: 180 }}>
-                    <InputLabel id={`macro-action-${index}`}>Action</InputLabel>
-                    <Select
-                      labelId={`macro-action-${index}`}
-                      value={payload.action || 'BACKSPACE'}
-                      label="Action"
-                      onChange={(e) =>
-                        updateEntry(index, {
-                          ...entry,
-                          payloadJson: {
-                            ...payload,
-                            action: (e.target as HTMLInputElement).value,
-                          },
-                        })
-                      }
-                    >
-                      {ACTION_OPTIONS.map((action) => (
-                        <MenuItem key={action} value={action}>
-                          {action}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                )}
+                    {(entry.macroType === 'ACTION' ||
+                      entry.macroType === 'SUBMIT_ACTION') && (
+                      <FormControl sx={{ minWidth: 180 }}>
+                        <InputLabel id={`macro-action-${index}`}>Action</InputLabel>
+                        <Select
+                          labelId={`macro-action-${index}`}
+                          value={payload.action || 'BACKSPACE'}
+                          label="Action"
+                          onChange={(e) =>
+                            updateEntry(index, {
+                              ...entry,
+                              payloadJson: {
+                                ...payload,
+                                action: (e.target as HTMLInputElement).value,
+                              },
+                            })
+                          }
+                        >
+                          {ACTION_OPTIONS.map((action) => (
+                            <MenuItem key={action} value={action}>
+                              {action}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )}
 
-                {(entry.macroType === 'ACTION' ||
-                  entry.macroType === 'SUBMIT_ACTION') && (
-                  <TextField
-                    label="Repeat"
-                    type="number"
-                    inputProps={{ min: 1, max: 10 }}
-                    value={payload.repeat ?? 1}
-                    onChange={(e) =>
-                      updateEntry(index, {
-                        ...entry,
-                        payloadJson: {
-                          ...payload,
-                          repeat: Math.max(1, Math.min(10, parseInt(e.target.value || '1', 10))),
-                        },
-                      })
-                    }
-                    sx={{ width: 110 }}
-                  />
-                )}
+                    {(entry.macroType === 'ACTION' ||
+                      entry.macroType === 'SUBMIT_ACTION') && (
+                      <TextField
+                        label="Repeat"
+                        type="number"
+                        inputProps={{ min: 1, max: 10 }}
+                        value={payload.repeat ?? 1}
+                        onChange={(e) =>
+                          updateEntry(index, {
+                            ...entry,
+                            payloadJson: {
+                              ...payload,
+                              repeat: Math.max(1, Math.min(10, parseInt(e.target.value || '1', 10))),
+                            },
+                          })
+                        }
+                        sx={{ width: 110 }}
+                      />
+                    )}
 
-                {entry.macroType === 'COMBO' && (
-                  <FormControl sx={{ minWidth: 200 }}>
-                    <InputLabel id={`macro-combo-${index}`}>Combo</InputLabel>
-                    <Select
-                      labelId={`macro-combo-${index}`}
-                      value={payload.comboId || 'SELECT_ALL_PASTE'}
-                      label="Combo"
-                      onChange={(e) =>
-                        updateEntry(index, {
-                          ...entry,
-                          payloadJson: { comboId: (e.target as HTMLInputElement).value as MacroComboId },
-                        })
-                      }
-                    >
-                      {COMBO_OPTIONS.map((comboId) => (
-                        <MenuItem key={comboId} value={comboId}>
-                          {comboId}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                )}
+                    {entry.macroType === 'COMBO' && (
+                      <FormControl sx={{ minWidth: 200 }}>
+                        <InputLabel id={`macro-combo-${index}`}>Combo</InputLabel>
+                        <Select
+                          labelId={`macro-combo-${index}`}
+                          value={payload.comboId || 'SELECT_ALL_PASTE'}
+                          label="Combo"
+                          onChange={(e) =>
+                            updateEntry(index, {
+                              ...entry,
+                              payloadJson: { comboId: (e.target as HTMLInputElement).value as MacroComboId },
+                            })
+                          }
+                        >
+                          {COMBO_OPTIONS.map((comboId) => (
+                            <MenuItem key={comboId} value={comboId}>
+                              {comboId}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )}
+                  </Stack>
+                </Box>
+              )
+            })}
+          </Stack>
+
+          {mode === 'edit' && (
+            <>
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                3. Save New Version
+              </Typography>
+              <TextField
+                label="Change Note"
+                value={changeNote}
+                onChange={(e) => setChangeNote(e.target.value)}
+                inputProps={{ maxLength: 280 }}
+                fullWidth
+              />
+              <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
+                <Button variant="contained" onClick={onSaveVersion} disabled={saving || loadingVersion}>
+                  Save New Version
+                </Button>
               </Stack>
-            </Box>
-          )
-        })}
-      </Stack>
+            </>
+          )}
 
-      <TextField
-        sx={{ mt: 2 }}
-        label="Change Note"
-        value={changeNote}
-        onChange={(e) => setChangeNote(e.target.value)}
-        inputProps={{ maxLength: 280 }}
-        fullWidth
-      />
+          {mode === 'create' && (
+            <>
+              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+                3. Create Group
+              </Typography>
+              <Stack direction="row" justifyContent="flex-end">
+                <Button
+                  variant="contained"
+                  onClick={onCreateGroup}
+                  disabled={saving || newGroupName.trim().length < 3}
+                >
+                  Create Group
+                </Button>
+              </Stack>
+            </>
+          )}
+        </>
+      )}
+
+      {mode === 'edit' && !selectedGroupId && (
+        <>
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="body2" color="text.secondary">
+            Select one of your groups to edit entries and save a new version.
+          </Typography>
+        </>
+      )}
     </Box>
   )
 }
