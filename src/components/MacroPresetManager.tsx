@@ -548,7 +548,6 @@ export const MacroPresetManager = ({
     entry: MacroEntryDraft,
     event: KeyboardEvent<HTMLInputElement>,
   ) => {
-    if (event.key === 'Tab') return
     event.preventDefault()
     event.stopPropagation()
     const rawKey = String(event.key || '')
@@ -910,6 +909,7 @@ export const MacroPresetManager = ({
                       label="Key"
                       value={entry.triggerKey}
                       onKeyDown={(event) => captureTriggerKey(index, entry, event)}
+                      onKeyUp={(event) => captureTriggerKey(index, entry, event)}
                       onChange={() => {}}
                       inputProps={{ maxLength: 64 }}
                       placeholder="Press a key..."
