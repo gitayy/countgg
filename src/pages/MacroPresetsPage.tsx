@@ -555,7 +555,11 @@ export const MacroPresetsPage = () => {
                         variant="outlined"
                         label={`v${groupPreviewById[preset.id]?.versionNumber ?? '-'}`}
                       />
-                      <Chip size="small" variant="outlined" label={`${entries.length} mappings`} />
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        label={`${entries.length} ${entries.length === 1 ? 'mapping' : 'mappings'}`}
+                      />
                       {ownedGroupIds.has(preset.id) && (
                         <Chip size="small" color="success" variant="outlined" label="Owned" />
                       )}
@@ -751,7 +755,11 @@ export const MacroPresetsPage = () => {
                             variant="outlined"
                             label={`v${groupPreviewById[preset.id]?.versionNumber ?? '-'}`}
                           />
-                          <Chip size="small" variant="outlined" label={`${entries.length} mappings`} />
+                          <Chip
+                            size="small"
+                            variant="outlined"
+                            label={`${entries.length} ${entries.length === 1 ? 'mapping' : 'mappings'}`}
+                          />
                         </Stack>
                       </Box>
                       <Stack direction={{ xs: 'row', lg: 'column' }} spacing={0.75}>
