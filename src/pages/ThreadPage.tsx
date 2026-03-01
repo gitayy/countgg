@@ -32,6 +32,7 @@ import {
   Select,
   Skeleton,
   Snackbar,
+  Stack,
   Tab,
   TextField,
   Theme,
@@ -188,6 +189,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     macroTriggerKey: string
     macroEntryType: MacroEntryType
   } | null>(null)
+  const [macroSelectionSaving, setMacroSelectionSaving] = useState(false)
   const activeMacroGroupName = useMemo(
     () =>
       availableMacroGroups.find((group) => group.id === activeMacroRuntime.macroGroupId)?.name ||
@@ -198,6 +200,23 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     () => prioritizeOwnedMacroGroups(availableMacroGroups, ownedMacroGroupIds),
     [availableMacroGroups, ownedMacroGroupIds],
   )
+  const describeActiveMacroEntry = useCallback((entry: any) => {
+    const payload = entry?.payloadJson || {}
+    switch (entry?.macroType) {
+      case 'CHAR_INSERT':
+        return `insert "${payload.char || ''}"`
+      case 'ACTION':
+        return `${String(payload.action || '').toLowerCase()}`
+      case 'ACTION_REPEAT':
+        return `${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`
+      case 'SUBMIT_ACTION_REPEAT':
+        return `submit + ${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`
+      case 'COMBO':
+        return `${String(payload.comboId || '').toLowerCase()}`
+      default:
+        return 'macro'
+    }
+  }, [])
   const loadSpikeGeneratedDuringLoadRef = useRef<PostType[]>([])
   const previousRecentCountsLoadingRef = useRef(false)
   const duplicateListenerUuidRef = useRef<string | undefined>(undefined)
@@ -2473,6 +2492,45 @@ useEffect(() => {
   setResetPrefs(false);
 }, [resetPrefs]);
 
+  const saveThreadMacroSelection = useCallback(
+    async (nextMacroGroupId: number | null) => {
+      const previousMacroGroupId = threadMacroGroupId
+      setThreadMacroGroupId(nextMacroGroupId)
+
+      if (!macroGroupsEnabled || !thread?.uuid || !user) {
+        return
+      }
+
+      setMacroSelectionSaving(true)
+      try {
+        const enabled = prefEnabled ?? true
+        await setThreadMacroGroupPreference(thread.uuid, enabled, nextMacroGroupId)
+        if (enabled && nextMacroGroupId !== null) {
+          await applyMacroGroupForThread(thread.uuid, nextMacroGroupId)
+        }
+
+        const [runtimeRes, recommendedRes] = await Promise.all([
+          getActiveMacroRuntimeForThread(thread.uuid),
+          getRecommendedMacroGroups(thread.uuid, 10),
+        ])
+        setActiveMacroRuntime(runtimeRes.data)
+        setRecommendedMacroGroups(recommendedRes.data.items || [])
+
+        setSnackbarSeverity('success')
+        setSnackbarOpen(true)
+        setSnackbarMessage('Thread macro selection saved')
+      } catch (err) {
+        setThreadMacroGroupId(previousMacroGroupId)
+        setSnackbarSeverity('error')
+        setSnackbarOpen(true)
+        setSnackbarMessage('Failed to save thread macro selection')
+      } finally {
+        setMacroSelectionSaving(false)
+      }
+    },
+    [macroGroupsEnabled, thread?.uuid, user, prefEnabled, threadMacroGroupId],
+  )
+
   const savePrefs = async () => {
     if (user && counter && thread) {
       if(!user.threadPreferences) {user.threadPreferences = []}
@@ -2758,6 +2816,92 @@ useEffect(() => {
               <ReactMarkdown children={thread ? thread.rules : 'Loading...'} components={{ p: 'span' }} remarkPlugins={[remarkGfm]} />
             </Typography> */}
             <CommunityNotes thread={thread} setThread={setThread} counter={counter} onSave={saveCommunityNotes} />
+            {macroGroupsEnabled && (
+              <Box
+                sx={{
+                  mt: 2,
+                  mb: 2,
+                  p: 1,
+                  maxWidth: 360,
+                  borderRadius: '8px',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: 'background.paper',
+                }}
+              >
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+                  <Typography variant="subtitle2" sx={{ lineHeight: 1.2 }}>
+                    Macros
+                  </Typography>
+                  <Stack direction="row" spacing={0.5} alignItems="center">
+                    {activeMacroRuntime.entries?.length > 0 && (
+                      <Chip size="small" label={`${activeMacroRuntime.entries.length} active`} />
+                    )}
+                    {threadMacroGroupId !== null && (
+                      <Button
+                        size="small"
+                        color="error"
+                        variant="text"
+                        onClick={() => saveThreadMacroSelection(null)}
+                        disabled={macroSelectionSaving}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </Stack>
+                </Stack>
+                <Autocomplete
+                  size="small"
+                  sx={{ mb: 0.5 }}
+                  options={sortedAvailableMacroGroups}
+                  getOptionLabel={(option) => option.name}
+                  filterOptions={(options, state) => {
+                    const q = state.inputValue.trim().toLowerCase()
+                    if (!q) return options
+                    return options.filter(
+                      (opt) =>
+                        opt.name.toLowerCase().includes(q) ||
+                        opt.description.toLowerCase().includes(q),
+                    )
+                  }}
+                  value={sortedAvailableMacroGroups.find((group) => group.id === threadMacroGroupId) || null}
+                  onChange={(_, value) => {
+                    saveThreadMacroSelection(value?.id ?? null)
+                  }}
+                  renderInput={(params) => (
+                    <TextField {...params} label="Group" placeholder="Search" size="small" />
+                  )}
+                  renderOption={(props, option) => (
+                    <li {...props} key={option.id}>
+                      <Box>
+                        <Typography variant="body2">{option.name}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {ownedMacroGroupIds.has(option.id) ? 'Mine - ' : ''}
+                          {option.description || 'No description'}
+                        </Typography>
+                      </Box>
+                    </li>
+                  )}
+                />
+                {macroSelectionSaving && (
+                  <Typography variant="caption" color="text.secondary">
+                    Saving...
+                  </Typography>
+                )}
+                {activeMacroRuntime.entries?.length > 0 && (
+                  <Box sx={{ mt: 0.5 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.1 }}>
+                      {activeMacroGroupName || 'Macro Group'} (v{activeMacroRuntime.macroGroupVersionNumber ?? '?'})
+                    </Typography>
+                    {activeMacroRuntime.entries.map((entry) => (
+                      <Typography key={entry.id} variant="caption" display="block" color="text.secondary" sx={{ lineHeight: 1.1 }}>
+                        {entry.triggerKey} -&gt; {describeActiveMacroEntry(entry)}
+                      </Typography>
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            )}
             {counter && thread && counter.roles.includes('mod') && (
               <Button variant="contained" onClick={lockThread}>
                 {thread.locked ? 'Unlock Thread' : 'Lock Thread'}
@@ -3012,7 +3156,9 @@ useEffect(() => {
               )
             }}
             value={sortedAvailableMacroGroups.find((group) => group.id === threadMacroGroupId) || null}
-            onChange={(_, value) => setThreadMacroGroupId(value?.id ?? null)}
+            onChange={(_, value) => {
+              saveThreadMacroSelection(value?.id ?? null)
+            }}
             renderInput={(params) => (
               <TextField {...params} label="Thread Macro Group" placeholder="Search macro groups" />
             )}
@@ -3031,7 +3177,7 @@ useEffect(() => {
           )}
           {macroGroupsEnabled && (
           <Typography sx={{ ml: 2, mb: 1 }} variant="body2" color="text.secondary">
-            Applied usage tracking is recorded when you save thread prefs with a macro group selected.
+            Macro selection now auto-saves; usage tracking updates on selection.
           </Typography>
           )}
           {macroGroupsEnabled && (
@@ -3077,7 +3223,7 @@ useEffect(() => {
                     size="small"
                     variant="outlined"
                     disabled={!row.macroGroup?.id}
-                    onClick={() => row.macroGroup?.id && setThreadMacroGroupId(row.macroGroup.id)}
+                    onClick={() => row.macroGroup?.id && saveThreadMacroSelection(row.macroGroup.id)}
                   >
                     Use
                   </Button>
