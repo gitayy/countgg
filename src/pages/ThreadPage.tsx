@@ -3151,7 +3151,13 @@ useEffect(() => {
                   getOptionLabel={(option) => option.name}
                   filterOptions={(options) => options}
                   inputValue={macroPresetSearchInput}
-                  onInputChange={(_, value) => setMacroPresetSearchInput(value)}
+                  onInputChange={(_, value, reason) => {
+                    // Ignore programmatic resets from selected value ("None"),
+                    // so typing/backspace in the search box remains fully controllable.
+                    if (reason === 'input' || reason === 'clear') {
+                      setMacroPresetSearchInput(value)
+                    }
+                  }}
                   value={selectedThreadMacroPresetValue}
                   onChange={(_, value) => {
                     saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
@@ -3450,7 +3456,11 @@ useEffect(() => {
             getOptionLabel={(option) => option.name}
             filterOptions={(options) => options}
             inputValue={macroPresetSearchInput}
-            onInputChange={(_, value) => setMacroPresetSearchInput(value)}
+            onInputChange={(_, value, reason) => {
+              if (reason === 'input' || reason === 'clear') {
+                setMacroPresetSearchInput(value)
+              }
+            }}
             value={selectedThreadMacroPresetValue}
             onChange={(_, value) => {
               saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
