@@ -693,7 +693,13 @@ const CountList = memo((props: any) => {
         props.handleSubmit(
           inputRef.current.value,
           {
-            m: { p: lastSubmitAtRef.current },
+            m: {
+              p: lastSubmitAtRef.current,
+              b:
+                typeof props.macroHashMeta?.current?.baselineText === 'string'
+                  ? props.macroHashMeta.current.baselineText
+                  : undefined,
+            },
             h: props.macroHash?.current ?? [],
           },
           post_hash,
@@ -704,6 +710,9 @@ const CountList = memo((props: any) => {
       throttle.current = performance.now()
       if (props.macroHash?.current) {
         props.macroHash.current = []
+      }
+      if (props.macroHashMeta?.current) {
+        props.macroHashMeta.current.baselineText = undefined
       }
       if (isThrottled.current) {
         isThrottled.current = false

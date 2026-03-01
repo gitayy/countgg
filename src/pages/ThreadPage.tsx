@@ -1015,6 +1015,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [newChatsLoadedState, setNewChatsLoadedState] = useState('')
 
   const macroHash = useRef<any>([])
+  const macroHashMeta = useRef<{ baselineText?: string }>({})
   useEffect(() => {
     userRef.current = user
   }, [user])
@@ -1025,6 +1026,19 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   useEffect(() => {
     const scrollCheck = (event) => {
       const { key: test } = event
+      if (macroHashMeta.current?.baselineText === undefined) {
+        const activeElement = document.activeElement as
+          | HTMLInputElement
+          | HTMLTextAreaElement
+          | null
+        if (
+          activeElement &&
+          (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') &&
+          typeof activeElement.value === 'string'
+        ) {
+          macroHashMeta.current.baselineText = activeElement.value
+        }
+      }
       const next = [
         ...(macroHash.current || []),
         {
@@ -2280,6 +2294,7 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         setCachedCounts={setCachedCounts}
         loadedNewestRef={loadedNewestRef}
         macroHash={macroHash}
+        macroHashMeta={macroHashMeta}
         newRecentPostLoaded={newRecentPostLoaded}
         loadedOldest={loadedOldest}
         cachedCounts={cachedCounts}
