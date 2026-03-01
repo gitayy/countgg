@@ -107,11 +107,11 @@ type DraftValidationResult = {
   globalErrors: string[]
 }
 
-const MAX_ENTRIES = 64
+const MAX_ENTRIES = 100
 const MAX_REPEAT = 10
 const MAX_TRIGGERS_PER_CHAR = 2
 const MAX_SUBMIT_MACROS = 2
-const HANDLE_REGEX = /^[a-z0-9](?:[a-z0-9_-]{1,62}[a-z0-9])?$/
+const HANDLE_REGEX = /^[a-z][a-z0-9_-]{2,63}$/
 
 const DEFAULT_ENTRY_BY_TYPE = (macroType: MacroEntryType): MacroEntryDraft => {
   switch (macroType) {
@@ -246,6 +246,7 @@ export const MacroPresetManager = ({
   const [changeNote, setChangeNote] = useState('')
   const [loadingVersion, setLoadingVersion] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [showValidationHints, setShowValidationHints] = useState(false)
   const [error, setError] = useState<string>('')
   const [success, setSuccess] = useState<string>('')
   const [activeVersionNumber, setActiveVersionNumber] = useState<number | null>(null)
@@ -347,11 +348,13 @@ export const MacroPresetManager = ({
 
   const onCreatePreset = async () => {
     if (entries.length < 1) {
+      setShowValidationHints(true)
       setError('At least one macro entry is required.')
       return
     }
 
     if (validation.globalErrors.length > 0 || Object.keys(validation.rowErrors).length > 0) {
+      setShowValidationHints(true)
       setError('Please fix macro validation errors before creating the preset.')
       return
     }
@@ -381,6 +384,7 @@ export const MacroPresetManager = ({
       setActiveVersionNumber(1)
       setVersions([])
       setSelectedVersionNumber(1)
+      setShowValidationHints(false)
       setSuccess('Preset created.')
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to create macro preset')
@@ -392,10 +396,12 @@ export const MacroPresetManager = ({
   const onSaveVersion = async () => {
     if (!selectedPresetId) return
     if (entries.length < 1) {
+      setShowValidationHints(true)
       setError('At least one macro entry is required.')
       return
     }
     if (validation.globalErrors.length > 0 || Object.keys(validation.rowErrors).length > 0) {
+      setShowValidationHints(true)
       setError('Please fix macro validation errors before saving.')
       return
     }
@@ -407,6 +413,7 @@ export const MacroPresetManager = ({
       await enqueueMacroPresetUpdate(selectedPresetId, changeNote.trim(), entries)
       await loadLatestVersion(selectedPresetId)
       setChangeNote('')
+      setShowValidationHints(false)
       setSuccess('New version saved.')
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to save macro update')
@@ -439,15 +446,22 @@ export const MacroPresetManager = ({
       : newPresetName.trim().length < 3
         ? 'Preset name must be at least 3 characters.'
         : !HANDLE_REGEX.test(newPresetHandle.trim().toLowerCase())
-          ? 'Handle must be 3-64 chars: lowercase letters, numbers, underscores, or hyphens.'
-        : validation.globalErrors[0] || Object.values(validation.rowErrors)[0]?.[0] || ''
+          ? 'Handle must be 3-64 chars, start with a lowercase letter, and then use lowercase letters, numbers, underscores, or hyphens.'
+          : showValidationHints
+          ? validation.globalErrors[0] || Object.values(validation.rowErrors)[0]?.[0] || ''
+          : ''
 
   const saveDisabledReason =
     saving || loadingVersion
       ? 'Saving...'
       : !selectedPresetId
         ? 'Select a preset first.'
-        : validation.globalErrors[0] || Object.values(validation.rowErrors)[0]?.[0] || ''
+        : showValidationHints
+          ? validation.globalErrors[0] || Object.values(validation.rowErrors)[0]?.[0] || ''
+          : ''
+
+  const activeValidationReason =
+    mode === 'create' ? createDisabledReason : saveDisabledReason
 
   return (
     <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper' }}>
@@ -480,6 +494,14 @@ export const MacroPresetManager = ({
           {error}
         </Alert>
       )}
+      {showValidationHints &&
+        activeValidationReason &&
+        activeValidationReason !== 'Saving...' &&
+        activeValidationReason !== error && (
+          <Alert sx={{ mb: 2 }} severity="error">
+            {activeValidationReason}
+          </Alert>
+        )}
       {success && (
         <Alert sx={{ mb: 2 }} severity="success">
           {success}
@@ -488,9 +510,6 @@ export const MacroPresetManager = ({
 
       {mode === 'create' ? (
         <>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            1. Preset Details
-          </Typography>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 1.5 }}>
             <TextField
               label="Display Name"
@@ -504,7 +523,7 @@ export const MacroPresetManager = ({
               value={newPresetHandle}
               onChange={(e) => setNewPresetHandle(e.target.value.toLowerCase())}
               inputProps={{ maxLength: 64 }}
-              helperText='Used in the URL: /macros/<handle>. Permanent and unique.'
+              helperText='Used in the URL: /macros/<handle>. Must start with a lowercase letter, then letters/numbers/_/-.'
               fullWidth
             />
             <TextField
@@ -519,7 +538,7 @@ export const MacroPresetManager = ({
       ) : (
         <>
           <Typography variant="subtitle1" sx={{ mb: 1.25 }}>
-            1. Select Preset
+            Select Preset
           </Typography>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }} sx={{ mb: 1.5 }}>
             <Autocomplete
@@ -625,12 +644,8 @@ export const MacroPresetManager = ({
         <>
           <Divider sx={{ my: 2 }} />
 
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            2. Entries ({entries.length})
-          </Typography>
-
           <Stack spacing={1}>
-            {validation.globalErrors.length > 0 && (
+            {showValidationHints && validation.globalErrors.length > 0 && (
               <Alert severity="error">
                 {validation.globalErrors.map((msg, idx) => (
                   <Typography key={`macro-validation-global-${idx}`} variant="body2">
@@ -656,11 +671,46 @@ export const MacroPresetManager = ({
                 }}
               >
                 <Typography variant="body2" color="text.secondary">
-                  No macro entries yet.
+                  No mappings yet.
                 </Typography>
-                <Button variant="outlined" size="small" onClick={addEntry}>
-                  Add First Entry
-                </Button>
+                <Box
+                  onClick={addEntry}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      addEntry()
+                    }
+                  }}
+                  sx={{
+                    width: '100%',
+                    p: 1.25,
+                    border: '1px dashed',
+                    borderColor: 'primary.main',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    bgcolor: 'background.paper',
+                    transition: 'background-color 120ms ease, border-color 120ms ease',
+                    '&:hover': {
+                      bgcolor: 'action.selected',
+                      borderColor: 'primary.dark',
+                    },
+                    '&:focus-visible': {
+                      outline: '2px solid',
+                      outlineColor: 'primary.main',
+                      outlineOffset: '2px',
+                    },
+                  }}
+                >
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    + Add Mapping
+                  </Typography>
+                </Box>
               </Box>
             )}
             {entries.map((entry, index) => {
@@ -675,17 +725,17 @@ export const MacroPresetManager = ({
                       <DeleteIcon />
                     </IconButton>
                     <TextField
-                      label="Trigger"
+                      label="Key"
                       value={entry.triggerKey}
                       onChange={(e) => updateEntry(index, { ...entry, triggerKey: e.target.value.slice(0, 1) })}
                       sx={{ width: 96 }}
                     />
                     <FormControl sx={{ minWidth: 220 }}>
-                      <InputLabel id={`macro-type-${index}`}>Type</InputLabel>
+                      <InputLabel id={`macro-type-${index}`}>Action Type</InputLabel>
                       <Select
                         labelId={`macro-type-${index}`}
                         value={entry.macroType}
-                        label="Type"
+                        label="Action Type"
                         onChange={(e) => updateEntryType(index, (e.target as HTMLInputElement).value as MacroEntryType)}
                       >
                         {MACRO_TYPE_OPTIONS.map((type) => (
@@ -698,7 +748,7 @@ export const MacroPresetManager = ({
 
                     {entry.macroType === 'CHAR_INSERT' && (
                       <TextField
-                        label="Char"
+                        label="Character"
                         value={payload.char || ''}
                         onChange={(e) =>
                           updateEntry(index, {
@@ -780,7 +830,7 @@ export const MacroPresetManager = ({
                       </FormControl>
                     )}
                   </Stack>
-                  {!!validation.rowErrors[index]?.length && (
+                  {showValidationHints && !!validation.rowErrors[index]?.length && (
                     <Box sx={{ mt: 0.75 }}>
                       {validation.rowErrors[index].map((err, errIdx) => (
                         <Typography
@@ -835,7 +885,7 @@ export const MacroPresetManager = ({
               }}
             >
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                + Add Entry
+                + Add Mapping
               </Typography>
             </Box>
           )}
@@ -843,7 +893,7 @@ export const MacroPresetManager = ({
           {mode === 'edit' && (
             <>
               <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-                3. Save New Version
+                Save New Version
               </Typography>
               <TextField
                 label="Change Note"
@@ -857,34 +907,28 @@ export const MacroPresetManager = ({
                   Save New Version
                 </Button>
               </Stack>
-              {!!saveDisabledReason && (
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                  {saveDisabledReason}
-                </Typography>
-              )}
             </>
           )}
 
           {mode === 'create' && (
             <>
-              <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
-                3. Create Preset
-              </Typography>
-              <Stack direction="row" justifyContent="flex-end">
+              <Box
+                sx={{
+                  borderRadius: '8px',
+                  p: 1,
+                }}
+              >
                 <Button
-                  size="small"
+                  fullWidth
                   variant="contained"
+                  size="large"
                   onClick={onCreatePreset}
                   disabled={Boolean(createDisabledReason)}
+                  sx={{ minHeight: 48, fontWeight: 700 }}
                 >
                   Create Preset
                 </Button>
-              </Stack>
-              {!!createDisabledReason && (
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                  {createDisabledReason}
-                </Typography>
-              )}
+              </Box>
             </>
           )}
         </>

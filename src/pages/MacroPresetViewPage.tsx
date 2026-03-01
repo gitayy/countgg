@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import {
+  getMacroPreset,
   getMacroPresetByHandle,
   getMacroPresetThreadUsage,
   getMacroPresetVersion,
@@ -47,8 +48,8 @@ const buildEntryRows = (entries: MacroEntry[]): string[] => {
 }
 
 export const MacroPresetViewPage = () => {
-  const { handle } = useParams<{ handle: string }>()
-  const [preset, setGroup] = useState<MacroPreset | null>(null)
+  const { presetRef, versionNumber } = useParams<{ presetRef: string; versionNumber?: string }>()
+  const [preset, setPreset] = useState<MacroPreset | null>(null)
   const [versions, setVersions] = useState<MacroPresetVersion[]>([])
   const [latestEntries, setLatestEntries] = useState<MacroEntry[]>([])
   const [usageRows, setUsageRows] = useState<MacroPresetThreadUsageRow[]>([])
@@ -64,31 +65,43 @@ export const MacroPresetViewPage = () => {
         setLoading(false)
         return
       }
-      if (!handle?.trim()) {
-        setError('Macro handle is missing.')
+      if (!presetRef?.trim()) {
+        setError('Macro preset reference is missing.')
+        setLoading(false)
+        return
+      }
+      const requestedVersion = versionNumber?.trim()
+      if (requestedVersion && !/^\d+$/.test(requestedVersion)) {
+        setError('Version number must be numeric.')
         setLoading(false)
         return
       }
       setLoading(true)
       setError('')
       try {
-        const readRes = await getMacroPresetByHandle(handle.trim().toLowerCase())
-        const loadedGroup = readRes.data.preset
-        setGroup(loadedGroup)
+        const normalizedRef = presetRef.trim()
+        const readRes = /^\d+$/.test(normalizedRef)
+          ? await getMacroPreset(parseInt(normalizedRef, 10))
+          : await getMacroPresetByHandle(normalizedRef.toLowerCase())
+        const loadedPreset = readRes.data.preset
+        setPreset(loadedPreset)
 
         const [versionsRes, usageRes] = await Promise.all([
-          getMacroPresetVersions(loadedGroup.id),
-          getMacroPresetThreadUsage(loadedGroup.id, 10),
+          getMacroPresetVersions(loadedPreset.id),
+          getMacroPresetThreadUsage(loadedPreset.id, 10),
         ])
         const loadedVersions = versionsRes.data || []
         setVersions(loadedVersions)
         setUsageRows(usageRes.data.items || [])
 
-        const latestVersion = loadedVersions[0]
-        if (latestVersion?.versionNumber) {
+        const selectedVersionNumber = requestedVersion
+          ? parseInt(requestedVersion, 10)
+          : loadedVersions[0]?.versionNumber
+
+        if (selectedVersionNumber) {
           const fullVersion = await getMacroPresetVersion(
-            loadedGroup.id,
-            latestVersion.versionNumber,
+            loadedPreset.id,
+            selectedVersionNumber,
           )
           setLatestEntries(fullVersion.data.entries || [])
         } else {
@@ -101,7 +114,7 @@ export const MacroPresetViewPage = () => {
       }
     }
     load()
-  }, [handle])
+  }, [presetRef, versionNumber])
 
   if (loading) {
     return (
@@ -159,7 +172,7 @@ export const MacroPresetViewPage = () => {
               </Typography>
               <Stack direction="row" spacing={0.75} sx={{ mt: 1, flexWrap: 'wrap' }}>
                 <Chip size="small" variant="outlined" label={`ID ${preset.id}`} />
-                <Chip size="small" variant="outlined" label={`${latestEntries.length} entries`} />
+                <Chip size="small" variant="outlined" label={`${latestEntries.length} mappings`} />
                 <Chip
                   size="small"
                   variant="outlined"
@@ -188,7 +201,7 @@ export const MacroPresetViewPage = () => {
             ))}
             {macroRows.length === 0 && (
               <Typography variant="body2" color="text.secondary">
-                No macro entries in latest version.
+                No mappings in latest version.
               </Typography>
             )}
           </Stack>

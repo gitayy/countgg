@@ -398,7 +398,7 @@ export const MacroPresetsPage = () => {
         >
           <Tab disableRipple label="Discover" value="discover" />
           <Tab disableRipple label="Create" value="create" />
-          <Tab disableRipple label="Edit Mine" value="edit" />
+          <Tab disableRipple label="Edit" value="edit" />
         </Tabs>
       </Stack>
       </Box>
@@ -491,7 +491,7 @@ export const MacroPresetsPage = () => {
                         variant="outlined"
                         label={`v${groupPreviewById[preset.id]?.versionNumber ?? '-'}`}
                       />
-                      <Chip size="small" variant="outlined" label={`${entries.length} entries`} />
+                      <Chip size="small" variant="outlined" label={`${entries.length} mappings`} />
                       {ownedGroupIds.has(preset.id) && (
                         <Chip size="small" color="success" variant="outlined" label="Owned" />
                       )}
@@ -538,7 +538,7 @@ export const MacroPresetsPage = () => {
                   ))}
                   {previewRows.length === 0 && (
                     <Typography variant="caption" color="text.secondary">
-                      No macro entries in latest version.
+                      No mappings in latest version.
                     </Typography>
                   )}
                 </Stack>

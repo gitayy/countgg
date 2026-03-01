@@ -47,8 +47,8 @@ describe('MacroPresetManager', () => {
     fireEvent.change(screen.getByLabelText('Description'), {
       target: { value: 'Starter macros' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Add First Entry' }))
-    fireEvent.change(screen.getByLabelText('Trigger'), {
+    fireEvent.click(screen.getByRole('button', { name: /\+ Add Mapping/i }))
+    fireEvent.change(screen.getByLabelText('Key'), {
       target: { value: 'q' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Create Preset' }))
@@ -135,8 +135,8 @@ describe('MacroPresetManager', () => {
     fireEvent.change(screen.getByLabelText('Handle (URL Name)'), {
       target: { value: 'copy-draft-preset' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Add First Entry' }))
-    fireEvent.change(screen.getByLabelText('Trigger'), {
+    fireEvent.click(screen.getByRole('button', { name: /\+ Add Mapping/i }))
+    fireEvent.change(screen.getByLabelText('Key'), {
       target: { value: 'q' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Create Preset' }))
