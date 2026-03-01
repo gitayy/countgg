@@ -355,6 +355,9 @@ export const MacroGroupManager = ({ macroGroups, refreshMacroGroups }: Props) =>
                   sx={{ p: 1, border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}
                 >
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
+                    <IconButton color="error" onClick={() => removeEntry(index)}>
+                      <DeleteIcon />
+                    </IconButton>
                     <TextField
                       label="Trigger"
                       value={entry.triggerKey}
@@ -461,9 +464,6 @@ export const MacroGroupManager = ({ macroGroups, refreshMacroGroups }: Props) =>
                       </FormControl>
                     )}
 
-                    <IconButton color="error" onClick={() => removeEntry(index)}>
-                      <DeleteIcon />
-                    </IconButton>
                   </Stack>
                 </Box>
               )

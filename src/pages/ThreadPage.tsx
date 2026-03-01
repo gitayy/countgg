@@ -199,6 +199,46 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     [availableMacroGroups, ownedMacroGroupIds],
   )
   const hasMacroEntries = !!activeMacroRuntime.enabled && (activeMacroRuntime.entries?.length || 0) > 0
+  const groupedActiveMacroEntries = useMemo(() => {
+    const grouped = new Map<string, typeof activeMacroRuntime.entries>()
+    const toGroupKey = (macroType: string) => {
+      if (macroType === 'SUBMIT' || macroType === 'SUBMIT_ACTION') return 'SUBMIT_MERGED'
+      return macroType
+    }
+    const groupOrder = ['CHAR_INSERT', 'SUBMIT_MERGED', 'ACTION', 'COMBO', 'TOGGLE'] as const
+    const groupLabels: Record<string, string> = {
+      CHAR_INSERT: 'Character Remapping',
+      ACTION: 'Action',
+      SUBMIT_MERGED: 'Submit',
+      COMBO: 'Combo',
+      TOGGLE: 'Toggle',
+    }
+
+    for (const entry of activeMacroRuntime.entries || []) {
+      const key = toGroupKey(entry.macroType)
+      const bucket = grouped.get(key) || []
+      bucket.push(entry)
+      grouped.set(key, bucket)
+    }
+
+    return groupOrder
+      .filter((type) => grouped.has(type))
+      .map((type) => ({
+        type,
+        label: groupLabels[type] || type,
+        entries: (grouped.get(type) || []).slice().sort((a, b) => a.triggerKey.localeCompare(b.triggerKey)),
+      }))
+  }, [activeMacroRuntime.entries])
+  const toggleHotkeySummary = useMemo(() => {
+    const keys = new Set<string>()
+    keys.add(MACRO_TOGGLE_KEY)
+    for (const entry of activeMacroRuntime.entries || []) {
+      if (entry.macroType === 'TOGGLE' && entry.triggerKey) {
+        keys.add(entry.triggerKey)
+      }
+    }
+    return Array.from(keys).sort((a, b) => a.localeCompare(b)).join(', ')
+  }, [activeMacroRuntime.entries])
   const describeActiveMacroEntry = useCallback((entry: any) => {
     const payload = entry?.payloadJson || {}
     switch (entry?.macroType) {
@@ -2906,29 +2946,38 @@ useEffect(() => {
                 {activeMacroRuntime.entries?.length > 0 && (
                   <Box sx={{ mt: 0.5 }}>
                     <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mb: 0.25 }}>
-                      <Chip
-                        size="small"
-                        color={macroHotkeysEnabled ? 'success' : 'default'}
-                        label={macroHotkeysEnabled ? 'Enabled' : 'Disabled'}
-                      />
                       <Button
                         size="small"
                         variant="outlined"
                         onClick={() => setMacroHotkeysEnabled((prev) => !prev)}
                       >
-                        Toggle
+                        Toggle ({toggleHotkeySummary})
                       </Button>
+                      <Chip
+                        size="small"
+                        color={macroHotkeysEnabled ? 'success' : 'default'}
+                        label={macroHotkeysEnabled ? 'Enabled' : 'Disabled'}
+                      />
                     </Stack>
                     <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.1 }}>
                       {activeMacroGroupName || 'Macro Group'} (v{activeMacroRuntime.macroGroupVersionNumber ?? '?'})
                     </Typography>
-                    <Typography variant="caption" display="block" color="text.secondary" sx={{ lineHeight: 1.1 }}>
-                      {MACRO_TOGGLE_KEY} toggles macros
-                    </Typography>
-                    {activeMacroRuntime.entries.map((entry) => (
-                      <Typography key={entry.id} variant="caption" display="block" color="text.secondary" sx={{ lineHeight: 1.1 }}>
-                        {entry.triggerKey} -&gt; {describeActiveMacroEntry(entry)}
-                      </Typography>
+                    {groupedActiveMacroEntries.map((group) => (
+                      <Box key={group.type} sx={{ mt: 0.5 }}>
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          color="text.secondary"
+                          sx={{ fontWeight: 700, lineHeight: 1.1 }}
+                        >
+                          {group.label}
+                        </Typography>
+                        {group.entries.map((entry) => (
+                          <Typography key={entry.id} variant="caption" display="block" color="text.secondary" sx={{ lineHeight: 1.1 }}>
+                            {entry.triggerKey}: {describeActiveMacroEntry(entry)}
+                          </Typography>
+                        ))}
+                      </Box>
                     ))}
                   </Box>
                 )}
@@ -3360,6 +3409,8 @@ useEffect(() => {
     isSimMode,
     activeMacroRuntime,
     hasMacroEntries,
+    groupedActiveMacroEntries,
+    toggleHotkeySummary,
     macroHotkeysEnabled,
   ])
 
