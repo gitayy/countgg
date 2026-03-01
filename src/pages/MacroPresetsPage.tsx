@@ -411,9 +411,6 @@ export const MacroPresetsPage = () => {
       <Typography variant="h4" sx={{ mb: 1 }}>
         Macro Presets
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Discover public presets or build and version your own.
-      </Typography>
 
       {error && (
         <Alert sx={{ mb: 2 }} severity="error">
@@ -464,12 +461,9 @@ export const MacroPresetsPage = () => {
 
       {viewMode === 'discover' && (
         <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper', mb: 2 }}>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Public Presets
-          </Typography>
           <TextField
-            label="Search & Filter Public Presets"
-            helperText='Use plain text or filters: creator:pull name:test1 handle:test1 thread:"main"'
+            label="Search"
+            helperText='Use plain text, or filters: creator:pull name:test1 handle:test1 thread:"main"'
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
