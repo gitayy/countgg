@@ -111,7 +111,6 @@ import CommunityNotes from '../components/thread/CommunityNotes'
 import { ThreadStatsPanel } from '../components/thread/ThreadStatsPanel'
 import RollVisualizerHost, { RollVisualizerHostHandle } from '../components/thread/RollVisualizerHost'
 import { buildMacroSubmitMetadata } from '../utils/macroRuntime'
-import { prioritizeOwnedMacroPresets } from '../utils/macroPresets'
 
 let imsorryfortheglobalpull = 'DISABLED'
 type LoadSpikeSimMode = 'baseline' | 'dup_listener' | 'post_load_overlap' | 'cache_overlap' | 'mixed_direction'
@@ -174,12 +173,15 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const macroPresetsEnabled = macroPresetsFeatureEnabled
 
   const socket = useContext(SocketContext)
+  const { user, counter, loading, challenges, setChallenges, miscSettings, setMiscSettings, preferences, setPreferences } = useContext(UserContext)
   const [socketStatus, setSocketStatus] = useState('CONNECTING')
   const [socketViewers, setSocketViewers] = useState(1)
   const [threadStreak, setThreadStreak] = useState<number | undefined>(undefined)
   const [threadMacroPresetId, setThreadMacroPresetId] = useState<number | null>(null)
   const [availableMacroPresets, setAvailableMacroPresets] = useState<MacroPreset[]>([])
-  const [ownedMacroPresetIds, setOwnedMacroPresetIds] = useState<Set<number>>(new Set())
+  const [visibleMacroPresetIds, setVisibleMacroPresetIds] = useState<number[]>([])
+  const [macroPresetSearchInput, setMacroPresetSearchInput] = useState('')
+  const [macroPresetSearchLoading, setMacroPresetSearchLoading] = useState(false)
   const [recommendedMacroPresets, setRecommendedMacroPresets] = useState<ThreadMacroPresetUsageRow[]>([])
   const [activeMacroRuntime, setActiveMacroRuntime] = useState<ActiveMacroRuntime>({
     source: 'none',
@@ -191,16 +193,11 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   })
   const [macroHotkeysEnabled, setMacroHotkeysEnabled] = useState(true)
   const [macroSelectionSaving, setMacroSelectionSaving] = useState(false)
-  const macroPresetsLoadedForUserRef = useRef<string | null>(null)
   const activeMacroPresetName = useMemo(
     () =>
       availableMacroPresets.find((preset) => preset.id === activeMacroRuntime.macroPresetId)?.name ||
       null,
     [availableMacroPresets, activeMacroRuntime.macroPresetId],
-  )
-  const sortedAvailableMacroPresets = useMemo(
-    () => prioritizeOwnedMacroPresets(availableMacroPresets, ownedMacroPresetIds),
-    [availableMacroPresets, ownedMacroPresetIds],
   )
   const threadUsageCountByMacroPresetId = useMemo(() => {
     const usage = new Map<number, number>()
@@ -238,36 +235,64 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     return 'None'
   }, [activeMacroRuntime.source])
   const threadMacroPresetOptions = useMemo<ThreadMacroPresetOption[]>(() => {
-    const byUsageThenName = [...sortedAvailableMacroPresets].sort((a, b) => {
+    const presetById = new Map(availableMacroPresets.map((preset) => [preset.id, preset]))
+    const visiblePresets = visibleMacroPresetIds
+      .map((id) => presetById.get(id))
+      .filter(Boolean) as MacroPreset[]
+    const isOwned = (preset: MacroPreset) =>
+      !!counter?.uuid && preset.ownerCounter?.uuid === counter.uuid
+
+    const byUsageThenName = [...visiblePresets].sort((a, b) => {
       const usageDiff =
         (threadUsageCountByMacroPresetId.get(b.id) || 0) -
         (threadUsageCountByMacroPresetId.get(a.id) || 0)
       if (usageDiff !== 0) return usageDiff
       return a.name.localeCompare(b.name)
     })
-    const topSet = new Set(topThreadMacroPresetIds)
-    const topOptions = topThreadMacroPresetIds
-      .map((id) => byUsageThenName.find((preset) => preset.id === id))
-      .filter(Boolean)
-      .map((preset) => ({
-        ...(preset as MacroPreset),
-        category: 'Top 3 For This Thread' as const,
-        threadUsageCount: threadUsageCountByMacroPresetId.get((preset as MacroPreset).id) || 0,
-      }))
+    const searchQuery = macroPresetSearchInput.trim()
+    const topSet = new Set(searchQuery ? [] : topThreadMacroPresetIds)
+    const topOptions = searchQuery
+      ? []
+      : topThreadMacroPresetIds
+          .map((id) => byUsageThenName.find((preset) => preset.id === id))
+          .filter(Boolean)
+          .map((preset) => ({
+            ...(preset as MacroPreset),
+            category: 'Top 3 For This Thread' as const,
+            threadUsageCount: threadUsageCountByMacroPresetId.get((preset as MacroPreset).id) || 0,
+          }))
     const mineOptions = byUsageThenName
-      .filter((preset) => ownedMacroPresetIds.has(preset.id) && !topSet.has(preset.id))
+      .filter((preset) => isOwned(preset) && !topSet.has(preset.id))
       .map((preset) => ({
         ...preset,
         category: 'Your Macros' as const,
         threadUsageCount: threadUsageCountByMacroPresetId.get(preset.id) || 0,
       }))
     const otherOptions = byUsageThenName
-      .filter((preset) => !ownedMacroPresetIds.has(preset.id) && !topSet.has(preset.id))
+      .filter((preset) => !isOwned(preset) && !topSet.has(preset.id))
       .map((preset) => ({
         ...preset,
         category: 'Other Macros' as const,
         threadUsageCount: threadUsageCountByMacroPresetId.get(preset.id) || 0,
       }))
+    const selectedPreset =
+      effectiveThreadMacroPresetId !== null
+        ? availableMacroPresets.find((preset) => preset.id === effectiveThreadMacroPresetId)
+        : undefined
+    const shouldPinSelected =
+      !!selectedPreset &&
+      !topOptions.some((option) => option.id === selectedPreset.id) &&
+      !mineOptions.some((option) => option.id === selectedPreset.id) &&
+      !otherOptions.some((option) => option.id === selectedPreset.id)
+    const pinnedSelectedOptions = shouldPinSelected
+      ? [
+          {
+            ...selectedPreset,
+            category: isOwned(selectedPreset) ? ('Your Macros' as const) : ('Other Macros' as const),
+            threadUsageCount: threadUsageCountByMacroPresetId.get(selectedPreset.id) || 0,
+          },
+        ]
+      : []
     return [
       {
         id: -1,
@@ -282,15 +307,38 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         threadUsageCount: 0,
       },
       ...topOptions,
+      ...pinnedSelectedOptions,
       ...mineOptions,
       ...otherOptions,
     ]
   }, [
-    sortedAvailableMacroPresets,
-    ownedMacroPresetIds,
+    availableMacroPresets,
+    visibleMacroPresetIds,
+    macroPresetSearchInput,
+    counter?.uuid,
     topThreadMacroPresetIds,
     threadUsageCountByMacroPresetId,
+    effectiveThreadMacroPresetId,
   ])
+  const selectedThreadMacroPresetValue = useMemo<ThreadMacroPresetOption | null>(() => {
+    if (effectiveThreadMacroPresetId === null) return threadMacroPresetOptions[0]
+    const existing = threadMacroPresetOptions.find(
+      (preset) => preset.id === effectiveThreadMacroPresetId,
+    )
+    if (existing) return existing
+    return {
+      id: effectiveThreadMacroPresetId,
+      name: activeMacroPresetName || `Preset #${effectiveThreadMacroPresetId}`,
+      handle: '',
+      description: '',
+      visibility: 'PUBLIC',
+      isDeleted: false,
+      createdAt: '',
+      updatedAt: '',
+      category: 'Other Macros',
+      threadUsageCount: 0,
+    }
+  }, [effectiveThreadMacroPresetId, threadMacroPresetOptions, activeMacroPresetName])
   const hasMacroEntries = !!activeMacroRuntime.enabled && (activeMacroRuntime.entries?.length || 0) > 0
   const groupedActiveMacroEntries = useMemo(() => {
     const grouped = new Map<string, typeof activeMacroRuntime.entries>()
@@ -355,7 +403,6 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const previousRecentCountsLoadingRef = useRef(false)
   const duplicateListenerUuidRef = useRef<string | undefined>(undefined)
 
-  const { user, counter, loading, challenges, setChallenges, miscSettings, setMiscSettings, preferences, setPreferences } = useContext(UserContext)
   const { allThreads, allThreadsLoading, setAllThreadsLoading } = useContext(ThreadsContext)
   const { thread, threadLoading, setThread } = useFetchThread(thread_name)
   const {
@@ -2551,35 +2598,47 @@ const [resetPrefs, setResetPrefs] = useState<boolean>(false);
 
   useEffect(() => {
     let ignore = false
-    const loadMacroPresets = async () => {
-      if (!macroPresetsEnabled || !user?.uuid) {
-        macroPresetsLoadedForUserRef.current = null
-        setAvailableMacroPresets([])
-        setOwnedMacroPresetIds(new Set())
-        return
-      }
-      if (macroPresetsLoadedForUserRef.current === user.uuid) {
-        return
-      }
-      try {
-        const [allRes, mineRes] = await Promise.all([
-          listMacroPresets(1, 100),
-          listMacroPresets(1, 100, undefined, true),
-        ])
-        if (!ignore) {
-          setAvailableMacroPresets(allRes.data.items || [])
-          setOwnedMacroPresetIds(new Set((mineRes.data.items || []).map((item) => item.id)))
-          macroPresetsLoadedForUserRef.current = user.uuid
-        }
-      } catch (err) {
-        // Keep thread page functional if macro presets fail to load.
-      }
+    if (!macroPresetsEnabled || !user?.uuid) {
+      setAvailableMacroPresets([])
+      setVisibleMacroPresetIds([])
+      return
     }
-    loadMacroPresets()
+    setMacroPresetSearchLoading(true)
+    const timer = setTimeout(async () => {
+      try {
+        const search = macroPresetSearchInput.trim() || undefined
+        const allRes = await listMacroPresets(
+          1,
+          100,
+          search,
+          undefined,
+          undefined,
+          thread?.uuid,
+        )
+        if (ignore) return
+        const fetched = allRes.data.items || []
+        setAvailableMacroPresets((prev) => {
+          const byId = new Map<number, MacroPreset>()
+          for (const item of prev) byId.set(item.id, item)
+          for (const item of fetched) byId.set(item.id, item)
+          return Array.from(byId.values())
+        })
+        setVisibleMacroPresetIds(fetched.map((item) => item.id))
+      } catch (err) {
+        if (!ignore) {
+          setVisibleMacroPresetIds([])
+        }
+      } finally {
+        if (!ignore) {
+          setMacroPresetSearchLoading(false)
+        }
+      }
+    }, 250)
     return () => {
       ignore = true
+      clearTimeout(timer)
     }
-  }, [macroPresetsEnabled, user?.uuid])
+  }, [macroPresetsEnabled, user?.uuid, macroPresetSearchInput, thread?.uuid])
 
   useEffect(() => {
     let ignore = false
@@ -2588,7 +2647,18 @@ const [resetPrefs, setResetPrefs] = useState<boolean>(false);
     try {
       const res = await getRecommendedMacroPresets(thread.uuid, 10)
       if (!ignore) {
-        setRecommendedMacroPresets(res.data.items || [])
+        const items = res.data.items || []
+        setRecommendedMacroPresets(items)
+        setAvailableMacroPresets((prev) => {
+          const byId = new Map<number, MacroPreset>()
+          for (const item of prev) byId.set(item.id, item)
+          for (const row of items) {
+            if (row.macroPreset?.id) {
+              byId.set(row.macroPreset.id, row.macroPreset)
+            }
+          }
+          return Array.from(byId.values())
+        })
       }
     } catch (err) {
       if (!ignore) {
@@ -3075,23 +3145,14 @@ useEffect(() => {
                   size="small"
                   sx={{ mb: 0.5 }}
                   options={threadMacroPresetOptions}
+                  loading={macroPresetSearchLoading}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
                   groupBy={(option) => option.category}
                   getOptionLabel={(option) => option.name}
-                  filterOptions={(options, state) => {
-                    const q = state.inputValue.trim().toLowerCase()
-                    if (!q) return options
-                    return options.filter(
-                      (opt) =>
-                        opt.name.toLowerCase().includes(q) ||
-                        (opt.handle || '').toLowerCase().includes(q) ||
-                        opt.description.toLowerCase().includes(q),
-                    )
-                  }}
-                  value={
-                    effectiveThreadMacroPresetId === null
-                      ? threadMacroPresetOptions[0]
-                      : threadMacroPresetOptions.find((preset) => preset.id === effectiveThreadMacroPresetId) || null
-                  }
+                  filterOptions={(options) => options}
+                  inputValue={macroPresetSearchInput}
+                  onInputChange={(_, value) => setMacroPresetSearchInput(value)}
+                  value={selectedThreadMacroPresetValue}
                   onChange={(_, value) => {
                     saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
                   }}
@@ -3383,23 +3444,14 @@ useEffect(() => {
           <Autocomplete
             sx={{ minWidth: 320, maxWidth: 640, width: '100%' }}
             options={threadMacroPresetOptions}
+            loading={macroPresetSearchLoading}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
             groupBy={(option) => option.category}
             getOptionLabel={(option) => option.name}
-            filterOptions={(options, state) => {
-              const q = state.inputValue.trim().toLowerCase()
-              if (!q) return options
-              return options.filter(
-                (opt) =>
-                  opt.name.toLowerCase().includes(q) ||
-                  (opt.handle || '').toLowerCase().includes(q) ||
-                  opt.description.toLowerCase().includes(q),
-              )
-            }}
-            value={
-              effectiveThreadMacroPresetId === null
-                ? threadMacroPresetOptions[0]
-                : threadMacroPresetOptions.find((preset) => preset.id === effectiveThreadMacroPresetId) || null
-            }
+            filterOptions={(options) => options}
+            inputValue={macroPresetSearchInput}
+            onInputChange={(_, value) => setMacroPresetSearchInput(value)}
+            value={selectedThreadMacroPresetValue}
             onChange={(_, value) => {
               saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
             }}
@@ -3604,6 +3656,10 @@ useEffect(() => {
     groupedActiveMacroEntries,
     toggleHotkeySummary,
     macroHotkeysEnabled,
+    threadMacroPresetOptions,
+    selectedThreadMacroPresetValue,
+    macroPresetSearchInput,
+    macroPresetSearchLoading,
   ])
 
   const loadingStatuses = [

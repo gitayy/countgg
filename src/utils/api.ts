@@ -21,6 +21,7 @@ import {
   ThreadMacroPresetUsageResponse,
   ActiveMacroRuntime,
   MacroPresetThreadUsageResponse,
+  MacroPresetSummaryResponse,
 } from './types'
 
 const CONFIG: AxiosRequestConfig = { withCredentials: true }
@@ -311,9 +312,10 @@ export const listMacroPresets = (
   search?: string,
   mine?: boolean,
   owner?: string,
+  threadId?: string,
 ) =>
   axios.get<MacroPresetListResponse>(`${API_URL}/macro-presets`, {
-    params: { page, limit, search, mine: mine ? '1' : undefined, owner },
+    params: { page, limit, search, mine: mine ? '1' : undefined, owner, threadId },
     ...CONFIG,
   })
 
@@ -334,6 +336,15 @@ export const getMacroPresetThreadUsage = (id: number, limit = 5) =>
       ...CONFIG,
     },
   )
+
+export const getMacroPresetSummaries = (ids: number[], usageLimit = 3) =>
+  axios.get<MacroPresetSummaryResponse>(`${API_URL}/macro-presets/summaries`, {
+    params: {
+      ids: ids.join(','),
+      usageLimit,
+    },
+    ...CONFIG,
+  })
 
 export const enqueueMacroPresetUpdate = (
   id: number,

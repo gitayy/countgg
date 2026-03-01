@@ -488,6 +488,21 @@ export type MacroPresetThreadUsageResponse = {
   items: MacroPresetThreadUsageRow[]
 }
 
+export type MacroPresetSummaryResponse = {
+  items: Array<{
+    macroPresetId: number
+    latestVersionNumber: number | null
+    entries: MacroEntry[]
+    threadUsage: Array<{
+      threadId: string
+      threadName: string
+      threadTitle: string
+      appliesCount: number
+    }>
+    threadUsageTotal: number
+  }>
+}
+
 export type ActiveMacroRuntime = {
   source: 'none' | 'global' | 'thread'
   enabled: boolean

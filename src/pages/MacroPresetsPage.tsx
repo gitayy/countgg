@@ -18,9 +18,7 @@ import {
 import { Link as RouterLink } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
 import {
-  getMacroPresetThreadUsage,
-  getMacroPresetVersion,
-  getMacroPresetVersions,
+  getMacroPresetSummaries,
   listMacroPresets,
   macroPresetsFeatureEnabled,
 } from '../utils/api'
@@ -101,6 +99,7 @@ export const MacroPresetsPage = () => {
       { threadId: string; threadName: string; threadTitle?: string; appliesCount: number }[]
     >
   >({})
+  const [groupThreadUsageTotalById, setGroupThreadUsageTotalById] = useState<Record<number, number>>({})
   const [draftSeed, setDraftSeed] = useState<{
     token: number
     name: string
@@ -130,56 +129,42 @@ export const MacroPresetsPage = () => {
   }, [])
 
   const hydrateGroupDetails = useCallback(async (presets: MacroPreset[]) => {
+    const presetIds = presets.map((preset) => preset.id)
+    if (presetIds.length === 0) {
+      setGroupPreviewById({})
+      setGroupThreadUsageById({})
+      setGroupThreadUsageTotalById({})
+      return
+    }
+
+    const summaryRes = await getMacroPresetSummaries(presetIds, 3)
     const previews: Record<number, { versionNumber: number | null; entries: MacroEntry[] }> = {}
     const usage: Record<
       number,
       { threadId: string; threadName: string; threadTitle?: string; appliesCount: number }[]
     > = {}
-
-    await Promise.all(
-      presets.map(async (preset) => {
-        const [versionsResult, usageResult] = await Promise.allSettled([
-          getMacroPresetVersions(preset.id),
-          getMacroPresetThreadUsage(preset.id, 3),
-        ])
-
-        if (versionsResult.status === 'fulfilled') {
-          const latest = versionsResult.value.data?.[0]
-          if (latest?.versionNumber) {
-            try {
-              const versionRes = await getMacroPresetVersion(preset.id, latest.versionNumber)
-              previews[preset.id] = {
-                versionNumber: latest.versionNumber,
-                entries: versionRes.data.entries || [],
-              }
-            } catch {
-              previews[preset.id] = { versionNumber: null, entries: [] }
-            }
-          } else {
-            previews[preset.id] = {
-              versionNumber: null,
-              entries: [],
-            }
-          }
-        } else {
-          previews[preset.id] = { versionNumber: null, entries: [] }
-        }
-
-        if (usageResult.status === 'fulfilled') {
-          usage[preset.id] = (usageResult.value.data.items || []).map((row) => ({
-            threadId: row.threadId,
-            threadName: row.threadName,
-            threadTitle: row.threadTitle,
-            appliesCount: row.appliesCount,
-          }))
-        } else {
-          usage[preset.id] = []
-        }
-      }),
+    const usageTotals: Record<number, number> = {}
+    const summariesById = new Map(
+      (summaryRes.data.items || []).map((item) => [item.macroPresetId, item]),
     )
+    presets.forEach((preset) => {
+      const summary = summariesById.get(preset.id)
+      previews[preset.id] = {
+        versionNumber: summary?.latestVersionNumber ?? null,
+        entries: summary?.entries || [],
+      }
+      usage[preset.id] = (summary?.threadUsage || []).map((row) => ({
+        threadId: row.threadId,
+        threadName: row.threadName,
+        threadTitle: row.threadTitle,
+        appliesCount: row.appliesCount,
+      }))
+      usageTotals[preset.id] = summary?.threadUsageTotal ?? 0
+    })
 
     setGroupPreviewById(previews)
     setGroupThreadUsageById(usage)
+    setGroupThreadUsageTotalById(usageTotals)
   }, [])
 
   const loadMacroPresets = useCallback(async () => {
@@ -523,8 +508,8 @@ export const MacroPresetsPage = () => {
                       Copy To Draft
                     </Button>
                     <Typography variant="caption" color="text.secondary">
-                      {usageRows.length > 0
-                        ? `${usageRows.length} thread${usageRows.length > 1 ? 's' : ''} using this`
+                      {(groupThreadUsageTotalById[preset.id] || 0) > 0
+                        ? `${groupThreadUsageTotalById[preset.id]} thread${groupThreadUsageTotalById[preset.id] > 1 ? 's' : ''} using this`
                         : 'No users set this on a thread yet'}
                     </Typography>
                   </Stack>
