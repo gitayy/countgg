@@ -644,12 +644,15 @@ export const MacroPresetManager = ({
                 sx={{
                   p: 1.5,
                   border: '1px dashed',
-                  borderColor: 'divider',
+                  borderColor: 'primary.main',
                   borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
+                  justifyContent: 'center',
+                  flexDirection: 'column',
                   gap: 1,
+                  minHeight: 74,
+                  bgcolor: 'action.hover',
                 }}
               >
                 <Typography variant="body2" color="text.secondary">
@@ -796,11 +799,45 @@ export const MacroPresetManager = ({
             })}
           </Stack>
           {entries.length > 0 && (
-            <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1 }}>
-              <Button variant="outlined" size="small" onClick={addEntry}>
-                Add Entry
-              </Button>
-            </Stack>
+            <Box
+              onClick={addEntry}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  addEntry()
+                }
+              }}
+              sx={{
+                mt: 1,
+                p: 1.5,
+                border: '1px dashed',
+                borderColor: 'primary.main',
+                borderRadius: '8px',
+                minHeight: 74,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'primary.main',
+                bgcolor: 'action.hover',
+                transition: 'background-color 120ms ease, border-color 120ms ease',
+                '&:hover': {
+                  bgcolor: 'action.selected',
+                  borderColor: 'primary.dark',
+                },
+                '&:focus-visible': {
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: '2px',
+                },
+              }}
+            >
+              <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                + Add Entry
+              </Typography>
+            </Box>
           )}
 
           {mode === 'edit' && (
@@ -866,4 +903,3 @@ export const MacroPresetManager = ({
 }
 
 export default MacroPresetManager
-

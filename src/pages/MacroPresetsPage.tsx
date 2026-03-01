@@ -400,10 +400,6 @@ export const MacroPresetsPage = () => {
           <Tab disableRipple label="Create" value="create" />
           <Tab disableRipple label="Edit Mine" value="edit" />
         </Tabs>
-        <Box sx={{ flexGrow: 1 }} />
-        <Button size="small" variant="outlined" color="inherit" component={RouterLink} to="/prefs">
-          Back To Prefs
-        </Button>
       </Stack>
       </Box>
 
