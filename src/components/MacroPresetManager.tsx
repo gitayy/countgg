@@ -17,7 +17,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete'
 import type { KeyboardEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { normalizeMacroTriggerKey } from '../utils/macroRuntime'
+import { isValidMacroTriggerKey, normalizeMacroTriggerKey } from '../utils/macroRuntime'
 import {
   createMacroPreset,
   enqueueMacroPresetUpdate,
@@ -174,6 +174,9 @@ const validateEntries = (entries: MacroEntryDraft[]): DraftValidationResult => {
         errs.push('Trigger is duplicated.')
       }
       seenTriggers.add(normalized)
+      if (!isValidMacroTriggerKey(normalized)) {
+        errs.push('Trigger key is not a supported key/code.')
+      }
     }
 
     if (entry.macroType === 'CHAR_INSERT') {

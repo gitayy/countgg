@@ -16,11 +16,58 @@ const MACRO_TRIGGER_KEY_ALIASES: Record<string, string> = {
   right: 'arrowright',
 }
 
+const NAMED_MACRO_TRIGGER_KEYS = new Set<string>([
+  'backspace',
+  'tab',
+  'enter',
+  'shift',
+  'control',
+  'alt',
+  'pause',
+  'capslock',
+  'escape',
+  'space',
+  'pageup',
+  'pagedown',
+  'end',
+  'home',
+  'arrowleft',
+  'arrowup',
+  'arrowright',
+  'arrowdown',
+  'printscreen',
+  'insert',
+  'delete',
+  'meta',
+  'contextmenu',
+  'numlock',
+  'scrolllock',
+])
+
+const CODE_STYLE_TRIGGER_PATTERNS = [
+  /^key[a-z]$/,
+  /^digit[0-9]$/,
+  /^numpad[0-9]$/,
+  /^f([1-9]|1[0-9]|2[0-4])$/,
+  /^(shift|control|alt|meta)(left|right)$/,
+  /^(backquote|minus|equal|bracketleft|bracketright|backslash|semicolon|quote|comma|period|slash)$/,
+  /^numpad(add|subtract|multiply|divide|decimal|enter|equal|comma|parenleft|parenright)$/,
+  /^intl(backslash|ro|yen)$/,
+]
+
 export const normalizeMacroTriggerKey = (key: string) => {
   const raw = (key || '').toLowerCase()
   if (raw === ' ' || raw === 'spacebar') return 'space'
   const normalized = raw.trim()
   return MACRO_TRIGGER_KEY_ALIASES[normalized] || normalized
+}
+
+export const isValidMacroTriggerKey = (key: string): boolean => {
+  const normalized = normalizeMacroTriggerKey(key)
+  if (!normalized || normalized.length > 64) return false
+  if (Array.from(normalized).length === 1) return true
+  if (NAMED_MACRO_TRIGGER_KEYS.has(normalized)) return true
+  return CODE_STYLE_TRIGGER_PATTERNS.some((pattern) => pattern.test(normalized))
 }
 
 export const getMacroTriggerCandidates = (key: string, code?: string): string[] => {
