@@ -178,8 +178,8 @@ const validateEntries = (entries: MacroEntryDraft[]): DraftValidationResult => {
 
     if (entry.macroType === 'CHAR_INSERT') {
       const c = typeof payload.char === 'string' ? payload.char : ''
-      if (!/^\S$/u.test(c)) {
-        errs.push('Character remap target must be one visible character.')
+      if (Array.from(c).length !== 1) {
+        errs.push('Character remap target must be exactly one character.')
       } else {
         const next = (charCounts.get(c) || 0) + 1
         charCounts.set(c, next)
@@ -978,7 +978,7 @@ export const MacroPresetManager = ({
                       <TextField
                         label="Repeat"
                         type="number"
-                        inputProps={{ min: 1, max: 10 }}
+                        inputProps={{ min: 1, max: MAX_REPEAT }}
                         value={payload.repeat ?? 1}
                         onChange={(e) =>
                           updateEntry(index, {
