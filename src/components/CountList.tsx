@@ -336,8 +336,14 @@ const CountList = memo((props: any) => {
           normalizedEventCode.startsWith('alt') ||
           normalizedEventCode.startsWith('meta') ||
           normalizedEventCode === 'contextmenu'
+        const isCtrlEnterSubmitCombo =
+          (event.ctrlKey || event.metaKey) && normalizedEventKey === 'enter'
 
-        if ((event.ctrlKey || event.metaKey || event.altKey) && !isStandaloneModifierTrigger) {
+        if (
+          (event.ctrlKey || event.metaKey || event.altKey) &&
+          !isStandaloneModifierTrigger &&
+          !isCtrlEnterSubmitCombo
+        ) {
           return
         }
 
@@ -441,6 +447,7 @@ const CountList = memo((props: any) => {
         return
       } else if (inputRef.current && inputRef.current === document.activeElement) {
         if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+          event.preventDefault()
           await handlePosting()
         }
       }
