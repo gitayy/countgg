@@ -52,10 +52,10 @@ export const findActiveMacroEntry = (
   runtime: ActiveMacroRuntime | undefined,
   key: string,
   code: string | undefined,
-  isDesktop: boolean,
+  _isDesktop: boolean,
   chatsOnly: boolean,
 ): MacroEntry | undefined => {
-  if (!runtime || !runtime.enabled || !isDesktop || chatsOnly || !runtime.entries?.length) {
+  if (!runtime || !runtime.enabled || chatsOnly || !runtime.entries?.length) {
     return undefined
   }
   const candidates = getMacroTriggerCandidates(key, code)

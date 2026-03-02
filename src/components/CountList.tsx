@@ -88,7 +88,6 @@ const CountList = memo((props: any) => {
   const getToggleMacroEntry = (key: string, code?: string): MacroEntry | undefined => {
     if (
       !props.activeMacroRuntime?.enabled ||
-      !isDesktop ||
       !!props.chatsOnly ||
       !props.activeMacroRuntime?.entries?.length
     ) {
@@ -325,12 +324,7 @@ const CountList = memo((props: any) => {
         event.preventDefault()
       }
 
-      if (
-        isDesktop &&
-        inputRef.current &&
-        inputRef.current === document.activeElement &&
-        !event.isComposing
-      ) {
+      if (inputRef.current && inputRef.current === document.activeElement && !event.isComposing) {
         const normalizedEventKey = String(event.key || '').toLowerCase()
         const normalizedEventCode = String(event.code || '').toLowerCase()
         const isStandaloneModifierTrigger =
