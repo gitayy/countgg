@@ -26,6 +26,7 @@ const DEFAULT_SIM_ODDS_DENOMINATOR = 4147
 export type RollVisualizerHostHandle = {
   registerSampleFromPost: (post?: PostType) => void
   reset: () => void
+  syncNow: () => void
 }
 
 type Props = {
@@ -49,6 +50,14 @@ type RollVisualizerUiState = {
   lowestRoll?: RollSample
   luckStats: RollLuckStats
 }
+
+type RollVisualizerCacheEntry = RollVisualizerUiState & {
+  maxRenderedRolls: number
+  simIntervalMs: number
+  simOddsDenominator: number
+}
+
+const rollVisualizerCacheByThread = new Map<string, RollVisualizerCacheEntry>()
 
 function RollVisualizerHostComponent(
   { threadName, showSimControls = false }: Props,
@@ -83,6 +92,7 @@ function RollVisualizerHostComponent(
   const hasUiChangesRef = useRef(false)
   const sampleIdCounterRef = useRef(0)
   const simulationCounterRef = useRef(0)
+  const previousThreadNameRef = useRef(threadName)
 
   const persistSamples = useCallback((samples: RollSample[]) => {
     rollSamplesRef.current = samples
@@ -91,15 +101,22 @@ function RollVisualizerHostComponent(
   const publishUiSnapshot = useCallback(() => {
     if (!hasUiChangesRef.current) return
     hasUiChangesRef.current = false
-    setUiState({
+    const nextUiState = {
       rolls: rollSamplesRef.current,
       recentHighRollHistory: rollHighSamplesRef.current,
       recentLowRollHistory: rollLowSamplesRef.current,
       highestRoll: highestRollSampleRef.current,
       lowestRoll: lowestRollSampleRef.current,
       luckStats: rollLuckStatsRef.current,
+    }
+    setUiState(nextUiState)
+    rollVisualizerCacheByThread.set(threadName, {
+      ...nextUiState,
+      maxRenderedRolls: maxRenderedRollsRef.current,
+      simIntervalMs: simIntervalMsRef.current,
+      simOddsDenominator: simOddsDenominatorRef.current,
     })
-  }, [])
+  }, [threadName])
 
   const flushPendingRollSamples = useCallback(() => {
     const pending = pendingRollSamplesRef.current
@@ -273,15 +290,26 @@ function RollVisualizerHostComponent(
     setMaxRenderedRolls(DEFAULT_MAX_RENDERED_ROLLS)
     setSimIntervalMs(DEFAULT_SIM_INTERVAL_MS)
     setSimOddsDenominator(DEFAULT_SIM_ODDS_DENOMINATOR)
-  }, [stopRollSimulation])
+    rollVisualizerCacheByThread.delete(threadName)
+  }, [stopRollSimulation, threadName])
+
+  const syncNow = useCallback(() => {
+    if (rollFlushTimeoutRef.current) {
+      clearTimeout(rollFlushTimeoutRef.current)
+      rollFlushTimeoutRef.current = null
+    }
+    flushPendingRollSamples()
+    publishUiSnapshot()
+  }, [flushPendingRollSamples, publishUiSnapshot])
 
   useImperativeHandle(
     ref,
     () => ({
       registerSampleFromPost,
       reset,
+      syncNow,
     }),
-    [registerSampleFromPost, reset],
+    [registerSampleFromPost, reset, syncNow],
   )
 
   useEffect(() => {
@@ -329,7 +357,36 @@ function RollVisualizerHostComponent(
   }, [showSimControls, stopRollSimulation])
 
   useEffect(() => {
-    reset()
+    const cached = rollVisualizerCacheByThread.get(threadName)
+    if (cached) {
+      rollSamplesRef.current = cached.rolls
+      rollHighSamplesRef.current = cached.recentHighRollHistory
+      rollLowSamplesRef.current = cached.recentLowRollHistory
+      highestRollSampleRef.current = cached.highestRoll
+      lowestRollSampleRef.current = cached.lowestRoll
+      rollLuckStatsRef.current = cached.luckStats
+      maxRenderedRollsRef.current = cached.maxRenderedRolls
+      simIntervalMsRef.current = cached.simIntervalMs
+      simOddsDenominatorRef.current = cached.simOddsDenominator
+      setUiState({
+        rolls: cached.rolls,
+        recentHighRollHistory: cached.recentHighRollHistory,
+        recentLowRollHistory: cached.recentLowRollHistory,
+        highestRoll: cached.highestRoll,
+        lowestRoll: cached.lowestRoll,
+        luckStats: cached.luckStats,
+      })
+      setMaxRenderedRolls(cached.maxRenderedRolls)
+      setSimIntervalMs(cached.simIntervalMs)
+      setSimOddsDenominator(cached.simOddsDenominator)
+    }
+  }, [threadName])
+
+  useEffect(() => {
+    if (previousThreadNameRef.current !== threadName) {
+      previousThreadNameRef.current = threadName
+      reset()
+    }
   }, [threadName, reset])
 
   useEffect(() => {

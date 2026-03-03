@@ -470,9 +470,55 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   )
   const rollVisualizerThreads = useMemo(() => new Set(['1inx', 'russian_roulette', 'incremental_odds']), [])
   const rollVisualizerRef = useRef<RollVisualizerHostHandle | null>(null)
+  const storedRollSamplesByUuidRef = useRef<Map<string, PostType>>(new Map())
+  const registeredRollSampleUuidsRef = useRef<Set<string>>(new Set())
+  const rebuildRollVisualizerFromRecent = useCallback(
+    (host: RollVisualizerHostHandle) => {
+      if (!rollVisualizerThreads.has(thread_name)) return
+      const orderedPosts = Array.from(storedRollSamplesByUuidRef.current.values()).sort((a, b) => Number(a.timestamp) - Number(b.timestamp))
+      host.reset()
+      for (const post of orderedPosts) {
+        host.registerSampleFromPost(post)
+      }
+      registeredRollSampleUuidsRef.current = new Set(orderedPosts.map((post) => post.uuid))
+      host.syncNow()
+    },
+    [thread_name, rollVisualizerThreads],
+  )
+  const setRollVisualizerHostRef = useCallback(
+    (host: RollVisualizerHostHandle | null) => {
+      rollVisualizerRef.current = host
+      if (host) {
+        rebuildRollVisualizerFromRecent(host)
+      }
+    },
+    [rebuildRollVisualizerFromRecent],
+  )
   const registerRollSampleFromPost = useCallback((post?: PostType) => {
-    rollVisualizerRef.current?.registerSampleFromPost(post)
-  }, [])
+    if (!post) return
+    if (!rollVisualizerThreads.has(thread_name)) return
+    if (post.uuid && registeredRollSampleUuidsRef.current.has(post.uuid)) return
+    if (post.uuid) {
+      registeredRollSampleUuidsRef.current.add(post.uuid)
+      storedRollSamplesByUuidRef.current.set(post.uuid, post)
+      if (storedRollSamplesByUuidRef.current.size > 20000) {
+        const nextEntries = Array.from(storedRollSamplesByUuidRef.current.values())
+          .sort((a, b) => Number(a.timestamp) - Number(b.timestamp))
+          .slice(-10000)
+          .map((sample) => [sample.uuid, sample] as const)
+        storedRollSamplesByUuidRef.current = new Map(nextEntries)
+      }
+      if (registeredRollSampleUuidsRef.current.size > 10000) {
+        const keep = new Set(Array.from(registeredRollSampleUuidsRef.current).slice(-5000))
+        registeredRollSampleUuidsRef.current = keep
+      }
+    }
+    const host = rollVisualizerRef.current
+    if (host) {
+      host.registerSampleFromPost(post)
+      return
+    }
+  }, [thread_name, rollVisualizerThreads])
 
   const [mobilePickerOpen, setMobilePickerOpen] = useState(false)
   const [desktopPickerOpen, setDesktopPickerOpen] = useState(true)
@@ -490,6 +536,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const replayEmittedCountRef = useRef(0)
   const replayAppliedCountRef = useRef(0)
   const replayLastAppliedValidRef = useRef<number | null>(null)
+  const seededRollsFromRecentRef = useRef(false)
 
   useEffect(() => {
     recentCountsRef.current = []
@@ -497,6 +544,9 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     setRecentCounts([])
     setRecentChats([])
     setCachedCounts([])
+    storedRollSamplesByUuidRef.current = new Map()
+    registeredRollSampleUuidsRef.current = new Set()
+    seededRollsFromRecentRef.current = false
   }, [thread_name, setRecentCounts, setRecentChats])
 
   useEffect(() => {
@@ -831,9 +881,12 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
 
   useEffect(() => {
     if (!rollVisualizerThreads.has(thread_name)) return
+    if (seededRollsFromRecentRef.current) return
+    if (!recentCounts.length) return
     for (const post of recentCounts) {
       registerRollSampleFromPost(post)
     }
+    seededRollsFromRecentRef.current = true
   }, [recentCounts, thread_name, registerRollSampleFromPost, rollVisualizerThreads])
 
   async function timer(start, end) {
@@ -1174,6 +1227,12 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     tabValueRef.current = newValue
     if (newValue === 'tab_2') {
       setNewChatsLoadedState(Date.now().toString())
+    }
+    if (newValue === 'tab_1') {
+      const host = rollVisualizerRef.current
+      if (host && rollVisualizerThreads.has(thread_name)) {
+        host.syncNow()
+      }
     }
   }
 
@@ -3016,7 +3075,7 @@ useEffect(() => {
               {countListMemo}
             </TabPanel>
           )}
-          <TabPanel value="tab_1" sx={{ flexGrow: 1, p: 4 }}>
+          <TabPanel value="tab_1" keepMounted sx={{ flexGrow: 1, p: 4 }}>
             {thread && counter && thread.countBans && thread.countBans.includes(counter.uuid) && (
               <Box display="flex" alignItems="center" sx={{ p: 2, border: '1px solid', borderColor: 'warning.main' }}>
                 <Box component={InfoIcon} sx={{ fontSize: 24, color: 'info.main', mr: 1 }} />
@@ -3087,7 +3146,7 @@ useEffect(() => {
               />
             </Typography>
             {rollVisualizerThreads.has(thread_name) && (
-              <RollVisualizerHost ref={rollVisualizerRef} threadName={thread_name} showSimControls={isSimMode} />
+              <RollVisualizerHost ref={setRollVisualizerHostRef} threadName={thread_name} showSimControls={isSimMode} />
             )}
             {isSimMode && (
               <Box sx={{ mt: 1, mb: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
