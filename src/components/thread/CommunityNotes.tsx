@@ -71,11 +71,11 @@ export default function CommunityNotes({ thread, setThread, counter, onSave }: C
                 </IconButton>
             )}
             </>
-        ) : (
+        ) : counter ? (
             <Typography variant='body2' fontSize={'small'} component="div" sx={{ width: '100%', mt: 0, color: (theme) => theme.palette.text.secondary, fontStyle: 'italic' }}>
             You can edit this when you reach level 20
             </Typography>
-        )}
+        ) : null}
     </Box>
 
       {thread ? (
