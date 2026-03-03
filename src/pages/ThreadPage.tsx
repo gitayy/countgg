@@ -3207,7 +3207,7 @@ useEffect(() => {
             <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
               <ReactMarkdown children={thread ? thread.rules : 'Loading...'} components={{ p: 'span' }} remarkPlugins={[remarkGfm]} />
             </Typography> */}
-            {macroPresetsEnabled && (
+            {macroPresetsEnabled && user && counter?.roles?.includes('counter') && (
               <Box
                 sx={{
                   mt: 2,
