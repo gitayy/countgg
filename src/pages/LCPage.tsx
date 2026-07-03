@@ -530,8 +530,9 @@ export const LCPage = () => {
     }
   }, [redditMessagesState, redditLoading, cggMessagesState])
 
-  const loginRedirect = process.env.REACT_APP_API_HOST + '/api/auth/reddit_login'
-  const logoutRedirect = process.env.REACT_APP_API_HOST + '/api/auth/reddit_logout'
+  const apiHost = process.env.REACT_APP_API_HOST?.replace(/localhost|127\.0\.0\.1/, window.location.hostname) ?? ''
+  const loginRedirect = apiHost + '/api/auth/reddit_login'
+  const logoutRedirect = apiHost + '/api/auth/reddit_logout'
 
   if (user && !loading && user.reddit && counter && !counter.roles.includes('banned') && !counter.roles.includes('muted')) {
     return (

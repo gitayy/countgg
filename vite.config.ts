@@ -95,7 +95,7 @@ function devServerPlugin(): Plugin {
 			const IS_NOT_HTTPS = HTTPS === "false";
 			return {
 				server: {
-					host: HOST || "localhost",
+					host: HOST || "0.0.0.0",
 					port: parseInt(PORT || "3000", 10),
 					open: true,
 					// https: true,

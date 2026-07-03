@@ -25,7 +25,15 @@ import {
 } from './types'
 
 const CONFIG: AxiosRequestConfig = { withCredentials: true }
-const API_URL = `${process.env.REACT_APP_API_HOST}/api`
+
+const resolveBackendUrl = (envUrl: string | undefined): string => {
+  if (!envUrl) return ''
+  const hostname = window.location.hostname
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return envUrl
+  return envUrl.replace(/localhost|127\.0\.0\.1/, hostname)
+}
+
+const API_URL = `${resolveBackendUrl(process.env.REACT_APP_API_HOST)}/api`
 export const macroPresetsFeatureEnabled =
   ((import.meta as any)?.env?.VITE_MACRO_PRESETS_V1 || '').toLowerCase() !== '0' &&
   ((import.meta as any)?.env?.VITE_MACRO_PRESETS_V1 || '').toLowerCase() !== 'false' &&

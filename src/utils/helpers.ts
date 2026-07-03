@@ -148,7 +148,13 @@ export const discordAvatarLink = (counter: Counter): string => {
     : `https://cdn.discordapp.com/embed/avatars/0.png`
 }
 
-export const loginRedirect = `${process.env.REACT_APP_API_HOST}${process.env.REACT_APP_LOGIN || '/api/auth/login'}`
+const resolveHost = (envUrl: string | undefined): string => {
+  if (!envUrl) return ''
+  const hostname = window.location.hostname
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return envUrl
+  return envUrl.replace(/localhost|127\.0\.0\.1/, hostname)
+}
+export const loginRedirect = `${resolveHost(process.env.REACT_APP_API_HOST)}${process.env.REACT_APP_LOGIN || '/api/auth/login'}`
 
 export const fakePost = (counter?: Counter): PostType => {
   return {
