@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from 'react'
-import { Box, IconButton, InputAdornment, Link, OutlinedInput, Paper, Typography, useTheme } from '@mui/material'
+import { Badge, Box, IconButton, InputAdornment, Link, OutlinedInput, Paper, Typography, useTheme } from '@mui/material'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
@@ -33,6 +33,10 @@ export const SiteChat = () => {
   const [messages, setMessages] = useState<PostType[]>([])
   const [inputValue, setInputValue] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
+  const [lastReadUUID, setLastReadUUID] = useState<string | null>(null)
+  const [windowFocused, setWindowFocused] = useState(document.hasFocus())
+  const [unreadMarkerUUID, setUnreadMarkerUUID] = useState<string | null>(null)
+  const markerSetRef = useRef(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const postHashRef = useRef(0)
@@ -66,11 +70,13 @@ export const SiteChat = () => {
     const watcherHandler = (count: number) => setWatchers(count)
     const connectHandler = () => setSocketStatus('LIVE')
     const disconnectHandler = () => setSocketStatus('DISCONNECTED')
+    const lastReadHandler = (uuid: string | null) => setLastReadUUID(uuid)
 
     socket.on('chat_post', postHandler)
     socket.on('chat_watcher_count', watcherHandler)
     socket.on('connect', connectHandler)
     socket.on('disconnect', disconnectHandler)
+    socket.on('chat_last_read', lastReadHandler)
     if (socket.connected) setSocketStatus('LIVE')
 
     return () => {
@@ -78,8 +84,36 @@ export const SiteChat = () => {
       socket.off('chat_watcher_count', watcherHandler)
       socket.off('connect', connectHandler)
       socket.off('disconnect', disconnectHandler)
+      socket.off('chat_last_read', lastReadHandler)
     }
   }, [socket])
+
+  // Track window focus
+  useEffect(() => {
+    const onFocus = () => setWindowFocused(true)
+    const onBlur = () => setWindowFocused(false)
+    window.addEventListener('focus', onFocus)
+    window.addEventListener('blur', onBlur)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      window.removeEventListener('blur', onBlur)
+    }
+  }, [])
+
+  // Mark as read when expanded + focused; set unread marker once on first focus
+  useEffect(() => {
+    if (!expanded || !windowFocused || !user || messages.length === 0) return
+    const latestUUID = messages[messages.length - 1].uuid
+    // Set the visual marker once — only if there are actually unread messages
+    if (!markerSetRef.current) {
+      markerSetRef.current = true
+      const hasUnread = lastReadUUID !== null && messages.some((m) => m.uuid > lastReadUUID)
+      setUnreadMarkerUUID(hasUnread ? lastReadUUID : null)
+    }
+    if (latestUUID === lastReadUUID) return
+    setLastReadUUID(latestUUID)
+    socket.emit('chat_mark_read', latestUUID)
+  }, [expanded, windowFocused, messages, user])
 
   // Scroll to bottom when expanded or new message arrives
   useEffect(() => {
@@ -99,12 +133,24 @@ export const SiteChat = () => {
     setInputValue('')
     setRateLimited(true)
     setTimeout(() => setRateLimited(false), 500)
+    // mark all current messages as read on send
+    const latestUUID = messages[messages.length - 1]?.uuid
+    if (latestUUID) {
+      setLastReadUUID(latestUUID)
+      socket.emit('chat_mark_read', latestUUID)
+    }
   }
 
   const lastMessage = messages[messages.length - 1]
   const lastAuthorCounter = lastMessage ? cachedCounters[lastMessage.authorUUID] : null
   const lastAuthor = lastAuthorCounter?.name ?? '…'
   const lastText = lastMessage?.comment || lastMessage?.rawText || ''
+
+  const unreadCount = user
+    ? lastReadUUID === null
+      ? messages.length
+      : messages.filter((m) => m.uuid > lastReadUUID).length
+    : 0
 
   const canWrite = canPost(counter)
   const bgColor = theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff'
@@ -172,9 +218,16 @@ export const SiteChat = () => {
           onClick={() => setExpanded((e) => !e)}
           sx={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, cursor: 'pointer' }}
         >
-          <Typography variant="body2" fontWeight={700} noWrap sx={{ flexShrink: 0, mr: 1 }}>
-            Chat
-          </Typography>
+          <Badge
+            badgeContent={unreadCount > 50 ? '50+' : unreadCount}
+            color="error"
+            invisible={expanded || unreadCount === 0}
+            sx={{ flexShrink: 0, mr: 1 }}
+          >
+            <Typography variant="body2" fontWeight={700} noWrap>
+              Chat
+            </Typography>
+          </Badge>
           {expanded && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mr: 1, flexShrink: 0 }}>
               <Box
@@ -256,8 +309,19 @@ export const SiteChat = () => {
                   ? `${author.emoji} ${author.name} ${author.emoji}`
                   : author.name
                 : '?'
+              const showMarker = unreadMarkerUUID !== null && msg.uuid > unreadMarkerUUID && (
+                messages.find((m) => m.uuid > unreadMarkerUUID) === msg
+              )
               return (
-                <Box key={msg.uuid} sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', lineHeight: 1.4 }}>
+                <Box key={msg.uuid}>
+                  {showMarker && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, my: 0.5 }}>
+                      <Box sx={{ flex: 1, height: '1px', bgcolor: 'error.main' }} />
+                      <Typography variant="caption" sx={{ color: 'error.main', whiteSpace: 'nowrap', fontSize: 10 }}>new</Typography>
+                      <Box sx={{ flex: 1, height: '1px', bgcolor: 'error.main' }} />
+                    </Box>
+                  )}
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', lineHeight: 1.4 }}>
                   <Link
                     variant="caption"
                     underline="hover"
@@ -269,6 +333,7 @@ export const SiteChat = () => {
                   <Typography variant="caption" sx={{ color: 'text.primary', wordBreak: 'break-word' }}>
                     {text}
                   </Typography>
+                </Box>
                 </Box>
               )
             })}
