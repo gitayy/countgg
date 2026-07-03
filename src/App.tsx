@@ -53,6 +53,7 @@ import AdminNewItemPage from './pages/AdminNewItemPage'
 import BlogsPage from './pages/BlogsPage'
 import BlogCreatePage from './pages/BlogCreatePage'
 import { ThreadProvider } from './utils/contexts/ThreadContext'
+import { SiteChat } from './components/SiteChat'
 import { NumberShufflePage } from './pages/NumberShufflePage'
 import ServersPage from './pages/ServersPage'
 import MacroPresetsPage from './pages/MacroPresetsPage'
@@ -315,6 +316,7 @@ function App() {
                         {user && counter && <Route path="/mentions" element={<MentionsPage />} />}
                         {user && counter && <Route path="/shop" element={<ShopPage />} />}
                       </Routes>
+                      <SiteChat />
                     </ThreadProvider>
                   </ThreadsContext.Provider>
                 </SocketContext.Provider>
