@@ -218,7 +218,7 @@ export const CounterPage = () => {
             <Card sx={{ my: 2, p: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <CardContent>
                 <Typography variant="h5" color="text.primary">
-                  Rainbow: {loadedCounter.rainbow }
+                  Rainbow: {loadedCounter.rainbow}
                 </Typography>
               </CardContent>
             </Card>

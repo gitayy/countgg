@@ -3,12 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import MacroPresetsPage from './MacroPresetsPage'
 import { UserContext } from '../utils/contexts/UserContext'
 import { defaultPreferences } from '../utils/helpers'
-import {
-  getMacroPresetThreadUsage,
-  getMacroPresetVersion,
-  getMacroPresetVersions,
-  listMacroPresets,
-} from '../utils/api'
+import { getMacroPresetThreadUsage, getMacroPresetVersion, getMacroPresetVersions, listMacroPresets } from '../utils/api'
 
 jest.mock('../utils/api', () => ({
   listMacroPresets: jest.fn(),
@@ -109,9 +104,7 @@ describe('MacroPresetsPage', () => {
 
     await waitFor(() => expect(screen.getByText('Main Thread Pack')).toBeInTheDocument())
 
-    expect(
-      screen.getByText(/Use plain text or filters: creator:pull name:test1 handle:test1 thread:used/i),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/Use plain text or filters: creator:pull name:test1 handle:test1 thread:used/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Copy To Draft' })).toBeInTheDocument()
     expect(screen.getAllByText('Owned').length).toBeGreaterThan(0)
   })
@@ -122,9 +115,7 @@ describe('MacroPresetsPage', () => {
     await waitFor(() => expect(screen.getByText('Main Thread Pack')).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: 'Copy To Draft' }))
 
-    await waitFor(() =>
-      expect(screen.getByText('Copied "Main Thread Pack" into draft.')).toBeInTheDocument(),
-    )
+    await waitFor(() => expect(screen.getByText('Copied "Main Thread Pack" into draft.')).toBeInTheDocument())
     expect(screen.getByText('Create Macro Preset')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Main Thread Pack (copy)')).toBeInTheDocument()
   })

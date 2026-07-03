@@ -42,22 +42,23 @@ export const pronouns: [string, string, string, string][] = [
   ['they', 'them', 'their', 'theirs'],
 ]
 
-export const defaultCounter = (uuid: string) => ({
-  uuid: uuid,
-  id: 1,
-  discordId: '',
-  name: '...',
-  username: '...',
-  color: '#333333',
-  roles: [],
-  avatar: '1',
-  pronouns: ['they', 'them', 'their', 'theirs'] as [string, string, string, string],
-  title: '...',
-  cardStyle: '',
-  cardBorderStyle: '',
-  xp: 100,
-  rainbow: 1,
-}) as Counter;
+export const defaultCounter = (uuid: string) =>
+  ({
+    uuid: uuid,
+    id: 1,
+    discordId: '',
+    name: '...',
+    username: '...',
+    color: '#333333',
+    roles: [],
+    avatar: '1',
+    pronouns: ['they', 'them', 'their', 'theirs'] as [string, string, string, string],
+    title: '...',
+    cardStyle: '',
+    cardBorderStyle: '',
+    xp: 100,
+    rainbow: 1,
+  }) as Counter
 
 export function isColorSuitableForBackground(textColor: string, backgroundColor: string, minContrastRatio: number = 4.5): boolean {
   const getLuminance = (color: string) => {
@@ -204,11 +205,11 @@ export const fakeThread = (thread?: ThreadType): ThreadType => {
 }
 
 function replaceLinebreaks(inputString: string, replaceLinebreakCount) {
-  let count = 0;
-  return inputString.replace(/\n/g, match => {
-      count++;
-      return count <= replaceLinebreakCount ? match : ' ';
-  });
+  let count = 0
+  return inputString.replace(/\n/g, (match) => {
+    count++
+    return count <= replaceLinebreakCount ? match : ' '
+  })
 }
 
 export function transformMarkdown(markdownContent, replaceLinebreakCount = 30) {
@@ -219,7 +220,7 @@ export function transformMarkdown(markdownContent, replaceLinebreakCount = 30) {
   const simplifiedContent = transformedContent.replace(/^[\*-]\ ([\*-]\s)+/gm, '* ')
 
   // Replace >20 line breaks
-  const noLinebreakSpamContent = replaceLinebreaks(simplifiedContent, replaceLinebreakCount);
+  const noLinebreakSpamContent = replaceLinebreaks(simplifiedContent, replaceLinebreakCount)
 
   return noLinebreakSpamContent
 }
@@ -229,7 +230,6 @@ export function tooManyMarkers(md: string, max = 200) {
   const m = md.match(/[*_~`#>|-]/g)
   return (m?.length ?? 0) > max
 }
-
 
 export function customBlockquotePlugin() {
   return (tree) => {
@@ -405,23 +405,23 @@ export const formatTimeDiff = (time1, time2, mini = false) => {
   const milliseconds = parseFloat((diff % second).toFixed(3))
 
   const [yearLabel, dayLabel, hourLabel, minuteLabel, secondLabel, millisecondLabel] = mini
-  ? ['y', 'd', 'h', 'm', 's', 'ms']
-  : [
-      ` year${years > 1 ? 's' : ''}`,
-      ` day${days > 1 ? 's' : ''}`,
-      ` hour${hours > 1 ? 's' : ''}`,
-      ` minute${minutes > 1 ? 's' : ''}`,
-      ` second${seconds > 1 ? 's' : ''}`,
-      ` millisecond${milliseconds !== 1 ? 's' : ''}`
-    ];
+    ? ['y', 'd', 'h', 'm', 's', 'ms']
+    : [
+        ` year${years > 1 ? 's' : ''}`,
+        ` day${days > 1 ? 's' : ''}`,
+        ` hour${hours > 1 ? 's' : ''}`,
+        ` minute${minutes > 1 ? 's' : ''}`,
+        ` second${seconds > 1 ? 's' : ''}`,
+        ` millisecond${milliseconds !== 1 ? 's' : ''}`,
+      ]
 
   var result: string[] = []
-  if (years) result.push(`${years}${yearLabel}`);
-  if (days) result.push(`${days}${dayLabel}`);
-  if (hours) result.push(`${hours}${hourLabel}`);
-  if (minutes) result.push(`${minutes}${minuteLabel}`);
-  if (seconds) result.push(`${seconds}${secondLabel}`);
-  if (milliseconds) result.push(`${milliseconds}${millisecondLabel}`);
+  if (years) result.push(`${years}${yearLabel}`)
+  if (days) result.push(`${days}${dayLabel}`)
+  if (hours) result.push(`${hours}${hourLabel}`)
+  if (minutes) result.push(`${minutes}${minuteLabel}`)
+  if (seconds) result.push(`${seconds}${secondLabel}`)
+  if (milliseconds) result.push(`${milliseconds}${millisecondLabel}`)
 
   return result.join(mini ? '' : ', ')
 }
@@ -442,28 +442,26 @@ export const fancyTime2 = (time1, time2, mini = false) => {
   const milliseconds = parseFloat((diff % second).toFixed(3))
 
   const [yearLabel, dayLabel, hourLabel, minuteLabel, secondLabel, millisecondLabel] = mini
-  ? ['y', 'd', 'h', 'm', 's', 'ms']
-  : [
-      ` year${years > 1 ? 's' : ''}`,
-      ` day${days > 1 ? 's' : ''}`,
-      ` hour${hours > 1 ? 's' : ''}`,
-      ` minute${minutes > 1 ? 's' : ''}`,
-      ` second${seconds > 1 ? 's' : ''}`,
-      ` millisecond${milliseconds !== 1 ? 's' : ''}`
-    ];
+    ? ['y', 'd', 'h', 'm', 's', 'ms']
+    : [
+        ` year${years > 1 ? 's' : ''}`,
+        ` day${days > 1 ? 's' : ''}`,
+        ` hour${hours > 1 ? 's' : ''}`,
+        ` minute${minutes > 1 ? 's' : ''}`,
+        ` second${seconds > 1 ? 's' : ''}`,
+        ` millisecond${milliseconds !== 1 ? 's' : ''}`,
+      ]
 
   var result: string[] = []
-  if (years) result.push(`${years}${yearLabel}`);
-  if (days) result.push(`${days}${dayLabel}`);
-  if (hours && !years) result.push(`${hours}${hourLabel}`);
-  if (minutes && !years && !days) result.push(`${minutes}${minuteLabel}`);
-  if (seconds && !years && !days && !hours) result.push(`${seconds}${secondLabel}`);
-  if (milliseconds && !years && !days && !hours && !minutes) result.push(`${milliseconds}${millisecondLabel}`);
+  if (years) result.push(`${years}${yearLabel}`)
+  if (days) result.push(`${days}${dayLabel}`)
+  if (hours && !years) result.push(`${hours}${hourLabel}`)
+  if (minutes && !years && !days) result.push(`${minutes}${minuteLabel}`)
+  if (seconds && !years && !days && !hours) result.push(`${seconds}${secondLabel}`)
+  if (milliseconds && !years && !days && !hours && !minutes) result.push(`${milliseconds}${millisecondLabel}`)
 
   return result.join(mini ? ' ' : ', ')
 }
-
-
 
 const replyColorNames = [
   'replyGold',
@@ -525,57 +523,57 @@ function getBaseColors(isDark: boolean): { [key: string]: string } {
     reply800: isDark ? '#460060' : '#e9adff',
     reply900: isDark ? '#6e0064' : '#ffadf8',
     reply1000: isDark ? '#2a2a2a' : '#ededed',
-  };
+  }
 }
 
 // Function to interpolate between two colors
 function interpolateColor(color1: string, color2: string, weight: number): string {
-  const c1 = hexToRgb(color1);
-  const c2 = hexToRgb(color2);
+  const c1 = hexToRgb(color1)
+  const c2 = hexToRgb(color2)
 
-  const mixedColor = c1.map((c, index) => Math.round(c + weight * (c2[index] - c)));
+  const mixedColor = c1.map((c, index) => Math.round(c + weight * (c2[index] - c)))
 
-  return rgbToHex(mixedColor[0], mixedColor[1], mixedColor[2]);
+  return rgbToHex(mixedColor[0], mixedColor[1], mixedColor[2])
 }
 
 // Helper function to convert hex to RGB
 function hexToRgb(hex: string): number[] {
-  const bigint = parseInt(hex.replace(/^#/, ''), 16);
-  return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+  const bigint = parseInt(hex.replace(/^#/, ''), 16)
+  return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255]
 }
 
 // Helper function to convert RGB to hex
 function rgbToHex(r: number, g: number, b: number): string {
-  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
 }
 
 // New function to get the interpolated color
 export function getInterpolatedReplyColor(time: number, useDarkColors: boolean, per: number = 100): string {
   if (typeof time === 'string') {
-    time = parseFloat(time);
+    time = parseFloat(time)
   }
-  
-  const intervalIndex = Math.ceil(Math.round(time) / per);
-  
+
+  const intervalIndex = Math.ceil(Math.round(time) / per)
+
   // Get the current and next reply color names
-  const currentColorName = getReplyColorName(time, per);
-  const nextColorName = getReplyColorName(time + per + 1, per);
+  const currentColorName = getReplyColorName(time, per)
+  const nextColorName = getReplyColorName(time + per + 1, per)
   // const nextColorName = intervalIndex < replyColorNames.length - 1 ? replyColorNames[intervalIndex] : currentColorName;
 
   // Get the base colors for the current and next names
   // const currentColor = baseColors[currentColorName];
   // const nextColor = baseColors[nextColorName];
-  const currentColor = getBaseColors(useDarkColors)[currentColorName];
-  const nextColor = getBaseColors(useDarkColors)[nextColorName];
+  const currentColor = getBaseColors(useDarkColors)[currentColorName]
+  const nextColor = getBaseColors(useDarkColors)[nextColorName]
 
   // Calculate the weight for interpolation
-  const weight = (time % per) / per;
+  const weight = (time % per) / per
 
   // Get the interpolated color
-  return interpolateColor(currentColor, nextColor, weight);
+  return interpolateColor(currentColor, nextColor, weight)
 }
 
-export const defaultPreferences: PreferencesType & {'is_default': boolean} = {
+export const defaultPreferences: PreferencesType & { is_default: boolean } = {
   is_default: true,
   pref_online: true,
   pref_discord_pings: true,
@@ -600,7 +598,7 @@ export const defaultPreferences: PreferencesType & {'is_default': boolean} = {
   pref_stricken_count_opacity: 1, // Opacity for stricken count display (0.0 to 1.0)
   pref_timestamp_display: 'relative', // Timestamp display format ('relative' or 'absolute')
   pref_show_latency: true, // Show latency information in the UI
-};
+}
 
 export const convertToTimestamp = (uuid) => {
   // should return epoch time as a number or null if invalid input

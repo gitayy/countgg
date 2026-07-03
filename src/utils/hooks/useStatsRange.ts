@@ -3,24 +3,25 @@ import moment from 'moment-timezone'
 
 type StatsSource = Record<string, any> | undefined
 
-export const useStatsRange = (
-  allStats: StatsSource,
-  selectedStartDate: any | null,
-  selectedEndDate: any | null,
-  timezone: string,
-) => {
-  const toStatsDayKey = useCallback((date: any): string | undefined => {
-    if (!date || !moment.isMoment(date) || !date.isValid()) {
-      return undefined
-    }
-    return date.clone().tz(timezone).format('YYYY-MM-DD')
-  }, [timezone])
+export const useStatsRange = (allStats: StatsSource, selectedStartDate: any | null, selectedEndDate: any | null, timezone: string) => {
+  const toStatsDayKey = useCallback(
+    (date: any): string | undefined => {
+      if (!date || !moment.isMoment(date) || !date.isValid()) {
+        return undefined
+      }
+      return date.clone().tz(timezone).format('YYYY-MM-DD')
+    },
+    [timezone],
+  )
 
-  const disableDate = useCallback((date: any) => {
-    const minDate = moment.tz('2023-02-22', 'YYYY-MM-DD', timezone).startOf('day').unix()
-    const maxDate = moment().tz(timezone).startOf('day').unix()
-    return date.unix() < minDate || date.unix() >= maxDate
-  }, [timezone])
+  const disableDate = useCallback(
+    (date: any) => {
+      const minDate = moment.tz('2023-02-22', 'YYYY-MM-DD', timezone).startOf('day').unix()
+      const maxDate = moment().tz(timezone).startOf('day').unix()
+      return date.unix() < minDate || date.unix() >= maxDate
+    },
+    [timezone],
+  )
 
   const { stats, graphStatsSource } = useMemo(() => {
     if (!allStats) {

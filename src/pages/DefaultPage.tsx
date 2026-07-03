@@ -116,8 +116,8 @@ export const DefaultPage = () => {
     socket.on('post', function (data) {
       const { post, counter, thread, total_counts, total_posts, total_xp } = data
       setTotalCounts(total_counts)
-      setTotalPosts(total_posts);
-      setTotalXP(total_xp);
+      setTotalPosts(total_posts)
+      setTotalXP(total_xp)
       if (post.isValidCount) {
         setLastCount({ lastCount: post, lastCounter: counter })
         if (counter && counter.uuid) {
@@ -176,8 +176,8 @@ export const DefaultPage = () => {
   const [isCat, setIsCat] = useState(false)
   const catify = () => {
     setIsCat(!isCat)
-    if(isCat) {
-      socket.emit(`meow`);
+    if (isCat) {
+      socket.emit(`meow`)
     }
   }
 
@@ -223,12 +223,12 @@ export const DefaultPage = () => {
     setRegisterModalOpen(false)
   }
 
-  const [mainStatRotation, setMainStatRotation] = useState(0);
-  const [mainStatNumber, setMainStatNumber] = useState(-1);
-  const [mainStatLabel, setMainStatLabel] = useState("Counts");
+  const [mainStatRotation, setMainStatRotation] = useState(0)
+  const [mainStatNumber, setMainStatNumber] = useState(-1)
+  const [mainStatLabel, setMainStatLabel] = useState('Counts')
 
   const handleMainStatClick = () => {
-    setMainStatRotation(prevMainStatRotation => (prevMainStatRotation + 1) % 4)
+    setMainStatRotation((prevMainStatRotation) => (prevMainStatRotation + 1) % 4)
   }
 
   const miniMainItem = (icon, title: string, href: string, mustBeRegistered = false) => {
@@ -299,7 +299,14 @@ export const DefaultPage = () => {
             backgroundRepeat: 'no-repeat',
           }}
         >
-          <Typography variant="h1" className='littlescale' onClick={() => {handleMainStatClick()}}  sx={{ textAlign: 'center', m: 1 }}>
+          <Typography
+            variant="h1"
+            className="littlescale"
+            onClick={() => {
+              handleMainStatClick()
+            }}
+            sx={{ textAlign: 'center', m: 1 }}
+          >
             <Typography
               variant="h1"
               component={'span'}
@@ -309,33 +316,33 @@ export const DefaultPage = () => {
               {(() => {
                 switch (mainStatRotation) {
                   case 0:
-                    return totalCounts > -1 ? totalCounts.toLocaleString() : '';
+                    return totalCounts > -1 ? totalCounts.toLocaleString() : ''
                   case 1:
-                    return totalPosts > -1 ? totalPosts.toLocaleString() : '';
+                    return totalPosts > -1 ? totalPosts.toLocaleString() : ''
                   case 2:
-                    return totalXP > -1 ? totalXP.toLocaleString() : '';
+                    return totalXP > -1 ? totalXP.toLocaleString() : ''
                   case 3:
-                    return totalTimeOnline > 0 ? Math.floor((totalTimeOnline / (1000 * 60 * 60))).toLocaleString() : '';
+                    return totalTimeOnline > 0 ? Math.floor(totalTimeOnline / (1000 * 60 * 60)).toLocaleString() : ''
                   default:
-                    totalCounts > -1 ? totalCounts.toLocaleString() : '';
+                    totalCounts > -1 ? totalCounts.toLocaleString() : ''
                 }
               })()}
               &nbsp;
             </Typography>{' '}
             {(() => {
-                switch (mainStatRotation) {
-                  case 0:
-                    return 'Counts';
-                  case 1:
-                    return 'Posts';
-                  case 2:
-                    return 'XP';
-                  case 3:
-                    return 'Hours Online';
-                  default:
-                    return 'Counts';
-                }
-              })()}
+              switch (mainStatRotation) {
+                case 0:
+                  return 'Counts'
+                case 1:
+                  return 'Posts'
+                case 2:
+                  return 'XP'
+                case 3:
+                  return 'Hours Online'
+                default:
+                  return 'Counts'
+              }
+            })()}
           </Typography>
           <Typography variant="body1" component={'div'} sx={{ textAlign: 'center', m: 1 }}>
             <Chip
@@ -739,7 +746,7 @@ export const DefaultPage = () => {
                             elevation={2}
                             sx={{
                               // background: 'linear-gradient(to right, #faf8f3, #eae4d9)',
-              bgcolor: theme.palette.mode === 'light' ? 'primary.light' : 'background.paper',
+                              bgcolor: theme.palette.mode === 'light' ? 'primary.light' : 'background.paper',
                               cursor: 'pointer',
                               mb: 2,
                               display: 'flex',

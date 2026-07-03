@@ -1,25 +1,27 @@
-import React, { useState } from 'react';
-import { Box, Typography, Collapse, IconButton, alpha, useTheme } from '@mui/material';
-import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import React, { useState } from 'react'
+import { Box, Typography, Collapse, IconButton, alpha, useTheme } from '@mui/material'
+import { ExpandMore, ExpandLess } from '@mui/icons-material'
 
 export default function MiscInfo({ thread }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   const handleToggle = () => {
-    setOpen((prevOpen) => !prevOpen);
-  };
+    setOpen((prevOpen) => !prevOpen)
+  }
 
   const theme = useTheme()
 
   return (
     <>
-      <Box onClick={handleToggle} bgcolor={alpha(theme.palette.primary.light, 0.25)} sx={{ p: 1, display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+      <Box
+        onClick={handleToggle}
+        bgcolor={alpha(theme.palette.primary.light, 0.25)}
+        sx={{ p: 1, display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+      >
         <Typography variant="body1" sx={{ flexGrow: 1 }}>
           Info
         </Typography>
-        <IconButton>
-          {open ? <ExpandLess /> : <ExpandMore />}
-        </IconButton>
+        <IconButton>{open ? <ExpandLess /> : <ExpandMore />}</IconButton>
       </Box>
 
       <Collapse in={open} timeout="auto" unmountOnExit>
@@ -49,5 +51,5 @@ export default function MiscInfo({ thread }) {
         )}
       </Collapse>
     </>
-  );
+  )
 }

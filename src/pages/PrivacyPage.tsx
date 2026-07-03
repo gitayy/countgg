@@ -5,10 +5,10 @@ import { SocketContext } from '../utils/contexts/SocketContext'
 
 export const PrivacyPage = () => {
   const location = useLocation()
-  const socket = useContext(SocketContext);
+  const socket = useContext(SocketContext)
   useEffect(() => {
     document.title = `Privacy Policy | Counting!`
-    socket.emit(`privacyPolicy`);
+    socket.emit(`privacyPolicy`)
     return () => {
       document.title = 'Counting!'
     }

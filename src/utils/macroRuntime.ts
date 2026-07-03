@@ -106,14 +106,10 @@ export const findActiveMacroEntry = (
     return undefined
   }
   const candidates = getMacroTriggerCandidates(key, code)
-  return runtime.entries.find((entry) =>
-    candidates.includes(normalizeMacroTriggerKey(entry.triggerKey)),
-  )
+  return runtime.entries.find((entry) => candidates.includes(normalizeMacroTriggerKey(entry.triggerKey)))
 }
 
-export const buildMacroSubmitMetadata = (
-  runtime: ActiveMacroRuntime | undefined,
-) => {
+export const buildMacroSubmitMetadata = (runtime: ActiveMacroRuntime | undefined) => {
   if (!runtime || !runtime.enabled) return undefined
   if (!runtime.macroPresetId || !runtime.macroPresetVersionId) return undefined
   return {

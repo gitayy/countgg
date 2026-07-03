@@ -190,7 +190,7 @@ const currentDate = moment()
 
 const daysDiff = currentDate.diff(targetDate, 'days')
 
-function Game({ socket, counter, ...props }: { socket: any; counter: Counter|undefined; } & GameProps) {
+function Game({ socket, counter, ...props }: { socket: any; counter: Counter | undefined } & GameProps) {
   let stateStorageKey = 'lrwoed-result-' + daysDiff
   let guessesStorageKey = 'lrwoed-guesses-' + daysDiff
   let hintStorageKey = 'lrwoed-hint-' + daysDiff
@@ -200,7 +200,7 @@ function Game({ socket, counter, ...props }: { socket: any; counter: Counter|und
   const [challenge, setChallenge] = useState<string>(initChallenge)
   const [wordLength, setWordLength] = useState(challenge ? challenge.length : parseUrlLength())
   const [gameNumber, setGameNumber] = useState(parseUrlGameNumber())
-  const [freshGameEnd, setFreshGameEnd] = useState(false);
+  const [freshGameEnd, setFreshGameEnd] = useState(false)
   const [target, setTarget] = useState(() => {
     return getRandomNonDictionaryWord(seed)
     // resetRng();
@@ -299,11 +299,11 @@ function Game({ socket, counter, ...props }: { socket: any; counter: Counter|und
       if (currentGuess === target) {
         setHint(gameOver('won'))
         setGameState(GameState.Won)
-        setFreshGameEnd(true);
+        setFreshGameEnd(true)
       } else if (guesses.length + 1 === props.maxGuesses) {
         setHint(gameOver('lost'))
         setGameState(GameState.Lost)
-        setFreshGameEnd(true);
+        setFreshGameEnd(true)
       } else {
         setHint('')
         speak(describeClue(clue(currentGuess, target)))
@@ -312,13 +312,13 @@ function Game({ socket, counter, ...props }: { socket: any; counter: Counter|und
   }
 
   useEffect(() => {
-    if(freshGameEnd) {
-      if(gameState !== GameState.Playing && counter !== undefined) {
+    if (freshGameEnd) {
+      if (gameState !== GameState.Playing && counter !== undefined) {
         socket.emit(`lrwoedScore`, { score: gameState === GameState.Won ? guesses.length : 0, props: props })
-        console.log({ score: gameState === GameState.Won ? guesses.length : 0, props: props });
+        console.log({ score: gameState === GameState.Won ? guesses.length : 0, props: props })
       }
     }
-  }, [freshGameEnd]);
+  }, [freshGameEnd])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {

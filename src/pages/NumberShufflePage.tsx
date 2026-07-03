@@ -49,7 +49,7 @@ export const NumberShufflePage = () => {
   const a = params.get('seed')
   const currentDay = moment().tz('America/New_York').format('YYYY-MM-DD')
 
-  const animationDuration = 500;
+  const animationDuration = 500
 
   function useSetting<T>(key: string, initial: T): [T, (value: T | ((t: T) => T)) => void] {
     const [current, setCurrent] = useState<T>(() => {
@@ -109,25 +109,28 @@ export const NumberShufflePage = () => {
       setNumbers(movesCopy)
       setNumbersCopy(movesCopy)
       setCurrentNumberCopy(data.randomNumber)
-      setTimeout(() => {
-        setGameSize(data.size)
-        setCurrentNumber(data.randomNumber)
-        data.gameStatus !== 'in_progress' && data.gameStatus !== 'won' && data.fresh_loss
-          ? setTimeout(() => {
-              setGameStatus(data.gameStatus)
-            }, 1000)
-          : setGameStatus(data.gameStatus)
-        setSeed_id(data.seed_id)
-        !data.day && setSearchParams({ seed: data.seed_id })
-        data.highScore !== undefined && setHighScore(data.highScore)
-        data.highScoreSeed !== undefined && setHighScoreSeed(data.highScoreSeed)
-        setDateStr(data.day)
-        setScore(data.score)
-        setScoreData(data.all_scores)
-        currentSelectedIndex.current = -1
-        setSelectedIndex(-1)
-        setIsAnimationPlaying(false)
-      }, (data.gameStatus === 'in_progress' || data.fresh_loss) && data.score > 0 ? animationDuration + 50 : 0)
+      setTimeout(
+        () => {
+          setGameSize(data.size)
+          setCurrentNumber(data.randomNumber)
+          data.gameStatus !== 'in_progress' && data.gameStatus !== 'won' && data.fresh_loss
+            ? setTimeout(() => {
+                setGameStatus(data.gameStatus)
+              }, 1000)
+            : setGameStatus(data.gameStatus)
+          setSeed_id(data.seed_id)
+          !data.day && setSearchParams({ seed: data.seed_id })
+          data.highScore !== undefined && setHighScore(data.highScore)
+          data.highScoreSeed !== undefined && setHighScoreSeed(data.highScoreSeed)
+          setDateStr(data.day)
+          setScore(data.score)
+          setScoreData(data.all_scores)
+          currentSelectedIndex.current = -1
+          setSelectedIndex(-1)
+          setIsAnimationPlaying(false)
+        },
+        (data.gameStatus === 'in_progress' || data.fresh_loss) && data.score > 0 ? animationDuration + 50 : 0,
+      )
     })
     socket.emit('number_shuffle', { isDaily: seed_id === undefined, size: gameSize, seed_id: seed_id })
     return () => {
@@ -268,7 +271,12 @@ export const NumberShufflePage = () => {
           flexDirection: 'row',
           height: `${100 / gameSize}%`,
           background: numbers[index] !== 0 ? `black!important` : 'white!important',
-          opacity: numbers[index] !== 0 ? `1` : !isAnimationPlaying && findPossibleIndicesForNextMove(numbers, currentNumber).includes(index) ? `1` : `0.25`,
+          opacity:
+            numbers[index] !== 0
+              ? `1`
+              : !isAnimationPlaying && findPossibleIndicesForNextMove(numbers, currentNumber).includes(index)
+                ? `1`
+                : `0.25`,
         }}
       >
         <Grid container spacing={0}>
@@ -771,7 +779,13 @@ export const NumberShufflePage = () => {
               // bgcolor: `secondary.light`
             }}
           >
-            {currentNumber > 0 ? <NumberAnimator number={currentNumberCopy} startRange={1} endRange={1000} animationDuration={animationDuration} /> : gameStatus === 'won' ? 'W' : ''}
+            {currentNumber > 0 ? (
+              <NumberAnimator number={currentNumberCopy} startRange={1} endRange={1000} animationDuration={animationDuration} />
+            ) : gameStatus === 'won' ? (
+              'W'
+            ) : (
+              ''
+            )}
           </Typography>
           {gameStatus !== 'Loading...' && gameStatus === 'in_progress' && (
             <Button

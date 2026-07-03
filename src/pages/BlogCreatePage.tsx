@@ -136,7 +136,12 @@ const BlogCreatePage = () => {
           </Button>
         </>
       ) : (
-        <Loading statuses={[{ label: 'User session', ready: !loading }, { label: 'Counter profile', ready: Boolean(counter) }]} />
+        <Loading
+          statuses={[
+            { label: 'User session', ready: !loading },
+            { label: 'Counter profile', ready: Boolean(counter) },
+          ]}
+        />
       )}
     </Box>
   )

@@ -66,13 +66,7 @@ const LeaderboardGraph = ({ threadName, startDateStr, endDateStr, cum }: Props) 
           if (graphResponseCache.has(requestKey)) {
             dataPromise = Promise.resolve(graphResponseCache.get(requestKey)!)
           } else {
-            dataPromise = getThreadGraphStats(
-              threadName,
-              undefined,
-              startDateStr,
-              endDateStr,
-              selectedUserUUIDs,
-            ).then((res) => {
+            dataPromise = getThreadGraphStats(threadName, undefined, startDateStr, endDateStr, selectedUserUUIDs).then((res) => {
               const payload = {
                 allLeaderboard: res.data.allLeaderboard || {},
                 points: Array.isArray(res.data.points) ? res.data.points : [],

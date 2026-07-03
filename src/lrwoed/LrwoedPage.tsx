@@ -42,8 +42,8 @@ function LrwoedPage() {
   const [keyboard, setKeyboard] = useSetting<string>('keyboard', 'qwertyuiop-asdfghjkl-BzxcvbnmE')
   const [enterLeft, setEnterLeft] = useSetting<boolean>('enter-left', false)
 
-  const socket = useContext(SocketContext);
-  const { counter} = useContext(UserContext)
+  const socket = useContext(SocketContext)
+  const { counter } = useContext(UserContext)
 
   useEffect(() => {
     document.body.className = theme.palette.mode

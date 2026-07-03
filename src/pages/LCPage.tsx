@@ -451,7 +451,10 @@ export const LCPage = () => {
           ) {
             if (user && preferences && preferences.pref_load_from_bottom && index === 0) {
               countsByDayAndHour[key].showHourBar = false
-            } else if ((!user || (user && preferences && !preferences.pref_load_from_bottom)) && index === redditMessages.current.length - 1) {
+            } else if (
+              (!user || (user && preferences && !preferences.pref_load_from_bottom)) &&
+              index === redditMessages.current.length - 1
+            ) {
               countsByDayAndHour[key].showHourBar = false
             } else {
               countsByDayAndHour[key].showHourBar = true

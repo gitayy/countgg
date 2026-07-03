@@ -119,12 +119,7 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
     async function fetchThreadStats() {
       setStatsLoading(true)
       try {
-        const { data } = await getThreadStats(
-          threadName,
-          undefined,
-          dateRange.startDateStr,
-          dateRange.endDateStr,
-        )
+        const { data } = await getThreadStats(threadName, undefined, dateRange.startDateStr, dateRange.endDateStr)
         if (isMounted.current && requestId === statsRequestSeq.current) {
           for (const counter of data.counters) {
             addCounterToCache(counter)
@@ -173,11 +168,7 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
     const currentRecords = isSpeed ? speedRecords : splitRecords
     const nextOffset = append ? currentRecords.length : 0
     const hasSelectedUsers = selectedUserUUIDs.length > 0
-    const limit = hasSelectedUsers
-      ? isSpeed
-        ? selectedUserPageSize
-        : selectedSplitPageSize
-      : defaultDetailsPageSize
+    const limit = hasSelectedUsers ? (isSpeed ? selectedUserPageSize : selectedSplitPageSize) : defaultDetailsPageSize
 
     if (isSpeed) {
       setSpeedLoading(true)
@@ -261,11 +252,7 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
 
     try {
       const hasSelectedUsers = selectedUserUUIDs.length > 0
-      const limit = hasSelectedUsers
-        ? isSpeed
-          ? selectedUserPageSize
-          : selectedSplitPageSize
-        : rowsPerPage
+      const limit = hasSelectedUsers ? (isSpeed ? selectedUserPageSize : selectedSplitPageSize) : rowsPerPage
       const res = await getThreadStatsDetails(
         threadName,
         type,
@@ -323,10 +310,22 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
   }
 
   useEffect(() => {
-    if (effectiveTabValue === THREAD_STATS_TABS.SPEED && hasSpeedStats && speedRecords.length === 0 && !speedLoading && !speedQueryLoaded) {
+    if (
+      effectiveTabValue === THREAD_STATS_TABS.SPEED &&
+      hasSpeedStats &&
+      speedRecords.length === 0 &&
+      !speedLoading &&
+      !speedQueryLoaded
+    ) {
       loadStatsDetailPage('speed', false, speedSelectedUserUUIDs)
     }
-    if (effectiveTabValue === THREAD_STATS_TABS.SPLITS && hasSplitStats && splitRecords.length === 0 && !splitLoading && !splitQueryLoaded) {
+    if (
+      effectiveTabValue === THREAD_STATS_TABS.SPLITS &&
+      hasSplitStats &&
+      splitRecords.length === 0 &&
+      !splitLoading &&
+      !splitQueryLoaded
+    ) {
       loadStatsDetailPage('splitSpeed', false, splitSelectedUserUUIDs)
     }
   }, [
@@ -379,7 +378,8 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
         const day = next[key]
         if (!day || typeof day !== 'object') continue
 
-        const currentCount = typeof day.splitSpeedCount === 'number' ? day.splitSpeedCount : Array.isArray(day.splitSpeed) ? day.splitSpeed.length : 0
+        const currentCount =
+          typeof day.splitSpeedCount === 'number' ? day.splitSpeedCount : Array.isArray(day.splitSpeed) ? day.splitSpeed.length : 0
         next[key] = { ...day, splitSpeedCount: currentCount }
       }
       return next
@@ -453,7 +453,9 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
       </Box>
 
       <TabContext value={effectiveTabValue}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', width: '100%', maxWidth: '100%', minWidth: 0 }}>
+        <Box
+          sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', width: '100%', maxWidth: '100%', minWidth: 0 }}
+        >
           <TabList
             onChange={(_event, newValue) => setTabValue(newValue)}
             variant={'scrollable'}
@@ -472,7 +474,13 @@ export const ThreadStatsPanel = ({ threadName }: Props) => {
         <Box sx={{ mt: 1, p: 2, bgcolor: 'background.paper', width: '100%', maxWidth: '100%', minWidth: 0, overflowX: 'hidden' }}>
           <TabPanel value={THREAD_STATS_TABS.LEADERBOARD} sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>
             {effectiveTabValue === THREAD_STATS_TABS.LEADERBOARD &&
-              (statsLoading ? tabSkeleton : stats?.leaderboard ? <LeaderboardTable stat={stats.leaderboard} justLB={true} /> : renderEmptyState('Leaderboard'))}
+              (statsLoading ? (
+                tabSkeleton
+              ) : stats?.leaderboard ? (
+                <LeaderboardTable stat={stats.leaderboard} justLB={true} />
+              ) : (
+                renderEmptyState('Leaderboard')
+              ))}
           </TabPanel>
 
           <TabPanel value={THREAD_STATS_TABS.GRAPHS} sx={{ p: 0, minWidth: 0, maxWidth: '100%' }}>

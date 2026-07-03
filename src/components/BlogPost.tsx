@@ -7,7 +7,7 @@ import { EmojiTest, formatDate, transformMarkdown } from '../utils/helpers'
 import data from '@emoji-mart/data/sets/14/twitter.json'
 import remarkGfm from 'remark-gfm'
 import { useNavigate } from 'react-router-dom'
-import { Table, TableBody, TableCell, TableHead, TableRow, Paper } from '@mui/material';
+import { Table, TableBody, TableCell, TableHead, TableRow, Paper } from '@mui/material'
 import { CodeBlock } from './CodeBlock'
 
 interface Props {
@@ -31,7 +31,7 @@ export const BlogPost: FC<Props> = ({ title, body, author, timestamp, update }) 
       )
     },
     table: ({ children }) => (
-      <Table size='small' component={Paper}>
+      <Table size="small" component={Paper}>
         {children}
       </Table>
     ),

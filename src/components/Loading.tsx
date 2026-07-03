@@ -66,11 +66,7 @@ export function Loading(props: LoadingProps) {
       <CircularProgress color="secondary" size="200px" />
 
       {showStatuses && (
-        <Typography
-          variant="body2"
-          color={connected ? 'success.main' : 'error.main'}
-          sx={{ fontFamily: 'monospace' }}
-        >
+        <Typography variant="body2" color={connected ? 'success.main' : 'error.main'} sx={{ fontFamily: 'monospace' }}>
           Socket: {connected ? 'Connected' : 'Disconnected 🥀'}
         </Typography>
       )}

@@ -29,11 +29,11 @@ export function useFetchUser() {
           setTotalCounters(data.totalCounters)
           setUnreadMessageCount(data.unreadMentionCount)
           setPreferences((prevPrefs) => {
-            if(prevPrefs && prevPrefs['is_default'] === undefined) {
+            if (prevPrefs && prevPrefs['is_default'] === undefined) {
               return prevPrefs
             }
             return data.user as PreferencesType
-        })
+          })
         }
         setLoading(false)
       })

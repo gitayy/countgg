@@ -33,7 +33,8 @@ export const RulesPage: FC<Props> = ({ isRegistering, onceDone }) => {
       ],
     },
     {
-      title: '2+ manual inputs are required for each count. Minimum inputs per count: 1+ character of the post, and manually submitting.',
+      title:
+        '2+ manual inputs are required for each count. Minimum inputs per count: 1+ character of the post, and manually submitting.',
       description: [
         `If you are not using external tools (macros, scripts, etc.), this rule should not be an issue.`,
         `Auto-pasters are allowed (and are built into the site), but you are still required to input a portion of your post manually, and then submit your post manually.`,

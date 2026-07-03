@@ -12,7 +12,7 @@ export function useFetchAllServers() {
     getAllServers()
       .then(({ data }) => {
         if (isMounted.current) {
-            setServers(data)
+          setServers(data)
         }
         setServersLoading(false)
       })

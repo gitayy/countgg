@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { transcribeAudio } from '../utils/api';
+import { useState } from 'react'
+import { transcribeAudio } from '../utils/api'
 
 const AudioRecorder = () => {
-  const [recording, setRecording] = useState(false);
+  const [recording, setRecording] = useState(false)
 
   const submitAudio = async (audio: any) => {
-    console.log(`transcribing audio:`);
-    console.log(audio);
+    console.log(`transcribing audio:`)
+    console.log(audio)
     const res = await transcribeAudio(audio)
       .then(({ data }) => {
         console.log(data)
@@ -18,48 +18,49 @@ const AudioRecorder = () => {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mediaRecorder = new MediaRecorder(stream, {
         audioBitsPerSecond: 12800,
-      });
-      const chunks: Blob[] = [];
+      })
+      const chunks: Blob[] = []
 
-      mediaRecorder.ondataavailable = event => {
-        chunks.push(event.data);
-      };
+      mediaRecorder.ondataavailable = (event) => {
+        chunks.push(event.data)
+      }
 
       mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunks, { type: 'audio/wav' });
-        const audioURL = URL.createObjectURL(blob);
-        console.log("Recorded audio URL:", audioURL);
-        const audio = new Audio(audioURL);
-        audio.play();
-        const formData = new FormData();
-        formData.append('audio', blob);
+        const blob = new Blob(chunks, { type: 'audio/wav' })
+        const audioURL = URL.createObjectURL(blob)
+        console.log('Recorded audio URL:', audioURL)
+        const audio = new Audio(audioURL)
+        audio.play()
+        const formData = new FormData()
+        formData.append('audio', blob)
         fetch(`${process.env.REACT_APP_API_HOST}/api/thread/transcribeAudio`, {
-            method: 'POST',
-            body: formData,
-          }).then(data => {
-            console.log('Upload successful:', data);
+          method: 'POST',
+          body: formData,
+        })
+          .then((data) => {
+            console.log('Upload successful:', data)
           })
-          .catch(error => {
-            console.error('Error uploading audio:', error);
-          });
-      };
+          .catch((error) => {
+            console.error('Error uploading audio:', error)
+          })
+      }
 
-      mediaRecorder.start();
+      mediaRecorder.start()
 
       setTimeout(() => {
-        mediaRecorder.stop();
-        stream.getTracks().forEach(track => track.stop());
-        setRecording(false);
-      }, 5000);
+        mediaRecorder.stop()
+        stream.getTracks().forEach((track) => track.stop())
+        setRecording(false)
+      }, 5000)
 
-      setRecording(true);
+      setRecording(true)
     } catch (error) {
-      console.error('Error accessing microphone:', error);
+      console.error('Error accessing microphone:', error)
     }
-  };
+  }
 
   return (
     <div>
@@ -67,7 +68,7 @@ const AudioRecorder = () => {
         {recording ? 'Recording...' : 'Start Recording'}
       </button>
     </div>
-  );
-};
+  )
+}
 
-export default AudioRecorder;
+export default AudioRecorder

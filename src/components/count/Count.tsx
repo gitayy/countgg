@@ -63,7 +63,8 @@ const Count = memo((props: any) => {
 
   if (
     user &&
-    preferences && preferences.pref_standardize_format != 'Disabled' &&
+    preferences &&
+    preferences.pref_standardize_format != 'Disabled' &&
     props.thread &&
     ![
       'binary',
@@ -112,7 +113,6 @@ const Count = memo((props: any) => {
   const theme = useTheme()
   const location = useLocation()
 
-
   // build the URL
   const url = `/thread/${props.thread ? props.thread.name : ''}/${props.post.uuid}`
   // isSameUuid
@@ -124,14 +124,9 @@ const Count = memo((props: any) => {
   const renderedCounter: Counter = props.renderedCounter || uncachedCounter
   const roundedLatency = Math.round(Number(props.post.latency))
   const roundedProcessingLatency = Math.round(Number(props.post.processingLatency))
-  const showProcessingLatency =
-    roundedProcessingLatency >= 50 &&
-    Number.isFinite(roundedProcessingLatency)
-  const latencyDisplayText = showProcessingLatency
-    ? `${roundedLatency}ms, ${roundedProcessingLatency}ms PL`
-    : `${roundedLatency}ms`
-  const showHoverProcessingSuffix =
-    !showProcessingLatency && Number.isFinite(roundedProcessingLatency)
+  const showProcessingLatency = roundedProcessingLatency >= 50 && Number.isFinite(roundedProcessingLatency)
+  const latencyDisplayText = showProcessingLatency ? `${roundedLatency}ms, ${roundedProcessingLatency}ms PL` : `${roundedLatency}ms`
+  const showHoverProcessingSuffix = !showProcessingLatency && Number.isFinite(roundedProcessingLatency)
   const latencyTooltip = Number.isFinite(roundedProcessingLatency)
     ? `End-to-end latency (client send to receive): ${roundedLatency}ms. Processing latency (server receive to emit): ${roundedProcessingLatency}ms.`
     : 'Time it took, from sending, for this post to be received from the server.'
@@ -142,7 +137,7 @@ const Count = memo((props: any) => {
   // const msSinceLastCount = Math.round(props.post.timeSinceLastCount) % 1000
   // const paddedMsSinceLastCount = msSinceLastCount.toString().padStart(3, '0')
 
-  const roundedTimeSinceLastPost = Math.round(props.post.timeSinceLastPost);
+  const roundedTimeSinceLastPost = Math.round(props.post.timeSinceLastPost)
   const hoursSinceLastPost = Math.floor(roundedTimeSinceLastPost / 3600000)
   const minutesSinceLastPost = Math.floor(roundedTimeSinceLastPost / 60000) % 60
   const secondsSinceLastPost = Math.floor(roundedTimeSinceLastPost / 1000) % 60
@@ -151,7 +146,7 @@ const Count = memo((props: any) => {
   const fancyMs = convertMsToFancyTime(Math.round(props.post.timeSinceLastPost))
   const fancyMs2 = fancyTime2(0, Math.round(props.post.timeSinceLastPost), true)
 
-  const isRainbow = renderedCounter.rainbow === roundedTimeSinceLastPost;
+  const isRainbow = renderedCounter.rainbow === roundedTimeSinceLastPost
 
   const [action, setAction] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
@@ -172,8 +167,8 @@ const Count = memo((props: any) => {
 
   const newReplyTimeColor = getInterpolatedReplyColor(
     props.post.timeSinceLastPost,
-    (theme.palette.mode === 'dark' && (user && preferences ? preferences.pref_night_mode_colors === 'Dark' : true)),
-    user && preferences && preferences.pref_reply_time_interval !== undefined ? preferences.pref_reply_time_interval : undefined,    
+    theme.palette.mode === 'dark' && (user && preferences ? preferences.pref_night_mode_colors === 'Dark' : true),
+    user && preferences && preferences.pref_reply_time_interval !== undefined ? preferences.pref_reply_time_interval : undefined,
   )
 
   function handleDeleteComment() {
@@ -183,7 +178,9 @@ const Count = memo((props: any) => {
   const anchorRef = useRef(null)
 
   const [expanded, setExpanded] = useState(
-    user && preferences && preferences.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment ? false : true,
+    user && preferences && preferences.pref_hide_stricken === 'Minimize' && props.post.stricken && !props.post.hasComment
+      ? false
+      : true,
   )
 
   const handleExpand = () => {
@@ -242,7 +239,9 @@ const Count = memo((props: any) => {
                   : 'initial',
           }}
         >
-          <span className={isRainbow ? "rainbow-text" : undefined} style={{ color: renderedCounter.color }}>{renderedCounter.name}</span>
+          <span className={isRainbow ? 'rainbow-text' : undefined} style={{ color: renderedCounter.color }}>
+            {renderedCounter.name}
+          </span>
           &nbsp;
           <span style={{ textDecoration: props.post.stricken ? 'line-through' : 'none' }}>{countContentCopy}</span>
           {maybeSpace}
@@ -322,39 +321,39 @@ const Count = memo((props: any) => {
                             <>
                               {' '}
                               (
-                                <Typography
-                                  component={'span'}
-                                  fontSize={9}
-                                  sx={{
-                                    width: 'fit-content',
-                                    color: 'text.secondary',
-                                    '&:hover .plHoverSuffix': {
-                                      maxWidth: 160,
-                                      opacity: 1,
-                                    },
-                                  }}
-                                  title={latencyTooltip}
-                                  style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}
-                                >
-                                  {latencyDisplayText}
-                                  {showHoverProcessingSuffix && (
-                                    <Box
-                                      component="span"
-                                      className="plHoverSuffix"
-                                      sx={{
-                                        maxWidth: 0,
-                                        opacity: 0,
-                                        overflow: 'hidden',
-                                        display: 'inline-block',
-                                        whiteSpace: 'nowrap',
-                                        verticalAlign: 'bottom',
-                                        transition: 'max-width 0.18s ease, opacity 0.18s ease',
-                                      }}
-                                    >
-                                      {`, ${roundedProcessingLatency}ms PL`}
-                                    </Box>
-                                  )}
-                                </Typography>
+                              <Typography
+                                component={'span'}
+                                fontSize={9}
+                                sx={{
+                                  width: 'fit-content',
+                                  color: 'text.secondary',
+                                  '&:hover .plHoverSuffix': {
+                                    maxWidth: 160,
+                                    opacity: 1,
+                                  },
+                                }}
+                                title={latencyTooltip}
+                                style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}
+                              >
+                                {latencyDisplayText}
+                                {showHoverProcessingSuffix && (
+                                  <Box
+                                    component="span"
+                                    className="plHoverSuffix"
+                                    sx={{
+                                      maxWidth: 0,
+                                      opacity: 0,
+                                      overflow: 'hidden',
+                                      display: 'inline-block',
+                                      whiteSpace: 'nowrap',
+                                      verticalAlign: 'bottom',
+                                      transition: 'max-width 0.18s ease, opacity 0.18s ease',
+                                    }}
+                                  >
+                                    {`, ${roundedProcessingLatency}ms PL`}
+                                  </Box>
+                                )}
+                              </Typography>
                               )
                             </>
                           )}
@@ -364,7 +363,10 @@ const Count = memo((props: any) => {
                           title={`${convertMsToFancyTime(Math.round(props.post.timeSinceLastCount))} since last count`}
                           sx={{
                             color:
-                              user && preferences && preferences.pref_night_mode_colors && preferences.pref_night_mode_colors !== 'Default'
+                              user &&
+                              preferences &&
+                              preferences.pref_night_mode_colors &&
+                              preferences.pref_night_mode_colors !== 'Default'
                                 ? preferences.pref_night_mode_colors === 'Light'
                                   ? '#000000de'
                                   : '#ffffffde'
@@ -466,7 +468,7 @@ const Count = memo((props: any) => {
                             textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none',
                             fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal',
                           }}
-                          className={isRainbow ? "rainbow-text" : undefined}
+                          className={isRainbow ? 'rainbow-text' : undefined}
                           color={renderedCounter.color}
                           onClick={(e) => {
                             e.preventDefault()
@@ -696,41 +698,41 @@ const Count = memo((props: any) => {
                       </Link>
                     </Box>
                     {props.post.latency && (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', textAlign: 'center' }}>
-                          <Typography
-                            fontSize={9}
-                            sx={{
-                              width: 'fit-content',
-                              color: 'text.secondary',
-                              '&:hover .plHoverSuffix': {
-                                maxWidth: 160,
-                                opacity: 1,
-                              },
-                            }}
-                            title={latencyTooltip}
-                            style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}
-                          >
-                            {latencyDisplayText}
-                            {showHoverProcessingSuffix && (
-                              <Box
-                                component="span"
-                                className="plHoverSuffix"
-                                sx={{
-                                  maxWidth: 0,
-                                  opacity: 0,
-                                  overflow: 'hidden',
-                                  display: 'inline-block',
-                                  whiteSpace: 'nowrap',
-                                  verticalAlign: 'bottom',
-                                  transition: 'max-width 0.18s ease, opacity 0.18s ease',
-                                }}
-                              >
-                                {`, ${roundedProcessingLatency}ms PL`}
-                              </Box>
-                            )}
-                          </Typography>
-                        </Box>
-                      )}
+                      <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', textAlign: 'center' }}>
+                        <Typography
+                          fontSize={9}
+                          sx={{
+                            width: 'fit-content',
+                            color: 'text.secondary',
+                            '&:hover .plHoverSuffix': {
+                              maxWidth: 160,
+                              opacity: 1,
+                            },
+                          }}
+                          title={latencyTooltip}
+                          style={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative' }}
+                        >
+                          {latencyDisplayText}
+                          {showHoverProcessingSuffix && (
+                            <Box
+                              component="span"
+                              className="plHoverSuffix"
+                              sx={{
+                                maxWidth: 0,
+                                opacity: 0,
+                                overflow: 'hidden',
+                                display: 'inline-block',
+                                whiteSpace: 'nowrap',
+                                verticalAlign: 'bottom',
+                                transition: 'max-width 0.18s ease, opacity 0.18s ease',
+                              }}
+                            >
+                              {`, ${roundedProcessingLatency}ms PL`}
+                            </Box>
+                          )}
+                        </Typography>
+                      </Box>
+                    )}
                   </Grid>
                   <Grid item xs={10}>
                     <Grid container sx={{ width: '95%' }}>
@@ -740,7 +742,10 @@ const Count = memo((props: any) => {
                           title={`${convertMsToFancyTime(Math.round(props.post.timeSinceLastCount))} since last count`}
                           sx={{
                             color:
-                              user && preferences && preferences.pref_night_mode_colors && preferences.pref_night_mode_colors !== 'Default'
+                              user &&
+                              preferences &&
+                              preferences.pref_night_mode_colors &&
+                              preferences.pref_night_mode_colors !== 'Default'
                                 ? preferences.pref_night_mode_colors === 'Light'
                                   ? '#000000de'
                                   : '#ffffffde'
@@ -858,7 +863,7 @@ const Count = memo((props: any) => {
                           textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none',
                           fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal',
                         }}
-                        className={isRainbow ? "rainbow-text" : undefined}
+                        className={isRainbow ? 'rainbow-text' : undefined}
                         color={renderedCounter.color}
                         onClick={(e) => {
                           e.preventDefault()
@@ -1061,7 +1066,7 @@ const Count = memo((props: any) => {
             background:
               props.mostRecentCount && user && preferences && preferences.pref_highlight_last_count
                 ? `${preferences.pref_highlight_last_count_color}1c`
-                : props.post.stricken && (user && preferences && preferences.pref_custom_stricken != 'Disabled')
+                : props.post.stricken && user && preferences && preferences.pref_custom_stricken != 'Disabled'
                   ? preferences.pref_strike_color
                   : 'initial',
           }}
@@ -1069,7 +1074,7 @@ const Count = memo((props: any) => {
           <Box sx={{}}>
             <Grid container>
               <Grid item xs={4}>
-                <Grid container sx={{ display: 'flex', height: '100%', }}>
+                <Grid container sx={{ display: 'flex', height: '100%' }}>
                   <Grid item xs={12} sx={{}}>
                     <Grid container sx={{ width: '100%', height: '100%' }}>
                       <Grid
@@ -1085,16 +1090,20 @@ const Count = memo((props: any) => {
                           // ...(Math.round(props.post.timeSinceLastCount) < 200 && {filter})
                         }}
                       >
-                      {Math.round(props.post.timeSinceLastPost) < 200 && <Box sx={{
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  width: `${Math.round(props.post.timeSinceLastPost) / 2}%`,
-  height: '100%',
-  backgroundColor: 'rgba(0, 0, 0, 0.075)',  // Black tint with 10% opacity
-  borderRight: `1px solid ${renderedCounter.color}66`,
-  pointerEvents: 'none', // Allows clicks to pass through
-}}></Box>}
+                        {Math.round(props.post.timeSinceLastPost) < 200 && (
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: `${Math.round(props.post.timeSinceLastPost) / 2}%`,
+                              height: '100%',
+                              backgroundColor: 'rgba(0, 0, 0, 0.075)', // Black tint with 10% opacity
+                              borderRight: `1px solid ${renderedCounter.color}66`,
+                              pointerEvents: 'none', // Allows clicks to pass through
+                            }}
+                          ></Box>
+                        )}
                         <Link
                           fontSize={11}
                           onClick={(e) => {
@@ -1103,31 +1112,43 @@ const Count = memo((props: any) => {
                           }}
                           href={url}
                           underline={'hover'}
-                          sx={{ margin: '1px', flexGrow: 1, display: 'flex', flexDirection: 'row', whiteSpace: 'nowrap', overflow: 'hidden', textAlign: 'left', alignItems: 'center' }}
+                          sx={{
+                            margin: '1px',
+                            flexGrow: 1,
+                            display: 'flex',
+                            flexDirection: 'row',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textAlign: 'left',
+                            alignItems: 'center',
+                          }}
                           variant="caption"
                           color="textSecondary"
                         >
                           {formatDateWithMilliseconds(parseInt(props.post.timestamp), true)}{' '}
                           {props.post.latency && (
-                            <Box component={'span'} className='displayOnHover'>
-                            &nbsp;
+                            <Box component={'span'} className="displayOnHover">
+                              &nbsp;
                               {/* {' '} */}
                               <Typography
                                 component={'span'}
                                 // fontSize={11}
-                                // sx={{ 
+                                // sx={{
                                 //   // width: 'fit-content',
                                 //    color: 'text.secondary' }}
                                 title={latencyTooltip}
-                                sx={{ borderBottom: '1px dotted grey', borderRadius: '1px', cursor: 'help', position: 'relative',
+                                sx={{
+                                  borderBottom: '1px dotted grey',
+                                  borderRadius: '1px',
+                                  cursor: 'help',
+                                  position: 'relative',
                                   color: 'text.secondary',
                                   fontSize: 'inherit',
                                   '&:hover .plHoverSuffix': {
                                     maxWidth: 160,
                                     opacity: 1,
                                   },
-                                  
-                                 }}
+                                }}
                               >
                                 ({latencyDisplayText})
                                 {showHoverProcessingSuffix && (
@@ -1156,23 +1177,26 @@ const Count = memo((props: any) => {
                             flexGrow: 1,
                           }}></Box> */}
                           <Box
-                          component={'span'}
-                          title={`${convertMsToFancyTime(Math.round(props.post.timeSinceLastCount))} since last count`}
-                          sx={{
-                            flexGrow: 1,
-                            color:
-                              user && preferences && preferences.pref_night_mode_colors && preferences.pref_night_mode_colors !== 'Default'
-                                ? preferences.pref_night_mode_colors === 'Light'
-                                  ? '#000000de'
-                                  : '#ffffffde'
-                                : 'text.primary',
-                            textAlign: 'right',
-                            bgcolor: `${newReplyTimeColor}`,
-                            fontSize: '14px'
-                          }}
-                        >
-                          {fancyMs2}
-                        </Box>
+                            component={'span'}
+                            title={`${convertMsToFancyTime(Math.round(props.post.timeSinceLastCount))} since last count`}
+                            sx={{
+                              flexGrow: 1,
+                              color:
+                                user &&
+                                preferences &&
+                                preferences.pref_night_mode_colors &&
+                                preferences.pref_night_mode_colors !== 'Default'
+                                  ? preferences.pref_night_mode_colors === 'Light'
+                                    ? '#000000de'
+                                    : '#ffffffde'
+                                  : 'text.primary',
+                              textAlign: 'right',
+                              bgcolor: `${newReplyTimeColor}`,
+                              fontSize: '14px',
+                            }}
+                          >
+                            {fancyMs2}
+                          </Box>
                         </Link>
                       </Grid>
                     </Grid>
@@ -1181,76 +1205,80 @@ const Count = memo((props: any) => {
               </Grid>
               <Grid item xs={6}>
                 <Grid container direction={'row'}>
-                  <Grid item xs={2.5} sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                  }}>
-                  <Link
-                          underline="hover"
-                          sx={{
-                            textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none',
-                            fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal',
-                            // display: 'block',
-                            // height: '100%',
-                            width: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                          }}
-                          className={isRainbow ? "rainbow-text" : undefined}
-                          color={renderedCounter.color}
-                          onClick={(e) => {
-                            e.preventDefault()
-                            navigate(
-                              `/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`,
-                            )
-                          }}
-                          href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`}
-                        >
-                          <CardMedia
-                    component="span"
-                    className={`border_${renderedCounter.cardBorderStyle} pfp-image`}
+                  <Grid
+                    item
+                    xs={2.5}
                     sx={{
-                      display: 'inline-block',
-                      backgroundSize: 'contain',
-                      // width: '100%',
-                      width: 36,
-                      height: 36,
-                      // height: '100%',
-                      // width: 46,
-                      // maxWidth: 46,
-                      // maxHeight: 4,
-                      backgroundImage:
-                      renderedCounter.avatar.length > 5
-                          ? `url(https://cdn.discordapp.com/avatars/${renderedCounter.discordId}/${renderedCounter.avatar})`
-                          : `url(${CggLogo2})`,
-                    }}
-                  />
-                        </Link>
-                  </Grid>
-                  <Grid item xs={9.5}>
-                <Box sx={{ display: 'flex', flexDirection: 'row' }}>
-                  <CardContent
-                    sx={{
-                      maxWidth: 'fit-content',
-                      flex: '1 0 auto',
-                      p: 0,
-                      pb: 0,
-                      overflowWrap: 'anywhere',
-                      '&:last-child': { pb: '0px' },
+                      display: 'flex',
+                      justifyContent: 'center',
                     }}
                   >
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end', flexDirection: 'row' }}>
-                      <Typography
+                    <Link
+                      underline="hover"
+                      sx={{
+                        textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none',
+                        fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal',
+                        // display: 'block',
+                        // height: '100%',
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                      }}
+                      className={isRainbow ? 'rainbow-text' : undefined}
+                      color={renderedCounter.color}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        navigate(
+                          `/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`,
+                        )
+                      }}
+                      href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`}
+                    >
+                      <CardMedia
                         component="span"
-                        // variant="body1"
-                        fontFamily={'Verdana'}
-                        fontSize={14}
-                        color={'text.primary'}
-                        sx={{ whiteSpace: 'pre-wrap', mr: 1 }}
+                        className={`border_${renderedCounter.cardBorderStyle} pfp-image`}
+                        sx={{
+                          display: 'inline-block',
+                          backgroundSize: 'contain',
+                          // width: '100%',
+                          width: 36,
+                          height: 36,
+                          // height: '100%',
+                          // width: 46,
+                          // maxWidth: 46,
+                          // maxHeight: 4,
+                          backgroundImage:
+                            renderedCounter.avatar.length > 5
+                              ? `url(https://cdn.discordapp.com/avatars/${renderedCounter.discordId}/${renderedCounter.avatar})`
+                              : `url(${CggLogo2})`,
+                        }}
+                      />
+                    </Link>
+                  </Grid>
+                  <Grid item xs={9.5}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+                      <CardContent
+                        sx={{
+                          maxWidth: 'fit-content',
+                          flex: '1 0 auto',
+                          p: 0,
+                          pb: 0,
+                          overflowWrap: 'anywhere',
+                          '&:last-child': { pb: '0px' },
+                        }}
                       >
-                        {/* <Typography fontSize={10} fontFamily={'Verdana'} component="span"> */}
-                        {/* <CardHeader
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'end', flexDirection: 'row' }}>
+                          <Typography
+                            component="span"
+                            // variant="body1"
+                            fontFamily={'Verdana'}
+                            fontSize={14}
+                            color={'text.primary'}
+                            sx={{ whiteSpace: 'pre-wrap', mr: 1 }}
+                          >
+                            {/* <Typography fontSize={10} fontFamily={'Verdana'} component="span"> */}
+                            {/* <CardHeader
                   sx={{ p: 0 }}
                   // avatar={
                   //   renderedCounter &&
@@ -1291,30 +1319,30 @@ const Count = memo((props: any) => {
                         </Link>
                   }
                 ></CardHeader> */}
-                <Grid container>
-                  <Grid item xs={12}>
-                  <Link
-                          underline="hover"
-                          sx={{
-                            textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none',
-                            fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal',
-                            fontSize: 12,
-                            m: 0,
-                            p: 0,
-                            // fontWeight: 600,
-                            // fontWeight: 'bold',
-                          }}
-                          className={isRainbow ? "rainbow-text" : undefined}
-                          color={renderedCounter.color}
-                          onClick={(e) => {
-                            e.preventDefault()
-                            navigate(
-                              `/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`,
-                            )
-                          }}
-                          href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`}
-                        >
-                          {/* <CardMedia
+                            <Grid container>
+                              <Grid item xs={12}>
+                                <Link
+                                  underline="hover"
+                                  sx={{
+                                    textDecoration: renderedCounter.roles.includes('banned') ? 'line-through' : 'none',
+                                    fontStyle: renderedCounter.roles.includes('muted') ? 'italic' : 'normal',
+                                    fontSize: 12,
+                                    m: 0,
+                                    p: 0,
+                                    // fontWeight: 600,
+                                    // fontWeight: 'bold',
+                                  }}
+                                  className={isRainbow ? 'rainbow-text' : undefined}
+                                  color={renderedCounter.color}
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    navigate(
+                                      `/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`,
+                                    )
+                                  }}
+                                  href={`/counter/${cachedCounters[props.post.authorUUID] ? cachedCounters[props.post.authorUUID].username : props.post.authorUUID}`}
+                                >
+                                  {/* <CardMedia
                     component="span"
                     className={`border_${renderedCounter.cardBorderStyle} pfp-image`}
                     sx={{
@@ -1328,105 +1356,105 @@ const Count = memo((props: any) => {
                           : `url(${CggLogo2})`,
                     }}
                   /> */}
-                          {renderedCounter.emoji
-                            ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}`
-                            : renderedCounter.name}
-                        </Link>
-                        &nbsp;
-                  </Grid>
-                  <Grid item xs={12}>
-                    <span style={{ textDecoration: props.post.stricken ? 'line-through' : 'none' }}>{countContentCopy}</span>
-                        {maybeSpace}
-                        {props.post.comment && (
-                          <ReactMarkdown
-                            children={
-                              props.post.comment.startsWith('\n')
-                                ? `\u00A0${transformMarkdown(props.post.comment)}`
-                                : transformMarkdown(props.post.comment)
-                            }
-                            components={components}
-                            remarkPlugins={[remarkGfm]}
-                          />
-                        )}
-                        {props.post.isCommentDeleted && (
-                          <Typography
-                            fontFamily={'Verdana'}
-                            fontSize={14}
-                            component={'span'}
-                            sx={{ width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black' }}
-                          >
-                            [deleted]
+                                  {renderedCounter.emoji
+                                    ? `${renderedCounter.emoji} ${renderedCounter.name} ${renderedCounter.emoji}`
+                                    : renderedCounter.name}
+                                </Link>
+                                &nbsp;
+                              </Grid>
+                              <Grid item xs={12}>
+                                <span style={{ textDecoration: props.post.stricken ? 'line-through' : 'none' }}>
+                                  {countContentCopy}
+                                </span>
+                                {maybeSpace}
+                                {props.post.comment && (
+                                  <ReactMarkdown
+                                    children={
+                                      props.post.comment.startsWith('\n')
+                                        ? `\u00A0${transformMarkdown(props.post.comment)}`
+                                        : transformMarkdown(props.post.comment)
+                                    }
+                                    components={components}
+                                    remarkPlugins={[remarkGfm]}
+                                  />
+                                )}
+                                {props.post.isCommentDeleted && (
+                                  <Typography
+                                    fontFamily={'Verdana'}
+                                    fontSize={14}
+                                    component={'span'}
+                                    sx={{ width: 'fit-content', p: 0.5, bgcolor: 'lightgray', color: 'black' }}
+                                  >
+                                    [deleted]
+                                  </Typography>
+                                )}
+                              </Grid>
+                            </Grid>
                           </Typography>
+                        </Box>
+                        {Object.entries(props.post.reactions).length > 0 && (
+                          <Box sx={{ display: 'inline-flex', flexWrap: 'wrap' }}>
+                            {props.post.reactions &&
+                              Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {
+                                if (counter && reaction[1] && (reaction[1] as string[]).includes(counter.uuid)) {
+                                  return (
+                                    <Box
+                                      key={reaction[0]}
+                                      onClick={() => {
+                                        props.socket.emit(`updateReactions`, { id: reaction[0], post_uuid: props.post.uuid })
+                                      }}
+                                      component={'div'}
+                                      sx={{
+                                        background: '#6ab3ff82',
+                                        cursor: 'pointer',
+                                        paddingTop: '6px',
+                                        marginRight: '5px',
+                                        paddingLeft: '5px',
+                                        paddingRight: '5px',
+                                        gap: '8px',
+                                        alignItems: 'center',
+                                        height: '30px',
+                                        display: 'inline-flex',
+                                        border: '1px solid #3c3cff82',
+                                        borderRadius: '10px',
+                                      }}
+                                    >
+                                      {EmojiTest({ id: reaction[0], size: 24, set: 'twitter' })} {(reaction[1] as string[]).length}
+                                    </Box>
+                                  )
+                                } else {
+                                  return (
+                                    <Box
+                                      key={reaction[0]}
+                                      onClick={() => {
+                                        props.socket.emit(`updateReactions`, { id: reaction[0], post_uuid: props.post.uuid })
+                                      }}
+                                      component={'div'}
+                                      sx={{
+                                        background: '#afafaf21',
+                                        cursor: 'pointer',
+                                        paddingTop: '6px',
+                                        marginRight: '5px',
+                                        paddingLeft: '5px',
+                                        paddingRight: '5px',
+                                        gap: '8px',
+                                        alignItems: 'center',
+                                        height: '30px',
+                                        display: 'inline-flex',
+                                        border: '1px solid #3c3cff82',
+                                        borderRadius: '10px',
+                                      }}
+                                    >
+                                      {EmojiTest({ id: reaction[0], size: 24, set: 'twitter' })} {(reaction[1] as string[]).length}
+                                    </Box>
+                                  )
+                                }
+                              })}
+                          </Box>
                         )}
-                  </Grid>
-                </Grid>
-                
-                      
-                      </Typography>
+                      </CardContent>
                     </Box>
-                    {Object.entries(props.post.reactions).length > 0 && (
-                      <Box sx={{ display: 'inline-flex', flexWrap: 'wrap' }}>
-                        {props.post.reactions &&
-                          Object.entries(props.post.reactions).map((reaction: [string, unknown]) => {
-                            if (counter && reaction[1] && (reaction[1] as string[]).includes(counter.uuid)) {
-                              return (
-                                <Box
-                                  key={reaction[0]}
-                                  onClick={() => {
-                                    props.socket.emit(`updateReactions`, { id: reaction[0], post_uuid: props.post.uuid })
-                                  }}
-                                  component={'div'}
-                                  sx={{
-                                    background: '#6ab3ff82',
-                                    cursor: 'pointer',
-                                    paddingTop: '6px',
-                                    marginRight: '5px',
-                                    paddingLeft: '5px',
-                                    paddingRight: '5px',
-                                    gap: '8px',
-                                    alignItems: 'center',
-                                    height: '30px',
-                                    display: 'inline-flex',
-                                    border: '1px solid #3c3cff82',
-                                    borderRadius: '10px',
-                                  }}
-                                >
-                                  {EmojiTest({ id: reaction[0], size: 24, set: 'twitter' })} {(reaction[1] as string[]).length}
-                                </Box>
-                              )
-                            } else {
-                              return (
-                                <Box
-                                  key={reaction[0]}
-                                  onClick={() => {
-                                    props.socket.emit(`updateReactions`, { id: reaction[0], post_uuid: props.post.uuid })
-                                  }}
-                                  component={'div'}
-                                  sx={{
-                                    background: '#afafaf21',
-                                    cursor: 'pointer',
-                                    paddingTop: '6px',
-                                    marginRight: '5px',
-                                    paddingLeft: '5px',
-                                    paddingRight: '5px',
-                                    gap: '8px',
-                                    alignItems: 'center',
-                                    height: '30px',
-                                    display: 'inline-flex',
-                                    border: '1px solid #3c3cff82',
-                                    borderRadius: '10px',
-                                  }}
-                                >
-                                  {EmojiTest({ id: reaction[0], size: 24, set: 'twitter' })} {(reaction[1] as string[]).length}
-                                </Box>
-                              )
-                            }
-                          })}
-                      </Box>
-                    )}
-                  </CardContent>
-                </Box>
-                </Grid>
+                  </Grid>
                 </Grid>
               </Grid>
               <Grid item xs={2} lg={2}>

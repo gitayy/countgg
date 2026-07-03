@@ -44,29 +44,29 @@ export type User = {
 }
 
 export interface PreferencesType {
-  pref_online: boolean;
-  pref_discord_pings: boolean;
-  pref_load_from_bottom: boolean;
-  pref_strike_color: string;
-  pref_submit_shortcut: string;
-  pref_clear: string;
-  pref_nightMode: string;
-  pref_standardize_format: string;
-  pref_time_since_last_count: boolean;
-  pref_custom_stricken: string;
-  pref_post_style: string;
-  pref_post_style_mobile: string;
-  pref_reply_time_interval: number;
-  pref_night_mode_colors: string;
-  pref_post_position: string;
-  pref_hide_stricken: string;
-  pref_highlight_last_count: boolean;
-  pref_highlight_last_count_color: string;
-  pref_sound_on_stricken: string;
-  pref_hide_thread_picker: boolean;
-  pref_stricken_count_opacity: number;
-  pref_timestamp_display: string;
-  pref_show_latency: boolean;
+  pref_online: boolean
+  pref_discord_pings: boolean
+  pref_load_from_bottom: boolean
+  pref_strike_color: string
+  pref_submit_shortcut: string
+  pref_clear: string
+  pref_nightMode: string
+  pref_standardize_format: string
+  pref_time_since_last_count: boolean
+  pref_custom_stricken: string
+  pref_post_style: string
+  pref_post_style_mobile: string
+  pref_reply_time_interval: number
+  pref_night_mode_colors: string
+  pref_post_position: string
+  pref_hide_stricken: string
+  pref_highlight_last_count: boolean
+  pref_highlight_last_count_color: string
+  pref_sound_on_stricken: string
+  pref_hide_thread_picker: boolean
+  pref_stricken_count_opacity: number
+  pref_timestamp_display: string
+  pref_show_latency: boolean
 }
 
 export type ThreadPrefs = {
@@ -329,15 +329,15 @@ export type Blog = {
 }
 
 export interface Category {
-  name: string;
-  threads: ThreadType[];
-  expanded: boolean;
+  name: string
+  threads: ThreadType[]
+  expanded: boolean
 }
 
 export interface CategoryWithoutFullThreads {
-  name: string;
-  threadUUIDs: string[];
-  expanded: boolean;
+  name: string
+  threadUUIDs: string[]
+  expanded: boolean
 }
 
 export type Server = {
@@ -358,13 +358,7 @@ export type Server = {
 
 export type MacroPresetVisibility = 'PUBLIC'
 
-export type MacroEntryType =
-  | 'CHAR_INSERT'
-  | 'ACTION'
-  | 'SUBMIT'
-  | 'SUBMIT_ACTION'
-  | 'TOGGLE'
-  | 'COMBO'
+export type MacroEntryType = 'CHAR_INSERT' | 'ACTION' | 'SUBMIT' | 'SUBMIT_ACTION' | 'TOGGLE' | 'COMBO'
 
 export type MacroActionType =
   | 'BACKSPACE'
@@ -380,9 +374,7 @@ export type MacroActionType =
   | 'COPY'
   | 'PASTE'
 
-export type MacroComboId =
-  | 'SELECT_ALL_COPY'
-  | 'SELECT_ALL_PASTE'
+export type MacroComboId = 'SELECT_ALL_COPY' | 'SELECT_ALL_PASTE'
 
 export type MacroEntryPayload =
   | { char: string }

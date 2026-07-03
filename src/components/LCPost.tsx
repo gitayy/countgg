@@ -122,8 +122,11 @@ export const LCPost = memo(({ postString, thread }: LCPostProps) => {
           flexDirection: 'column',
           fontFamily: 'Verdana!important',
           filter: post.stricken && user && preferences && preferences.pref_custom_stricken == 'Inverse' ? 'invert(1)' : '',
-          opacity: post.stricken && user && preferences? preferences.pref_stricken_count_opacity : 1,
-          background: post.stricken && user && preferences && preferences.pref_custom_stricken != 'Disabled' ? preferences.pref_strike_color : 'initial',
+          opacity: post.stricken && user && preferences ? preferences.pref_stricken_count_opacity : 1,
+          background:
+            post.stricken && user && preferences && preferences.pref_custom_stricken != 'Disabled'
+              ? preferences.pref_strike_color
+              : 'initial',
         }}
       >
         <Grid container>

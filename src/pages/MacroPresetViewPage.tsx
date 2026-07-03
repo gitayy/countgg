@@ -1,16 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  Container,
-  Divider,
-  LinearProgress,
-  Stack,
-  Typography,
-} from '@mui/material'
+import { Alert, Avatar, Box, Button, Chip, Container, Divider, LinearProgress, Stack, Typography } from '@mui/material'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import {
   getMacroPreset,
@@ -59,10 +48,7 @@ export const MacroPresetViewPage = () => {
   const [error, setError] = useState('')
 
   const macroRows = useMemo(() => buildEntryRows(latestEntries), [latestEntries])
-  const isOwner =
-    !!counter?.discordId &&
-    !!preset?.ownerCounter?.discordId &&
-    counter.discordId === preset.ownerCounter.discordId
+  const isOwner = !!counter?.discordId && !!preset?.ownerCounter?.discordId && counter.discordId === preset.ownerCounter.discordId
 
   useEffect(() => {
     const load = async () => {
@@ -100,15 +86,10 @@ export const MacroPresetViewPage = () => {
         setVersions(loadedVersions)
         setUsageRows(usageRes.data.items || [])
 
-        const selectedVersionNumber = requestedVersion
-          ? parseInt(requestedVersion, 10)
-          : loadedVersions[0]?.versionNumber
+        const selectedVersionNumber = requestedVersion ? parseInt(requestedVersion, 10) : loadedVersions[0]?.versionNumber
 
         if (selectedVersionNumber) {
-          const fullVersion = await getMacroPresetVersion(
-            loadedPreset.id,
-            selectedVersionNumber,
-          )
+          const fullVersion = await getMacroPresetVersion(loadedPreset.id, selectedVersionNumber)
           setLatestEntries(fullVersion.data.entries || [])
         } else {
           setLatestEntries([])
@@ -179,22 +160,13 @@ export const MacroPresetViewPage = () => {
               <Stack direction="row" spacing={0.75} sx={{ mt: 1, flexWrap: 'wrap' }}>
                 <Chip size="small" variant="outlined" label={`ID ${preset.id}`} />
                 <Chip size="small" variant="outlined" label={`${latestEntries.length} mappings`} />
-                <Chip
-                  size="small"
-                  variant="outlined"
-                  label={`Latest v${versions[0]?.versionNumber ?? '-'}`}
-                />
+                <Chip size="small" variant="outlined" label={`Latest v${versions[0]?.versionNumber ?? '-'}`} />
                 <Chip size="small" variant="outlined" label={`${versions.length} versions`} />
               </Stack>
             </Box>
             <Stack direction="row" spacing={1} sx={{ alignSelf: 'flex-start' }}>
               {isOwner && (
-                <Button
-                  size="small"
-                  variant="contained"
-                  component={RouterLink}
-                  to={`/macros?tab=edit&preset=${preset.id}`}
-                >
+                <Button size="small" variant="contained" component={RouterLink} to={`/macros?tab=edit&preset=${preset.id}`}>
                   Edit Preset
                 </Button>
               )}
@@ -240,10 +212,10 @@ export const MacroPresetViewPage = () => {
               />
             ))}
             {usageRows.length === 0 && (
-                <Typography variant="body2" color="text.secondary">
-                  No thread users tracked yet.
-                </Typography>
-              )}
+              <Typography variant="body2" color="text.secondary">
+                No thread users tracked yet.
+              </Typography>
+            )}
           </Box>
         </Box>
       </Container>

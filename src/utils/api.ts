@@ -126,23 +126,21 @@ export const getAllServers = () => axios.get<any>(`${API_URL}/server/all`, CONFI
 export const purchaseItem = (item_id: number) => axios.post(`${API_URL}/api/purchaseItem`, { item_id: item_id }, CONFIG)
 
 export const transcribeAudio = (audio: any) => {
-  console.log({ audio: audio });
-  return axios.post(`${API_URL}/thread/transcribeAudio`, { audio: audio }, 
-{
-  ...CONFIG,
-  // headers: { 'Content-Type': 'multipart/form-data' }
-})
+  console.log({ audio: audio })
+  return axios.post(
+    `${API_URL}/thread/transcribeAudio`,
+    { audio: audio },
+    {
+      ...CONFIG,
+      // headers: { 'Content-Type': 'multipart/form-data' }
+    },
+  )
 }
 
 export const changeMessageReadStatus = (post_uuids: string[], newReadStatus: boolean) =>
   axios.post(`${API_URL}/counter/changeMessageReadStatus`, { messageIDs: post_uuids, newReadStatus: newReadStatus }, CONFIG)
 
-export const getThreadStats = (
-  threadName: string,
-  dateStr: string | undefined,
-  startDateStr?: string,
-  endDateStr?: string,
-) =>
+export const getThreadStats = (threadName: string, dateStr: string | undefined, startDateStr?: string, endDateStr?: string) =>
   withStatsRateLimit('threadStats', () =>
     axios.post<{
       stats: {
@@ -183,44 +181,44 @@ export const getThreadStatsDetails = (
       offset: number
       limit: number
       total: number
-    hasMore: boolean
-    distributionStats?: Array<{
-      uuid: string
-      attempts: number
-      min: number
-      q1: number
-      median: number
-      q3: number
-      p99?: number
-      max: number
-      plotMax: number
-    }>
-    distributionStatsRealOnly?: Array<{
-      uuid: string
-      attempts: number
-      min: number
-      q1: number
-      median: number
-      q3: number
-      p99?: number
-      max: number
-      plotMax: number
-    }>
-    distributionStatsFakeOnly?: Array<{
-      uuid: string
-      attempts: number
-      min: number
-      q1: number
-      median: number
-      q3: number
-      p99?: number
-      max: number
-      plotMax: number
-    }>
-    hallOfSpeed?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
-    hallOfSpeedRealOnly?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
-    hallOfSpeedFakeOnly?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
-  }>(
+      hasMore: boolean
+      distributionStats?: Array<{
+        uuid: string
+        attempts: number
+        min: number
+        q1: number
+        median: number
+        q3: number
+        p99?: number
+        max: number
+        plotMax: number
+      }>
+      distributionStatsRealOnly?: Array<{
+        uuid: string
+        attempts: number
+        min: number
+        q1: number
+        median: number
+        q3: number
+        p99?: number
+        max: number
+        plotMax: number
+      }>
+      distributionStatsFakeOnly?: Array<{
+        uuid: string
+        attempts: number
+        min: number
+        q1: number
+        median: number
+        q3: number
+        p99?: number
+        max: number
+        plotMax: number
+      }>
+      hallOfSpeed?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
+      hallOfSpeedRealOnly?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
+      hallOfSpeedFakeOnly?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
+    }>(
       `${API_URL}/thread/stats/threadStatsDetails`,
       {
         thread: threadName,
@@ -270,11 +268,10 @@ export const registerCounter = (updateInfo: object) => axios.post(`${API_URL}/co
 export const updateCounterPrefs = (update: User, counter: Counter) =>
   axios.post(`${API_URL}/user/prefs`, { prefsUpdate: update, counterUpdate: counter }, CONFIG)
 
-export const updateThreadPrefs = (update: ThreadPrefs) =>
-  axios.post(`${API_URL}/user/threadPrefs`, { prefsUpdate: update }, CONFIG)
+export const updateThreadPrefs = (update: ThreadPrefs) => axios.post(`${API_URL}/user/threadPrefs`, { prefsUpdate: update }, CONFIG)
 
 export const deleteThreadPrefs = (thread: ThreadType) =>
-  axios.delete(`${API_URL}/user/deleteThreadPrefs`, {...CONFIG,  params: {threadUUID: thread.uuid} })
+  axios.delete(`${API_URL}/user/deleteThreadPrefs`, { ...CONFIG, params: { threadUUID: thread.uuid } })
 
 export const createMacroPreset = (
   name: string,
@@ -282,15 +279,9 @@ export const createMacroPreset = (
   description: string,
   changeNote?: string,
   entries: MacroEntryDraft[] = [],
-) =>
-  axios.post<MacroPreset>(
-    `${API_URL}/macro-presets`,
-    { name, handle, description, changeNote, entries },
-    CONFIG,
-  )
+) => axios.post<MacroPreset>(`${API_URL}/macro-presets`, { name, handle, description, changeNote, entries }, CONFIG)
 
-export const getMacroPreset = (id: number) =>
-  axios.get<MacroPresetReadResponse>(`${API_URL}/macro-presets/${id}`, CONFIG)
+export const getMacroPreset = (id: number) => axios.get<MacroPresetReadResponse>(`${API_URL}/macro-presets/${id}`, CONFIG)
 
 export const getMacroPresetByHandle = (handle: string) =>
   axios.get<MacroPresetReadResponse>(`${API_URL}/macro-presets/handle/${handle}`, CONFIG)
@@ -303,8 +294,7 @@ export const updateMacroPreset = (
   },
 ) => axios.patch<MacroPreset>(`${API_URL}/macro-presets/${id}`, update, CONFIG)
 
-export const deleteMacroPreset = (id: number) =>
-  axios.delete<{ success: boolean }>(`${API_URL}/macro-presets/${id}`, CONFIG)
+export const deleteMacroPreset = (id: number) => axios.delete<{ success: boolean }>(`${API_URL}/macro-presets/${id}`, CONFIG)
 
 export const listMacroPresets = (
   page = 1,
@@ -332,19 +322,13 @@ export const getMacroPresetVersions = (id: number) =>
   axios.get<MacroPresetVersion[]>(`${API_URL}/macro-presets/${id}/versions`, CONFIG)
 
 export const getMacroPresetVersion = (id: number, versionNumber: number) =>
-  axios.get<MacroPresetVersion>(
-    `${API_URL}/macro-presets/${id}/versions/${versionNumber}`,
-    CONFIG,
-  )
+  axios.get<MacroPresetVersion>(`${API_URL}/macro-presets/${id}/versions/${versionNumber}`, CONFIG)
 
 export const getMacroPresetThreadUsage = (id: number, limit = 5) =>
-  axios.get<MacroPresetThreadUsageResponse>(
-    `${API_URL}/macro-presets/${id}/thread-usage`,
-    {
-      params: { limit },
-      ...CONFIG,
-    },
-  )
+  axios.get<MacroPresetThreadUsageResponse>(`${API_URL}/macro-presets/${id}/thread-usage`, {
+    params: { limit },
+    ...CONFIG,
+  })
 
 export const getMacroPresetSummaries = (ids: number[], usageLimit = 3) =>
   axios.get<MacroPresetSummaryResponse>(`${API_URL}/macro-presets/summaries`, {
@@ -355,35 +339,16 @@ export const getMacroPresetSummaries = (ids: number[], usageLimit = 3) =>
     ...CONFIG,
   })
 
-export const enqueueMacroPresetUpdate = (
-  id: number,
-  changeNote: string | undefined,
-  entries: MacroEntryDraft[],
-) =>
-  axios.post(
-    `${API_URL}/macro-presets/${id}/update-requests`,
-    { changeNote, entries },
-    CONFIG,
-  )
+export const enqueueMacroPresetUpdate = (id: number, changeNote: string | undefined, entries: MacroEntryDraft[]) =>
+  axios.post(`${API_URL}/macro-presets/${id}/update-requests`, { changeNote, entries }, CONFIG)
 
 export const setGlobalMacroPresetPreference = (macroPresetId: number | null) =>
-  axios.put<MacroSetPreferenceResponse>(
-    `${API_URL}/users/me/preferences/macro-preset`,
-    { macroPresetId },
-    CONFIG,
-  )
+  axios.put<MacroSetPreferenceResponse>(`${API_URL}/users/me/preferences/macro-preset`, { macroPresetId }, CONFIG)
 
 export const getGlobalMacroPresetPreference = () =>
-  axios.get<MacroSetPreferenceResponse>(
-    `${API_URL}/users/me/preferences/macro-preset`,
-    CONFIG,
-  )
+  axios.get<MacroSetPreferenceResponse>(`${API_URL}/users/me/preferences/macro-preset`, CONFIG)
 
-export const setThreadMacroPresetPreference = (
-  threadId: string,
-  enabled: boolean,
-  macroPresetId: number | null,
-) =>
+export const setThreadMacroPresetPreference = (threadId: string, enabled: boolean, macroPresetId: number | null) =>
   axios.put<ThreadMacroSetPreferenceResponse>(
     `${API_URL}/threads/${threadId}/preferences/macro-preset`,
     { enabled, macroPresetId },
@@ -391,35 +356,22 @@ export const setThreadMacroPresetPreference = (
   )
 
 export const applyMacroPresetForThread = (threadId: string, macroPresetId: number) =>
-  axios.post<MacroApplyResponse>(
-    `${API_URL}/threads/${threadId}/macro-presets/${macroPresetId}/apply`,
-    {},
-    CONFIG,
-  )
+  axios.post<MacroApplyResponse>(`${API_URL}/threads/${threadId}/macro-presets/${macroPresetId}/apply`, {}, CONFIG)
 
 export const getRecommendedMacroPresets = (threadId: string, limit = 10) =>
-  axios.get<ThreadMacroPresetUsageResponse>(
-    `${API_URL}/threads/${threadId}/macro-presets/recommended`,
-    {
-      params: { limit },
-      ...CONFIG,
-    },
-  )
+  axios.get<ThreadMacroPresetUsageResponse>(`${API_URL}/threads/${threadId}/macro-presets/recommended`, {
+    params: { limit },
+    ...CONFIG,
+  })
 
 export const getPopularMacroPresets = (threadId: string, limit = 50) =>
-  axios.get<ThreadMacroPresetUsageResponse>(
-    `${API_URL}/threads/${threadId}/macro-presets/popular`,
-    {
-      params: { limit },
-      ...CONFIG,
-    },
-  )
+  axios.get<ThreadMacroPresetUsageResponse>(`${API_URL}/threads/${threadId}/macro-presets/popular`, {
+    params: { limit },
+    ...CONFIG,
+  })
 
 export const getActiveMacroRuntimeForThread = (threadId: string) =>
-  axios.get<ActiveMacroRuntime>(
-    `${API_URL}/threads/${threadId}/macro-presets/active`,
-    CONFIG,
-  )
+  axios.get<ActiveMacroRuntime>(`${API_URL}/threads/${threadId}/macro-presets/active`, CONFIG)
 
 export const updateCommunityNotes = (thread: ThreadType, update: string) =>
   axios.post(`${API_URL}/thread/updateCommunityNotes`, { threadUUID: thread.uuid, update: update }, CONFIG)
@@ -428,14 +380,13 @@ export const getRecentCounts = (thread_name: string, context: string | (string |
   axios.post(`${API_URL}/thread/getRecent`, { thread_name: thread_name, context: context, commentsOnly: commentsOnly }, CONFIG)
 
 export const recentOnLoadFull = (threadName: string, context?: string, commentsOnly?: boolean) =>
-  axios.get(`${API_URL}/thread/recentOnLoadFull/${threadName}`, 
-    {
+  axios.get(`${API_URL}/thread/recentOnLoadFull/${threadName}`, {
     params: {
-      context: context, 
-      commentsOnly: commentsOnly
+      context: context,
+      commentsOnly: commentsOnly,
     },
-  ...CONFIG,
-})
+    ...CONFIG,
+  })
 
 export const getOlderCounts = (thread_name: string, uuid: string) =>
   axios.post(`${API_URL}/thread/getOlder`, { thread_name: thread_name, uuid: uuid }, CONFIG)

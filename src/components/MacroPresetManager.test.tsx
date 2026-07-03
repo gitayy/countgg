@@ -1,12 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import MacroPresetManager from './MacroPresetManager'
-import {
-  createMacroPreset,
-  getMacroPreset,
-  getMacroPresetVersion,
-  getMacroPresetVersions,
-  listMacroPresets,
-} from '../utils/api'
+import { createMacroPreset, getMacroPreset, getMacroPresetVersion, getMacroPresetVersions, listMacroPresets } from '../utils/api'
 
 jest.mock('../utils/api', () => ({
   createMacroPreset: jest.fn(),
@@ -43,11 +37,7 @@ describe('MacroPresetManager', () => {
 
     const refreshMacroPresets = jest.fn().mockResolvedValue(undefined)
 
-    render(
-      <MacroPresetManager
-        refreshMacroPresets={refreshMacroPresets}
-      />,
-    )
+    render(<MacroPresetManager refreshMacroPresets={refreshMacroPresets} />)
 
     fireEvent.change(screen.getByLabelText('Display Name'), {
       target: { value: 'Fast Main' },
@@ -65,19 +55,13 @@ describe('MacroPresetManager', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create Preset' }))
 
     await waitFor(() =>
-      expect(mockedCreateMacroPreset).toHaveBeenCalledWith(
-        'Fast Main',
-        'fast-main',
-        'Starter macros',
-        'Initial version',
-        [
-          {
-            triggerKey: 'q',
-            macroType: 'CHAR_INSERT',
-            payloadJson: { char: '1' },
-          },
-        ],
-      ),
+      expect(mockedCreateMacroPreset).toHaveBeenCalledWith('Fast Main', 'fast-main', 'Starter macros', 'Initial version', [
+        {
+          triggerKey: 'q',
+          macroType: 'CHAR_INSERT',
+          payloadJson: { char: '1' },
+        },
+      ]),
     )
     expect(refreshMacroPresets).toHaveBeenCalled()
   })
@@ -111,22 +95,14 @@ describe('MacroPresetManager', () => {
       },
     })
 
-    render(
-      <MacroPresetManager
-        refreshMacroPresets={jest.fn().mockResolvedValue(undefined)}
-      />,
-    )
+    render(<MacroPresetManager refreshMacroPresets={jest.fn().mockResolvedValue(undefined)} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
     fireEvent.mouseDown(screen.getByLabelText('Your Preset'))
     fireEvent.click(await screen.findByText('Main Thread Macro Set'))
 
-    await waitFor(() =>
-      expect(mockedGetMacroPresetVersions).toHaveBeenCalledWith(7),
-    )
-    await waitFor(() =>
-      expect(mockedGetMacroPresetVersion).toHaveBeenCalledWith(7, 3),
-    )
+    await waitFor(() => expect(mockedGetMacroPresetVersions).toHaveBeenCalledWith(7))
+    await waitFor(() => expect(mockedGetMacroPresetVersion).toHaveBeenCalledWith(7, 3))
   })
 
   it('keeps create mode when forcedMode is create', async () => {
@@ -136,12 +112,7 @@ describe('MacroPresetManager', () => {
       },
     })
 
-    render(
-      <MacroPresetManager
-        refreshMacroPresets={jest.fn().mockResolvedValue(undefined)}
-        forcedMode="create"
-      />,
-    )
+    render(<MacroPresetManager refreshMacroPresets={jest.fn().mockResolvedValue(undefined)} forcedMode="create" />)
 
     fireEvent.change(screen.getByLabelText('Display Name'), {
       target: { value: 'Copy Draft Preset' },
@@ -156,19 +127,13 @@ describe('MacroPresetManager', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create Preset' }))
 
     await waitFor(() =>
-      expect(mockedCreateMacroPreset).toHaveBeenCalledWith(
-        'Copy Draft Preset',
-        'copy-draft-preset',
-        '',
-        'Initial version',
-        [
-          {
-            triggerKey: 'q',
-            macroType: 'CHAR_INSERT',
-            payloadJson: { char: '1' },
-          },
-        ],
-      ),
+      expect(mockedCreateMacroPreset).toHaveBeenCalledWith('Copy Draft Preset', 'copy-draft-preset', '', 'Initial version', [
+        {
+          triggerKey: 'q',
+          macroType: 'CHAR_INSERT',
+          payloadJson: { char: '1' },
+        },
+      ]),
     )
 
     expect(screen.getByText('Create Macro Preset')).toBeInTheDocument()

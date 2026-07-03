@@ -66,19 +66,9 @@ const ACTION_OPTIONS: MacroActionType[] = [
   'PASTE',
 ]
 
-const COMBO_OPTIONS: MacroComboId[] = [
-  'SELECT_ALL_COPY',
-  'SELECT_ALL_PASTE',
-]
+const COMBO_OPTIONS: MacroComboId[] = ['SELECT_ALL_COPY', 'SELECT_ALL_PASTE']
 
-const MACRO_TYPE_OPTIONS: MacroEntryType[] = [
-  'CHAR_INSERT',
-  'ACTION',
-  'SUBMIT',
-  'SUBMIT_ACTION',
-  'TOGGLE',
-  'COMBO',
-]
+const MACRO_TYPE_OPTIONS: MacroEntryType[] = ['CHAR_INSERT', 'ACTION', 'SUBMIT', 'SUBMIT_ACTION', 'TOGGLE', 'COMBO']
 
 const MACRO_TYPE_LABEL: Record<MacroEntryType, string> = {
   CHAR_INSERT: 'Character Remap',
@@ -196,10 +186,7 @@ const validateEntries = (entries: MacroEntryDraft[]): DraftValidationResult => {
       if (!ACTION_OPTIONS.includes(payload.action as MacroActionType)) {
         errs.push('Action is invalid.')
       }
-      const repeatValue =
-        payload.repeat === undefined || payload.repeat === null
-          ? 1
-          : Number(payload.repeat)
+      const repeatValue = payload.repeat === undefined || payload.repeat === null ? 1 : Number(payload.repeat)
       if (!Number.isInteger(repeatValue) || repeatValue < 1 || repeatValue > MAX_REPEAT) {
         errs.push(`Repeat must be an integer from 1 to ${MAX_REPEAT}.`)
       }
@@ -267,8 +254,7 @@ export const MacroPresetManager = ({
   const [debouncedOwnedPresetSearch, setDebouncedOwnedPresetSearch] = useState('')
   const [ownedPresetOptions, setOwnedPresetOptions] = useState<MacroPreset[]>([])
   const [loadingOwnedPresetOptions, setLoadingOwnedPresetOptions] = useState(false)
-  const title =
-    mode === 'create' ? 'Create Macro Preset' : 'Edit Macro Preset'
+  const title = mode === 'create' ? 'Create Macro Preset' : 'Edit Macro Preset'
 
   const selectedPreset = useMemo(
     () => ownedPresetOptions.find((preset) => preset.id === selectedPresetId),
@@ -312,9 +298,7 @@ export const MacroPresetManager = ({
       .then((res) => {
         const preset = res.data?.preset
         if (!preset) return
-        setOwnedPresetOptions((prev) =>
-          prev.some((p) => p.id === preset.id) ? prev : [preset, ...prev],
-        )
+        setOwnedPresetOptions((prev) => (prev.some((p) => p.id === preset.id) ? prev : [preset, ...prev]))
       })
       .catch(() => {})
   }, [selectedPresetId, ownedPresetOptions])
@@ -513,11 +497,7 @@ export const MacroPresetManager = ({
         description: nextDescription,
       })
       setOwnedPresetOptions((prev) =>
-        prev.map((preset) =>
-          preset.id === selectedPresetId
-            ? { ...preset, name: nextName, description: nextDescription }
-            : preset,
-        ),
+        prev.map((preset) => (preset.id === selectedPresetId ? { ...preset, name: nextName, description: nextDescription } : preset)),
       )
       await refreshMacroPresets()
       setSuccess('Preset details updated.')
@@ -546,11 +526,7 @@ export const MacroPresetManager = ({
     setEntries((prev) => prev.map((entry, idx) => (idx === index ? next : entry)))
   }
 
-  const captureTriggerKey = (
-    index: number,
-    entry: MacroEntryDraft,
-    event: KeyboardEvent<HTMLInputElement>,
-  ) => {
+  const captureTriggerKey = (index: number, entry: MacroEntryDraft, event: KeyboardEvent<HTMLInputElement>) => {
     event.preventDefault()
     event.stopPropagation()
     const rawKey = String(event.key || '')
@@ -567,14 +543,13 @@ export const MacroPresetManager = ({
     updateEntry(index, { ...entry, triggerKey: normalized.slice(0, 64) })
   }
 
-  const createDisabledReason =
-    saving
-      ? 'Saving...'
-      : newPresetName.trim().length < 3
-        ? 'Preset name must be at least 3 characters.'
-        : !HANDLE_REGEX.test(newPresetHandle.trim().toLowerCase())
-          ? 'Handle must be 3-64 chars, start with a lowercase letter, and then use lowercase letters, numbers, underscores, or hyphens.'
-          : showValidationHints
+  const createDisabledReason = saving
+    ? 'Saving...'
+    : newPresetName.trim().length < 3
+      ? 'Preset name must be at least 3 characters.'
+      : !HANDLE_REGEX.test(newPresetHandle.trim().toLowerCase())
+        ? 'Handle must be 3-64 chars, start with a lowercase letter, and then use lowercase letters, numbers, underscores, or hyphens.'
+        : showValidationHints
           ? validation.globalErrors[0] || Object.values(validation.rowErrors)[0]?.[0] || ''
           : ''
 
@@ -587,20 +562,17 @@ export const MacroPresetManager = ({
           ? validation.globalErrors[0] || Object.values(validation.rowErrors)[0]?.[0] || ''
           : ''
 
-  const activeValidationReason =
-    mode === 'create' ? createDisabledReason : saveDisabledReason
+  const activeValidationReason = mode === 'create' ? createDisabledReason : saveDisabledReason
 
-  const saveDetailsDisabledReason =
-    saving
-      ? 'Saving...'
-      : !selectedPresetId || !selectedPreset
-        ? 'Select a preset first.'
-        : editPresetName.trim().length < 3
-          ? 'Preset name must be at least 3 characters.'
-          : editPresetName.trim() === (selectedPreset.name || '') &&
-              editPresetDescription.trim() === (selectedPreset.description || '')
-            ? 'No changes to save.'
-            : ''
+  const saveDetailsDisabledReason = saving
+    ? 'Saving...'
+    : !selectedPresetId || !selectedPreset
+      ? 'Select a preset first.'
+      : editPresetName.trim().length < 3
+        ? 'Preset name must be at least 3 characters.'
+        : editPresetName.trim() === (selectedPreset.name || '') && editPresetDescription.trim() === (selectedPreset.description || '')
+          ? 'No changes to save.'
+          : ''
 
   return (
     <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper' }}>
@@ -618,11 +590,7 @@ export const MacroPresetManager = ({
           >
             Create
           </Button>
-          <Button
-            size="small"
-            variant={mode === 'edit' ? 'contained' : 'outlined'}
-            onClick={() => setMode('edit')}
-          >
+          <Button size="small" variant={mode === 'edit' ? 'contained' : 'outlined'} onClick={() => setMode('edit')}>
             Edit
           </Button>
         </Stack>
@@ -633,14 +601,11 @@ export const MacroPresetManager = ({
           {error}
         </Alert>
       )}
-      {showValidationHints &&
-        activeValidationReason &&
-        activeValidationReason !== 'Saving...' &&
-        activeValidationReason !== error && (
-          <Alert sx={{ mb: 2 }} severity="error">
-            {activeValidationReason}
-          </Alert>
-        )}
+      {showValidationHints && activeValidationReason && activeValidationReason !== 'Saving...' && activeValidationReason !== error && (
+        <Alert sx={{ mb: 2 }} severity="error">
+          {activeValidationReason}
+        </Alert>
+      )}
       {success && (
         <Alert sx={{ mb: 2 }} severity="success">
           {success}
@@ -662,7 +627,7 @@ export const MacroPresetManager = ({
               value={newPresetHandle}
               onChange={(e) => setNewPresetHandle(e.target.value.toLowerCase())}
               inputProps={{ maxLength: 64 }}
-              helperText='Used in the URL: /macros/<handle>. Must start with a lowercase letter, then letters/numbers/_/-.'
+              helperText="Used in the URL: /macros/<handle>. Must start with a lowercase letter, then letters/numbers/_/-."
               fullWidth
             />
             <TextField
@@ -707,9 +672,7 @@ export const MacroPresetManager = ({
                           ...params.InputProps,
                           endAdornment: (
                             <>
-                              {loadingOwnedPresetOptions ? (
-                                <CircularProgress color="inherit" size={16} sx={{ mr: 1 }} />
-                              ) : null}
+                              {loadingOwnedPresetOptions ? <CircularProgress color="inherit" size={16} sx={{ mr: 1 }} /> : null}
                               {params.InputProps.endAdornment}
                             </>
                           ),
@@ -779,11 +742,7 @@ export const MacroPresetManager = ({
 
           {!!selectedPresetId && (
             <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-              <Button
-                variant="text"
-                size="small"
-                onClick={() => setShowAdvancedEditOptions((prev) => !prev)}
-              >
+              <Button variant="text" size="small" onClick={() => setShowAdvancedEditOptions((prev) => !prev)}>
                 {showAdvancedEditOptions ? 'Hide Advanced' : 'Show Advanced'}
               </Button>
             </Stack>
@@ -811,11 +770,7 @@ export const MacroPresetManager = ({
                 </Select>
               </FormControl>
               {selectedVersionNumber !== activeVersionNumber && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => selectedPresetId && loadLatestVersion(selectedPresetId)}
-                >
+                <Button size="small" variant="outlined" onClick={() => selectedPresetId && loadLatestVersion(selectedPresetId)}>
                   Use Latest
                 </Button>
               )}
@@ -900,10 +855,7 @@ export const MacroPresetManager = ({
             {entries.map((entry, index) => {
               const payload = entry.payloadJson as any
               return (
-                <Box
-                  key={`macro-entry-${index}`}
-                  sx={{ p: 1, border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}
-                >
+                <Box key={`macro-entry-${index}`} sx={{ p: 1, border: '1px solid', borderColor: 'divider', borderRadius: '8px' }}>
                   <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }} flexWrap="wrap">
                     <IconButton color="error" size="small" onClick={() => removeEntry(index)}>
                       <DeleteIcon />
@@ -949,8 +901,7 @@ export const MacroPresetManager = ({
                       />
                     )}
 
-                    {(entry.macroType === 'ACTION' ||
-                      entry.macroType === 'SUBMIT_ACTION') && (
+                    {(entry.macroType === 'ACTION' || entry.macroType === 'SUBMIT_ACTION') && (
                       <FormControl sx={{ minWidth: 180 }}>
                         <InputLabel id={`macro-action-${index}`}>Action</InputLabel>
                         <Select
@@ -976,8 +927,7 @@ export const MacroPresetManager = ({
                       </FormControl>
                     )}
 
-                    {(entry.macroType === 'ACTION' ||
-                      entry.macroType === 'SUBMIT_ACTION') && (
+                    {(entry.macroType === 'ACTION' || entry.macroType === 'SUBMIT_ACTION') && (
                       <TextField
                         label="Repeat"
                         type="number"
@@ -1022,12 +972,7 @@ export const MacroPresetManager = ({
                   {showValidationHints && !!validation.rowErrors[index]?.length && (
                     <Box sx={{ mt: 0.75 }}>
                       {validation.rowErrors[index].map((err, errIdx) => (
-                        <Typography
-                          key={`macro-row-error-${index}-${errIdx}`}
-                          variant="caption"
-                          color="error"
-                          display="block"
-                        >
+                        <Typography key={`macro-row-error-${index}-${errIdx}`} variant="caption" color="error" display="block">
                           {err}
                         </Typography>
                       ))}

@@ -10,7 +10,7 @@ export const AboutPage = () => {
     return () => {
       document.title = 'Counting!'
     }
-  }, [location.pathname]);
+  }, [location.pathname])
 
   return (
     <Box sx={{ bgcolor: 'background.paper', color: 'text.primary', flexGrow: 1, p: 2 }}>

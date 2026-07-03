@@ -76,7 +76,8 @@
   },
   "scripts": {
     "start:dev": "vite",
-    "build": "vite build",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,json}\"",
+    "build": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,json}\" && vite build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "dev": "vite",

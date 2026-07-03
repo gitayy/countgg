@@ -76,7 +76,8 @@ export const Sidebar = () => {
   const navigate = useNavigate()
   const { hash } = useLocation()
 
-  const { loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, user, unreadMessageCount, preferences } = useContext(UserContext)
+  const { loading, loadedSiteVer, setLoadedSiteVer, counter, setCounter, user, unreadMessageCount, preferences } =
+    useContext(UserContext)
   const socket = useContext(SocketContext)
 
   useEffect(() => {
@@ -1047,7 +1048,8 @@ export const Sidebar = () => {
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
-                {counter && counter.color && [
+                {counter &&
+                  counter.color && [
                     <Link
                       color={'inherit'}
                       underline="none"
@@ -1073,8 +1075,7 @@ export const Sidebar = () => {
                       }}
                     >
                       <MenuItem>Preferences</MenuItem>
-                    </Link>
-                    ,
+                    </Link>,
                     <Link
                       color={'inherit'}
                       underline="none"
@@ -1087,9 +1088,8 @@ export const Sidebar = () => {
                       }}
                     >
                       <MenuItem>Macros</MenuItem>
-                    </Link>
-                  ]
-                }
+                    </Link>,
+                  ]}
                 <Link onClick={handleClose} target={'_blank'} color="inherit" underline="none" href="https://discord.gg/bfS9RQht6M">
                   <MenuItem>Discord Server</MenuItem>
                 </Link>

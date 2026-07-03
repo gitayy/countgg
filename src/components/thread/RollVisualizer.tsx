@@ -235,13 +235,19 @@ export default function RollVisualizer({
     if (recentHighRollHistory) {
       return [...recentHighRollHistory].reverse().slice(0, 5)
     }
-    return [...recentScopeRolls].reverse().filter((sample) => sample.roll > 0.99).slice(0, 5)
+    return [...recentScopeRolls]
+      .reverse()
+      .filter((sample) => sample.roll > 0.99)
+      .slice(0, 5)
   }, [recentHighRollHistory, recentScopeRolls])
   const recentLowRolls = useMemo(() => {
     if (recentLowRollHistory) {
       return [...recentLowRollHistory].reverse().slice(0, 5)
     }
-    return [...recentScopeRolls].reverse().filter((sample) => sample.roll < 0.01).slice(0, 5)
+    return [...recentScopeRolls]
+      .reverse()
+      .filter((sample) => sample.roll < 0.01)
+      .slice(0, 5)
   }, [recentLowRollHistory, recentScopeRolls])
   const latestId = recentScopeRolls.length > 0 ? recentScopeRolls[recentScopeRolls.length - 1].id : ''
 
@@ -439,18 +445,18 @@ export default function RollVisualizer({
           pb: 1,
           overflow: 'hidden',
         }}
-        >
-          <canvas
-            ref={plotCanvasRef}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              pointerEvents: 'none',
-              zIndex: 1,
-            }}
-          />
+      >
+        <canvas
+          ref={plotCanvasRef}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        />
         <Box
           sx={{
             position: 'absolute',

@@ -17,11 +17,7 @@ import {
 } from '@mui/material'
 import { Link as RouterLink, useSearchParams } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
-import {
-  getMacroPresetSummaries,
-  listMacroPresets,
-  macroPresetsFeatureEnabled,
-} from '../utils/api'
+import { getMacroPresetSummaries, listMacroPresets, macroPresetsFeatureEnabled } from '../utils/api'
 import { MacroEntry, MacroEntryDraft, MacroEntryPayload, MacroPreset } from '../utils/types'
 import MacroPresetManager from '../components/MacroPresetManager'
 import { prioritizeOwnedMacroPresets } from '../utils/macroPresets'
@@ -80,14 +76,9 @@ export const MacroPresetsPage = () => {
   const [total, setTotal] = useState(0)
   const [macroPresets, setMacroPresets] = useState<MacroPreset[]>([])
   const [ownedGroupIds, setOwnedGroupIds] = useState<Set<number>>(new Set())
-  const [groupPreviewById, setGroupPreviewById] = useState<
-    Record<number, { versionNumber: number | null; entries: MacroEntry[] }>
-  >({})
+  const [groupPreviewById, setGroupPreviewById] = useState<Record<number, { versionNumber: number | null; entries: MacroEntry[] }>>({})
   const [groupThreadUsageById, setGroupThreadUsageById] = useState<
-    Record<
-      number,
-      { threadId: string; threadName: string; threadTitle?: string; appliesCount: number }[]
-    >
+    Record<number, { threadId: string; threadName: string; threadTitle?: string; appliesCount: number }[]>
   >({})
   const [groupThreadUsageTotalById, setGroupThreadUsageTotalById] = useState<Record<number, number>>({})
   const [draftSeed, setDraftSeed] = useState<{
@@ -125,10 +116,7 @@ export const MacroPresetsPage = () => {
   }, [editSearch])
 
   const searchFilters = useMemo(() => parseMacroSearchFilters(debouncedSearch), [debouncedSearch])
-  const editSearchFilters = useMemo(
-    () => parseMacroSearchFilters(debouncedEditSearch),
-    [debouncedEditSearch],
-  )
+  const editSearchFilters = useMemo(() => parseMacroSearchFilters(debouncedEditSearch), [debouncedEditSearch])
 
   useEffect(() => {
     document.title = 'Macro Presets | Counting!'
@@ -164,14 +152,9 @@ export const MacroPresetsPage = () => {
 
     const summaryRes = await getMacroPresetSummaries(presetIds, 3)
     const previews: Record<number, { versionNumber: number | null; entries: MacroEntry[] }> = {}
-    const usage: Record<
-      number,
-      { threadId: string; threadName: string; threadTitle?: string; appliesCount: number }[]
-    > = {}
+    const usage: Record<number, { threadId: string; threadName: string; threadTitle?: string; appliesCount: number }[]> = {}
     const usageTotals: Record<number, number> = {}
-    const summariesById = new Map(
-      (summaryRes.data.items || []).map((item) => [item.macroPresetId, item]),
-    )
+    const summariesById = new Map((summaryRes.data.items || []).map((item) => [item.macroPresetId, item]))
     presets.forEach((preset) => {
       const summary = summariesById.get(preset.id)
       previews[preset.id] = {
@@ -210,11 +193,7 @@ export const MacroPresetsPage = () => {
       const itemsWithPinned = groupsRes.data.items || []
       setMacroPresets(itemsWithPinned)
       setOwnedGroupIds(
-        new Set(
-          itemsWithPinned
-            .filter((item) => item.ownerCounter?.discordId === user?.discordId)
-            .map((item) => item.id),
-        ),
+        new Set(itemsWithPinned.filter((item) => item.ownerCounter?.discordId === user?.discordId).map((item) => item.id)),
       )
       await hydrateGroupDetails(itemsWithPinned)
     } catch (err: any) {
@@ -258,15 +237,13 @@ export const MacroPresetsPage = () => {
     loadOwnedMacroPresets()
   }, [viewMode, loadOwnedMacroPresets])
 
-  const sortedMacroPresets = useMemo(
-    () => prioritizeOwnedMacroPresets(macroPresets, ownedGroupIds),
-    [macroPresets, ownedGroupIds],
-  )
+  const sortedMacroPresets = useMemo(() => prioritizeOwnedMacroPresets(macroPresets, ownedGroupIds), [macroPresets, ownedGroupIds])
 
   const filteredMacroPresets = useMemo(() => {
     return sortedMacroPresets.filter((preset) => {
       const entries = groupPreviewById[preset.id]?.entries || []
-      const ownerName = `${preset.ownerCounter?.name || ''} ${preset.ownerCounter?.username || ''} ${preset.ownerCounter?.uuid || ''}`.toLowerCase()
+      const ownerName =
+        `${preset.ownerCounter?.name || ''} ${preset.ownerCounter?.username || ''} ${preset.ownerCounter?.uuid || ''}`.toLowerCase()
       const name = (preset.name || '').toLowerCase()
       const handle = (preset.handle || '').toLowerCase()
       const threadUsageNames = (groupThreadUsageById[preset.id] || [])
@@ -285,12 +262,7 @@ export const MacroPresetsPage = () => {
       if (searchFilters.freeText && !freeTextHaystack.includes(searchFilters.freeText.toLowerCase())) return false
       return true
     })
-  }, [
-    sortedMacroPresets,
-    searchFilters,
-    groupPreviewById,
-    groupThreadUsageById,
-  ])
+  }, [sortedMacroPresets, searchFilters, groupPreviewById, groupThreadUsageById])
 
   const buildGroupedPreviewRows = (entries: MacroEntry[]) => {
     const presets: Record<string, string[]> = {
@@ -312,15 +284,11 @@ export const MacroPresetsPage = () => {
         return
       }
       if (entry.macroType === 'SUBMIT_ACTION') {
-        presets.Submit.push(
-          `${entry.triggerKey}+${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`,
-        )
+        presets.Submit.push(`${entry.triggerKey}+${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`)
         return
       }
       if (entry.macroType === 'ACTION') {
-        presets.Actions.push(
-          `${entry.triggerKey}:${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`,
-        )
+        presets.Actions.push(`${entry.triggerKey}:${String(payload.action || '').toLowerCase()} x${payload.repeat ?? 1}`)
         return
       }
       if (entry.macroType === 'COMBO') {
@@ -398,447 +366,430 @@ export const MacroPresetsPage = () => {
           p: 0,
         }}
       >
-      <Box
-        sx={{
-          p: 2,
-          borderRadius: '10px',
-          bgcolor: 'background.paper',
-          border: '1px solid',
-          borderColor: 'divider',
-          mb: 2,
-        }}
-      >
-      <Typography variant="h4" sx={{ mb: 1 }}>
-        Macro Presets
-      </Typography>
-
-      {error && (
-        <Alert sx={{ mb: 2 }} severity="error">
-          {error}
-        </Alert>
-      )}
-
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }} sx={{ mb: 0.5 }}>
-        <Tabs
-          value={viewMode}
-          onChange={(_, value) => {
-            setViewMode(value)
-            const next = new URLSearchParams(searchParams)
-            next.set('tab', value)
-            if (value !== 'edit') {
-              next.delete('preset')
-            }
-            setSearchParams(next, { replace: true })
-          }}
-          sx={{
-            minHeight: 36,
-            '& .MuiTabs-indicator': { display: 'none' },
-            '& .MuiTab-root': {
-              minHeight: 36,
-              px: 1.5,
-              py: 0.5,
-              mr: 0.75,
-              borderRadius: '8px',
-              border: '1px solid',
-              borderColor: 'divider',
-              textTransform: 'none',
-              color: 'text.secondary',
-              fontWeight: 600,
-            },
-            '& .MuiTab-root.Mui-selected': {
-              color: '#fff !important',
-              bgcolor: 'primary.main',
-              borderColor: 'primary.main',
-            },
-          }}
-        >
-          <Tab disableRipple label="Discover" value="discover" />
-          <Tab disableRipple label="Create" value="create" />
-          <Tab disableRipple label="Edit" value="edit" />
-        </Tabs>
-      </Stack>
-      </Box>
-
-      {viewMode === 'discover' && (
-        <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper', mb: 2 }}>
-          <TextField
-            label="Search"
-            helperText='Use plain text, or filters: creator:pull name:test1 handle:test1 thread:"main"'
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value)
-              setPage(1)
-            }}
-            fullWidth
-          />
-
-          {loading && <LinearProgress sx={{ mt: 1.5 }} />}
-          <Divider sx={{ my: 2 }} />
-
-          <Stack spacing={1.25}>
-            {filteredMacroPresets.map((preset) => (
-              (() => {
-                const entries = groupPreviewById[preset.id]?.entries || []
-                const previewRows = buildGroupedPreviewRows(entries)
-                const usageRows = groupThreadUsageById[preset.id] || []
-                const topUsage = usageRows[0]
-                return (
-              <Box
-                key={preset.id}
-                sx={{
-                  p: 1.5,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: '10px',
-                  bgcolor: 'background.default',
-                  transition: 'border-color 120ms ease, transform 120ms ease',
-                  '&:hover': {
-                    borderColor: 'primary.main',
-                    transform: 'translateY(-1px)',
-                  },
-                }}
-              >
-                <Stack direction={{ xs: 'column', lg: 'row' }} justifyContent="space-between" spacing={1.5}>
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                      <Avatar
-                        sx={{ width: 28, height: 28, fontSize: 13 }}
-                        src={
-                          (preset.ownerCounter?.avatar &&
-                            preset.ownerCounter.avatar.length > 5 &&
-                            `https://cdn.discordapp.com/avatars/${preset.ownerCounter.discordId}/${preset.ownerCounter.avatar}`) ||
-                          'https://cdn.discordapp.com/embed/avatars/0.png'
-                        }
-                      >
-                        {preset.ownerCounter?.name?.[0]?.toUpperCase() || preset.ownerCounter?.username?.[0]?.toUpperCase() || '?'}
-                      </Avatar>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                      >
-                        {preset.ownerCounter
-                          ? `${preset.ownerCounter.name || preset.ownerCounter.username || 'Unknown'}${preset.ownerCounter.username ? ` (@${preset.ownerCounter.username})` : ''}`
-                          : 'Unknown creator'}
-                      </Typography>
-                    </Stack>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 700, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >
-                      {preset.name}
-                    </Typography>
-                    {preset.handle && (
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                      >
-                        /macros/{preset.handle}
-                      </Typography>
-                    )}
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        mt: 0.25,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {preset.description || 'No description'}
-                    </Typography>
-                    <Stack direction="row" spacing={0.75} sx={{ mt: 0.85, flexWrap: 'wrap' }}>
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={`v${groupPreviewById[preset.id]?.versionNumber ?? '-'}`}
-                      />
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={`${entries.length} ${entries.length === 1 ? 'mapping' : 'mappings'}`}
-                      />
-                      {ownedGroupIds.has(preset.id) && (
-                        <Chip size="small" color="success" variant="outlined" label="Owned" />
-                      )}
-                      {topUsage && (
-                        <Chip
-                          size="small"
-                          color="primary"
-                          variant="outlined"
-                          component={RouterLink}
-                          clickable
-                          to={`/thread/${encodeURIComponent(topUsage.threadName || topUsage.threadId)}`}
-                          label={`Top thread: ${topUsage.threadTitle || topUsage.threadName} (${topUsage.appliesCount})`}
-                        />
-                      )}
-                    </Stack>
-                  </Box>
-                  <Stack direction={{ xs: 'row', lg: 'column' }} spacing={0.75} alignItems={{ xs: 'center', lg: 'flex-end' }}>
-                    {preset.handle && (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        component={RouterLink}
-                        to={`/macros/${preset.handle}`}
-                      >
-                        Open
-                      </Button>
-                    )}
-                    <Button size="small" variant="contained" onClick={() => copyToDraft(preset)}>
-                      Copy To Draft
-                    </Button>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >
-                      {(groupThreadUsageTotalById[preset.id] || 0) > 0
-                        ? `${groupThreadUsageTotalById[preset.id]} thread${groupThreadUsageTotalById[preset.id] > 1 ? 's' : ''} using this`
-                        : 'No users set this on a thread yet'}
-                    </Typography>
-                  </Stack>
-                </Stack>
-                <Divider sx={{ my: 1.25 }} />
-                <Stack spacing={0.4}>
-                  {previewRows.map((row) => (
-                    <Typography
-                      key={`${preset.id}-${row}`}
-                      variant="caption"
-                      color="text.primary"
-                      sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                    >
-                      {row}
-                    </Typography>
-                  ))}
-                  {previewRows.length === 0 && (
-                    <Typography variant="caption" color="text.secondary">
-                      No mappings in latest version.
-                    </Typography>
-                  )}
-                </Stack>
-                <Box sx={{ mt: 1, display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-                  {usageRows.slice(topUsage ? 1 : 0).map((row) =>
-                    row.threadId ? (
-                      <Chip
-                        key={`${preset.id}-${row.threadId}`}
-                        size="small"
-                        variant="outlined"
-                        component={RouterLink}
-                        clickable
-                        to={`/thread/${encodeURIComponent(row.threadName || row.threadId)}`}
-                        label={`${row.threadTitle || row.threadName} (${row.appliesCount})`}
-                      />
-                    ) : (
-                      <Chip
-                        key={`${preset.id}-${row.threadName}`}
-                        size="small"
-                        variant="outlined"
-                        label={`${row.threadTitle || row.threadName} (${row.appliesCount})`}
-                      />
-                    ),
-                  )}
-                  {usageRows.length === 0 && (
-                    <Typography variant="caption" color="text.secondary">
-                      No thread users yet
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-                )
-              })()
-            ))}
-            {!loading && filteredMacroPresets.length === 0 && (
-              <Typography variant="body2" color="text.secondary">
-                No macro presets found with current search/filters.
-              </Typography>
-            )}
-          </Stack>
-
-          {total > PAGE_SIZE && (
-            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-              <Pagination
-                count={Math.max(1, Math.ceil(total / PAGE_SIZE))}
-                page={page}
-                onChange={(_, value) => setPage(value)}
-              />
-            </Box>
-          )}
-        </Box>
-      )}
-
-      {viewMode === 'create' && (
-        <>
-          {copyNotice && (
-            <Alert severity="success" sx={{ mb: 2 }} onClose={() => setCopyNotice('')}>
-              {copyNotice}
-            </Alert>
-          )}
-          <MacroPresetManager
-            refreshMacroPresets={loadMacroPresets}
-            draftSeed={draftSeed}
-            forcedMode="create"
-          />
-        </>
-      )}
-
-      {viewMode === 'edit' && (
         <Box
           sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) minmax(0, 1fr)' },
-            gap: 2,
-            alignItems: 'start',
+            p: 2,
+            borderRadius: '10px',
+            bgcolor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+            mb: 2,
           }}
         >
-          <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper' }}>
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
-              Your Presets
-            </Typography>
-            {editError && (
-              <Alert severity="error" sx={{ mb: 1.5 }}>
-                {editError}
-              </Alert>
-            )}
+          <Typography variant="h4" sx={{ mb: 1 }}>
+            Macro Presets
+          </Typography>
+
+          {error && (
+            <Alert sx={{ mb: 2 }} severity="error">
+              {error}
+            </Alert>
+          )}
+
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }} sx={{ mb: 0.5 }}>
+            <Tabs
+              value={viewMode}
+              onChange={(_, value) => {
+                setViewMode(value)
+                const next = new URLSearchParams(searchParams)
+                next.set('tab', value)
+                if (value !== 'edit') {
+                  next.delete('preset')
+                }
+                setSearchParams(next, { replace: true })
+              }}
+              sx={{
+                minHeight: 36,
+                '& .MuiTabs-indicator': { display: 'none' },
+                '& .MuiTab-root': {
+                  minHeight: 36,
+                  px: 1.5,
+                  py: 0.5,
+                  mr: 0.75,
+                  borderRadius: '8px',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  textTransform: 'none',
+                  color: 'text.secondary',
+                  fontWeight: 600,
+                },
+                '& .MuiTab-root.Mui-selected': {
+                  color: '#fff !important',
+                  bgcolor: 'primary.main',
+                  borderColor: 'primary.main',
+                },
+              }}
+            >
+              <Tab disableRipple label="Discover" value="discover" />
+              <Tab disableRipple label="Create" value="create" />
+              <Tab disableRipple label="Edit" value="edit" />
+            </Tabs>
+          </Stack>
+        </Box>
+
+        {viewMode === 'discover' && (
+          <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper', mb: 2 }}>
             <TextField
-              label="Search Your Presets"
-              helperText='Use plain text or filters: name:test handle:main thread:"main"'
-              value={editSearch}
+              label="Search"
+              helperText='Use plain text, or filters: creator:pull name:test1 handle:test1 thread:"main"'
+              value={search}
               onChange={(e) => {
-                setEditSearch(e.target.value)
-                setEditPage(1)
+                setSearch(e.target.value)
+                setPage(1)
               }}
               fullWidth
             />
-            {editLoading && <LinearProgress sx={{ mt: 1.5 }} />}
+
+            {loading && <LinearProgress sx={{ mt: 1.5 }} />}
             <Divider sx={{ my: 2 }} />
+
             <Stack spacing={1.25}>
-              {editMacroPresets.map((preset) => {
-                const entries = groupPreviewById[preset.id]?.entries || []
-                const previewRows = buildGroupedPreviewRows(entries)
-                return (
-                  <Box
-                    key={`edit-${preset.id}`}
-                    sx={{
-                      p: 1.5,
-                      border: '1px solid',
-                      borderColor:
-                        selectedEditPresetId === preset.id ? 'primary.main' : 'divider',
-                      borderRadius: '10px',
-                      bgcolor: 'background.default',
-                    }}
-                  >
-                    <Stack
-                      direction={{ xs: 'column', lg: 'row' }}
-                      justifyContent="space-between"
-                      spacing={1.5}
+              {filteredMacroPresets.map((preset) =>
+                (() => {
+                  const entries = groupPreviewById[preset.id]?.entries || []
+                  const previewRows = buildGroupedPreviewRows(entries)
+                  const usageRows = groupThreadUsageById[preset.id] || []
+                  const topUsage = usageRows[0]
+                  return (
+                    <Box
+                      key={preset.id}
+                      sx={{
+                        p: 1.5,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: '10px',
+                        bgcolor: 'background.default',
+                        transition: 'border-color 120ms ease, transform 120ms ease',
+                        '&:hover': {
+                          borderColor: 'primary.main',
+                          transform: 'translateY(-1px)',
+                        },
+                      }}
                     >
-                      <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography
-                          variant="subtitle1"
-                          sx={{ fontWeight: 700, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                        >
-                          {preset.name}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ mt: 0.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                        >
-                          {preset.description || 'No description'}
-                        </Typography>
-                        <Stack direction="row" spacing={0.75} sx={{ mt: 0.85, flexWrap: 'wrap' }}>
-                          <Chip
-                            size="small"
-                            variant="outlined"
-                            label={`v${groupPreviewById[preset.id]?.versionNumber ?? '-'}`}
-                          />
-                          <Chip
-                            size="small"
-                            variant="outlined"
-                            label={`${entries.length} ${entries.length === 1 ? 'mapping' : 'mappings'}`}
-                          />
-                        </Stack>
-                      </Box>
-                      <Stack direction={{ xs: 'row', lg: 'column' }} spacing={0.75}>
-                        <Button
-                          size="small"
-                          variant={selectedEditPresetId === preset.id ? 'contained' : 'outlined'}
-                          onClick={() => selectPresetForEdit(preset.id)}
-                        >
-                          Edit
-                        </Button>
-                        {preset.handle && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            component={RouterLink}
-                            to={`/macros/${preset.handle}`}
+                      <Stack direction={{ xs: 'column', lg: 'row' }} justifyContent="space-between" spacing={1.5}>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                            <Avatar
+                              sx={{ width: 28, height: 28, fontSize: 13 }}
+                              src={
+                                (preset.ownerCounter?.avatar &&
+                                  preset.ownerCounter.avatar.length > 5 &&
+                                  `https://cdn.discordapp.com/avatars/${preset.ownerCounter.discordId}/${preset.ownerCounter.avatar}`) ||
+                                'https://cdn.discordapp.com/embed/avatars/0.png'
+                              }
+                            >
+                              {preset.ownerCounter?.name?.[0]?.toUpperCase() ||
+                                preset.ownerCounter?.username?.[0]?.toUpperCase() ||
+                                '?'}
+                            </Avatar>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                            >
+                              {preset.ownerCounter
+                                ? `${preset.ownerCounter.name || preset.ownerCounter.username || 'Unknown'}${preset.ownerCounter.username ? ` (@${preset.ownerCounter.username})` : ''}`
+                                : 'Unknown creator'}
+                            </Typography>
+                          </Stack>
+                          <Typography
+                            variant="subtitle1"
+                            sx={{
+                              fontWeight: 700,
+                              lineHeight: 1.2,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
                           >
-                            Open
+                            {preset.name}
+                          </Typography>
+                          {preset.handle && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                            >
+                              /macros/{preset.handle}
+                            </Typography>
+                          )}
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              mt: 0.25,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {preset.description || 'No description'}
+                          </Typography>
+                          <Stack direction="row" spacing={0.75} sx={{ mt: 0.85, flexWrap: 'wrap' }}>
+                            <Chip size="small" variant="outlined" label={`v${groupPreviewById[preset.id]?.versionNumber ?? '-'}`} />
+                            <Chip
+                              size="small"
+                              variant="outlined"
+                              label={`${entries.length} ${entries.length === 1 ? 'mapping' : 'mappings'}`}
+                            />
+                            {ownedGroupIds.has(preset.id) && <Chip size="small" color="success" variant="outlined" label="Owned" />}
+                            {topUsage && (
+                              <Chip
+                                size="small"
+                                color="primary"
+                                variant="outlined"
+                                component={RouterLink}
+                                clickable
+                                to={`/thread/${encodeURIComponent(topUsage.threadName || topUsage.threadId)}`}
+                                label={`Top thread: ${topUsage.threadTitle || topUsage.threadName} (${topUsage.appliesCount})`}
+                              />
+                            )}
+                          </Stack>
+                        </Box>
+                        <Stack direction={{ xs: 'row', lg: 'column' }} spacing={0.75} alignItems={{ xs: 'center', lg: 'flex-end' }}>
+                          {preset.handle && (
+                            <Button size="small" variant="outlined" component={RouterLink} to={`/macros/${preset.handle}`}>
+                              Open
+                            </Button>
+                          )}
+                          <Button size="small" variant="contained" onClick={() => copyToDraft(preset)}>
+                            Copy To Draft
                           </Button>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          >
+                            {(groupThreadUsageTotalById[preset.id] || 0) > 0
+                              ? `${groupThreadUsageTotalById[preset.id]} thread${groupThreadUsageTotalById[preset.id] > 1 ? 's' : ''} using this`
+                              : 'No users set this on a thread yet'}
+                          </Typography>
+                        </Stack>
+                      </Stack>
+                      <Divider sx={{ my: 1.25 }} />
+                      <Stack spacing={0.4}>
+                        {previewRows.map((row) => (
+                          <Typography
+                            key={`${preset.id}-${row}`}
+                            variant="caption"
+                            color="text.primary"
+                            sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          >
+                            {row}
+                          </Typography>
+                        ))}
+                        {previewRows.length === 0 && (
+                          <Typography variant="caption" color="text.secondary">
+                            No mappings in latest version.
+                          </Typography>
                         )}
                       </Stack>
-                    </Stack>
-                    <Divider sx={{ my: 1.25 }} />
-                    <Stack spacing={0.4}>
-                      {previewRows.map((row) => (
-                        <Typography
-                          key={`${preset.id}-${row}`}
-                          variant="caption"
-                          color="text.primary"
-                          sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                        >
-                          {row}
-                        </Typography>
-                      ))}
-                      {previewRows.length === 0 && (
-                        <Typography variant="caption" color="text.secondary">
-                          No mappings in latest version.
-                        </Typography>
-                      )}
-                    </Stack>
-                  </Box>
-                )
-              })}
+                      <Box sx={{ mt: 1, display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                        {usageRows
+                          .slice(topUsage ? 1 : 0)
+                          .map((row) =>
+                            row.threadId ? (
+                              <Chip
+                                key={`${preset.id}-${row.threadId}`}
+                                size="small"
+                                variant="outlined"
+                                component={RouterLink}
+                                clickable
+                                to={`/thread/${encodeURIComponent(row.threadName || row.threadId)}`}
+                                label={`${row.threadTitle || row.threadName} (${row.appliesCount})`}
+                              />
+                            ) : (
+                              <Chip
+                                key={`${preset.id}-${row.threadName}`}
+                                size="small"
+                                variant="outlined"
+                                label={`${row.threadTitle || row.threadName} (${row.appliesCount})`}
+                              />
+                            ),
+                          )}
+                        {usageRows.length === 0 && (
+                          <Typography variant="caption" color="text.secondary">
+                            No thread users yet
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                  )
+                })(),
+              )}
+              {!loading && filteredMacroPresets.length === 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  No macro presets found with current search/filters.
+                </Typography>
+              )}
             </Stack>
-            {!editLoading && editMacroPresets.length === 0 && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                No presets found.
-              </Typography>
-            )}
-            {editTotal > PAGE_SIZE && (
+
+            {total > PAGE_SIZE && (
               <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                <Pagination
-                  count={Math.max(1, Math.ceil(editTotal / PAGE_SIZE))}
-                  page={editPage}
-                  onChange={(_, value) => setEditPage(value)}
-                />
+                <Pagination count={Math.max(1, Math.ceil(total / PAGE_SIZE))} page={page} onChange={(_, value) => setPage(value)} />
               </Box>
             )}
           </Box>
+        )}
+
+        {viewMode === 'create' && (
+          <>
+            {copyNotice && (
+              <Alert severity="success" sx={{ mb: 2 }} onClose={() => setCopyNotice('')}>
+                {copyNotice}
+              </Alert>
+            )}
+            <MacroPresetManager refreshMacroPresets={loadMacroPresets} draftSeed={draftSeed} forcedMode="create" />
+          </>
+        )}
+
+        {viewMode === 'edit' && (
           <Box
             sx={{
-              position: { xs: 'static', lg: 'sticky' },
-              top: { xs: 'auto', lg: 16 },
-              alignSelf: 'start',
-              maxHeight: { xs: 'none', lg: 'calc(100vh - 32px)' },
-              overflowY: { xs: 'visible', lg: 'auto' },
-              pr: { xs: 0, lg: 0.5 },
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) minmax(0, 1fr)' },
+              gap: 2,
+              alignItems: 'start',
             }}
           >
-            <MacroPresetManager
-              refreshMacroPresets={loadOwnedMacroPresets}
-              draftSeed={draftSeed}
-              forcedMode="edit"
-              initialSelectedPresetId={editPresetIdFromUrl ?? selectedEditPresetId}
-              hidePresetSelector
-            />
+            <Box sx={{ p: 2, borderRadius: '10px', bgcolor: 'background.paper' }}>
+              <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                Your Presets
+              </Typography>
+              {editError && (
+                <Alert severity="error" sx={{ mb: 1.5 }}>
+                  {editError}
+                </Alert>
+              )}
+              <TextField
+                label="Search Your Presets"
+                helperText='Use plain text or filters: name:test handle:main thread:"main"'
+                value={editSearch}
+                onChange={(e) => {
+                  setEditSearch(e.target.value)
+                  setEditPage(1)
+                }}
+                fullWidth
+              />
+              {editLoading && <LinearProgress sx={{ mt: 1.5 }} />}
+              <Divider sx={{ my: 2 }} />
+              <Stack spacing={1.25}>
+                {editMacroPresets.map((preset) => {
+                  const entries = groupPreviewById[preset.id]?.entries || []
+                  const previewRows = buildGroupedPreviewRows(entries)
+                  return (
+                    <Box
+                      key={`edit-${preset.id}`}
+                      sx={{
+                        p: 1.5,
+                        border: '1px solid',
+                        borderColor: selectedEditPresetId === preset.id ? 'primary.main' : 'divider',
+                        borderRadius: '10px',
+                        bgcolor: 'background.default',
+                      }}
+                    >
+                      <Stack direction={{ xs: 'column', lg: 'row' }} justifyContent="space-between" spacing={1.5}>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography
+                            variant="subtitle1"
+                            sx={{
+                              fontWeight: 700,
+                              lineHeight: 1.2,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {preset.name}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ mt: 0.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          >
+                            {preset.description || 'No description'}
+                          </Typography>
+                          <Stack direction="row" spacing={0.75} sx={{ mt: 0.85, flexWrap: 'wrap' }}>
+                            <Chip size="small" variant="outlined" label={`v${groupPreviewById[preset.id]?.versionNumber ?? '-'}`} />
+                            <Chip
+                              size="small"
+                              variant="outlined"
+                              label={`${entries.length} ${entries.length === 1 ? 'mapping' : 'mappings'}`}
+                            />
+                          </Stack>
+                        </Box>
+                        <Stack direction={{ xs: 'row', lg: 'column' }} spacing={0.75}>
+                          <Button
+                            size="small"
+                            variant={selectedEditPresetId === preset.id ? 'contained' : 'outlined'}
+                            onClick={() => selectPresetForEdit(preset.id)}
+                          >
+                            Edit
+                          </Button>
+                          {preset.handle && (
+                            <Button size="small" variant="outlined" component={RouterLink} to={`/macros/${preset.handle}`}>
+                              Open
+                            </Button>
+                          )}
+                        </Stack>
+                      </Stack>
+                      <Divider sx={{ my: 1.25 }} />
+                      <Stack spacing={0.4}>
+                        {previewRows.map((row) => (
+                          <Typography
+                            key={`${preset.id}-${row}`}
+                            variant="caption"
+                            color="text.primary"
+                            sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                          >
+                            {row}
+                          </Typography>
+                        ))}
+                        {previewRows.length === 0 && (
+                          <Typography variant="caption" color="text.secondary">
+                            No mappings in latest version.
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Box>
+                  )
+                })}
+              </Stack>
+              {!editLoading && editMacroPresets.length === 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  No presets found.
+                </Typography>
+              )}
+              {editTotal > PAGE_SIZE && (
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                  <Pagination
+                    count={Math.max(1, Math.ceil(editTotal / PAGE_SIZE))}
+                    page={editPage}
+                    onChange={(_, value) => setEditPage(value)}
+                  />
+                </Box>
+              )}
+            </Box>
+            <Box
+              sx={{
+                position: { xs: 'static', lg: 'sticky' },
+                top: { xs: 'auto', lg: 16 },
+                alignSelf: 'start',
+                maxHeight: { xs: 'none', lg: 'calc(100vh - 32px)' },
+                overflowY: { xs: 'visible', lg: 'auto' },
+                pr: { xs: 0, lg: 0.5 },
+              }}
+            >
+              <MacroPresetManager
+                refreshMacroPresets={loadOwnedMacroPresets}
+                draftSeed={draftSeed}
+                forcedMode="edit"
+                initialSelectedPresetId={editPresetIdFromUrl ?? selectedEditPresetId}
+                hidePresetSelector
+              />
+            </Box>
           </Box>
-        </Box>
-      )}
+        )}
       </Container>
     </Box>
   )

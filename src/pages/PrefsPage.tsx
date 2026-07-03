@@ -36,7 +36,13 @@ import {
   standardizeFormatOptions,
   submitShortcutOptions,
 } from '../utils/helpers'
-import { getGlobalMacroPresetPreference, listMacroPresets, macroPresetsFeatureEnabled, setGlobalMacroPresetPreference, updateCounterPrefs } from '../utils/api'
+import {
+  getGlobalMacroPresetPreference,
+  listMacroPresets,
+  macroPresetsFeatureEnabled,
+  setGlobalMacroPresetPreference,
+  updateCounterPrefs,
+} from '../utils/api'
 import { CounterCard } from '../components/CounterCard'
 import { Loading } from '../components/Loading'
 import { HexColorPicker } from 'react-colorful'
@@ -106,10 +112,7 @@ export const PrefsPage = () => {
   const [ownedGroupIds, setOwnedGroupIds] = useState<Set<number>>(new Set())
   const [selectedMacroPresetId, setSelectedMacroPresetId] = useState<number | null>(user?.macroPresetId ?? null)
   const [globalMacroSelectionSaving, setGlobalMacroSelectionSaving] = useState(false)
-  const sortedMacroPresets = useMemo(
-    () => prioritizeOwnedMacroPresets(macroPresets, ownedGroupIds),
-    [macroPresets, ownedGroupIds],
-  )
+  const sortedMacroPresets = useMemo(() => prioritizeOwnedMacroPresets(macroPresets, ownedGroupIds), [macroPresets, ownedGroupIds])
   const globalMacroPresetOptions = useMemo<MacroPreset[]>(
     () => [
       {
@@ -129,10 +132,7 @@ export const PrefsPage = () => {
 
   const loadMacroPresets = useCallback(async () => {
     try {
-      const [allRes, mineRes] = await Promise.all([
-        listMacroPresets(1, 100),
-        listMacroPresets(1, 100, undefined, true),
-      ])
+      const [allRes, mineRes] = await Promise.all([listMacroPresets(1, 100), listMacroPresets(1, 100, undefined, true)])
       setMacroPresets(allRes.data.items || [])
       setOwnedGroupIds(new Set((mineRes.data.items || []).map((item) => item.id)))
     } catch (err) {
@@ -161,9 +161,7 @@ export const PrefsPage = () => {
         setSnackbarSeverity('success')
         setSnackbarOpen(true)
         setSnackbarMessage(
-          (response.data.macroPresetId ?? null) === null
-            ? 'Global macro preset cleared.'
-            : 'Global macro preset saved.',
+          (response.data.macroPresetId ?? null) === null ? 'Global macro preset cleared.' : 'Global macro preset saved.',
         )
       } catch (err) {
         setSnackbarSeverity('error')
@@ -248,9 +246,7 @@ export const PrefsPage = () => {
       counter.pronouns = pronounOptions[selectedPronounIndex]
       try {
         const res = await updateCounterPrefs(user, counter)
-        const macroRes = macroPresetsEnabled
-          ? await setGlobalMacroPresetPreference(selectedMacroPresetId)
-          : { status: 200 }
+        const macroRes = macroPresetsEnabled ? await setGlobalMacroPresetPreference(selectedMacroPresetId) : { status: 200 }
         if (res.status == 201 && macroRes.status == 200) {
           setSnackbarSeverity('success')
           setSnackbarOpen(true)
@@ -508,28 +504,51 @@ export const PrefsPage = () => {
             </Box>
           </Box>
           <Preferences
-            savePrefs={savePrefs} maybeU={maybeU} title={`Counting Preferences`}
-            prefOnline={prefOnline} setPrefOnline={setPrefOnline}
-            prefDiscordPings={prefDiscordPings} setPrefDiscordPings={setPrefDiscordPings}
-            prefLoadFromBottom={prefLoadFromBottom} setPrefLoadFromBottom={setPrefLoadFromBottom}
-            prefStrikeColor={prefStrikeColor} setPrefStrikeColor={setPrefStrikeColor}
-            prefStandardizeFormat={prefStandardizeFormat} setPrefStandardizeFormat={setPrefStandardizeFormat}
-            prefNightMode={prefNightMode} setPrefNightMode={setPrefNightMode}
-            prefSubmitShortcut={prefSubmitShortcut} setPrefSubmitShortcut={setPrefSubmitShortcut}
-            prefClear={prefClear} setPrefClear={setPrefClear}
-            prefTimeSinceLastCount={prefTimeSinceLastCount} setPrefTimeSinceLastCount={setPrefTimeSinceLastCount}
-            prefCustomStricken={prefCustomStricken} setPrefCustomStricken={setPrefCustomStricken}
-            prefPostStyle={prefPostStyle} setPrefPostStyle={setPrefPostStyle}
-            prefPostStyleMobile={prefPostStyleMobile} setPrefPostStyleMobile={setPrefPostStyleMobile}
-            prefReplyTimeInterval={prefReplyTimeInterval} setPrefReplyTimeInterval={setPrefReplyTimeInterval}
-            prefNightModeColors={prefNightModeColors} setPrefNightModeColors={setPrefNightModeColors}
-            prefPostPosition={prefPostPosition} setPrefPostPosition={setPrefPostPosition}
-            prefHideStricken={prefHideStricken} setPrefHideStricken={setPrefHideStricken}
-            prefHighlightLastCount={prefHighlightLastCount} setPrefHighlightLastCount={setPrefHighlightLastCount}
-            prefHighlightLastCountColor={prefHighlightLastCountColor} setPrefHighlightLastCountColor={setPrefHighlightLastCountColor}
-            prefSoundOnStricken={prefSoundOnStricken} setPrefSoundOnStricken={setPrefSoundOnStricken}
-            prefHideThreadPicker={prefHideThreadPicker} setPrefHideThreadPicker={setPrefHideThreadPicker}
-            prefStrickenCountOpacity={prefStrickenCountOpacity} setPrefStrickenCountOpacity={setPrefStrickenCountOpacity}
+            savePrefs={savePrefs}
+            maybeU={maybeU}
+            title={`Counting Preferences`}
+            prefOnline={prefOnline}
+            setPrefOnline={setPrefOnline}
+            prefDiscordPings={prefDiscordPings}
+            setPrefDiscordPings={setPrefDiscordPings}
+            prefLoadFromBottom={prefLoadFromBottom}
+            setPrefLoadFromBottom={setPrefLoadFromBottom}
+            prefStrikeColor={prefStrikeColor}
+            setPrefStrikeColor={setPrefStrikeColor}
+            prefStandardizeFormat={prefStandardizeFormat}
+            setPrefStandardizeFormat={setPrefStandardizeFormat}
+            prefNightMode={prefNightMode}
+            setPrefNightMode={setPrefNightMode}
+            prefSubmitShortcut={prefSubmitShortcut}
+            setPrefSubmitShortcut={setPrefSubmitShortcut}
+            prefClear={prefClear}
+            setPrefClear={setPrefClear}
+            prefTimeSinceLastCount={prefTimeSinceLastCount}
+            setPrefTimeSinceLastCount={setPrefTimeSinceLastCount}
+            prefCustomStricken={prefCustomStricken}
+            setPrefCustomStricken={setPrefCustomStricken}
+            prefPostStyle={prefPostStyle}
+            setPrefPostStyle={setPrefPostStyle}
+            prefPostStyleMobile={prefPostStyleMobile}
+            setPrefPostStyleMobile={setPrefPostStyleMobile}
+            prefReplyTimeInterval={prefReplyTimeInterval}
+            setPrefReplyTimeInterval={setPrefReplyTimeInterval}
+            prefNightModeColors={prefNightModeColors}
+            setPrefNightModeColors={setPrefNightModeColors}
+            prefPostPosition={prefPostPosition}
+            setPrefPostPosition={setPrefPostPosition}
+            prefHideStricken={prefHideStricken}
+            setPrefHideStricken={setPrefHideStricken}
+            prefHighlightLastCount={prefHighlightLastCount}
+            setPrefHighlightLastCount={setPrefHighlightLastCount}
+            prefHighlightLastCountColor={prefHighlightLastCountColor}
+            setPrefHighlightLastCountColor={setPrefHighlightLastCountColor}
+            prefSoundOnStricken={prefSoundOnStricken}
+            setPrefSoundOnStricken={setPrefSoundOnStricken}
+            prefHideThreadPicker={prefHideThreadPicker}
+            setPrefHideThreadPicker={setPrefHideThreadPicker}
+            prefStrickenCountOpacity={prefStrickenCountOpacity}
+            setPrefStrickenCountOpacity={setPrefStrickenCountOpacity}
           >
             {macroPresetsEnabled && (
               <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid', borderColor: 'divider' }}>
@@ -557,9 +576,7 @@ export const PrefsPage = () => {
                         : globalMacroPresetOptions.find((preset) => preset.id === selectedMacroPresetId) || null
                     }
                     onChange={(_, value) => saveGlobalMacroSelection(!value || value.id === -1 ? null : value.id)}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Global Macro Preset" placeholder="Search macro presets" />
-                    )}
+                    renderInput={(params) => <TextField {...params} label="Global Macro Preset" placeholder="Search macro presets" />}
                     renderOption={(props, option) => (
                       <li {...props} key={option.id}>
                         <Box>

@@ -30,11 +30,7 @@ import { useNavigate } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
 import { SocketContext } from '../utils/contexts/SocketContext'
 import { MacroActionType, MacroComboId, MacroEntry } from '../utils/types'
-import {
-  findActiveMacroEntry,
-  getMacroTriggerCandidates,
-  normalizeMacroTriggerKey,
-} from '../utils/macroRuntime'
+import { findActiveMacroEntry, getMacroTriggerCandidates, normalizeMacroTriggerKey } from '../utils/macroRuntime'
 
 const MACRO_TOGGLE_KEY = 'F8'
 const MAX_MACRO_REPEAT = 256
@@ -82,29 +78,19 @@ const CountList = memo((props: any) => {
   const isThrottled = useRef(false)
 
   const getActiveMacroEntry = (key: string, code?: string): MacroEntry | undefined =>
-    props.macroHotkeysEnabled
-      ? findActiveMacroEntry(props.activeMacroRuntime, key, code, isDesktop, !!props.chatsOnly)
-      : undefined
+    props.macroHotkeysEnabled ? findActiveMacroEntry(props.activeMacroRuntime, key, code, isDesktop, !!props.chatsOnly) : undefined
   const getToggleMacroEntry = (key: string, code?: string): MacroEntry | undefined => {
-    if (
-      !props.activeMacroRuntime?.enabled ||
-      !!props.chatsOnly ||
-      !props.activeMacroRuntime?.entries?.length
-    ) {
+    if (!props.activeMacroRuntime?.enabled || !!props.chatsOnly || !props.activeMacroRuntime?.entries?.length) {
       return undefined
     }
     const candidates = getMacroTriggerCandidates(key, code)
     return props.activeMacroRuntime.entries.find(
-      (entry) =>
-        entry.macroType === 'TOGGLE' &&
-        candidates.includes(normalizeMacroTriggerKey(entry.triggerKey)),
+      (entry) => entry.macroType === 'TOGGLE' && candidates.includes(normalizeMacroTriggerKey(entry.triggerKey)),
     )
   }
   const hasContextMenuMacro = useMemo(() => {
     if (!props.activeMacroRuntime?.enabled || !props.activeMacroRuntime?.entries?.length) return false
-    return props.activeMacroRuntime.entries.some(
-      (entry) => normalizeMacroTriggerKey(entry.triggerKey) === 'contextmenu',
-    )
+    return props.activeMacroRuntime.entries.some((entry) => normalizeMacroTriggerKey(entry.triggerKey) === 'contextmenu')
   }, [props.activeMacroRuntime])
 
   const replaceInputSelection = (text: string) => {
@@ -136,9 +122,7 @@ const CountList = memo((props: any) => {
         lineStarts.push(i + 1)
       }
     }
-    const lineEnds = lineStarts.map((lineStart, index) =>
-      index + 1 < lineStarts.length ? lineStarts[index + 1] - 1 : value.length,
-    )
+    const lineEnds = lineStarts.map((lineStart, index) => (index + 1 < lineStarts.length ? lineStarts[index + 1] - 1 : value.length))
 
     let currentLineIndex = lineStarts.length - 1
     for (let i = 0; i < lineStarts.length; i += 1) {
@@ -336,26 +320,18 @@ const CountList = memo((props: any) => {
           normalizedEventCode.startsWith('alt') ||
           normalizedEventCode.startsWith('meta') ||
           normalizedEventCode === 'contextmenu'
-        const isCtrlEnterSubmitCombo =
-          (event.ctrlKey || event.metaKey) && normalizedEventKey === 'enter'
+        const isCtrlEnterSubmitCombo = (event.ctrlKey || event.metaKey) && normalizedEventKey === 'enter'
 
-        if (
-          (event.ctrlKey || event.metaKey || event.altKey) &&
-          !isStandaloneModifierTrigger &&
-          !isCtrlEnterSubmitCombo
-        ) {
+        if ((event.ctrlKey || event.metaKey || event.altKey) && !isStandaloneModifierTrigger && !isCtrlEnterSubmitCombo) {
           return
         }
 
-        const hasMacroEntries =
-          !!props.activeMacroRuntime?.enabled &&
-          !!props.activeMacroRuntime?.entries?.length
+        const hasMacroEntries = !!props.activeMacroRuntime?.enabled && !!props.activeMacroRuntime?.entries?.length
         if (hasMacroEntries) {
           const normalizedKey = String(event.key || '').toUpperCase()
           if (normalizedKey === MACRO_TOGGLE_KEY) {
             event.preventDefault()
-            props.onMacroHotkeysEnabledChange &&
-              props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
+            props.onMacroHotkeysEnabledChange && props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
             return
           }
         }
@@ -365,8 +341,7 @@ const CountList = memo((props: any) => {
         if (toggleMacroEntry) {
           event.preventDefault()
           event.stopPropagation()
-          props.onMacroHotkeysEnabledChange &&
-            props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
+          props.onMacroHotkeysEnabledChange && props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
           return
         }
 
@@ -386,11 +361,11 @@ const CountList = memo((props: any) => {
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
                 const action = activeMacroEntry.payloadJson.action as MacroActionType
                 const repeat = Math.max(1, Math.min(MAX_MACRO_REPEAT, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
-                await applyActionRepeated(
-                  action,
-                  repeat,
+                await applyActionRepeated(action, repeat)
+                props.handleMacro?.(
+                  activeMacroEntry.triggerKey,
+                  Array.from({ length: repeat }, () => actionToKeypressToken(action)),
                 )
-                props.handleMacro?.(activeMacroEntry.triggerKey, Array.from({ length: repeat }, () => actionToKeypressToken(action)))
               }
               return
             case 'SUBMIT':
@@ -401,10 +376,10 @@ const CountList = memo((props: any) => {
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
                 const action = activeMacroEntry.payloadJson.action as MacroActionType
                 const repeat = Math.max(1, Math.min(MAX_MACRO_REPEAT, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
-                props.handleMacro?.(
-                  activeMacroEntry.triggerKey,
-                  ['Enter', ...Array.from({ length: repeat }, () => actionToKeypressToken(action))],
-                )
+                props.handleMacro?.(activeMacroEntry.triggerKey, [
+                  'Enter',
+                  ...Array.from({ length: repeat }, () => actionToKeypressToken(action)),
+                ])
               } else {
                 props.handleMacro?.(activeMacroEntry.triggerKey, ['Enter'])
               }
@@ -412,15 +387,11 @@ const CountList = memo((props: any) => {
               if (typeof activeMacroEntry.payloadJson?.action === 'string') {
                 const action = activeMacroEntry.payloadJson.action as MacroActionType
                 const repeat = Math.max(1, Math.min(MAX_MACRO_REPEAT, Number(activeMacroEntry.payloadJson?.repeat ?? 1)))
-                await applyActionRepeated(
-                  action,
-                  repeat,
-                )
+                await applyActionRepeated(action, repeat)
               }
               return
             case 'TOGGLE':
-              props.onMacroHotkeysEnabledChange &&
-                props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
+              props.onMacroHotkeysEnabledChange && props.onMacroHotkeysEnabledChange(!props.macroHotkeysEnabled)
               props.handleMacro?.(activeMacroEntry.triggerKey, ['ToggleMacros'])
               return
             case 'COMBO':
@@ -438,7 +409,13 @@ const CountList = memo((props: any) => {
         }
       }
 
-      if (inputRef.current && inputRef.current === document.activeElement && user && preferences && preferences.pref_submit_shortcut === 'Enter') {
+      if (
+        inputRef.current &&
+        inputRef.current === document.activeElement &&
+        user &&
+        preferences &&
+        preferences.pref_submit_shortcut === 'Enter'
+      ) {
         if (event.key === 'Enter' && !event.shiftKey && !event.altKey) {
           event.preventDefault()
           await handlePosting()
@@ -470,12 +447,7 @@ const CountList = memo((props: any) => {
 
   useEffect(() => {
     const blockContextMenuIfMacroBound = (event: MouseEvent) => {
-      if (
-        isDesktop &&
-        hasContextMenuMacro &&
-        inputRef.current &&
-        document.activeElement === inputRef.current
-      ) {
+      if (isDesktop && hasContextMenuMacro && inputRef.current && document.activeElement === inputRef.current) {
         event.preventDefault()
         event.stopPropagation()
       }
@@ -527,9 +499,7 @@ const CountList = memo((props: any) => {
   const handleUnfreeze = () => {
     if (props.cachedCounts && props.cachedCounts.length > 0) {
       const seenUUIDs = new Set(
-        (props.recentCounts.current || [])
-          .map((count) => count?.uuid)
-          .filter((uuid) => typeof uuid === 'string' && uuid.length > 0),
+        (props.recentCounts.current || []).map((count) => count?.uuid).filter((uuid) => typeof uuid === 'string' && uuid.length > 0),
       )
       const uniqueCachedCounts = props.cachedCounts.filter((count) => {
         const uuid = count?.uuid
@@ -698,17 +668,20 @@ const CountList = memo((props: any) => {
 
   const handlePosting = async () => {
     const throttleCheck = performance.now() - throttle.current
-    let throttled;
-    if(props.thread && props.thread.validationType === 'bars') {
+    let throttled
+    if (props.thread && props.thread.validationType === 'bars') {
       throttled = throttleCheck < 1000
-    } else if(props.thread && props.thread.validationType === 'tugofwar' && props.recentCounts.current &&
-    new Set(
-      props.recentCounts.current
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .slice(0, 50)
-      .filter(currentCount => currentCount.isValidCount)
-      .map(validCount => validCount.rawCount)
-    ).size <= 15
+    } else if (
+      props.thread &&
+      props.thread.validationType === 'tugofwar' &&
+      props.recentCounts.current &&
+      new Set(
+        props.recentCounts.current
+          .sort((a, b) => b.timestamp - a.timestamp)
+          .slice(0, 50)
+          .filter((currentCount) => currentCount.isValidCount)
+          .map((validCount) => validCount.rawCount),
+      ).size <= 15
     ) {
       throttled = throttleCheck < 1000
     } else {
@@ -736,10 +709,7 @@ const CountList = memo((props: any) => {
           {
             m: {
               p: lastSubmitAtRef.current,
-              b:
-                typeof props.macroHashMeta?.current?.baselineText === 'string'
-                  ? props.macroHashMeta.current.baselineText
-                  : undefined,
+              b: typeof props.macroHashMeta?.current?.baselineText === 'string' ? props.macroHashMeta.current.baselineText : undefined,
             },
             h: props.macroHash?.current ?? [],
           },
@@ -868,7 +838,8 @@ const CountList = memo((props: any) => {
       if (props.chatsOnly) {
         if (
           user &&
-          preferences && preferences.pref_load_from_bottom &&
+          preferences &&
+          preferences.pref_load_from_bottom &&
           !gotNewerUUIDs.includes(props.recentCounts.current[props.recentCounts.current.length - 1].uuid)
         ) {
           setGotNewerUUIDs((old) => {
@@ -887,7 +858,8 @@ const CountList = memo((props: any) => {
       } else {
         if (
           user &&
-          preferences && preferences.pref_load_from_bottom &&
+          preferences &&
+          preferences.pref_load_from_bottom &&
           !gotNewerUUIDs.includes(props.recentCounts.current[props.recentCounts.current.length - 1].uuid)
         ) {
           setGotNewerUUIDs((old) => {
@@ -927,7 +899,8 @@ const CountList = memo((props: any) => {
         props.recentCounts.current[0] &&
         props.loadedNewest === false &&
         user &&
-        preferences && preferences.pref_load_from_bottom
+        preferences &&
+        preferences.pref_load_from_bottom
       ) {
         const distance_From_Top = element.scrollHeight
         distanceFromTop.current = distance_From_Top
@@ -956,7 +929,8 @@ const CountList = memo((props: any) => {
         props.recentCounts.current[0] &&
         props.loadedOldest === false &&
         user &&
-        preferences && preferences.pref_load_from_bottom
+        preferences &&
+        preferences.pref_load_from_bottom
       ) {
         const distance_From_Bottom = element.scrollHeight - element.scrollTop - element.clientHeight
         distanceFromBottom.current = distance_From_Bottom
@@ -1125,7 +1099,14 @@ const CountList = memo((props: any) => {
           </Typography>
         </Box>
       )
-    } else if (isDesktop && counter && (counter.roles.includes('counter') || counter.roles.includes('bot')) && props.thread && [...props.thread.updatableBy, 'bot'].some(role => counter.roles.includes(role)) && props.thread.locked === false) {
+    } else if (
+      isDesktop &&
+      counter &&
+      (counter.roles.includes('counter') || counter.roles.includes('bot')) &&
+      props.thread &&
+      [...props.thread.updatableBy, 'bot'].some((role) => counter.roles.includes(role)) &&
+      props.thread.locked === false
+    ) {
       return (
         <Box
           ref={submitRef}
@@ -1162,35 +1143,39 @@ const CountList = memo((props: any) => {
             fullWidth
             multiline
             maxRows={4}
-            style={{ borderRadius: '20px', padding: '10px', width: user && preferences && ['Custom', 'No Clear'].includes(preferences.pref_clear) ? '50%' : '70%' }}
+            style={{
+              borderRadius: '20px',
+              padding: '10px',
+              width: user && preferences && ['Custom', 'No Clear'].includes(preferences.pref_clear) ? '50%' : '70%',
+            }}
             autoFocus
             inputRef={inputRef}
             inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: 'off' }}
           />
           {user && preferences && preferences.pref_clear === 'No Clear' && (
             <>
-            <Tooltip title="How many characters to keep.">
-              <TextField
-                maxRows={1}
-                variant='standard'
-                type='number'
-                sx={{ borderRadius: '20px', padding: '10px', width: '10%', mx: 0.5}}
-                inputRef={noClearKeepInputRef}
-                inputProps={{ inputMode: "numeric", spellCheck: 'false', autoCorrect: 'off' }}
-                helperText="Keep"
-              />
-            </Tooltip>
-            <Tooltip title="How many characters to delete.">
-              <TextField
-                maxRows={1}
-                type='number'
-                variant='standard'
-                sx={{ borderRadius: '20px', padding: '10px', width: '10%', mx: 0.5 }}
-                inputRef={noClearDeleteInputRef}
-                inputProps={{ inputMode: "numeric", spellCheck: 'false', autoCorrect: 'off' }}
-                helperText="Delete"
-              />
-            </Tooltip>
+              <Tooltip title="How many characters to keep.">
+                <TextField
+                  maxRows={1}
+                  variant="standard"
+                  type="number"
+                  sx={{ borderRadius: '20px', padding: '10px', width: '10%', mx: 0.5 }}
+                  inputRef={noClearKeepInputRef}
+                  inputProps={{ inputMode: 'numeric', spellCheck: 'false', autoCorrect: 'off' }}
+                  helperText="Keep"
+                />
+              </Tooltip>
+              <Tooltip title="How many characters to delete.">
+                <TextField
+                  maxRows={1}
+                  type="number"
+                  variant="standard"
+                  sx={{ borderRadius: '20px', padding: '10px', width: '10%', mx: 0.5 }}
+                  inputRef={noClearDeleteInputRef}
+                  inputProps={{ inputMode: 'numeric', spellCheck: 'false', autoCorrect: 'off' }}
+                  helperText="Delete"
+                />
+              </Tooltip>
             </>
           )}
           {user && preferences && preferences.pref_clear === 'Custom' && (
@@ -1219,7 +1204,14 @@ const CountList = memo((props: any) => {
           </Tooltip>
         </Box>
       )
-    } else if (!isDesktop && counter && (counter.roles.includes('counter') || counter.roles.includes('bot')) && props.thread && [...props.thread.updatableBy, 'bot'].some(role => counter.roles.includes(role)) && props.thread.locked === false) {
+    } else if (
+      !isDesktop &&
+      counter &&
+      (counter.roles.includes('counter') || counter.roles.includes('bot')) &&
+      props.thread &&
+      [...props.thread.updatableBy, 'bot'].some((role) => counter.roles.includes(role)) &&
+      props.thread.locked === false
+    ) {
       // } else {
       return (
         <>
@@ -1263,48 +1255,52 @@ const CountList = memo((props: any) => {
               fullWidth
               multiline
               maxRows={4}
-              style={{ borderRadius: '20px', padding: '10px', width: user && preferences && ['Custom', 'No Clear'].includes(preferences.pref_clear) ? '40%' : '80%' }}
+              style={{
+                borderRadius: '20px',
+                padding: '10px',
+                width: user && preferences && ['Custom', 'No Clear'].includes(preferences.pref_clear) ? '40%' : '80%',
+              }}
               autoFocus
               inputRef={inputRef}
               inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: 'off', enterKeyHint: 'send' }}
             />
             {user && preferences && preferences.pref_clear === 'No Clear' && (
-            <>
-            <Tooltip title="How many characters to keep.">
-              <TextField
-                maxRows={1}
-                variant='standard'
-                type='number'
-                sx={{ borderRadius: '20px', padding: '10px', width: '15%', mx: 0.25}}
-                inputRef={noClearKeepInputRef}
-                inputProps={{ inputMode: "numeric", spellCheck: 'false', autoCorrect: 'off' }}
-                helperText="Keep"
-              />
-            </Tooltip>
-            <Tooltip title="How many characters to delete.">
-              <TextField
-                maxRows={1}
-                type='number'
-                variant='standard'
-                sx={{ borderRadius: '20px', padding: '10px', width: '15%', mx: 0.25 }}
-                inputRef={noClearDeleteInputRef}
-                inputProps={{ inputMode: "numeric", spellCheck: 'false', autoCorrect: 'off' }}
-                helperText="Delete"
-              />
-            </Tooltip>
-            </>
-          )}
+              <>
+                <Tooltip title="How many characters to keep.">
+                  <TextField
+                    maxRows={1}
+                    variant="standard"
+                    type="number"
+                    sx={{ borderRadius: '20px', padding: '10px', width: '15%', mx: 0.25 }}
+                    inputRef={noClearKeepInputRef}
+                    inputProps={{ inputMode: 'numeric', spellCheck: 'false', autoCorrect: 'off' }}
+                    helperText="Keep"
+                  />
+                </Tooltip>
+                <Tooltip title="How many characters to delete.">
+                  <TextField
+                    maxRows={1}
+                    type="number"
+                    variant="standard"
+                    sx={{ borderRadius: '20px', padding: '10px', width: '15%', mx: 0.25 }}
+                    inputRef={noClearDeleteInputRef}
+                    inputProps={{ inputMode: 'numeric', spellCheck: 'false', autoCorrect: 'off' }}
+                    helperText="Delete"
+                  />
+                </Tooltip>
+              </>
+            )}
             {user && preferences && preferences.pref_clear === 'Custom' && (
-            <TextField
-              variant="standard"
-              maxRows={1}
-              style={{ borderRadius: '20px', padding: '10px', width: '30%' }}
-              onInput={handleCustomInputChange}
-              inputRef={customInputRef}
-              inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: 'off' }}
-              helperText="Auto-paste"
-            />
-          )}
+              <TextField
+                variant="standard"
+                maxRows={1}
+                style={{ borderRadius: '20px', padding: '10px', width: '30%' }}
+                onInput={handleCustomInputChange}
+                inputRef={customInputRef}
+                inputProps={{ inputMode: keyboardType, spellCheck: 'false', autoCorrect: 'off' }}
+                helperText="Auto-paste"
+              />
+            )}
             <Tooltip title="Throttled" open={submitColor === 'error' ? true : false} arrow>
               <IconButton color={submitColor} onClick={() => handlePosting()}>
                 <SendIcon />
@@ -1314,7 +1310,12 @@ const CountList = memo((props: any) => {
           <Box ref={endOfSubmitRef}></Box>
         </>
       )
-    } else if (counter && (counter.roles.includes('counter') || counter.roles.includes('bot')) && props.thread && ![...props.thread.updatableBy, 'bot'].some(role => counter.roles.includes(role))) {
+    } else if (
+      counter &&
+      (counter.roles.includes('counter') || counter.roles.includes('bot')) &&
+      props.thread &&
+      ![...props.thread.updatableBy, 'bot'].some((role) => counter.roles.includes(role))
+    ) {
       return (
         <Box
           ref={submitRef}
@@ -1511,7 +1512,10 @@ const CountList = memo((props: any) => {
         ) {
           if (user && preferences && preferences.pref_load_from_bottom && index === 0) {
             countsByDayAndHour[key].showHourBar = false
-          } else if ((!preferences || (preferences && !preferences.pref_load_from_bottom)) && index === orderedRecentCounts.length - 1) {
+          } else if (
+            (!preferences || (preferences && !preferences.pref_load_from_bottom)) &&
+            index === orderedRecentCounts.length - 1
+          ) {
             countsByDayAndHour[key].showHourBar = false
           } else {
             countsByDayAndHour[key].showHourBar = true
@@ -1546,7 +1550,10 @@ const CountList = memo((props: any) => {
           {counts.map((count, index) => {
             const contextMatch = props.context && props.context === count.uuid
             const ref = contextMatch ? contextRef : null
-            if (isDesktop && !(count.stricken && !count.hasComment && user && preferences && preferences.pref_hide_stricken === 'Hide')) {
+            if (
+              isDesktop &&
+              !(count.stricken && !count.hasComment && user && preferences && preferences.pref_hide_stricken === 'Hide')
+            ) {
               return (
                 <Count
                   mostRecentCount={count.validCountNumber === highestValidCountNumber}
@@ -1671,4 +1678,3 @@ const CountList = memo((props: any) => {
 })
 
 export default CountList
-

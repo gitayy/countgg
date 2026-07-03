@@ -102,9 +102,9 @@ import { useThread } from '../utils/contexts/ThreadContext'
 
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import CheckIcon from '@mui/icons-material/Check';
-import ClearIcon from '@mui/icons-material/Clear';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import CheckIcon from '@mui/icons-material/Check'
+import ClearIcon from '@mui/icons-material/Clear'
 import { isEqual } from 'lodash'
 import { Preferences } from '../components/Preferences'
 import MiscInfo from '../components/thread/MiscInfo'
@@ -135,7 +135,12 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [loadSpikeSimMode, setLoadSpikeSimMode] = useState<LoadSpikeSimMode>(() => {
     if (typeof window === 'undefined') return 'baseline'
     const persisted = window.localStorage.getItem('cgg_load_spike_mode')
-    if (persisted === 'dup_listener' || persisted === 'post_load_overlap' || persisted === 'cache_overlap' || persisted === 'mixed_direction') {
+    if (
+      persisted === 'dup_listener' ||
+      persisted === 'post_load_overlap' ||
+      persisted === 'cache_overlap' ||
+      persisted === 'mixed_direction'
+    ) {
       return persisted
     }
     return 'baseline'
@@ -152,10 +157,10 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       if (setThreadName) {
         setThreadName(undefined)
       }
-      setLoadedOldest(false);
-      setLoadedNewest(true);
-      setLoadedOldestChats(false);
-      setLoadedNewestChats(true);
+      setLoadedOldest(false)
+      setLoadedNewest(true)
+      setLoadedOldestChats(false)
+      setLoadedNewestChats(true)
     }
   }, [thread_name, setThreadName])
   const navigate = useNavigate()
@@ -174,7 +179,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const macroPresetsEnabled = macroPresetsFeatureEnabled
 
   const socket = useContext(SocketContext)
-  const { user, counter, loading, challenges, setChallenges, miscSettings, setMiscSettings, preferences, setPreferences } = useContext(UserContext)
+  const { user, counter, loading, challenges, setChallenges, miscSettings, setMiscSettings, preferences, setPreferences } =
+    useContext(UserContext)
   const [socketStatus, setSocketStatus] = useState('CONNECTING')
   const [socketViewers, setSocketViewers] = useState(1)
   const [threadStreak, setThreadStreak] = useState<number | undefined>(undefined)
@@ -197,9 +203,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [macroHotkeysEnabled, setMacroHotkeysEnabled] = useState(true)
   const [macroSelectionSaving, setMacroSelectionSaving] = useState(false)
   const activeMacroPresetName = useMemo(
-    () =>
-      availableMacroPresets.find((preset) => preset.id === activeMacroRuntime.macroPresetId)?.name ||
-      null,
+    () => availableMacroPresets.find((preset) => preset.id === activeMacroRuntime.macroPresetId)?.name || null,
     [availableMacroPresets, activeMacroRuntime.macroPresetId],
   )
   const threadUsageCountByMacroPresetId = useMemo(() => {
@@ -224,10 +228,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   }, [recommendedMacroPresets])
   const effectiveThreadMacroPresetId = useMemo(() => {
     if (threadMacroPresetId !== null) return threadMacroPresetId
-    if (
-      activeMacroRuntime.source === 'global' ||
-      activeMacroRuntime.source === 'thread'
-    ) {
+    if (activeMacroRuntime.source === 'global' || activeMacroRuntime.source === 'thread') {
       return activeMacroRuntime.macroPresetId
     }
     return null
@@ -239,16 +240,11 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   }, [activeMacroRuntime.source])
   const threadMacroPresetOptions = useMemo<ThreadMacroPresetOption[]>(() => {
     const presetById = new Map(availableMacroPresets.map((preset) => [preset.id, preset]))
-    const visiblePresets = visibleMacroPresetIds
-      .map((id) => presetById.get(id))
-      .filter(Boolean) as MacroPreset[]
-    const isOwned = (preset: MacroPreset) =>
-      !!counter?.uuid && preset.ownerCounter?.uuid === counter.uuid
+    const visiblePresets = visibleMacroPresetIds.map((id) => presetById.get(id)).filter(Boolean) as MacroPreset[]
+    const isOwned = (preset: MacroPreset) => !!counter?.uuid && preset.ownerCounter?.uuid === counter.uuid
 
     const byUsageThenName = [...visiblePresets].sort((a, b) => {
-      const usageDiff =
-        (threadUsageCountByMacroPresetId.get(b.id) || 0) -
-        (threadUsageCountByMacroPresetId.get(a.id) || 0)
+      const usageDiff = (threadUsageCountByMacroPresetId.get(b.id) || 0) - (threadUsageCountByMacroPresetId.get(a.id) || 0)
       if (usageDiff !== 0) return usageDiff
       return a.name.localeCompare(b.name)
     })
@@ -325,9 +321,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   ])
   const selectedThreadMacroPresetValue = useMemo<ThreadMacroPresetOption | null>(() => {
     if (effectiveThreadMacroPresetId === null) return threadMacroPresetOptions[0]
-    const existing = threadMacroPresetOptions.find(
-      (preset) => preset.id === effectiveThreadMacroPresetId,
-    )
+    const existing = threadMacroPresetOptions.find((preset) => preset.id === effectiveThreadMacroPresetId)
     if (existing) return existing
     return {
       id: effectiveThreadMacroPresetId,
@@ -385,7 +379,9 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         keys.add(entry.triggerKey)
       }
     }
-    return Array.from(keys).sort((a, b) => a.localeCompare(b)).join(', ')
+    return Array.from(keys)
+      .sort((a, b) => a.localeCompare(b))
+      .join(', ')
   }, [activeMacroRuntime.entries])
   const describeActiveMacroEntry = useCallback((entry: any) => {
     const payload = entry?.payloadJson || {}
@@ -462,10 +458,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const strickenSoundRollSuppressedThreads = useMemo(() => new Set(['1inx', 'incremental_odds']), [])
   const shouldSuppressStrickenSoundForPost = useCallback(
     (post?: PostType) =>
-      !!post &&
-      strickenSoundRollSuppressedThreads.has(thread_name) &&
-      (post as any).roll !== undefined &&
-      (post as any).roll !== null,
+      !!post && strickenSoundRollSuppressedThreads.has(thread_name) && (post as any).roll !== undefined && (post as any).roll !== null,
     [thread_name, strickenSoundRollSuppressedThreads],
   )
   const rollVisualizerThreads = useMemo(() => new Set(['1inx', 'russian_roulette', 'incremental_odds']), [])
@@ -475,7 +468,9 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const rebuildRollVisualizerFromRecent = useCallback(
     (host: RollVisualizerHostHandle) => {
       if (!rollVisualizerThreads.has(thread_name)) return
-      const orderedPosts = Array.from(storedRollSamplesByUuidRef.current.values()).sort((a, b) => Number(a.timestamp) - Number(b.timestamp))
+      const orderedPosts = Array.from(storedRollSamplesByUuidRef.current.values()).sort(
+        (a, b) => Number(a.timestamp) - Number(b.timestamp),
+      )
       host.reset()
       for (const post of orderedPosts) {
         host.registerSampleFromPost(post)
@@ -494,31 +489,34 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     },
     [rebuildRollVisualizerFromRecent],
   )
-  const registerRollSampleFromPost = useCallback((post?: PostType) => {
-    if (!post) return
-    if (!rollVisualizerThreads.has(thread_name)) return
-    if (post.uuid && registeredRollSampleUuidsRef.current.has(post.uuid)) return
-    if (post.uuid) {
-      registeredRollSampleUuidsRef.current.add(post.uuid)
-      storedRollSamplesByUuidRef.current.set(post.uuid, post)
-      if (storedRollSamplesByUuidRef.current.size > 20000) {
-        const nextEntries = Array.from(storedRollSamplesByUuidRef.current.values())
-          .sort((a, b) => Number(a.timestamp) - Number(b.timestamp))
-          .slice(-10000)
-          .map((sample) => [sample.uuid, sample] as const)
-        storedRollSamplesByUuidRef.current = new Map(nextEntries)
+  const registerRollSampleFromPost = useCallback(
+    (post?: PostType) => {
+      if (!post) return
+      if (!rollVisualizerThreads.has(thread_name)) return
+      if (post.uuid && registeredRollSampleUuidsRef.current.has(post.uuid)) return
+      if (post.uuid) {
+        registeredRollSampleUuidsRef.current.add(post.uuid)
+        storedRollSamplesByUuidRef.current.set(post.uuid, post)
+        if (storedRollSamplesByUuidRef.current.size > 20000) {
+          const nextEntries = Array.from(storedRollSamplesByUuidRef.current.values())
+            .sort((a, b) => Number(a.timestamp) - Number(b.timestamp))
+            .slice(-10000)
+            .map((sample) => [sample.uuid, sample] as const)
+          storedRollSamplesByUuidRef.current = new Map(nextEntries)
+        }
+        if (registeredRollSampleUuidsRef.current.size > 10000) {
+          const keep = new Set(Array.from(registeredRollSampleUuidsRef.current).slice(-5000))
+          registeredRollSampleUuidsRef.current = keep
+        }
       }
-      if (registeredRollSampleUuidsRef.current.size > 10000) {
-        const keep = new Set(Array.from(registeredRollSampleUuidsRef.current).slice(-5000))
-        registeredRollSampleUuidsRef.current = keep
+      const host = rollVisualizerRef.current
+      if (host) {
+        host.registerSampleFromPost(post)
+        return
       }
-    }
-    const host = rollVisualizerRef.current
-    if (host) {
-      host.registerSampleFromPost(post)
-      return
-    }
-  }, [thread_name, rollVisualizerThreads])
+    },
+    [thread_name, rollVisualizerThreads],
+  )
 
   const [mobilePickerOpen, setMobilePickerOpen] = useState(false)
   const [desktopPickerOpen, setDesktopPickerOpen] = useState(true)
@@ -758,8 +756,14 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     let start
     let end
     try {
-      start = countNumber1 !== null ? await findPostByThreadAndNumber(countNumber1.toString(), thread?.uuid) : await findPostByThreadAndRawCount(rawCount1, thread?.uuid)
-      end = countNumber2 !== null ? await findPostByThreadAndNumber(countNumber2.toString(), thread?.uuid) : await findPostByThreadAndRawCount(rawCount2, thread?.uuid)
+      start =
+        countNumber1 !== null
+          ? await findPostByThreadAndNumber(countNumber1.toString(), thread?.uuid)
+          : await findPostByThreadAndRawCount(rawCount1, thread?.uuid)
+      end =
+        countNumber2 !== null
+          ? await findPostByThreadAndNumber(countNumber2.toString(), thread?.uuid)
+          : await findPostByThreadAndRawCount(rawCount2, thread?.uuid)
     } catch (err) {
       setSnackbarSeverity('error')
       setSnackbarOpen(true)
@@ -925,7 +929,12 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
           emittedSoFar: replayEmittedCountRef.current,
           prevAppliedValidCountNumber: prevAppliedValid,
         })
-        if (currentCount.isValidCount && prevAppliedValid !== null && typeof currentValid === 'number' && currentValid > prevAppliedValid + 1) {
+        if (
+          currentCount.isValidCount &&
+          prevAppliedValid !== null &&
+          typeof currentValid === 'number' &&
+          currentValid > prevAppliedValid + 1
+        ) {
           console.warn('[replay] observed validCountNumber gap on apply', {
             prevAppliedValidCountNumber: prevAppliedValid,
             currentValidCountNumber: currentValid,
@@ -1067,11 +1076,13 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [bank, setBank] = useState(-1)
   const [robOpen, setRobOpen] = useState(false)
   const [deleteCategoryOpen, setDeleteCategoryOpen] = useState(false)
-  const [deletedCategory, setDeletedCategory] = useState<Category>();
+  const [deletedCategory, setDeletedCategory] = useState<Category>()
 
   const deleteCategoryConfirm = () => {
-    if(!deletedCategory) {return;}
-    deleteCategory(deletedCategory.name);
+    if (!deletedCategory) {
+      return
+    }
+    deleteCategory(deletedCategory.name)
     setDeleteCategoryOpen(false)
   }
 
@@ -1088,7 +1099,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     setRobOpen(true)
   }
 
-  const ConfirmDialog = ({ open, text, handleCancel, handleConfirm, title = "Are you sure?" }) => {
+  const ConfirmDialog = ({ open, text, handleCancel, handleConfirm, title = 'Are you sure?' }) => {
     return (
       <Dialog open={open} onClose={handleCancel}>
         <DialogTitle>{title}</DialogTitle>
@@ -1133,10 +1144,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     const scrollCheck = (event) => {
       const { key: test } = event
       if (macroHashMeta.current?.baselineText === undefined) {
-        const activeElement = document.activeElement as
-          | HTMLInputElement
-          | HTMLTextAreaElement
-          | null
+        const activeElement = document.activeElement as HTMLInputElement | HTMLTextAreaElement | null
         if (
           activeElement &&
           (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA') &&
@@ -1279,7 +1287,6 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       }
     }
   }
-  
 
   // useEffect(() => {
   //   if(recentCountsLoading == false) {
@@ -1288,7 +1295,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   // }, [recentCountsLoading])
 
   const [miscSettingsChanged, setMiscSettingsChanged] = useState<number>(Date.now())
-  const [lastClick, setLastClick] = useState<number>(0);
+  const [lastClick, setLastClick] = useState<number>(0)
 
   // useEffect(() => {
   //   const handleClick = (event) => {
@@ -1300,10 +1307,9 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   //       setAllThreadsLoading(false);
   //     }
   //     console.log("Removing event listener");
-  //     document.removeEventListener('click', handleClick);      
+  //     document.removeEventListener('click', handleClick);
   //   };
   //   // setLastClick(Date.now());
-
 
   //   // Add event listener for click on the entire document
   //   if(miscSettingsChanged && miscSettingsChanged > 0 && Date.now() > miscSettingsChanged) {
@@ -1389,19 +1395,18 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         setBank(data)
       })
       socket.on(`miscSettingsLastUpdated`, function (data) {
-        if(setMiscSettings) {
+        if (setMiscSettings) {
           setMiscSettings((prevMiscSettings) => {
             return {
               ...prevMiscSettings,
               lastUpdated: data,
             }
-            })
+          })
         }
-      });
+      })
       socket.on(`updateMiscSettings`, function (data) {
         // I promised I tried this but it's so bad for performance. I know people are going to lose stuff by having
         // different tabs open etc. I will try to handle this server-side lol
-
         // if(setMiscSettings !== undefined && hasChangedRecently.current !== undefined && Date.now() - hasChangedRecently.current > 7000) {
         //   setMiscSettings(data)
         //   setMiscSettingsChanged(Date.now());
@@ -1756,11 +1761,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     macroHash.current = next.slice(-20)
   }, [])
 
-  const handleSubmit = (
-    text: string,
-    macroHashPayload: any,
-    post_hash: string,
-  ) => {
+  const handleSubmit = (text: string, macroHashPayload: any, post_hash: string) => {
     const submitText = text
     if (thread_name && counter) {
       socket.emit('post', {
@@ -1888,15 +1889,51 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     return groupedThreads
   }
 
-  const [categorizedThreads, setCategorizedThreads] = useState<Category[]>([]);
+  const [categorizedThreads, setCategorizedThreads] = useState<Category[]>([])
   const [lastCategoryChange, setLastCategoryChange] = useState<number>()
 
-  const defaultOtherThreadOverrides = ['test', 'test2', 'random_hour', 'tug_of_war_avoid_0', 'countdown', 'yoco', 'russian_roulette', '1inx', 'slow_tslc', 'wait_x', 'random_minute', 'no_counting', 'username', 'incremental_odds']
-  const defaultFavorites = allThreads.filter((thread) => ['main', 'double_counting', 'bars', 'slow', 'no_mistakes'].includes(thread.name))
-  const defaultTraditional = allThreads.filter((thread) => !defaultOtherThreadOverrides.includes(thread.name) && ![...defaultFavorites].includes(thread) && !thread.allowDoublePosts && !thread.resetOnMistakes)
-  const defaultDouble = allThreads.filter((thread) => !defaultOtherThreadOverrides.includes(thread.name) && ![...defaultFavorites, ...defaultTraditional].includes(thread) && thread.allowDoublePosts && !thread.resetOnMistakes)
-  const defaultNoMistakes = allThreads.filter((thread) => !defaultOtherThreadOverrides.includes(thread.name) && ![...defaultFavorites, ...defaultTraditional, ...defaultDouble].includes(thread) && thread.resetOnMistakes)
-  const defaultOther = allThreads.filter((thread) => ![...defaultFavorites, ...defaultTraditional, ...defaultDouble, ...defaultNoMistakes].includes(thread))
+  const defaultOtherThreadOverrides = [
+    'test',
+    'test2',
+    'random_hour',
+    'tug_of_war_avoid_0',
+    'countdown',
+    'yoco',
+    'russian_roulette',
+    '1inx',
+    'slow_tslc',
+    'wait_x',
+    'random_minute',
+    'no_counting',
+    'username',
+    'incremental_odds',
+  ]
+  const defaultFavorites = allThreads.filter((thread) =>
+    ['main', 'double_counting', 'bars', 'slow', 'no_mistakes'].includes(thread.name),
+  )
+  const defaultTraditional = allThreads.filter(
+    (thread) =>
+      !defaultOtherThreadOverrides.includes(thread.name) &&
+      ![...defaultFavorites].includes(thread) &&
+      !thread.allowDoublePosts &&
+      !thread.resetOnMistakes,
+  )
+  const defaultDouble = allThreads.filter(
+    (thread) =>
+      !defaultOtherThreadOverrides.includes(thread.name) &&
+      ![...defaultFavorites, ...defaultTraditional].includes(thread) &&
+      thread.allowDoublePosts &&
+      !thread.resetOnMistakes,
+  )
+  const defaultNoMistakes = allThreads.filter(
+    (thread) =>
+      !defaultOtherThreadOverrides.includes(thread.name) &&
+      ![...defaultFavorites, ...defaultTraditional, ...defaultDouble].includes(thread) &&
+      thread.resetOnMistakes,
+  )
+  const defaultOther = allThreads.filter(
+    (thread) => ![...defaultFavorites, ...defaultTraditional, ...defaultDouble, ...defaultNoMistakes].includes(thread),
+  )
   const defaultCategories = [
     { name: 'Favorites', threads: defaultFavorites, expanded: true },
     { name: 'Traditional', threads: defaultTraditional, expanded: true },
@@ -1905,62 +1942,58 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     { name: 'Other', threads: defaultOther, expanded: true },
   ]
 
-
-
   useEffect(() => {
-    if(!loading && !allThreadsLoading && allThreads) {
-    if(!miscSettings || miscSettings && !miscSettings.categories || miscSettings && miscSettings.categories.length === 0) {
-      setCategorizedThreads(defaultCategories);
-    } else {
-      // Step 1: Map threads to categories
-      const categorizedThreads = miscSettings.categories.map((category) => {
-        const fullThreads = category.threadUUIDs.map(threadUUID => {
-          return allThreads.find(thread => thread.uuid === threadUUID);
-        }).filter(thread => thread !== undefined) as ThreadType[];
+    if (!loading && !allThreadsLoading && allThreads) {
+      if (!miscSettings || (miscSettings && !miscSettings.categories) || (miscSettings && miscSettings.categories.length === 0)) {
+        setCategorizedThreads(defaultCategories)
+      } else {
+        // Step 1: Map threads to categories
+        const categorizedThreads = miscSettings.categories.map((category) => {
+          const fullThreads = category.threadUUIDs
+            .map((threadUUID) => {
+              return allThreads.find((thread) => thread.uuid === threadUUID)
+            })
+            .filter((thread) => thread !== undefined) as ThreadType[]
 
-        return {
-          ...category,
-          threads: fullThreads,
-        };
-      });
-
-      // Step 2: Gather threads not in any category
-      const categoryNames = categorizedThreads.reduce((names: string[], category) => {
-        return names.concat(category.name);
-      }, []);
-      if(!categoryNames.includes("Other")) {
-        categorizedThreads.push({
-          name: "Other",
-          threads: [],
-          threadUUIDs: [],
-          expanded: true,
-        });
-      }
-      const threadsInCategories = categorizedThreads.reduce((threads: ThreadType[], category) => {
-        return threads.concat(category.threads);
-      }, []);
-
-      const threadsNotInCategories = allThreads.filter(thread => !threadsInCategories.includes(thread));
-
-      setCategorizedThreads(
-        categorizedThreads.map((category) => {
-          if (category.name === 'Other') {
-            return {
-              ...category,
-              threads: [
-                ...category.threads,
-                ...threadsNotInCategories,
-              ],
-            };
+          return {
+            ...category,
+            threads: fullThreads,
           }
-
-          return category;
         })
-      )
+
+        // Step 2: Gather threads not in any category
+        const categoryNames = categorizedThreads.reduce((names: string[], category) => {
+          return names.concat(category.name)
+        }, [])
+        if (!categoryNames.includes('Other')) {
+          categorizedThreads.push({
+            name: 'Other',
+            threads: [],
+            threadUUIDs: [],
+            expanded: true,
+          })
+        }
+        const threadsInCategories = categorizedThreads.reduce((threads: ThreadType[], category) => {
+          return threads.concat(category.threads)
+        }, [])
+
+        const threadsNotInCategories = allThreads.filter((thread) => !threadsInCategories.includes(thread))
+
+        setCategorizedThreads(
+          categorizedThreads.map((category) => {
+            if (category.name === 'Other') {
+              return {
+                ...category,
+                threads: [...category.threads, ...threadsNotInCategories],
+              }
+            }
+
+            return category
+          }),
+        )
+      }
     }
-    
-  }
-  }, [allThreads, allThreadsLoading, loading]);
+  }, [allThreads, allThreadsLoading, loading])
 
   const handleCategoryClick = (category) => {
     setCategorizedThreads((prevCategorizedThreads) => {
@@ -1971,52 +2004,51 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         return categoryObj
       })
     })
-    setLastCategoryChange(Date.now());
+    setLastCategoryChange(Date.now())
   }
 
   useEffect(() => {
     function navigateThread(direction) {
-
-      let currentCategoryIndex = -1;
-      let currentThreadIndex = -1;
+      let currentCategoryIndex = -1
+      let currentThreadIndex = -1
 
       // Find the current thread's category and index
       categorizedThreads.forEach((category, categoryIndex) => {
-        const threadIndex = category.threads.findIndex(thread => thread.name === thread_name);
+        const threadIndex = category.threads.findIndex((thread) => thread.name === thread_name)
         if (threadIndex !== -1) {
-          currentCategoryIndex = categoryIndex;
-          currentThreadIndex = threadIndex;
+          currentCategoryIndex = categoryIndex
+          currentThreadIndex = threadIndex
         }
-      });
+      })
 
       if (currentCategoryIndex === -1 || currentThreadIndex === -1) {
-        return;
+        return
       }
 
-      var newThread: ThreadType|undefined = undefined;
+      var newThread: ThreadType | undefined = undefined
 
       if (direction === 'up') {
         if (currentThreadIndex > 0) {
-          newThread = categorizedThreads[currentCategoryIndex].threads[currentThreadIndex - 1];
+          newThread = categorizedThreads[currentCategoryIndex].threads[currentThreadIndex - 1]
         } else if (currentCategoryIndex > 0) {
-          const previousCategory = categorizedThreads[currentCategoryIndex - 1];
+          const previousCategory = categorizedThreads[currentCategoryIndex - 1]
           if (previousCategory.threads.length > 0) {
-            newThread = previousCategory.threads[previousCategory.threads.length - 1];
+            newThread = previousCategory.threads[previousCategory.threads.length - 1]
           }
         }
       } else if (direction === 'down') {
         if (currentThreadIndex < categorizedThreads[currentCategoryIndex].threads.length - 1) {
-          newThread = categorizedThreads[currentCategoryIndex].threads[currentThreadIndex + 1];
+          newThread = categorizedThreads[currentCategoryIndex].threads[currentThreadIndex + 1]
         } else if (currentCategoryIndex < categorizedThreads.length - 1) {
-          const nextCategory = categorizedThreads[currentCategoryIndex + 1];
+          const nextCategory = categorizedThreads[currentCategoryIndex + 1]
           if (nextCategory.threads.length > 0) {
-            newThread = nextCategory.threads[0];
+            newThread = nextCategory.threads[0]
           }
         }
       }
 
       if (newThread) {
-        navigateToThread(newThread.name);
+        navigateToThread(newThread.name)
       }
     }
 
@@ -2024,172 +2056,169 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       if (event.altKey) {
         switch (event.key) {
           case 'ArrowUp':
-            navigateThread('up');
-            break;
+            navigateThread('up')
+            break
           case 'ArrowDown':
-            navigateThread('down');
-            break;
+            navigateThread('down')
+            break
         }
       }
-    };
+    }
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown)
 
     return () => {
       // Remove the event listener when the component unmounts
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [thread_name, allThreadsLoading, categorizedThreads]);
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [thread_name, allThreadsLoading, categorizedThreads])
 
   const onDragEnd = (result) => {
-    const { source, destination, type } = result;
+    const { source, destination, type } = result
 
     // Do nothing if the thread is dropped outside any droppable
-    if (!destination) return;
+    if (!destination) return
 
     // Reordering categories
-  if (type === 'CATEGORY') {
-    const newCategorizedThreads = Array.from(categorizedThreads);
-    const [movedCategory] = newCategorizedThreads.splice(source.index, 1);
-    newCategorizedThreads.splice(destination.index, 0, movedCategory);
+    if (type === 'CATEGORY') {
+      const newCategorizedThreads = Array.from(categorizedThreads)
+      const [movedCategory] = newCategorizedThreads.splice(source.index, 1)
+      newCategorizedThreads.splice(destination.index, 0, movedCategory)
 
-    if (JSON.stringify(categorizedThreads) !== JSON.stringify(newCategorizedThreads)) {
-      setCategorizedThreads(newCategorizedThreads);
-      setLastCategoryChange(Date.now());
+      if (JSON.stringify(categorizedThreads) !== JSON.stringify(newCategorizedThreads)) {
+        setCategorizedThreads(newCategorizedThreads)
+        setLastCategoryChange(Date.now())
+      }
+      return
     }
-    return;
-  }
 
     // Do nothing if the thread is dropped into the same place
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    ) {
-      return;
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      return
     }
 
-  setCategorizedThreads((prevCategorizedThreads) => {
-    const newCategorizedThreads = Array.from(prevCategorizedThreads);
-    
-    // Get the source and destination categories
-    const sourceCategoryIndex = newCategorizedThreads.findIndex(cat => cat.name === source.droppableId);
-    const destinationCategoryIndex = newCategorizedThreads.findIndex(cat => cat.name === destination.droppableId);
-    
-    const sourceCategory = newCategorizedThreads[sourceCategoryIndex];
-    const destinationCategory = newCategorizedThreads[destinationCategoryIndex];
-    
-    // Get the threads from the source category
-    const sourceThreads = Array.from(sourceCategory.threads);
-    const [movedThread] = sourceThreads.splice(source.index, 1);
-    
-    if (sourceCategoryIndex === destinationCategoryIndex) {
-      // Insert the thread at the new position in the same category
-      sourceThreads.splice(destination.index, 0, movedThread);
-      newCategorizedThreads[sourceCategoryIndex].threads = sourceThreads;
-    } else {
-      // Get the threads from the destination category
-      const destinationThreads = Array.from(destinationCategory.threads);
-      // Insert the thread at the new position in the different category
-      destinationThreads.splice(destination.index, 0, movedThread);
-      newCategorizedThreads[sourceCategoryIndex].threads = sourceThreads;
-      newCategorizedThreads[destinationCategoryIndex].threads = destinationThreads;
-    }    
-    return newCategorizedThreads;
-  });
-  setLastCategoryChange(Date.now());
-};
+    setCategorizedThreads((prevCategorizedThreads) => {
+      const newCategorizedThreads = Array.from(prevCategorizedThreads)
 
-function deleteCategory(categoryName) {
-  setCategorizedThreads((prevCategorizedThreads) => {
+      // Get the source and destination categories
+      const sourceCategoryIndex = newCategorizedThreads.findIndex((cat) => cat.name === source.droppableId)
+      const destinationCategoryIndex = newCategorizedThreads.findIndex((cat) => cat.name === destination.droppableId)
+
+      const sourceCategory = newCategorizedThreads[sourceCategoryIndex]
+      const destinationCategory = newCategorizedThreads[destinationCategoryIndex]
+
+      // Get the threads from the source category
+      const sourceThreads = Array.from(sourceCategory.threads)
+      const [movedThread] = sourceThreads.splice(source.index, 1)
+
+      if (sourceCategoryIndex === destinationCategoryIndex) {
+        // Insert the thread at the new position in the same category
+        sourceThreads.splice(destination.index, 0, movedThread)
+        newCategorizedThreads[sourceCategoryIndex].threads = sourceThreads
+      } else {
+        // Get the threads from the destination category
+        const destinationThreads = Array.from(destinationCategory.threads)
+        // Insert the thread at the new position in the different category
+        destinationThreads.splice(destination.index, 0, movedThread)
+        newCategorizedThreads[sourceCategoryIndex].threads = sourceThreads
+        newCategorizedThreads[destinationCategoryIndex].threads = destinationThreads
+      }
+      return newCategorizedThreads
+    })
+    setLastCategoryChange(Date.now())
+  }
+
+  function deleteCategory(categoryName) {
+    setCategorizedThreads((prevCategorizedThreads) => {
       // Remove the specified category
-      const updatedCategories = prevCategorizedThreads.filter(cat => cat.name !== categoryName);
+      const updatedCategories = prevCategorizedThreads.filter((cat) => cat.name !== categoryName)
 
       // Find the threads to move
-      const categoryToDelete = prevCategorizedThreads.find(cat => cat.name === categoryName);
-      const threadsToMove = categoryToDelete ? categoryToDelete.threads : [];
+      const categoryToDelete = prevCategorizedThreads.find((cat) => cat.name === categoryName)
+      const threadsToMove = categoryToDelete ? categoryToDelete.threads : []
 
       // Check if "Other" category exists
-      let otherCategory = updatedCategories.find(cat => cat.name === "Other");
+      let otherCategory = updatedCategories.find((cat) => cat.name === 'Other')
 
       if (!otherCategory) {
-          // If "Other" category doesn't exist, create it
-          otherCategory = {
-              name: "Other",
-              threads: [],
-              expanded: true
-          };
-          updatedCategories.push(otherCategory);
+        // If "Other" category doesn't exist, create it
+        otherCategory = {
+          name: 'Other',
+          threads: [],
+          expanded: true,
+        }
+        updatedCategories.push(otherCategory)
       }
 
       // Append threads to the "Other" category
-      otherCategory.threads = [...otherCategory.threads, ...threadsToMove];
+      otherCategory.threads = [...otherCategory.threads, ...threadsToMove]
 
       // Update the state
-      const newCategorizedThreads = updatedCategories.map(cat =>
-          cat.name === "Other" ? otherCategory : cat
-      );
-      return newCategorizedThreads;
-  });
-  setLastCategoryChange(Date.now());
-}
+      const newCategorizedThreads = updatedCategories.map((cat) => (cat.name === 'Other' ? otherCategory : cat))
+      return newCategorizedThreads
+    })
+    setLastCategoryChange(Date.now())
+  }
 
-const [newCategoryName, setNewCategoryName] = useState('');
-const categoryNameRef = useRef<HTMLInputElement>(null)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const categoryNameRef = useRef<HTMLInputElement>(null)
 
   const handleCheckClick = () => {
-    if(newCategoryName.length > 0) {
-        // Clear the input after adding the category
-        setCategorizedThreads((prevCategorizedThreads) => [...prevCategorizedThreads, { name: newCategoryName, threads: [], expanded: true }]);
-        setLastCategoryChange(Date.now());
-        setNewCategoryName('');
-        if(categoryNameRef.current) {
-          categoryNameRef.current.value = '';
-        }
-      } else {
-        console.log('Please enter a category name.');
+    if (newCategoryName.length > 0) {
+      // Clear the input after adding the category
+      setCategorizedThreads((prevCategorizedThreads) => [
+        ...prevCategorizedThreads,
+        { name: newCategoryName, threads: [], expanded: true },
+      ])
+      setLastCategoryChange(Date.now())
+      setNewCategoryName('')
+      if (categoryNameRef.current) {
+        categoryNameRef.current.value = ''
       }
-  };
+    } else {
+      console.log('Please enter a category name.')
+    }
+  }
 
-  const hasChangedRecently = useRef<number>(0);
+  const hasChangedRecently = useRef<number>(0)
 
   useEffect(() => {
-    if(categorizedThreads && !loading && categorizedThreads.length > 0 && lastCategoryChange && lastCategoryChange > 100) {
-      const mappedThreads = categorizedThreads.map(category => ({
+    if (categorizedThreads && !loading && categorizedThreads.length > 0 && lastCategoryChange && lastCategoryChange > 100) {
+      const mappedThreads = categorizedThreads.map((category) => ({
         ...category,
         threads: undefined,
-        threadUUIDs: category.threads.map(thread => thread.uuid),
-      }));
-      if(miscSettings && JSON.stringify(miscSettings.categories) === JSON.stringify(mappedThreads)) {
-        return;
+        threadUUIDs: category.threads.map((thread) => thread.uuid),
+      }))
+      if (miscSettings && JSON.stringify(miscSettings.categories) === JSON.stringify(mappedThreads)) {
+        return
       }
-      if(JSON.stringify(defaultCategories) === JSON.stringify(mappedThreads)) {
-        return;
+      if (JSON.stringify(defaultCategories) === JSON.stringify(mappedThreads)) {
+        return
       }
-      hasChangedRecently.current = Date.now();
-      socket.emit(`updateCategories`, {update: mappedThreads, miscSettingsChanged: miscSettings ? miscSettings.lastUpdated : 0})
-      setLastCategoryChange(undefined);
+      hasChangedRecently.current = Date.now()
+      socket.emit(`updateCategories`, { update: mappedThreads, miscSettingsChanged: miscSettings ? miscSettings.lastUpdated : 0 })
+      setLastCategoryChange(undefined)
     }
-  }, [categorizedThreads, loading, lastCategoryChange]);
+  }, [categorizedThreads, loading, lastCategoryChange])
 
-  const newCategoryBox = (<Paper
-    square={true}
-    sx={{ p: '2px 4px', 
-      display: { xs: 'none', lg: `flex` },
-      alignItems: 'center', height: '50px' }}
-  >
-    <InputBase
-      sx={{ ml: 1, flex: 1 }}
-      inputRef={categoryNameRef}
-      placeholder="New category..."
-      inputProps={{ 'aria-label': 'new category', maxLength: 200 }}
-      onChange={(e) => {setNewCategoryName(e.target.value);}}
-    />
-    {newCategoryName.length > 0 && (
-      <IconButton type="button" onClick={handleCheckClick} sx={{ p: '10px' }} aria-label="search">
-        <CheckIcon />
-      </IconButton>
-    )}
-  </Paper>)
+  const newCategoryBox = (
+    <Paper square={true} sx={{ p: '2px 4px', display: { xs: 'none', lg: `flex` }, alignItems: 'center', height: '50px' }}>
+      <InputBase
+        sx={{ ml: 1, flex: 1 }}
+        inputRef={categoryNameRef}
+        placeholder="New category..."
+        inputProps={{ 'aria-label': 'new category', maxLength: 200 }}
+        onChange={(e) => {
+          setNewCategoryName(e.target.value)
+        }}
+      />
+      {newCategoryName.length > 0 && (
+        <IconButton type="button" onClick={handleCheckClick} sx={{ p: '10px' }} aria-label="search">
+          <CheckIcon />
+        </IconButton>
+      )}
+    </Paper>
+  )
 
   const threadPickerMemo = useMemo(() => {
     if (allThreads && allThreads.length > 0) {
@@ -2208,87 +2237,88 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
             overflowY: 'scroll',
           }}
         >
-            <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable droppableId="categories" type="CATEGORY" direction="vertical">
-                {(provided) => (
-                  <div ref={provided.innerRef} {...provided.droppableProps}>
-                    {categorizedThreads.map((category, categoryIndex) => (
-                      <Draggable key={category.name} draggableId={category.name} index={categoryIndex}>
-                        {(provided) => (
-                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                            <Droppable droppableId={category.name} type="THREAD">
-                              {(provided) => (
-                                <div ref={provided.innerRef} {...provided.droppableProps}>
-                                  <ListItemButton
-                                    onClick={() => handleCategoryClick(category.name)}
-                                    sx={{ py: 0 }}
-                                  >
-                                    <ListItemIcon sx={{ minWidth: 24, paddingRight: 1 }}>
-                                      {category.expanded ? (
-                                        <KeyboardArrowDownIcon />
-                                      ) : (
-                                        <KeyboardArrowRightIcon />
-                                      )}
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="categories" type="CATEGORY" direction="vertical">
+              {(provided) => (
+                <div ref={provided.innerRef} {...provided.droppableProps}>
+                  {categorizedThreads.map((category, categoryIndex) => (
+                    <Draggable key={category.name} draggableId={category.name} index={categoryIndex}>
+                      {(provided) => (
+                        <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                          <Droppable droppableId={category.name} type="THREAD">
+                            {(provided) => (
+                              <div ref={provided.innerRef} {...provided.droppableProps}>
+                                <ListItemButton onClick={() => handleCategoryClick(category.name)} sx={{ py: 0 }}>
+                                  <ListItemIcon sx={{ minWidth: 24, paddingRight: 1 }}>
+                                    {category.expanded ? <KeyboardArrowDownIcon /> : <KeyboardArrowRightIcon />}
+                                  </ListItemIcon>
+                                  <ListItemText primary={category.name} sx={{ overflowX: 'hidden' }} />
+                                  {category.name !== 'Other' && (
+                                    <ListItemIcon
+                                      className="deleteCategoryIcon"
+                                      sx={{ minWidth: 8 }}
+                                      onClick={() => {
+                                        setDeletedCategory(category)
+                                        setDeleteCategoryOpen(true)
+                                      }}
+                                    >
+                                      <ClearIcon fontSize="inherit" />
                                     </ListItemIcon>
-                                    <ListItemText primary={category.name} sx={{overflowX: 'hidden'}} />
-                                    {category.name !== "Other" && <ListItemIcon className='deleteCategoryIcon' sx={{ minWidth: 8 }} onClick={() => {setDeletedCategory(category); setDeleteCategoryOpen(true)}}>
-                                        <ClearIcon fontSize='inherit' />
-                                    </ListItemIcon>}
-                                  </ListItemButton>
-                                  <Collapse in={category.expanded}>
-                                    <List>
-                                      {category.threads.map((thread, index) => (
-                                        <Draggable key={thread.uuid} draggableId={thread.uuid} index={index}>
-                                          {(provided) => (
-                                            <div
-                                              ref={provided.innerRef}
-                                              {...provided.draggableProps}
-                                              {...provided.dragHandleProps}
+                                  )}
+                                </ListItemButton>
+                                <Collapse in={category.expanded}>
+                                  <List>
+                                    {category.threads.map((thread, index) => (
+                                      <Draggable key={thread.uuid} draggableId={thread.uuid} index={index}>
+                                        {(provided) => (
+                                          <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                            <Button
+                                              key={thread.uuid}
+                                              startIcon={<TagIcon />}
+                                              sx={{
+                                                width: '100%',
+                                                py: isDesktop ? 0 : 0.5,
+                                                opacity: thread_name === thread.name ? 1 : 0.75,
+                                                textAlign: 'left',
+                                                border: '1px solid transparent',
+                                                '&:hover': {
+                                                  opacity: 1,
+                                                  border: '1px solid',
+                                                  borderColor: theme.palette.primary.main,
+                                                },
+                                                bgcolor:
+                                                  thread_name === thread.name
+                                                    ? alpha(theme.palette.primary.main, 0.5)
+                                                    : 'background.paper',
+                                                color: thread_name === thread.name ? 'text.primary' : 'text.secondary',
+                                                justifyContent: 'flex-start',
+                                              }}
+                                              onClick={() => navigateToThread(thread.name)}
                                             >
-                                              <Button
-                                                key={thread.uuid}
-                                                startIcon={<TagIcon />}
-                                                sx={{
-                                                  width: '100%',
-                                                  py: isDesktop ? 0 : 0.5,
-                                                  opacity: thread_name === thread.name ? 1 : 0.75,
-                                                  textAlign: 'left',
-                                                  border: '1px solid transparent',
-                                                  '&:hover': {
-                                                    opacity: 1,
-                                                    border: '1px solid',
-                                                    borderColor: theme.palette.primary.main,
-                                                  },
-                                                  bgcolor: thread_name === thread.name ? alpha(theme.palette.primary.main, 0.5) : 'background.paper',
-                                                  color: thread_name === thread.name ? 'text.primary' : 'text.secondary',
-                                                  justifyContent: 'flex-start',
-                                                }}
-                                                onClick={() => navigateToThread(thread.name)}
-                                              >
-                                                {thread.threadOfTheDay && (
-                                                  <LocalFireDepartmentIcon sx={{ color: 'orangered', verticalAlign: 'bottom' }} />
-                                                )}
-                                                {thread.title}
-                                              </Button>
-                                            </div>
-                                          )}
-                                        </Draggable>
-                                      ))}
-                                      {provided.placeholder}
-                                    </List>
-                                  </Collapse>
-                                </div>
-                              )}
-                            </Droppable>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
+                                              {thread.threadOfTheDay && (
+                                                <LocalFireDepartmentIcon sx={{ color: 'orangered', verticalAlign: 'bottom' }} />
+                                              )}
+                                              {thread.title}
+                                            </Button>
+                                          </div>
+                                        )}
+                                      </Draggable>
+                                    ))}
+                                    {provided.placeholder}
+                                  </List>
+                                </Collapse>
+                              </div>
+                            )}
+                          </Droppable>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
         </Box>
       )
       return (
@@ -2338,15 +2368,44 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
         </Box>
       )
     }
-  }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, thread_name, isDesktop, allThreads, categorizedThreads, preferences, navigateToThread])
+  }, [
+    allThreadsLoading,
+    mobilePickerOpen,
+    desktopPickerOpen,
+    thread_name,
+    isDesktop,
+    allThreads,
+    categorizedThreads,
+    preferences,
+    navigateToThread,
+  ])
 
   const robConfirmMemo = useMemo(() => {
-    return <ConfirmDialog open={robOpen} text={`You may only rob once per day. Your ability to rob resets at midnight Eastern (US).`} handleCancel={() => robCancel()} handleConfirm={() => robConfirm()} />
+    return (
+      <ConfirmDialog
+        open={robOpen}
+        text={`You may only rob once per day. Your ability to rob resets at midnight Eastern (US).`}
+        handleCancel={() => robCancel()}
+        handleConfirm={() => robConfirm()}
+      />
+    )
   }, [robOpen])
 
   const deleteCategoryConfirmMemo = useMemo(() => {
-    if(!deletedCategory) {return;}
-    return <ConfirmDialog open={deleteCategoryOpen} text={`You are deleting the ${deletedCategory.name} category (${deletedCategory.threads.length} thread${deletedCategory.threads.length === 1 ? `` : `s`}). \n\nDeleting a category will move all its threads to the "Other" category.`} handleCancel={() => {setDeleteCategoryOpen(false); setDeletedCategory(undefined);}} handleConfirm={() => (deleteCategoryConfirm())} />
+    if (!deletedCategory) {
+      return
+    }
+    return (
+      <ConfirmDialog
+        open={deleteCategoryOpen}
+        text={`You are deleting the ${deletedCategory.name} category (${deletedCategory.threads.length} thread${deletedCategory.threads.length === 1 ? `` : `s`}). \n\nDeleting a category will move all its threads to the "Other" category.`}
+        handleCancel={() => {
+          setDeleteCategoryOpen(false)
+          setDeletedCategory(undefined)
+        }}
+        handleConfirm={() => deleteCategoryConfirm()}
+      />
+    )
   }, [deletedCategory, deleteCategoryOpen])
 
   const countListMemo = useMemo(() => {
@@ -2568,30 +2627,30 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
   // const [prefHighlightLastCountColor, setPrefHighlightLastCountColor] = useState(threadPrefs?.pref_highlight_last_count_color || user?.pref_highlight_last_count_color || '#006b99');
   // const [prefSoundOnStricken, setPrefSoundOnStricken] = useState(threadPrefs?.pref_sound_on_stricken || user?.pref_sound_on_stricken || 'Disabled');
   // const [prefHideThreadPicker, setPrefHideThreadPicker] = useState(threadPrefs?.pref_hide_thread_picker || user?.pref_hide_thread_picker || false);
-  // const [prefStrickenCountOpacity, setPrefStrickenCountOpacity] = useState(threadPrefs?.pref_stricken_count_opacity || user?.pref_stricken_count_opacity || 1);  
+  // const [prefStrickenCountOpacity, setPrefStrickenCountOpacity] = useState(threadPrefs?.pref_stricken_count_opacity || user?.pref_stricken_count_opacity || 1);
 
-  const [prefEnabled, setPrefEnabled] = useState<boolean | undefined>(undefined);
-  const [prefOnline, setPrefOnline] = useState<boolean | undefined>(undefined);
-  const [prefDiscordPings, setPrefDiscordPings] = useState<boolean | undefined>(undefined);
-  const [prefLoadFromBottom, setPrefLoadFromBottom] = useState<boolean | undefined>(undefined);
-  const [prefStrikeColor, setPrefStrikeColor] = useState<string | undefined>(undefined);
-  const [prefStandardizeFormat, setPrefStandardizeFormat] = useState<string | undefined>(undefined);
-  const [prefNightMode, setPrefNightMode] = useState<string | undefined>(undefined);
-  const [prefSubmitShortcut, setPrefSubmitShortcut] = useState<string | undefined>(undefined);
-  const [prefClear, setPrefClear] = useState<string | undefined>(undefined);
-  const [prefTimeSinceLastCount, setPrefTimeSinceLastCount] = useState<boolean | undefined>(undefined);
-  const [prefCustomStricken, setPrefCustomStricken] = useState<string | undefined>(undefined);
-  const [prefPostStyle, setPrefPostStyle] = useState<string | undefined>(undefined);
-  const [prefPostStyleMobile, setPrefPostStyleMobile] = useState<string | undefined>(undefined);
-  const [prefReplyTimeInterval, setPrefReplyTimeInterval] = useState<number | undefined>(undefined);
-  const [prefNightModeColors, setPrefNightModeColors] = useState<string | undefined>(undefined);
-  const [prefPostPosition, setPrefPostPosition] = useState<string | undefined>(undefined);
-  const [prefHideStricken, setPrefHideStricken] = useState<string | undefined>(undefined);
-  const [prefHighlightLastCount, setPrefHighlightLastCount] = useState<boolean | undefined>(undefined);
-  const [prefHighlightLastCountColor, setPrefHighlightLastCountColor] = useState<string | undefined>(undefined);
-  const [prefSoundOnStricken, setPrefSoundOnStricken] = useState<string | undefined>(undefined);
-  const [prefHideThreadPicker, setPrefHideThreadPicker] = useState<boolean | undefined>(undefined);
-  const [prefStrickenCountOpacity, setPrefStrickenCountOpacity] = useState<number | undefined>(undefined);
+  const [prefEnabled, setPrefEnabled] = useState<boolean | undefined>(undefined)
+  const [prefOnline, setPrefOnline] = useState<boolean | undefined>(undefined)
+  const [prefDiscordPings, setPrefDiscordPings] = useState<boolean | undefined>(undefined)
+  const [prefLoadFromBottom, setPrefLoadFromBottom] = useState<boolean | undefined>(undefined)
+  const [prefStrikeColor, setPrefStrikeColor] = useState<string | undefined>(undefined)
+  const [prefStandardizeFormat, setPrefStandardizeFormat] = useState<string | undefined>(undefined)
+  const [prefNightMode, setPrefNightMode] = useState<string | undefined>(undefined)
+  const [prefSubmitShortcut, setPrefSubmitShortcut] = useState<string | undefined>(undefined)
+  const [prefClear, setPrefClear] = useState<string | undefined>(undefined)
+  const [prefTimeSinceLastCount, setPrefTimeSinceLastCount] = useState<boolean | undefined>(undefined)
+  const [prefCustomStricken, setPrefCustomStricken] = useState<string | undefined>(undefined)
+  const [prefPostStyle, setPrefPostStyle] = useState<string | undefined>(undefined)
+  const [prefPostStyleMobile, setPrefPostStyleMobile] = useState<string | undefined>(undefined)
+  const [prefReplyTimeInterval, setPrefReplyTimeInterval] = useState<number | undefined>(undefined)
+  const [prefNightModeColors, setPrefNightModeColors] = useState<string | undefined>(undefined)
+  const [prefPostPosition, setPrefPostPosition] = useState<string | undefined>(undefined)
+  const [prefHideStricken, setPrefHideStricken] = useState<string | undefined>(undefined)
+  const [prefHighlightLastCount, setPrefHighlightLastCount] = useState<boolean | undefined>(undefined)
+  const [prefHighlightLastCountColor, setPrefHighlightLastCountColor] = useState<string | undefined>(undefined)
+  const [prefSoundOnStricken, setPrefSoundOnStricken] = useState<string | undefined>(undefined)
+  const [prefHideThreadPicker, setPrefHideThreadPicker] = useState<boolean | undefined>(undefined)
+  const [prefStrickenCountOpacity, setPrefStrickenCountOpacity] = useState<number | undefined>(undefined)
 
   function setPreferencesFromThreadOrUser(threadPrefs: ThreadPrefs | undefined, user: User): PreferencesType {
     const preferences: PreferencesType = {
@@ -2612,58 +2671,62 @@ const categoryNameRef = useRef<HTMLInputElement>(null)
       pref_post_position: threadPrefs?.pref_post_position ?? user.pref_post_position ?? 'Left',
       pref_hide_stricken: threadPrefs?.pref_hide_stricken ?? user.pref_hide_stricken ?? 'Disabled',
       pref_highlight_last_count: threadPrefs?.pref_highlight_last_count ?? user.pref_highlight_last_count ?? false,
-      pref_highlight_last_count_color: threadPrefs?.pref_highlight_last_count_color ?? user.pref_highlight_last_count_color ?? '#006b99',
+      pref_highlight_last_count_color:
+        threadPrefs?.pref_highlight_last_count_color ?? user.pref_highlight_last_count_color ?? '#006b99',
       pref_sound_on_stricken: threadPrefs?.pref_sound_on_stricken ?? user.pref_sound_on_stricken ?? 'Disabled',
       pref_hide_thread_picker: threadPrefs?.pref_hide_thread_picker ?? user.pref_hide_thread_picker ?? false,
       pref_stricken_count_opacity: threadPrefs?.pref_stricken_count_opacity ?? user.pref_stricken_count_opacity ?? 1,
       pref_timestamp_display: user.pref_timestamp_display ?? 'Milliseconds',
-      pref_show_latency: user.pref_show_latency ?? true
+      pref_show_latency: user.pref_show_latency ?? true,
       // Add more preferences as needed
-    };
-  
-    return preferences;
-  }
-
-// Assuming 'user' and 'threadPrefs' are fetched asynchronously
-useEffect(() => {
-  // Check if user and threadPrefs are loaded
-  if (!loading && user && thread) {
-    let threadPrefs = user.threadPreferences && user.threadPreferences.length > 0 ? user.threadPreferences?.find(prefs => prefs.thread.uuid === thread?.uuid) : undefined;
-
-    // Set default values from threadPrefs or user, falling back to hard-coded defaults if not available
-    setPrefEnabled(threadPrefs && threadPrefs.enabled !== undefined ? threadPrefs.enabled : true);
-    setPrefOnline(threadPrefs?.pref_online ?? user.pref_online ?? false);
-    setPrefDiscordPings(threadPrefs?.pref_discord_pings ?? user.pref_discord_pings ?? false);
-    setPrefLoadFromBottom(threadPrefs?.pref_load_from_bottom ?? user.pref_load_from_bottom ?? false);
-    setPrefStrikeColor(threadPrefs?.pref_strike_color ?? user.pref_strike_color ?? '#cccccc');
-    setPrefStandardizeFormat(threadPrefs?.pref_standardize_format ?? user.pref_standardize_format ?? 'Disabled');
-    setPrefNightMode(threadPrefs?.pref_nightMode ?? user.pref_nightMode ?? 'System');
-    setPrefSubmitShortcut(threadPrefs?.pref_submit_shortcut ?? user.pref_submit_shortcut ?? 'CtrlEnter');
-    setPrefClear(threadPrefs?.pref_clear ?? user.pref_clear ?? 'Clear');
-    setPrefTimeSinceLastCount(threadPrefs?.pref_time_since_last_count ?? user.pref_time_since_last_count ?? false);
-    setPrefCustomStricken(threadPrefs?.pref_custom_stricken ?? user.pref_custom_stricken ?? 'Disabled');
-    setPrefPostStyle(threadPrefs?.pref_post_style ?? user.pref_post_style ?? 'Default');
-    setPrefPostStyleMobile(threadPrefs?.pref_post_style_mobile ?? user.pref_post_style_mobile ?? 'Default');
-    setPrefReplyTimeInterval(threadPrefs?.pref_reply_time_interval ?? user.pref_reply_time_interval ?? 100);
-    setPrefNightModeColors(threadPrefs?.pref_night_mode_colors ?? user.pref_night_mode_colors ?? 'Default');
-    setPrefPostPosition(threadPrefs?.pref_post_position ?? user.pref_post_position ?? 'Left');
-    setPrefHideStricken(threadPrefs?.pref_hide_stricken ?? user.pref_hide_stricken ?? 'Disabled');
-    setPrefHighlightLastCount(threadPrefs?.pref_highlight_last_count ?? user.pref_highlight_last_count ?? false);
-    setPrefHighlightLastCountColor(threadPrefs?.pref_highlight_last_count_color ?? user.pref_highlight_last_count_color ?? '#006b99');
-    setPrefSoundOnStricken(threadPrefs?.pref_sound_on_stricken ?? user.pref_sound_on_stricken ?? 'Disabled');
-    setPrefHideThreadPicker(threadPrefs?.pref_hide_thread_picker ?? user.pref_hide_thread_picker ?? false);
-    setPrefStrickenCountOpacity(threadPrefs?.pref_stricken_count_opacity ?? user.pref_stricken_count_opacity ?? 1);
-    setThreadMacroPresetId(threadPrefs?.macroPresetId ?? null);
-
-    if(threadPrefs && threadPrefs.enabled === true && setPreferences) {
-      setPreferences(setPreferencesFromThreadOrUser(threadPrefs, user))
-    } else if(setPreferences) {
-      setPreferences(setPreferencesFromThreadOrUser(undefined, user))
     }
-  }
-}, [loading, thread]);
 
-const [resetPrefs, setResetPrefs] = useState<boolean>(false);
+    return preferences
+  }
+
+  // Assuming 'user' and 'threadPrefs' are fetched asynchronously
+  useEffect(() => {
+    // Check if user and threadPrefs are loaded
+    if (!loading && user && thread) {
+      let threadPrefs =
+        user.threadPreferences && user.threadPreferences.length > 0
+          ? user.threadPreferences?.find((prefs) => prefs.thread.uuid === thread?.uuid)
+          : undefined
+
+      // Set default values from threadPrefs or user, falling back to hard-coded defaults if not available
+      setPrefEnabled(threadPrefs && threadPrefs.enabled !== undefined ? threadPrefs.enabled : true)
+      setPrefOnline(threadPrefs?.pref_online ?? user.pref_online ?? false)
+      setPrefDiscordPings(threadPrefs?.pref_discord_pings ?? user.pref_discord_pings ?? false)
+      setPrefLoadFromBottom(threadPrefs?.pref_load_from_bottom ?? user.pref_load_from_bottom ?? false)
+      setPrefStrikeColor(threadPrefs?.pref_strike_color ?? user.pref_strike_color ?? '#cccccc')
+      setPrefStandardizeFormat(threadPrefs?.pref_standardize_format ?? user.pref_standardize_format ?? 'Disabled')
+      setPrefNightMode(threadPrefs?.pref_nightMode ?? user.pref_nightMode ?? 'System')
+      setPrefSubmitShortcut(threadPrefs?.pref_submit_shortcut ?? user.pref_submit_shortcut ?? 'CtrlEnter')
+      setPrefClear(threadPrefs?.pref_clear ?? user.pref_clear ?? 'Clear')
+      setPrefTimeSinceLastCount(threadPrefs?.pref_time_since_last_count ?? user.pref_time_since_last_count ?? false)
+      setPrefCustomStricken(threadPrefs?.pref_custom_stricken ?? user.pref_custom_stricken ?? 'Disabled')
+      setPrefPostStyle(threadPrefs?.pref_post_style ?? user.pref_post_style ?? 'Default')
+      setPrefPostStyleMobile(threadPrefs?.pref_post_style_mobile ?? user.pref_post_style_mobile ?? 'Default')
+      setPrefReplyTimeInterval(threadPrefs?.pref_reply_time_interval ?? user.pref_reply_time_interval ?? 100)
+      setPrefNightModeColors(threadPrefs?.pref_night_mode_colors ?? user.pref_night_mode_colors ?? 'Default')
+      setPrefPostPosition(threadPrefs?.pref_post_position ?? user.pref_post_position ?? 'Left')
+      setPrefHideStricken(threadPrefs?.pref_hide_stricken ?? user.pref_hide_stricken ?? 'Disabled')
+      setPrefHighlightLastCount(threadPrefs?.pref_highlight_last_count ?? user.pref_highlight_last_count ?? false)
+      setPrefHighlightLastCountColor(threadPrefs?.pref_highlight_last_count_color ?? user.pref_highlight_last_count_color ?? '#006b99')
+      setPrefSoundOnStricken(threadPrefs?.pref_sound_on_stricken ?? user.pref_sound_on_stricken ?? 'Disabled')
+      setPrefHideThreadPicker(threadPrefs?.pref_hide_thread_picker ?? user.pref_hide_thread_picker ?? false)
+      setPrefStrickenCountOpacity(threadPrefs?.pref_stricken_count_opacity ?? user.pref_stricken_count_opacity ?? 1)
+      setThreadMacroPresetId(threadPrefs?.macroPresetId ?? null)
+
+      if (threadPrefs && threadPrefs.enabled === true && setPreferences) {
+        setPreferences(setPreferencesFromThreadOrUser(threadPrefs, user))
+      } else if (setPreferences) {
+        setPreferences(setPreferencesFromThreadOrUser(undefined, user))
+      }
+    }
+  }, [loading, thread])
+
+  const [resetPrefs, setResetPrefs] = useState<boolean>(false)
 
   useEffect(() => {
     let ignore = false
@@ -2676,14 +2739,7 @@ const [resetPrefs, setResetPrefs] = useState<boolean>(false);
     const timer = setTimeout(async () => {
       try {
         const search = macroPresetSearchInput.trim() || undefined
-        const allRes = await listMacroPresets(
-          1,
-          100,
-          search,
-          undefined,
-          undefined,
-          thread?.uuid,
-        )
+        const allRes = await listMacroPresets(1, 100, search, undefined, undefined, thread?.uuid)
         if (ignore) return
         const fetched = allRes.data.items || []
         setAvailableMacroPresets((prev) => {
@@ -2712,34 +2768,34 @@ const [resetPrefs, setResetPrefs] = useState<boolean>(false);
   useEffect(() => {
     let ignore = false
     const loadRecommendedMacroPresets = async () => {
-    if (!thread?.uuid || !macroPresetsEnabled) return
-    try {
-      const res = await getRecommendedMacroPresets(thread.uuid, 10)
-      if (!ignore) {
-        const items = res.data.items || []
-        setRecommendedMacroPresets(items)
-        setAvailableMacroPresets((prev) => {
-          const byId = new Map<number, MacroPreset>()
-          for (const item of prev) byId.set(item.id, item)
-          for (const row of items) {
-            if (row.macroPreset?.id) {
-              byId.set(row.macroPreset.id, row.macroPreset)
+      if (!thread?.uuid || !macroPresetsEnabled) return
+      try {
+        const res = await getRecommendedMacroPresets(thread.uuid, 10)
+        if (!ignore) {
+          const items = res.data.items || []
+          setRecommendedMacroPresets(items)
+          setAvailableMacroPresets((prev) => {
+            const byId = new Map<number, MacroPreset>()
+            for (const item of prev) byId.set(item.id, item)
+            for (const row of items) {
+              if (row.macroPreset?.id) {
+                byId.set(row.macroPreset.id, row.macroPreset)
+              }
             }
-          }
-          return Array.from(byId.values())
-        })
-      }
-    } catch (err) {
-      if (!ignore) {
-        setRecommendedMacroPresets([])
+            return Array.from(byId.values())
+          })
+        }
+      } catch (err) {
+        if (!ignore) {
+          setRecommendedMacroPresets([])
+        }
       }
     }
-  }
-  loadRecommendedMacroPresets()
-  return () => {
-    ignore = true
-  }
-}, [thread?.uuid, macroPresetsEnabled])
+    loadRecommendedMacroPresets()
+    return () => {
+      ignore = true
+    }
+  }, [thread?.uuid, macroPresetsEnabled])
 
   useEffect(() => {
     let ignore = false
@@ -2747,19 +2803,19 @@ const [resetPrefs, setResetPrefs] = useState<boolean>(false);
       if (!macroPresetsEnabled || !user?.uuid) return
       const idsToEnsure = Array.from(
         new Set(
-          [threadMacroPresetId, activeMacroRuntime.macroPresetId].filter(
-            (id): id is number => typeof id === 'number' && id > 0,
-          ),
+          [threadMacroPresetId, activeMacroRuntime.macroPresetId].filter((id): id is number => typeof id === 'number' && id > 0),
         ),
       )
       if (idsToEnsure.length === 0) return
-      const missingIds = idsToEnsure.filter(
-        (id) => !availableMacroPresets.some((preset) => preset.id === id),
-      )
+      const missingIds = idsToEnsure.filter((id) => !availableMacroPresets.some((preset) => preset.id === id))
       if (missingIds.length === 0) return
       try {
         const loaded = await Promise.all(
-          missingIds.map((id) => getMacroPreset(id).then((res) => res.data?.preset).catch(() => null)),
+          missingIds.map((id) =>
+            getMacroPreset(id)
+              .then((res) => res.data?.preset)
+              .catch(() => null),
+          ),
         )
         if (ignore) return
         const validLoaded = loaded.filter((preset): preset is MacroPreset => !!preset?.id)
@@ -2778,82 +2834,76 @@ const [resetPrefs, setResetPrefs] = useState<boolean>(false);
     return () => {
       ignore = true
     }
-  }, [
-    macroPresetsEnabled,
-    user?.uuid,
-    threadMacroPresetId,
-    activeMacroRuntime.macroPresetId,
-    availableMacroPresets,
-  ])
+  }, [macroPresetsEnabled, user?.uuid, threadMacroPresetId, activeMacroRuntime.macroPresetId, availableMacroPresets])
 
   useEffect(() => {
     let ignore = false
     const loadActiveMacroRuntime = async () => {
-    if (!thread?.uuid || !user || !macroPresetsEnabled) {
-      if (!ignore) {
-        setActiveMacroRuntime({
-          source: 'none',
-          enabled: false,
-          macroPresetId: null,
-          macroPresetVersionId: null,
-          macroPresetVersionNumber: null,
-          entries: [],
-        })
+      if (!thread?.uuid || !user || !macroPresetsEnabled) {
+        if (!ignore) {
+          setActiveMacroRuntime({
+            source: 'none',
+            enabled: false,
+            macroPresetId: null,
+            macroPresetVersionId: null,
+            macroPresetVersionNumber: null,
+            entries: [],
+          })
+        }
+        return
       }
-      return
+      try {
+        const res = await getActiveMacroRuntimeForThread(thread.uuid)
+        if (!ignore) {
+          setActiveMacroRuntime(res.data)
+        }
+      } catch (err) {
+        if (!ignore) {
+          setActiveMacroRuntime({
+            source: 'none',
+            enabled: false,
+            macroPresetId: null,
+            macroPresetVersionId: null,
+            macroPresetVersionNumber: null,
+            entries: [],
+          })
+        }
+      }
     }
-    try {
-      const res = await getActiveMacroRuntimeForThread(thread.uuid)
-      if (!ignore) {
-        setActiveMacroRuntime(res.data)
-      }
-    } catch (err) {
-      if (!ignore) {
-        setActiveMacroRuntime({
-          source: 'none',
-          enabled: false,
-          macroPresetId: null,
-          macroPresetVersionId: null,
-          macroPresetVersionNumber: null,
-          entries: [],
-        })
-      }
+    loadActiveMacroRuntime()
+    return () => {
+      ignore = true
     }
-  }
-  loadActiveMacroRuntime()
-  return () => {
-    ignore = true
-  }
-}, [thread?.uuid, user, macroPresetsEnabled])
+  }, [thread?.uuid, user, macroPresetsEnabled])
 
-useEffect(() => {
-  if(user && resetPrefs) {
-    setPrefEnabled(true);
-    setPrefOnline(user.pref_online);
-    setPrefDiscordPings(user.pref_discord_pings);
-    setPrefLoadFromBottom(user.pref_load_from_bottom);
-    setPrefStrikeColor(user.pref_strike_color);
-    setPrefStandardizeFormat(user.pref_standardize_format);
-    setPrefNightMode(user.pref_nightMode);
-    setPrefSubmitShortcut(user.pref_submit_shortcut);
-    setPrefClear(user.pref_clear);
-    setPrefTimeSinceLastCount(user.pref_time_since_last_count);
-    setPrefCustomStricken(user.pref_custom_stricken);
-    setPrefPostStyle(user.pref_post_style);
-    setPrefPostStyleMobile(user.pref_post_style_mobile);
-    setPrefReplyTimeInterval(user.pref_reply_time_interval);
-    setPrefNightModeColors(user.pref_night_mode_colors);
-    setPrefPostPosition(user.pref_post_position);
-    setPrefHideStricken(user.pref_hide_stricken);
-    setPrefHighlightLastCount(user.pref_highlight_last_count);
-    setPrefHighlightLastCountColor(user.pref_highlight_last_count_color);
-    setPrefSoundOnStricken(user.pref_sound_on_stricken);
-    setPrefHideThreadPicker(user.pref_hide_thread_picker);
-    setPrefStrickenCountOpacity(user.pref_stricken_count_opacity);
-    setThreadMacroPresetId(null);
-  }
-  setResetPrefs(false);
-}, [resetPrefs]);
+  useEffect(() => {
+    if (user && resetPrefs) {
+      setPrefEnabled(true)
+      setPrefOnline(user.pref_online)
+      setPrefDiscordPings(user.pref_discord_pings)
+      setPrefLoadFromBottom(user.pref_load_from_bottom)
+      setPrefStrikeColor(user.pref_strike_color)
+      setPrefStandardizeFormat(user.pref_standardize_format)
+      setPrefNightMode(user.pref_nightMode)
+      setPrefSubmitShortcut(user.pref_submit_shortcut)
+      setPrefClear(user.pref_clear)
+      setPrefTimeSinceLastCount(user.pref_time_since_last_count)
+      setPrefCustomStricken(user.pref_custom_stricken)
+      setPrefPostStyle(user.pref_post_style)
+      setPrefPostStyleMobile(user.pref_post_style_mobile)
+      setPrefReplyTimeInterval(user.pref_reply_time_interval)
+      setPrefNightModeColors(user.pref_night_mode_colors)
+      setPrefPostPosition(user.pref_post_position)
+      setPrefHideStricken(user.pref_hide_stricken)
+      setPrefHighlightLastCount(user.pref_highlight_last_count)
+      setPrefHighlightLastCountColor(user.pref_highlight_last_count_color)
+      setPrefSoundOnStricken(user.pref_sound_on_stricken)
+      setPrefHideThreadPicker(user.pref_hide_thread_picker)
+      setPrefStrickenCountOpacity(user.pref_stricken_count_opacity)
+      setThreadMacroPresetId(null)
+    }
+    setResetPrefs(false)
+  }, [resetPrefs])
 
   const saveThreadMacroSelection = useCallback(
     async (nextMacroPresetId: number | null) => {
@@ -2925,49 +2975,50 @@ useEffect(() => {
 
   const savePrefs = async () => {
     if (user && counter && thread) {
-      if(!user.threadPreferences) {user.threadPreferences = []}
-      let thisThreadPrefs: any = user.threadPreferences && user.threadPreferences.length > 0 ? user.threadPreferences?.find(prefs => prefs.thread.uuid === thread?.uuid) : undefined;
-      if(thisThreadPrefs === undefined) {
+      if (!user.threadPreferences) {
+        user.threadPreferences = []
+      }
+      let thisThreadPrefs: any =
+        user.threadPreferences && user.threadPreferences.length > 0
+          ? user.threadPreferences?.find((prefs) => prefs.thread.uuid === thread?.uuid)
+          : undefined
+      if (thisThreadPrefs === undefined) {
         thisThreadPrefs = {
           user: user,
           thread: thread,
-        };
+        }
       }
 
-      thisThreadPrefs.enabled = prefEnabled; 
-      thisThreadPrefs.pref_discord_pings = prefDiscordPings;
-      thisThreadPrefs.pref_online = prefOnline;
-      thisThreadPrefs.pref_load_from_bottom = prefLoadFromBottom;
-      thisThreadPrefs.pref_time_since_last_count = prefTimeSinceLastCount;
-      thisThreadPrefs.pref_standardize_format = prefStandardizeFormat;
-      thisThreadPrefs.pref_nightMode = prefNightMode;
-      thisThreadPrefs.pref_submit_shortcut = prefSubmitShortcut;
-      thisThreadPrefs.pref_custom_stricken = prefCustomStricken;
-      thisThreadPrefs.pref_strike_color = prefStrikeColor;
-      thisThreadPrefs.pref_clear = prefClear;
-      thisThreadPrefs.pref_post_style = prefPostStyle;
-      thisThreadPrefs.pref_post_style_mobile = prefPostStyleMobile;
-      thisThreadPrefs.pref_reply_time_interval = prefReplyTimeInterval;
-      thisThreadPrefs.pref_night_mode_colors = prefNightModeColors;
-      thisThreadPrefs.pref_post_position = prefPostPosition;
-      thisThreadPrefs.pref_hide_stricken = prefHideStricken;
-      thisThreadPrefs.pref_hide_thread_picker = prefHideThreadPicker;
-      thisThreadPrefs.pref_sound_on_stricken = prefSoundOnStricken;
-      thisThreadPrefs.pref_highlight_last_count = prefHighlightLastCount;
-      thisThreadPrefs.pref_highlight_last_count_color = prefHighlightLastCountColor;
-      thisThreadPrefs.pref_stricken_count_opacity = prefStrickenCountOpacity;
-      thisThreadPrefs.macroPresetId = threadMacroPresetId;
-      if(setPreferences) {
+      thisThreadPrefs.enabled = prefEnabled
+      thisThreadPrefs.pref_discord_pings = prefDiscordPings
+      thisThreadPrefs.pref_online = prefOnline
+      thisThreadPrefs.pref_load_from_bottom = prefLoadFromBottom
+      thisThreadPrefs.pref_time_since_last_count = prefTimeSinceLastCount
+      thisThreadPrefs.pref_standardize_format = prefStandardizeFormat
+      thisThreadPrefs.pref_nightMode = prefNightMode
+      thisThreadPrefs.pref_submit_shortcut = prefSubmitShortcut
+      thisThreadPrefs.pref_custom_stricken = prefCustomStricken
+      thisThreadPrefs.pref_strike_color = prefStrikeColor
+      thisThreadPrefs.pref_clear = prefClear
+      thisThreadPrefs.pref_post_style = prefPostStyle
+      thisThreadPrefs.pref_post_style_mobile = prefPostStyleMobile
+      thisThreadPrefs.pref_reply_time_interval = prefReplyTimeInterval
+      thisThreadPrefs.pref_night_mode_colors = prefNightModeColors
+      thisThreadPrefs.pref_post_position = prefPostPosition
+      thisThreadPrefs.pref_hide_stricken = prefHideStricken
+      thisThreadPrefs.pref_hide_thread_picker = prefHideThreadPicker
+      thisThreadPrefs.pref_sound_on_stricken = prefSoundOnStricken
+      thisThreadPrefs.pref_highlight_last_count = prefHighlightLastCount
+      thisThreadPrefs.pref_highlight_last_count_color = prefHighlightLastCountColor
+      thisThreadPrefs.pref_stricken_count_opacity = prefStrickenCountOpacity
+      thisThreadPrefs.macroPresetId = threadMacroPresetId
+      if (setPreferences) {
         setPreferences(setPreferencesFromThreadOrUser(prefEnabled ? thisThreadPrefs : undefined, user))
       }
       try {
         const res = await updateThreadPrefs(thisThreadPrefs)
         const macroPrefRes = macroPresetsEnabled
-          ? await setThreadMacroPresetPreference(
-              thread.uuid,
-              prefEnabled ?? true,
-              threadMacroPresetId,
-            )
+          ? await setThreadMacroPresetPreference(thread.uuid, prefEnabled ?? true, threadMacroPresetId)
           : { status: 200 }
         if (macroPresetsEnabled && (prefEnabled ?? true) && threadMacroPresetId !== null) {
           await applyMacroPresetForThread(thread.uuid, threadMacroPresetId)
@@ -2991,11 +3042,11 @@ useEffect(() => {
 
   const deletePrefs = async () => {
     if (user && counter && thread) {
-      if(setPreferences) {
+      if (setPreferences) {
         setPreferences(setPreferencesFromThreadOrUser(undefined, user))
       }
       try {
-        const res = await deleteThreadPrefs(thread);
+        const res = await deleteThreadPrefs(thread)
         if (res.status == 200) {
           setSnackbarSeverity('success')
           setSnackbarOpen(true)
@@ -3009,10 +3060,10 @@ useEffect(() => {
     }
   }
 
-  const saveCommunityNotes = async (update: string) => {  
-    if(thread) {
+  const saveCommunityNotes = async (update: string) => {
+    if (thread) {
       try {
-        const res = await updateCommunityNotes(thread, update);
+        const res = await updateCommunityNotes(thread, update)
         if (res.status == 200) {
           setSnackbarSeverity('success')
           setSnackbarOpen(true)
@@ -3316,12 +3367,7 @@ useEffect(() => {
                   <Box sx={{ mt: 0.5 }}>
                     {groupedActiveMacroEntries.map((group) => (
                       <Box key={group.type} sx={{ mt: 0.5 }}>
-                        <Typography
-                          variant="caption"
-                          display="block"
-                          color="text.secondary"
-                          sx={{ fontWeight: 700, lineHeight: 1.1 }}
-                        >
+                        <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
                           {group.label}
                         </Typography>
                         {group.entries.map((entry) => (
@@ -3552,192 +3598,212 @@ useEffect(() => {
             {replayActive && <Typography>{timerStr}</Typography>}
           </TabPanel>
           <TabPanel value="tab_6" sx={{ flexGrow: 1 }}>
-          {/* {user && thread && user.threadPreferences && user.threadPreferences.length > 0 && user.threadPreferences.find(prefs => prefs.thread.uuid === thread?.uuid) !== undefined && <> */}
-          <Button
-                sx={{ m: 2 }}
-                size="large"
-                color="success"
-                variant="outlined"
-                onClick={() => {
-                  setResetPrefs(true)
-                }}
-              >
-                Set to Global Prefs
-              </Button>
-          <Button
-                sx={{ m: 2 }}
-                size="large"
-                color="error"
-                variant="outlined"
-                onClick={() => {
-                  deletePrefs()
-                }}
-              >
-                Delete Thread Prefs
-              </Button>
-          {macroPresetsEnabled && (
-          <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ md: 'center' }} spacing={1} sx={{ m: 2 }}>
-          <Autocomplete
-            sx={{ minWidth: 320, maxWidth: 640, width: '100%' }}
-            options={threadMacroPresetOptions}
-            loading={macroPresetSearchLoading}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-            groupBy={(option) => option.category}
-            getOptionLabel={(option) => option.name}
-            filterOptions={(options) => options}
-            inputValue={macroPresetInputValue}
-            onInputChange={(_, value, reason) => {
-              if (reason === 'input' || reason === 'clear') {
-                setMacroPresetInputValue(value)
-                setMacroPresetSearchInput(value)
-              }
-            }}
-            value={selectedThreadMacroPresetValue}
-            onChange={(_, value, reason) => {
-              const nextLabel = !value || value.id === -1 ? '' : value.name
-              setMacroPresetInputValue(nextLabel)
-              setMacroPresetSearchInput('')
-              if (reason === 'selectOption') {
-                saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
-              }
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Thread Macro Preset"
-                placeholder="Search macro presets"
-                onFocus={() => setMacroPresetInputFocused(true)}
-                onBlur={() => setMacroPresetInputFocused(false)}
-              />
-            )}
-              renderOption={(props, option) => (
-                <li {...props} key={option.id}>
-                  <Box>
-                    <Typography variant="body2">{option.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {option.id === -1
-                        ? 'No macro preset'
-                        : `${option.threadUsageCount > 0 ? `${option.threadUsageCount} users here - ` : ''}${option.handle ? `@${option.handle} - ` : ''}${option.description || 'No description'}`}
-                    </Typography>
-                  </Box>
-                </li>
-              )}
-            />
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={() => saveThreadMacroSelection(null)}
-            disabled={threadMacroPresetId === null || macroSelectionSaving}
-          >
-            Clear
-          </Button>
-          </Stack>
-          )}
-          {macroPresetsEnabled && (
-          <Box sx={{ ml: 2, mb: 1 }}>
-            {activeMacroRuntime.source === 'thread' ? (
-              <Chip
-                size="small"
-                color="primary"
-                label="Thread Pref"
-                onDelete={clearThreadMacroOverrideToGlobal}
-                disabled={macroSelectionSaving}
-              />
-            ) : (
-              <Chip
-                size="small"
-                variant="outlined"
-                label={threadMacroSelectionSourceLabel}
-              />
-            )}
-          </Box>
-          )}
-          {macroPresetsEnabled && (
-          <Typography sx={{ ml: 2, mb: 1 }} variant="body2" color="text.secondary">
-            Macro selection now auto-saves; usage tracking updates on selection.
-          </Typography>
-          )}
-          {macroPresetsEnabled && (
-            <Box sx={{ m: 2, p: 1, borderRadius: '8px', border: '1px solid', borderColor: 'divider' }}>
-              <Typography variant="subtitle2">Active Macro Runtime</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Source: {activeMacroRuntime.source}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Preset: {activeMacroPresetName || 'None'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Version: {activeMacroRuntime.macroPresetVersionNumber ?? 'N/A'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Entries: {activeMacroRuntime.entries?.length || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Hotkeys: {hasMacroEntries ? (macroHotkeysEnabled ? 'Enabled' : 'Disabled') : 'N/A'}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Runtime executes only in desktop mode.
-              </Typography>
-            </Box>
-          )}
-          {macroPresetsEnabled && recommendedMacroPresets.length > 0 && (
-            <Box sx={{ m: 2, p: 1, borderRadius: '8px', border: '1px solid', borderColor: 'divider' }}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Recommended Macros For This Thread
-              </Typography>
-              {recommendedMacroPresets.map((row) => (
-                <Box
-                  key={row.id}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 1,
-                    p: 0.5,
+            {/* {user && thread && user.threadPreferences && user.threadPreferences.length > 0 && user.threadPreferences.find(prefs => prefs.thread.uuid === thread?.uuid) !== undefined && <> */}
+            <Button
+              sx={{ m: 2 }}
+              size="large"
+              color="success"
+              variant="outlined"
+              onClick={() => {
+                setResetPrefs(true)
+              }}
+            >
+              Set to Global Prefs
+            </Button>
+            <Button
+              sx={{ m: 2 }}
+              size="large"
+              color="error"
+              variant="outlined"
+              onClick={() => {
+                deletePrefs()
+              }}
+            >
+              Delete Thread Prefs
+            </Button>
+            {macroPresetsEnabled && (
+              <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ md: 'center' }} spacing={1} sx={{ m: 2 }}>
+                <Autocomplete
+                  sx={{ minWidth: 320, maxWidth: 640, width: '100%' }}
+                  options={threadMacroPresetOptions}
+                  loading={macroPresetSearchLoading}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  groupBy={(option) => option.category}
+                  getOptionLabel={(option) => option.name}
+                  filterOptions={(options) => options}
+                  inputValue={macroPresetInputValue}
+                  onInputChange={(_, value, reason) => {
+                    if (reason === 'input' || reason === 'clear') {
+                      setMacroPresetInputValue(value)
+                      setMacroPresetSearchInput(value)
+                    }
                   }}
+                  value={selectedThreadMacroPresetValue}
+                  onChange={(_, value, reason) => {
+                    const nextLabel = !value || value.id === -1 ? '' : value.name
+                    setMacroPresetInputValue(nextLabel)
+                    setMacroPresetSearchInput('')
+                    if (reason === 'selectOption') {
+                      saveThreadMacroSelection(!value || value.id === -1 ? null : value.id)
+                    }
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Thread Macro Preset"
+                      placeholder="Search macro presets"
+                      onFocus={() => setMacroPresetInputFocused(true)}
+                      onBlur={() => setMacroPresetInputFocused(false)}
+                    />
+                  )}
+                  renderOption={(props, option) => (
+                    <li {...props} key={option.id}>
+                      <Box>
+                        <Typography variant="body2">{option.name}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {option.id === -1
+                            ? 'No macro preset'
+                            : `${option.threadUsageCount > 0 ? `${option.threadUsageCount} users here - ` : ''}${option.handle ? `@${option.handle} - ` : ''}${option.description || 'No description'}`}
+                        </Typography>
+                      </Box>
+                    </li>
+                  )}
+                />
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => saveThreadMacroSelection(null)}
+                  disabled={threadMacroPresetId === null || macroSelectionSaving}
                 >
-                    <Typography variant="body2">
-                     {row.macroPreset?.name || 'Unknown Macro Preset'} ({row.appliesCount} users)
-                    </Typography>
-                  <Button
+                  Clear
+                </Button>
+              </Stack>
+            )}
+            {macroPresetsEnabled && (
+              <Box sx={{ ml: 2, mb: 1 }}>
+                {activeMacroRuntime.source === 'thread' ? (
+                  <Chip
                     size="small"
-                    variant="outlined"
-                    disabled={!row.macroPreset?.id}
-                    onClick={() => row.macroPreset?.id && saveThreadMacroSelection(row.macroPreset.id)}
+                    color="primary"
+                    label="Thread Pref"
+                    onDelete={clearThreadMacroOverrideToGlobal}
+                    disabled={macroSelectionSaving}
+                  />
+                ) : (
+                  <Chip size="small" variant="outlined" label={threadMacroSelectionSourceLabel} />
+                )}
+              </Box>
+            )}
+            {macroPresetsEnabled && (
+              <Typography sx={{ ml: 2, mb: 1 }} variant="body2" color="text.secondary">
+                Macro selection now auto-saves; usage tracking updates on selection.
+              </Typography>
+            )}
+            {macroPresetsEnabled && (
+              <Box sx={{ m: 2, p: 1, borderRadius: '8px', border: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="subtitle2">Active Macro Runtime</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Source: {activeMacroRuntime.source}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Preset: {activeMacroPresetName || 'None'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Version: {activeMacroRuntime.macroPresetVersionNumber ?? 'N/A'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Entries: {activeMacroRuntime.entries?.length || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Hotkeys: {hasMacroEntries ? (macroHotkeysEnabled ? 'Enabled' : 'Disabled') : 'N/A'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Runtime executes only in desktop mode.
+                </Typography>
+              </Box>
+            )}
+            {macroPresetsEnabled && recommendedMacroPresets.length > 0 && (
+              <Box sx={{ m: 2, p: 1, borderRadius: '8px', border: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Recommended Macros For This Thread
+                </Typography>
+                {recommendedMacroPresets.map((row) => (
+                  <Box
+                    key={row.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 1,
+                      p: 0.5,
+                    }}
                   >
-                    Use
-                  </Button>
-                </Box>
-              ))}
-            </Box>
-          )}
-          {/* </>}  */}
-          
-          <Preferences
-            savePrefs={savePrefs} maybeU={maybeU} title={`${thread?.title} Preferences`}
-            prefOnline={prefOnline} setPrefOnline={setPrefOnline}
-            prefDiscordPings={prefDiscordPings} setPrefDiscordPings={setPrefDiscordPings}
-            prefLoadFromBottom={prefLoadFromBottom} setPrefLoadFromBottom={setPrefLoadFromBottom}
-            prefStrikeColor={prefStrikeColor} setPrefStrikeColor={setPrefStrikeColor}
-            prefStandardizeFormat={prefStandardizeFormat} setPrefStandardizeFormat={setPrefStandardizeFormat}
-            prefNightMode={prefNightMode} setPrefNightMode={setPrefNightMode}
-            prefSubmitShortcut={prefSubmitShortcut} setPrefSubmitShortcut={setPrefSubmitShortcut}
-            prefClear={prefClear} setPrefClear={setPrefClear}
-            prefTimeSinceLastCount={prefTimeSinceLastCount} setPrefTimeSinceLastCount={setPrefTimeSinceLastCount}
-            prefCustomStricken={prefCustomStricken} setPrefCustomStricken={setPrefCustomStricken}
-            prefPostStyle={prefPostStyle} setPrefPostStyle={setPrefPostStyle}
-            prefPostStyleMobile={prefPostStyleMobile} setPrefPostStyleMobile={setPrefPostStyleMobile}
-            prefReplyTimeInterval={prefReplyTimeInterval} setPrefReplyTimeInterval={setPrefReplyTimeInterval}
-            prefNightModeColors={prefNightModeColors} setPrefNightModeColors={setPrefNightModeColors}
-            prefPostPosition={prefPostPosition} setPrefPostPosition={setPrefPostPosition}
-            prefHideStricken={prefHideStricken} setPrefHideStricken={setPrefHideStricken}
-            prefHighlightLastCount={prefHighlightLastCount} setPrefHighlightLastCount={setPrefHighlightLastCount}
-            prefHighlightLastCountColor={prefHighlightLastCountColor} setPrefHighlightLastCountColor={setPrefHighlightLastCountColor}
-            prefSoundOnStricken={prefSoundOnStricken} setPrefSoundOnStricken={setPrefSoundOnStricken}
-            prefHideThreadPicker={prefHideThreadPicker} setPrefHideThreadPicker={setPrefHideThreadPicker}
-            prefStrickenCountOpacity={prefStrickenCountOpacity} setPrefStrickenCountOpacity={setPrefStrickenCountOpacity}
-            enabled={prefEnabled} setEnabled={setPrefEnabled}
-          />
+                    <Typography variant="body2">
+                      {row.macroPreset?.name || 'Unknown Macro Preset'} ({row.appliesCount} users)
+                    </Typography>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={!row.macroPreset?.id}
+                      onClick={() => row.macroPreset?.id && saveThreadMacroSelection(row.macroPreset.id)}
+                    >
+                      Use
+                    </Button>
+                  </Box>
+                ))}
+              </Box>
+            )}
+            {/* </>}  */}
+
+            <Preferences
+              savePrefs={savePrefs}
+              maybeU={maybeU}
+              title={`${thread?.title} Preferences`}
+              prefOnline={prefOnline}
+              setPrefOnline={setPrefOnline}
+              prefDiscordPings={prefDiscordPings}
+              setPrefDiscordPings={setPrefDiscordPings}
+              prefLoadFromBottom={prefLoadFromBottom}
+              setPrefLoadFromBottom={setPrefLoadFromBottom}
+              prefStrikeColor={prefStrikeColor}
+              setPrefStrikeColor={setPrefStrikeColor}
+              prefStandardizeFormat={prefStandardizeFormat}
+              setPrefStandardizeFormat={setPrefStandardizeFormat}
+              prefNightMode={prefNightMode}
+              setPrefNightMode={setPrefNightMode}
+              prefSubmitShortcut={prefSubmitShortcut}
+              setPrefSubmitShortcut={setPrefSubmitShortcut}
+              prefClear={prefClear}
+              setPrefClear={setPrefClear}
+              prefTimeSinceLastCount={prefTimeSinceLastCount}
+              setPrefTimeSinceLastCount={setPrefTimeSinceLastCount}
+              prefCustomStricken={prefCustomStricken}
+              setPrefCustomStricken={setPrefCustomStricken}
+              prefPostStyle={prefPostStyle}
+              setPrefPostStyle={setPrefPostStyle}
+              prefPostStyleMobile={prefPostStyleMobile}
+              setPrefPostStyleMobile={setPrefPostStyleMobile}
+              prefReplyTimeInterval={prefReplyTimeInterval}
+              setPrefReplyTimeInterval={setPrefReplyTimeInterval}
+              prefNightModeColors={prefNightModeColors}
+              setPrefNightModeColors={setPrefNightModeColors}
+              prefPostPosition={prefPostPosition}
+              setPrefPostPosition={setPrefPostPosition}
+              prefHideStricken={prefHideStricken}
+              setPrefHideStricken={setPrefHideStricken}
+              prefHighlightLastCount={prefHighlightLastCount}
+              setPrefHighlightLastCount={setPrefHighlightLastCount}
+              prefHighlightLastCountColor={prefHighlightLastCountColor}
+              setPrefHighlightLastCountColor={setPrefHighlightLastCountColor}
+              prefSoundOnStricken={prefSoundOnStricken}
+              setPrefSoundOnStricken={setPrefSoundOnStricken}
+              prefHideThreadPicker={prefHideThreadPicker}
+              setPrefHideThreadPicker={setPrefHideThreadPicker}
+              prefStrickenCountOpacity={prefStrickenCountOpacity}
+              setPrefStrickenCountOpacity={setPrefStrickenCountOpacity}
+              enabled={prefEnabled}
+              setEnabled={setPrefEnabled}
+            />
           </TabPanel>
         </Box>
       </TabContext>
@@ -3833,7 +3899,7 @@ useEffect(() => {
           {user && preferences && preferences.pref_post_position === 'Right' ? (
             <>
               <Grid item xs={0} lg={2} sx={{ height: 'auto' }}>
-                <Box sx={{  }}>{threadPickerMemo}</Box>
+                <Box sx={{}}>{threadPickerMemo}</Box>
                 {/* <Box sx={{  }}>{threadPicker}</Box> */}
                 {newCategoryBox}
               </Grid>
@@ -3863,7 +3929,7 @@ useEffect(() => {
           ) : (
             <>
               <Grid item xs={0} lg={2} sx={{ display: !desktopPickerOpen && isDesktop ? 'none' : 'flex', flexDirection: 'column' }}>
-                <Box sx={{  }}>{threadPickerMemo}</Box>
+                <Box sx={{}}>{threadPickerMemo}</Box>
                 {newCategoryBox}
               </Grid>
               {isDesktop && (

@@ -1,9 +1,6 @@
 import { MacroPreset } from './types'
 
-export const prioritizeOwnedMacroPresets = (
-  presets: MacroPreset[],
-  ownedGroupIds: Set<number>,
-): MacroPreset[] => {
+export const prioritizeOwnedMacroPresets = (presets: MacroPreset[], ownedGroupIds: Set<number>): MacroPreset[] => {
   const copy = [...presets]
   copy.sort((a, b) => {
     const aOwned = ownedGroupIds.has(a.id) ? 1 : 0
@@ -13,4 +10,3 @@ export const prioritizeOwnedMacroPresets = (
   })
   return copy
 }
-

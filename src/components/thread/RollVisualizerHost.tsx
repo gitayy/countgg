@@ -1,14 +1,4 @@
-import React, {
-  ForwardedRef,
-  forwardRef,
-  memo,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import React, { ForwardedRef, forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { Box, Button, TextField, Typography } from '@mui/material'
 import { cachedCounters } from '../../utils/helpers'
 import { PostType } from '../../utils/types'
@@ -59,10 +49,7 @@ type RollVisualizerCacheEntry = RollVisualizerUiState & {
 
 const rollVisualizerCacheByThread = new Map<string, RollVisualizerCacheEntry>()
 
-function RollVisualizerHostComponent(
-  { threadName, showSimControls = false }: Props,
-  ref: ForwardedRef<RollVisualizerHostHandle>,
-) {
+function RollVisualizerHostComponent({ threadName, showSimControls = false }: Props, ref: ForwardedRef<RollVisualizerHostHandle>) {
   const [isSimulatingRolls, setIsSimulatingRolls] = useState(false)
   const [maxRenderedRolls, setMaxRenderedRolls] = useState(DEFAULT_MAX_RENDERED_ROLLS)
   const [simIntervalMs, setSimIntervalMs] = useState(DEFAULT_SIM_INTERVAL_MS)
@@ -124,26 +111,26 @@ function RollVisualizerHostComponent(
     pendingRollSamplesRef.current = []
 
     const queued = [...pending]
-    persistSamples((() => {
-      const next = [...rollSamplesRef.current, ...queued]
-      if (next.length > maxRenderedRollsRef.current) {
-        return next.slice(next.length - maxRenderedRollsRef.current)
-      }
-      return next
-    })())
+    persistSamples(
+      (() => {
+        const next = [...rollSamplesRef.current, ...queued]
+        if (next.length > maxRenderedRollsRef.current) {
+          return next.slice(next.length - maxRenderedRollsRef.current)
+        }
+        return next
+      })(),
+    )
 
     const queuedHigh = queued.filter((sample) => sample.roll > 0.99)
     if (queuedHigh.length > 0) {
       const next = [...rollHighSamplesRef.current, ...queuedHigh]
-      rollHighSamplesRef.current =
-        next.length > EXTREMA_HISTORY_CAP ? next.slice(next.length - EXTREMA_HISTORY_CAP) : next
+      rollHighSamplesRef.current = next.length > EXTREMA_HISTORY_CAP ? next.slice(next.length - EXTREMA_HISTORY_CAP) : next
     }
 
     const queuedLow = queued.filter((sample) => sample.roll < 0.01)
     if (queuedLow.length > 0) {
       const next = [...rollLowSamplesRef.current, ...queuedLow]
-      rollLowSamplesRef.current =
-        next.length > EXTREMA_HISTORY_CAP ? next.slice(next.length - EXTREMA_HISTORY_CAP) : next
+      rollLowSamplesRef.current = next.length > EXTREMA_HISTORY_CAP ? next.slice(next.length - EXTREMA_HISTORY_CAP) : next
     }
 
     let highest = highestRollSampleRef.current

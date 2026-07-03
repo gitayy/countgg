@@ -146,12 +146,7 @@ export const StatsPage = () => {
     async function fetchData() {
       setStatsLoading(true)
       try {
-        const { data } = await getThreadStats(
-          selectedThread.name,
-          undefined,
-          statsDateRange.startDateStr,
-          statsDateRange.endDateStr,
-        )
+        const { data } = await getThreadStats(selectedThread.name, undefined, statsDateRange.startDateStr, statsDateRange.endDateStr)
         if (isMounted.current && requestId === statsRequestSeq.current) {
           for (const counter of data.counters) {
             addCounterToCache(counter)
@@ -238,11 +233,7 @@ export const StatsPage = () => {
     const currentRecords = isSpeed ? speedRecords : splitRecords
     const nextOffset = append ? currentRecords.length : 0
     const hasSelectedUsers = selectedUserUUIDs.length > 0
-    const limit = hasSelectedUsers
-      ? isSpeed
-        ? selectedUserPageSize
-        : selectedSplitPageSize
-      : defaultDetailsPageSize
+    const limit = hasSelectedUsers ? (isSpeed ? selectedUserPageSize : selectedSplitPageSize) : defaultDetailsPageSize
 
     if (isSpeed) {
       setSpeedLoading(true)
@@ -329,11 +320,7 @@ export const StatsPage = () => {
 
     try {
       const hasSelectedUsers = selectedUserUUIDs.length > 0
-      const limit = hasSelectedUsers
-        ? isSpeed
-          ? selectedUserPageSize
-          : selectedSplitPageSize
-        : rowsPerPage
+      const limit = hasSelectedUsers ? (isSpeed ? selectedUserPageSize : selectedSplitPageSize) : rowsPerPage
       const res = await getThreadStatsDetails(
         selectedThread.name,
         type,
@@ -445,7 +432,8 @@ export const StatsPage = () => {
       for (const key of Object.keys(next)) {
         const day = next[key]
         if (!day || typeof day !== 'object') continue
-        const currentCount = typeof day.splitSpeedCount === 'number' ? day.splitSpeedCount : Array.isArray(day.splitSpeed) ? day.splitSpeed.length : 0
+        const currentCount =
+          typeof day.splitSpeedCount === 'number' ? day.splitSpeedCount : Array.isArray(day.splitSpeed) ? day.splitSpeed.length : 0
         next[key] = { ...day, splitSpeedCount: currentCount }
       }
       return next
@@ -541,7 +529,13 @@ export const StatsPage = () => {
   if (loading || allThreadsLoading) {
     return (
       <Box sx={{ p: 2 }}>
-        <Typography variant="body2">{loadingStatuses.filter((x) => !x.ready).map((x) => x.label).join(', ')}...</Typography>
+        <Typography variant="body2">
+          {loadingStatuses
+            .filter((x) => !x.ready)
+            .map((x) => x.label)
+            .join(', ')}
+          ...
+        </Typography>
       </Box>
     )
   }
@@ -574,7 +568,14 @@ export const StatsPage = () => {
         <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', color: 'text.primary' }}>
           <TabPanel value={STATS_TABS.LEADERBOARD} sx={{ p: 0 }}>
             <Typography variant="h6">Leaderboard</Typography>
-            {effectiveTabValue === STATS_TABS.LEADERBOARD && (statsLoading ? tabSkeleton : stats?.leaderboard ? <LeaderboardTable stat={stats.leaderboard} justLB={true} /> : renderEmptyState('Leaderboard'))}
+            {effectiveTabValue === STATS_TABS.LEADERBOARD &&
+              (statsLoading ? (
+                tabSkeleton
+              ) : stats?.leaderboard ? (
+                <LeaderboardTable stat={stats.leaderboard} justLB={true} />
+              ) : (
+                renderEmptyState('Leaderboard')
+              ))}
           </TabPanel>
 
           <TabPanel value={STATS_TABS.GRAPHS} sx={{ p: 0 }}>
@@ -681,8 +682,8 @@ export const StatsPage = () => {
 
           <TabPanel value={STATS_TABS.SPLITS} sx={{ p: 0 }}>
             <Typography variant="h6">Splits</Typography>
-            {effectiveTabValue === STATS_TABS.SPLITS && (
-              statsLoading ? (
+            {effectiveTabValue === STATS_TABS.SPLITS &&
+              (statsLoading ? (
                 tabSkeleton
               ) : (
                 <>
@@ -726,8 +727,7 @@ export const StatsPage = () => {
                     }
                   />
                 </>
-              )
-            )}
+              ))}
           </TabPanel>
         </Box>
       </TabContext>
