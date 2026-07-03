@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from 'react'
-import { Badge, Box, IconButton, InputAdornment, Link, OutlinedInput, Paper, Typography, useTheme } from '@mui/material'
+import { Badge, Box, IconButton, InputAdornment, Link, OutlinedInput, Paper, Tooltip, Typography, useTheme } from '@mui/material'
+import DeleteIcon from '@mui/icons-material/Delete'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
@@ -19,6 +20,12 @@ const canPost = (counter?: Counter) => {
   if (!counter) return false
   const roles = counter.roles
   return roles.includes('counter') && !roles.includes('banned') && !roles.includes('muted')
+}
+
+const canDelete = (counter: Counter | undefined, authorUUID: string) => {
+  if (!counter) return false
+  if (counter.uuid === authorUUID) return true
+  return counter.roles.includes('admin') || counter.roles.includes('moderator')
 }
 
 export const SiteChat = () => {
@@ -67,12 +74,16 @@ export const SiteChat = () => {
       addCounterToCache(data.counter)
       setMessages((prev) => [...prev, data.post].slice(-MAX_MESSAGES))
     }
+    const deleteHandler = (post: PostType) => {
+      setMessages((prev) => prev.map((m) => m.uuid === post.uuid ? post : m))
+    }
     const watcherHandler = (count: number) => setWatchers(count)
     const connectHandler = () => setSocketStatus('LIVE')
     const disconnectHandler = () => setSocketStatus('DISCONNECTED')
     const lastReadHandler = (uuid: string | null) => setLastReadUUID(uuid)
 
     socket.on('chat_post', postHandler)
+    socket.on('deleteComment', deleteHandler)
     socket.on('chat_watcher_count', watcherHandler)
     socket.on('connect', connectHandler)
     socket.on('disconnect', disconnectHandler)
@@ -81,6 +92,7 @@ export const SiteChat = () => {
 
     return () => {
       socket.off('chat_post', postHandler)
+      socket.off('deleteComment', deleteHandler)
       socket.off('chat_watcher_count', watcherHandler)
       socket.off('connect', connectHandler)
       socket.off('disconnect', disconnectHandler)
@@ -303,7 +315,8 @@ export const SiteChat = () => {
             )}
             {messages.map((msg) => {
               const author = cachedCounters[msg.authorUUID]
-              const text = msg.comment || msg.rawText || ''
+              const isDeleted = !!msg.isCommentDeleted
+              const text = isDeleted ? '[deleted]' : (msg.comment || msg.rawText || '')
               const displayName = author
                 ? author.emoji
                   ? `${author.emoji} ${author.name} ${author.emoji}`
@@ -312,6 +325,7 @@ export const SiteChat = () => {
               const showMarker = unreadMarkerUUID !== null && msg.uuid > unreadMarkerUUID && (
                 messages.find((m) => m.uuid > unreadMarkerUUID) === msg
               )
+              const showDelete = !isDeleted && canDelete(counter, msg.authorUUID)
               return (
                 <Box key={msg.uuid}>
                   {showMarker && (
@@ -321,19 +335,33 @@ export const SiteChat = () => {
                       <Box sx={{ flex: 1, height: '1px', bgcolor: 'error.main' }} />
                     </Box>
                   )}
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', lineHeight: 1.4 }}>
-                  <Link
-                    variant="caption"
-                    underline="hover"
-                    href={`/counter/${author?.username ?? ''}`}
-                    sx={{ color: author?.color || 'text.secondary', whiteSpace: 'nowrap' }}
+                  <Box
+                    sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', lineHeight: 1.4, alignItems: 'flex-start', '&:hover .delete-btn': { opacity: 1 } }}
                   >
-                    {displayName}:
-                  </Link>
-                  <Typography variant="caption" sx={{ color: 'text.primary', wordBreak: 'break-word' }}>
-                    {text}
-                  </Typography>
-                </Box>
+                    <Link
+                      variant="caption"
+                      underline="hover"
+                      href={`/counter/${author?.username ?? ''}`}
+                      sx={{ color: isDeleted ? 'text.disabled' : (author?.color || 'text.secondary'), whiteSpace: 'nowrap' }}
+                    >
+                      {displayName}:
+                    </Link>
+                    <Typography variant="caption" sx={{ color: isDeleted ? 'text.disabled' : 'text.primary', wordBreak: 'break-word', fontStyle: isDeleted ? 'italic' : 'normal' }}>
+                      {text}
+                    </Typography>
+                    {showDelete && (
+                      <Tooltip title="Delete" placement="top">
+                        <IconButton
+                          className="delete-btn"
+                          size="small"
+                          onClick={() => socket.emit('deleteComment', { uuid: msg.uuid })}
+                          sx={{ opacity: 0, transition: 'opacity 0.1s', p: 0, ml: 'auto', color: 'error.main' }}
+                        >
+                          <DeleteIcon sx={{ fontSize: 13 }} />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </Box>
                 </Box>
               )
             })}
