@@ -99,6 +99,7 @@ export const StatsPage = () => {
     name: 'all',
     uuid: 'all',
   })
+  const [selectedGraph, setSelectedGraph] = useState<'cumulative-total' | 'cumulative-compare' | 'daily-total' | 'daily-compare'>('cumulative-total')
   const statsRequestSeq = useRef(0)
   const statsDateRange = useMemo(() => {
     const toKey = (value: any) => {
@@ -580,6 +581,20 @@ export const StatsPage = () => {
 
           <TabPanel value={STATS_TABS.GRAPHS} sx={{ p: 0 }}>
             <Typography variant="h6">Graphs</Typography>
+            <FormControl size="small" sx={{ mt: 1, mb: 2, minWidth: 240 }}>
+              <InputLabel id="graph-select-label">Graph</InputLabel>
+              <Select
+                labelId="graph-select-label"
+                label="Graph"
+                value={selectedGraph}
+                onChange={(e) => setSelectedGraph(e.target.value as typeof selectedGraph)}
+              >
+                <MenuItem value="cumulative-total">Cumulative Total</MenuItem>
+                <MenuItem value="cumulative-compare">Cumulative User Comparison</MenuItem>
+                <MenuItem value="daily-total">Daily Total</MenuItem>
+                <MenuItem value="daily-compare">Daily User Comparison</MenuItem>
+              </Select>
+            </FormControl>
             {effectiveTabValue === STATS_TABS.GRAPHS &&
               (statsLoading ? (
                 tabSkeleton
@@ -588,18 +603,8 @@ export const StatsPage = () => {
                   threadName={selectedThread.name}
                   startDateStr={statsDateRange.startDateStr}
                   endDateStr={statsDateRange.endDateStr}
-                  cum={true}
-                />
-              ))}
-            {effectiveTabValue === STATS_TABS.GRAPHS &&
-              (statsLoading ? (
-                tabSkeleton
-              ) : (
-                <LeaderboardGraph
-                  threadName={selectedThread.name}
-                  startDateStr={statsDateRange.startDateStr}
-                  endDateStr={statsDateRange.endDateStr}
-                  cum={false}
+                  cum={selectedGraph === 'cumulative-total' || selectedGraph === 'cumulative-compare'}
+                  graphType={selectedGraph === 'cumulative-total' || selectedGraph === 'daily-total' ? 'total' : 'compare'}
                 />
               ))}
           </TabPanel>

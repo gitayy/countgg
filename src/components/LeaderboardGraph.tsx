@@ -19,9 +19,10 @@ type Props = {
   startDateStr?: string
   endDateStr?: string
   cum: boolean
+  graphType?: 'total' | 'compare'
 }
 
-const LeaderboardGraph = ({ threadName, startDateStr, endDateStr, cum }: Props) => {
+const LeaderboardGraph = ({ threadName, startDateStr, endDateStr, cum, graphType = 'total' }: Props) => {
   const { loading, counter } = useContext(UserContext)
   const [selectedCounters, setSelectedCounters] = useState<Counter[]>([])
   const [points, setPoints] = useState<Array<Record<string, any>>>([])
@@ -159,60 +160,65 @@ const LeaderboardGraph = ({ threadName, startDateStr, endDateStr, cum }: Props) 
 
   return (
     <>
-      <ResponsiveContainer width="100%" aspect={2.2}>
-        <LineChart data={points} margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#d9d9d9" />
-          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-          <YAxis tickFormatter={formatYAxis} tick={{ fontSize: 12 }} />
-          <Tooltip formatter={formatTooltipValue} />
-          <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-          <Line type="monotone" dataKey={dataKey} stroke="#264653" strokeWidth={2} dot={false} name={`${metricLabel} Total`} />
-        </LineChart>
-      </ResponsiveContainer>
-
-      <Box sx={{ width: { xs: '100%', md: '50%' }, mt: 2 }}>
-        <CounterAutocomplete
-          onCounterSelect={handleCounterSelection}
-          label="Compare"
-          options={orderedCounterOptions}
-          selectedUsers={selectedCounters.map((ct) => ct.username)}
-        />
-      </Box>
-      {graphLoading && (
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Updating graph...
-        </Typography>
-      )}
-
-      {selectedCounters.length === 0 ? (
-        <Alert sx={{ mt: 2 }} severity="info">
-          Select one or more users to overlay them on the same graph.
-        </Alert>
-      ) : (
+      {graphType === 'total' && (
         <ResponsiveContainer width="100%" aspect={2.2}>
-          <LineChart data={selectedCounterSeries} margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
+          <LineChart data={points} margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#d9d9d9" />
             <XAxis dataKey="date" tick={{ fontSize: 12 }} />
             <YAxis tickFormatter={formatYAxis} tick={{ fontSize: 12 }} />
             <Tooltip formatter={formatTooltipValue} />
             <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
-            {selectedCounters.map((selectedCounter, index) => {
-              const fallback = linePalette[index % linePalette.length]
-              const stroke = selectedCounter.color || fallback
-              return (
-                <Line
-                  key={`${dataKey}-${selectedCounter.uuid}`}
-                  type="monotone"
-                  dataKey={selectedCounter.uuid}
-                  stroke={stroke}
-                  strokeWidth={2}
-                  dot={false}
-                  name={selectedCounter.username}
-                />
-              )
-            })}
+            <Line type="monotone" dataKey={dataKey} stroke="#264653" strokeWidth={2} dot={false} name={`${metricLabel} Total`} />
           </LineChart>
         </ResponsiveContainer>
+      )}
+
+      {graphType === 'compare' && (
+        <>
+          <Box sx={{ width: { xs: '100%', md: '50%' }, mt: 2 }}>
+            <CounterAutocomplete
+              onCounterSelect={handleCounterSelection}
+              label="Compare"
+              options={orderedCounterOptions}
+              selectedUsers={selectedCounters.map((ct) => ct.username)}
+            />
+          </Box>
+          {graphLoading && (
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              Updating graph...
+            </Typography>
+          )}
+          {selectedCounters.length === 0 ? (
+            <Alert sx={{ mt: 2 }} severity="info">
+              Select one or more users to overlay them on the same graph.
+            </Alert>
+          ) : (
+            <ResponsiveContainer width="100%" aspect={2.2}>
+              <LineChart data={selectedCounterSeries} margin={{ top: 8, right: 24, left: 8, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#d9d9d9" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <YAxis tickFormatter={formatYAxis} tick={{ fontSize: 12 }} />
+                <Tooltip formatter={formatTooltipValue} />
+                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+                {selectedCounters.map((selectedCounter, index) => {
+                  const fallback = linePalette[index % linePalette.length]
+                  const stroke = selectedCounter.color || fallback
+                  return (
+                    <Line
+                      key={`${dataKey}-${selectedCounter.uuid}`}
+                      type="monotone"
+                      dataKey={selectedCounter.uuid}
+                      stroke={stroke}
+                      strokeWidth={2}
+                      dot={false}
+                      name={selectedCounter.username}
+                    />
+                  )
+                })}
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </>
       )}
     </>
   )
