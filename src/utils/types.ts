@@ -528,6 +528,7 @@ export type RankChallenge = {
   bingoCategory: string | null
   seasonId: number
   clonedFromId: string | null
+  baseReassignmentWaitMs: number | null
   createdAt: number
   // with context=true
   completionCount?: number
@@ -581,6 +582,9 @@ export type ChallengeLog = {
   // flag so the animation doesn't replay every time the Rank tab is reopened (RankTabPanel
   // unmounts on tab switch, wiping any purely client-side "already animated" tracking).
   entranceSeenAt?: number | null
+  // When set, this log is not yet eligible for evaluation — assigned after a chain-terminal
+  // repeat with baseReassignmentWaitMs, becomes available once now >= availableAt.
+  availableAt?: number | null
   // Joined in from the log's own RankChallenge template server-side — ThreadPage renders
   // purely from these logs and never fetches the template catalog itself.
   type: string
@@ -593,6 +597,7 @@ export type ChallengeLog = {
   // renders as "1/4" on the card.
   sequencePosition: number
   sequenceTotal: number
+  baseReassignmentWaitMs?: number | null
 }
 
 export type RankUpEvent = {

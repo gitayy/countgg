@@ -114,6 +114,15 @@ interface ChallengeFormState {
   rewardType: 'gg' | 'auto_jump'
   threadUuid: string
   params: string
+  // Stored as hours in the form (easier to type than milliseconds); converted on submit.
+  // Empty string = null (no wait). Defaults populated per-type when type changes.
+  baseReassignmentWaitHours: string
+}
+
+// Default wait times by type, in hours — mirrors DEFAULT_REASSIGNMENT_WAIT_MS_BY_TYPE on backend.
+const DEFAULT_WAIT_HOURS_BY_TYPE: Record<string, string> = {
+  split_under_ms: '24',
+  get_under_ms: '24',
 }
 
 const emptyForm = (): ChallengeFormState => ({
@@ -125,6 +134,7 @@ const emptyForm = (): ChallengeFormState => ({
   rewardType: 'gg',
   threadUuid: '',
   params: '',
+  baseReassignmentWaitHours: '',
 })
 
 const challengeToForm = (c: RankChallenge): ChallengeFormState => ({
@@ -136,6 +146,7 @@ const challengeToForm = (c: RankChallenge): ChallengeFormState => ({
   rewardType: c.rewardType ?? 'gg',
   threadUuid: c.threadUuid ?? '',
   params: c.params ? JSON.stringify(c.params, null, 2) : '',
+  baseReassignmentWaitHours: c.baseReassignmentWaitMs != null ? String(c.baseReassignmentWaitMs / 3_600_000) : '',
 })
 
 // Typed-field schema for each type's known/required params (mirrors rank.evaluation.service.ts's
@@ -393,7 +404,13 @@ function ChallengeForm({
               const schema = PARAM_FIELD_SCHEMAS[newType] ?? []
               const defaults =
                 schema.length > 0 ? JSON.stringify(Object.fromEntries(schema.map((f) => [f.key, f.defaultValue])), null, 2) : ''
-              setForm({ ...form, type: newType, threadUuid: newThreadUuid, params: defaults })
+              setForm({
+                ...form,
+                type: newType,
+                threadUuid: newThreadUuid,
+                params: defaults,
+                baseReassignmentWaitHours: DEFAULT_WAIT_HOURS_BY_TYPE[newType] ?? '',
+              })
             }}
           >
             {CHALLENGE_TYPES.map((t) => (
@@ -480,6 +497,17 @@ function ChallengeForm({
                 <MenuItem value="auto_jump">Auto-jump to rank</MenuItem>
               </Select>
             </FormControl>
+            <TextField
+              label="Reassign Wait (hours)"
+              type="number"
+              size="small"
+              value={form.baseReassignmentWaitHours}
+              onChange={(e) => setForm({ ...form, baseReassignmentWaitHours: e.target.value })}
+              placeholder="none"
+              inputProps={{ min: 0, step: 0.5 }}
+              sx={{ flex: '0 1 160px' }}
+              helperText="Empty = instant"
+            />
           </Box>
         </>
       ) : (
@@ -1050,6 +1078,12 @@ export const RankAdminPage = () => {
   const MAXMS_TYPES = new Set(['split_under_ms', 'get_under_ms', 'bars_within_ms'])
   const requiresMaxMs = (form: ChallengeFormState, params: object | undefined) => MAXMS_TYPES.has(form.type) && !(params as any)?.maxMs
 
+  const parseWaitMs = (hours: string): number | null => {
+    const h = parseFloat(hours)
+    if (!hours.trim() || isNaN(h) || h <= 0) return null
+    return Math.round(h * 3_600_000)
+  }
+
   const buildCreateDto = (form: ChallengeFormState): object | null => {
     const params = parseParams(form.params)
     if (params === null) return null
@@ -1063,6 +1097,7 @@ export const RankAdminPage = () => {
       rewardType: form.rewardType,
       threadUuid: form.threadUuid || undefined,
       params: params ?? undefined,
+      baseReassignmentWaitMs: parseWaitMs(form.baseReassignmentWaitHours),
     }
   }
 
@@ -1078,6 +1113,7 @@ export const RankAdminPage = () => {
       rewardType: form.rewardType,
       threadUuid: form.threadUuid || undefined,
       params: params ?? undefined,
+      baseReassignmentWaitMs: parseWaitMs(form.baseReassignmentWaitHours),
     }
   }
 

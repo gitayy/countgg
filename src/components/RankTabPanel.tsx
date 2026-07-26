@@ -476,6 +476,61 @@ function ReplayBarStep({ startPct, log, onDone }: { startPct: number; log: Chall
   )
 }
 
+// Ticks every second while ms > 0; stops once the target time has passed.
+function useCountdown(availableAt: number): string {
+  const [remaining, setRemaining] = useState(() => Math.max(0, availableAt - Date.now()))
+  useEffect(() => {
+    if (remaining <= 0) return
+    const id = setInterval(() => {
+      const ms = Math.max(0, availableAt - Date.now())
+      setRemaining(ms)
+      if (ms <= 0) clearInterval(id)
+    }, 1000)
+    return () => clearInterval(id)
+  }, [availableAt])
+
+  const totalSeconds = Math.ceil(remaining / 1000)
+  const h = Math.floor(totalSeconds / 3600)
+  const m = Math.floor((totalSeconds % 3600) / 60)
+  const s = totalSeconds % 60
+  if (h > 0) return `${h}h ${m}m`
+  if (m > 0) return `${m}m ${s}s`
+  return `${s}s`
+}
+
+function LockedChallengeCard({ ch }: { ch: ChallengeLog }) {
+  // TypeORM returns bigint columns as strings from MySQL — coerce before arithmetic.
+  const countdown = useCountdown(Number(ch.availableAt!))
+  const title = getChallengeTitle(ch)
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        px: 2,
+        py: 1.5,
+        borderRadius: 1,
+        bgcolor: 'action.disabledBackground',
+        opacity: 0.7,
+        gap: 1,
+      }}
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+          {title}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Available in {countdown}
+        </Typography>
+      </Box>
+      <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+        +{ch.ggReward} GG
+      </Typography>
+    </Box>
+  )
+}
+
 // Renders one challenge card from a ChallengeLog — shared by thread-scoped and sitewide
 // sections. Completed challenges are never rendered as history here; isComplete/isAnimating
 // only ever describe a slot that's actively mid-animation.
@@ -1106,6 +1161,10 @@ export const RankTabPanel = ({
       markEntranceAnimated: (key: string) => void,
     ) =>
       slotList.map((slot) => {
+        // Locked: assigned but not yet eligible (baseReassignmentWaitMs cooldown active).
+        if (slot.phase === 'progress' && slot.data.availableAt != null && Number(slot.data.availableAt) > Date.now()) {
+          return <LockedChallengeCard key={slot.key} ch={slot.data} />
+        }
         const isCompleting = slot.phase === 'completing'
         return renderChallengeCard(
           slot.key,
