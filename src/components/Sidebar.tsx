@@ -1129,11 +1129,11 @@ export const Sidebar = () => {
               </Menu>
             </div>
           )}
-          <Dialog open={bingoQuickOpen} onClose={() => setBingoQuickOpen(false)} maxWidth="sm" fullWidth>
+          {/* <Dialog open={bingoQuickOpen} onClose={() => setBingoQuickOpen(false)} maxWidth="sm" fullWidth>
             <DialogContent>
               <BingoMiniWidget title="Bingo" />
             </DialogContent>
-          </Dialog>
+          </Dialog> */}
         </Toolbar>
       </AppBar>
       {threadPickerMemo}

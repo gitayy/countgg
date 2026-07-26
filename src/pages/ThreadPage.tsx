@@ -3303,7 +3303,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
             </TabPanel>
           )}
           <TabPanel value="tab_1" sx={{ flexGrow: 1, p: 4 }}>
-            <BingoMiniWidget key={`bingo-${thread_name}`} title="Bingo" />
+            {/* <BingoMiniWidget key={`bingo-${thread_name}`} title="Bingo" /> */}
             {thread && counter && thread.countBans && thread.countBans.includes(counter.uuid) && (
               <Box display="flex" alignItems="center" sx={{ p: 2, border: '1px solid', borderColor: 'warning.main' }}>
                 <Box component={InfoIcon} sx={{ fontSize: 24, color: 'info.main', mr: 1 }} />
