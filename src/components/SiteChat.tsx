@@ -308,8 +308,12 @@ export const SiteChat = () => {
             <Tooltip
               title={
                 socketStatus === 'LIVE'
-                  ? backfilling ? 'Connected — loading missed messages…' : 'Connected'
-                  : socketStatus === 'DISCONNECTED' ? 'Disconnected — reconnecting…' : 'Connecting…'
+                  ? backfilling
+                    ? 'Connected — loading missed messages…'
+                    : 'Connected'
+                  : socketStatus === 'DISCONNECTED'
+                    ? 'Disconnected — reconnecting…'
+                    : 'Connecting…'
               }
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mr: 1, flexShrink: 0 }}>
@@ -318,14 +322,21 @@ export const SiteChat = () => {
                     width: 8,
                     height: 8,
                     borderRadius: '50%',
-                    bgcolor: socketStatus === 'LIVE' ? 'success.light' : socketStatus === 'DISCONNECTED' ? 'error.light' : 'info.light',
+                    bgcolor:
+                      socketStatus === 'LIVE' ? 'success.light' : socketStatus === 'DISCONNECTED' ? 'error.light' : 'info.light',
                     flexShrink: 0,
                   }}
                 />
                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.85)', lineHeight: 1, whiteSpace: 'nowrap' }}>
                   {socketStatus === 'LIVE'
-                    ? backfilling ? 'syncing…' : watchers !== null ? watchers : ''
-                    : socketStatus === 'DISCONNECTED' ? 'reconnecting…' : 'connecting…'}
+                    ? backfilling
+                      ? 'syncing…'
+                      : watchers !== null
+                        ? watchers
+                        : ''
+                    : socketStatus === 'DISCONNECTED'
+                      ? 'reconnecting…'
+                      : 'connecting…'}
                 </Typography>
               </Box>
             </Tooltip>

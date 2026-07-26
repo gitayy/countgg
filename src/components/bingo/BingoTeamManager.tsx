@@ -69,11 +69,7 @@ export const BingoTeamManager = ({ gameId, members, teams, teamSwapMode, isHost,
     <Box>
       {isHost && (
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-          <Switch
-            size="small"
-            checked={teamSwapMode === 'open'}
-            onChange={toggleSwapMode}
-          />
+          <Switch size="small" checked={teamSwapMode === 'open'} onChange={toggleSwapMode} />
           <Typography variant="caption" sx={{ color: theme.palette.primary.contrastText }}>
             {teamSwapMode === 'open' ? 'Members can swap teams' : 'Team swapping locked (host only)'}
           </Typography>
@@ -89,11 +85,14 @@ export const BingoTeamManager = ({ gameId, members, teams, teamSwapMode, isHost,
 
             return (
               <Box key={team.id} sx={{ flex: '1 1 160px', minWidth: 160, maxWidth: 260 }}>
-                <Paper variant="outlined" sx={{
-                  borderTop: `3px solid ${team.locked ? '#555' : color}`,
-                  bgcolor: 'rgba(16, 28, 52, 0.78)',
-                  overflow: 'hidden',
-                }}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    borderTop: `3px solid ${team.locked ? '#555' : color}`,
+                    bgcolor: 'rgba(16, 28, 52, 0.78)',
+                    overflow: 'hidden',
+                  }}
+                >
                   <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 1, pt: 0.75, pb: 0.5 }}>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
                       <Icon sx={{ fontSize: 15, color: team.locked ? '#666' : color }} />
@@ -106,8 +105,11 @@ export const BingoTeamManager = ({ gameId, members, teams, teamSwapMode, isHost,
                     </Stack>
                     {isHost && (
                       <Tooltip title={team.locked ? 'Unlock team' : 'Lock team'} placement="top">
-                        <IconButton size="small" onClick={() => toggleTeamLock(team.id, !team.locked)}
-                          sx={{ p: 0.2, color: team.locked ? '#666' : theme.palette.primary.contrastText }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => toggleTeamLock(team.id, !team.locked)}
+                          sx={{ p: 0.2, color: team.locked ? '#666' : theme.palette.primary.contrastText }}
+                        >
                           {team.locked ? <LockIcon sx={{ fontSize: 14 }} /> : <LockOpenIcon sx={{ fontSize: 14 }} />}
                         </IconButton>
                       </Tooltip>
@@ -116,15 +118,26 @@ export const BingoTeamManager = ({ gameId, members, teams, teamSwapMode, isHost,
 
                   <Droppable droppableId={String(team.id)}>
                     {(provided, snapshot) => (
-                      <Box ref={provided.innerRef} {...provided.droppableProps} sx={{
-                        minHeight: 52, px: 0.75, pb: 0.75,
-                        bgcolor: snapshot.isDraggingOver ? `${team.locked ? '#333' : color}18` : undefined,
-                        transition: 'background 150ms',
-                      }}>
+                      <Box
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        sx={{
+                          minHeight: 52,
+                          px: 0.75,
+                          pb: 0.75,
+                          bgcolor: snapshot.isDraggingOver ? `${team.locked ? '#333' : color}18` : undefined,
+                          transition: 'background 150ms',
+                        }}
+                      >
                         {teamMembers.map((member, index) => {
                           const draggable = canDrag(member)
                           return (
-                            <Draggable key={member.counter.uuid} draggableId={member.counter.uuid} index={index} isDragDisabled={!draggable}>
+                            <Draggable
+                              key={member.counter.uuid}
+                              draggableId={member.counter.uuid}
+                              index={index}
+                              isDragDisabled={!draggable}
+                            >
                               {(drag, dragSnapshot) => (
                                 <Stack
                                   ref={drag.innerRef}
@@ -134,7 +147,10 @@ export const BingoTeamManager = ({ gameId, members, teams, teamSwapMode, isHost,
                                   alignItems="center"
                                   spacing={0.6}
                                   sx={{
-                                    mb: 0.5, px: 0.6, py: 0.4, borderRadius: 1,
+                                    mb: 0.5,
+                                    px: 0.6,
+                                    py: 0.4,
+                                    borderRadius: 1,
                                     bgcolor: dragSnapshot.isDragging ? 'rgba(30,50,90,0.95)' : 'rgba(20,34,64,0.6)',
                                     border: draggable
                                       ? `1px dashed ${dragSnapshot.isDragging ? color : '#445'}`
@@ -142,10 +158,16 @@ export const BingoTeamManager = ({ gameId, members, teams, teamSwapMode, isHost,
                                     cursor: draggable ? 'grab' : 'default',
                                   }}
                                 >
-                                  <Avatar sx={{ width: 20, height: 20, flexShrink: 0 }}
+                                  <Avatar
+                                    sx={{ width: 20, height: 20, flexShrink: 0 }}
                                     alt={member.counter.name || member.counter.username}
-                                    src={avatarSrc(member)} />
-                                  <Typography variant="caption" noWrap sx={{ color: member.counter.color || theme.palette.primary.main, flex: 1, minWidth: 0 }}>
+                                    src={avatarSrc(member)}
+                                  />
+                                  <Typography
+                                    variant="caption"
+                                    noWrap
+                                    sx={{ color: member.counter.color || theme.palette.primary.main, flex: 1, minWidth: 0 }}
+                                  >
                                     {member.counter.username}
                                     {member.role === 'host' ? ' ★' : ''}
                                   </Typography>

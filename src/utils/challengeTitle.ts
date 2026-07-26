@@ -24,7 +24,14 @@ export const CHALLENGE_TYPE_NAMES: Record<string, string> = {
 }
 
 export function getPrettyTypeName(type: string): string {
-  return CHALLENGE_TYPE_NAMES[type] ?? type.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  return (
+    CHALLENGE_TYPE_NAMES[type] ??
+    type
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
+  )
 }
 
 // One formula per challenge type, extensible for future types — generates a short display
@@ -62,11 +69,7 @@ export function getChallengeTitle(ch: TitleSource): string {
 // ThreadCountsChallengeCard's own progress label. Types without a real "count" progress
 // (roll/etc, which are pass/fail rather than an accumulating number) fall back to the
 // static title itself, since there's nothing more meaningful to show mid-animation.
-const COUNT_STYLE_TYPES = new Set([
-  'thread_counts',
-  'bingo_complete_squares',
-  'counts_in_day',
-])
+const COUNT_STYLE_TYPES = new Set(['thread_counts', 'bingo_complete_squares', 'counts_in_day'])
 
 // count_attempts progresses on every post attempt (valid or not) — its own progress label
 // says "Attempts" rather than "Counts" to make clear invalid posts count toward it too.

@@ -46,10 +46,7 @@ export const AccuracyMeter = ({ window: rleWindow, windowSize, minAccuracyPercen
   const animatedValidCount = useAnimatedNumber(stats.validCount)
   const animatedEffective = useAnimatedNumber(stats.effective)
 
-  const buckets = useMemo(
-    () => getAccuracyBuckets(rleWindow, windowSize, MAX_BATCHES),
-    [rleWindow, windowSize],
-  )
+  const buckets = useMemo(() => getAccuracyBuckets(rleWindow, windowSize, MAX_BATCHES), [rleWindow, windowSize])
 
   return (
     <Box>
@@ -127,9 +124,7 @@ const BatchStrip = ({ window: rleWindow, buckets, overallStats, minAccuracyPerce
           // the threshold is opacity ~0 (transparent, shows the panel's own background through),
           // and gets more solidly colored the further from the threshold it confidently sits.
           // See getBatchColorSignal for the confidence + saturation curve behind the opacity.
-          const color = side === 'good'
-            ? `rgba(${GOOD_RGB}, ${opacity})`
-            : `rgba(${BAD_RGB}, ${opacity})`
+          const color = side === 'good' ? `rgba(${GOOD_RGB}, ${opacity})` : `rgba(${BAD_RGB}, ${opacity})`
           return (
             <Tooltip
               key={i}

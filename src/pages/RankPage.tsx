@@ -31,7 +31,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import { getRankSitewideLeaderboard, getRankSeasons, getRankChallenges, getRankCounterProfile, getRankGgProjection } from '../utils/api'
+import {
+  getRankSitewideLeaderboard,
+  getRankSeasons,
+  getRankChallenges,
+  getRankCounterProfile,
+  getRankGgProjection,
+} from '../utils/api'
 import { discordAvatarLink } from '../utils/helpers'
 import { SitewideLeaderboardResponse, RankSeason, RankChallenge, CounterRankProfileResponse, GgProjection } from '../utils/types'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
@@ -42,7 +48,13 @@ import { Loading } from '../components/Loading'
 import { RANK_COLORS, RANK_LABELS } from '../utils/rankColors'
 import { RankName } from '../utils/types'
 import { getChallengeTitle, getPrettyTypeName } from '../utils/challengeTitle'
-import { CHALLENGE_TYPES, SITEWIDE_ONLY_TYPES, THREAD_REQUIRED_TYPES, RANK_OPTIONS, PSEUDO_THREAD_LABELS } from '../utils/challengeTypes'
+import {
+  CHALLENGE_TYPES,
+  SITEWIDE_ONLY_TYPES,
+  THREAD_REQUIRED_TYPES,
+  RANK_OPTIONS,
+  PSEUDO_THREAD_LABELS,
+} from '../utils/challengeTypes'
 
 const POSITION_COLORS = ['#ffd700', '#c0c0c0', '#cd7f32']
 
@@ -96,7 +108,7 @@ const ChallengeCard = ({
           </Box>
         </Box>
 
-<Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.75, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.75, flexWrap: 'wrap' }}>
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)' }}>
             Target: {challenge.target.toLocaleString()}
             {challenge.params &&
@@ -317,10 +329,7 @@ export const RankPage = () => {
   useEffect(() => {
     if (pageTab !== 'my-progress' || myProgressLoaded || !counter?.username) return
     setMyProgressLoading(true)
-    Promise.all([
-      getRankCounterProfile(counter.username, selectedSeasonId),
-      getRankGgProjection(counter.username, selectedSeasonId),
-    ])
+    Promise.all([getRankCounterProfile(counter.username, selectedSeasonId), getRankGgProjection(counter.username, selectedSeasonId)])
       .then(([profileRes, projectionRes]) => {
         if (!isMounted.current) return
         setMyProfile(profileRes.data)
@@ -350,7 +359,11 @@ export const RankPage = () => {
     ? [{ key: 'sitewide', label: 'Sitewide', threadUuid: null }]
     : [
         ...(matrixThreadRequired ? [] : [{ key: 'sitewide', label: 'Sitewide', threadUuid: null }]),
-        ...matrixThreadUuids.map((uuid) => ({ key: uuid, label: PSEUDO_THREAD_LABELS[uuid] ?? threadNameMap.get(uuid) ?? uuid.slice(0, 8), threadUuid: uuid })),
+        ...matrixThreadUuids.map((uuid) => ({
+          key: uuid,
+          label: PSEUDO_THREAD_LABELS[uuid] ?? threadNameMap.get(uuid) ?? uuid.slice(0, 8),
+          threadUuid: uuid,
+        })),
       ]
   const countFor = (threadUuid: string | null, rank: RankName): number =>
     typeMatrixChallenges.filter((c) => (c.threadUuid ?? null) === threadUuid && c.rank === rank).length
@@ -513,67 +526,71 @@ export const RankPage = () => {
                         return entry.username.toLowerCase().includes(q) || (entry.name ?? '').toLowerCase().includes(q)
                       })
                       .map(({ entry, i }) => {
-                      const position = leaderboardPage * LEADERBOARD_PAGE_SIZE + i
-                      const posColor = POSITION_COLORS[position] ?? null
-                      const rankColor = RANK_COLORS[entry.rank] ?? 'rgba(255,255,255,0.15)'
-                      const isMe = counter?.username === entry.username
-                      return (
-                        <TableRow
-                          key={entry.counterUuid}
-                          ref={isMe ? myRowRef : undefined}
-                          hover
-                          sx={{
-                            cursor: 'pointer',
-                            borderLeft: isMe ? '3px solid #ffd700' : position < 3 ? `3px solid ${posColor}` : '3px solid transparent',
-                            outline: isMe ? '1px solid rgba(255,215,0,0.4)' : undefined,
-                            '& td': { borderBottom: '1px solid rgba(255,255,255,0.06)', color: '#fff' },
-                            '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' },
-                            '&:last-child td': { borderBottom: 'none' },
-                            bgcolor: isMe
-                              ? 'rgba(255,215,0,0.08)'
-                              : position === 0
-                                ? 'rgba(255,215,0,0.04)'
-                                : position === 1
-                                  ? 'rgba(192,192,192,0.03)'
-                                  : position === 2
-                                    ? 'rgba(205,127,50,0.03)'
-                                    : 'transparent',
-                          }}
-                          onClick={() => navigate(`/counter/${entry.username}`)}
-                        >
-                          <TableCell>
-                            <Typography
-                              variant="body2"
-                              fontWeight={700}
-                              sx={{ color: posColor ?? 'rgba(255,255,255,0.35)', fontSize: position < 3 ? '1rem' : '0.85rem' }}
-                            >
-                              {position + 1}
-                            </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                              <Avatar
-                                src={discordAvatarLink(entry)}
-                                sx={{ width: 32, height: 32, fontSize: '0.8rem', border: `2px solid ${rankColor}` }}
+                        const position = leaderboardPage * LEADERBOARD_PAGE_SIZE + i
+                        const posColor = POSITION_COLORS[position] ?? null
+                        const rankColor = RANK_COLORS[entry.rank] ?? 'rgba(255,255,255,0.15)'
+                        const isMe = counter?.username === entry.username
+                        return (
+                          <TableRow
+                            key={entry.counterUuid}
+                            ref={isMe ? myRowRef : undefined}
+                            hover
+                            sx={{
+                              cursor: 'pointer',
+                              borderLeft: isMe
+                                ? '3px solid #ffd700'
+                                : position < 3
+                                  ? `3px solid ${posColor}`
+                                  : '3px solid transparent',
+                              outline: isMe ? '1px solid rgba(255,215,0,0.4)' : undefined,
+                              '& td': { borderBottom: '1px solid rgba(255,255,255,0.06)', color: '#fff' },
+                              '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' },
+                              '&:last-child td': { borderBottom: 'none' },
+                              bgcolor: isMe
+                                ? 'rgba(255,215,0,0.08)'
+                                : position === 0
+                                  ? 'rgba(255,215,0,0.04)'
+                                  : position === 1
+                                    ? 'rgba(192,192,192,0.03)'
+                                    : position === 2
+                                      ? 'rgba(205,127,50,0.03)'
+                                      : 'transparent',
+                            }}
+                            onClick={() => navigate(`/counter/${entry.username}`)}
+                          >
+                            <TableCell>
+                              <Typography
+                                variant="body2"
+                                fontWeight={700}
+                                sx={{ color: posColor ?? 'rgba(255,255,255,0.35)', fontSize: position < 3 ? '1rem' : '0.85rem' }}
                               >
-                                {entry.name?.[0] ?? '?'}
-                              </Avatar>
-                              <Typography variant="body2" fontWeight={600} sx={{ color: entry.color || '#fff' }}>
-                                {entry.name || entry.username}
+                                {position + 1}
                               </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
-                            <RankIconBadge rank={entry.rank} division={entry.division} size="mini" />
-                          </TableCell>
-                          <TableCell align="right">
-                            <Typography variant="body2" fontWeight={700} sx={{ color: rankColor }}>
-                              {entry.totalGg.toLocaleString()} GG
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
+                            </TableCell>
+                            <TableCell>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <Avatar
+                                  src={discordAvatarLink(entry)}
+                                  sx={{ width: 32, height: 32, fontSize: '0.8rem', border: `2px solid ${rankColor}` }}
+                                >
+                                  {entry.name?.[0] ?? '?'}
+                                </Avatar>
+                                <Typography variant="body2" fontWeight={600} sx={{ color: entry.color || '#fff' }}>
+                                  {entry.name || entry.username}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <RankIconBadge rank={entry.rank} division={entry.division} size="mini" />
+                            </TableCell>
+                            <TableCell align="right">
+                              <Typography variant="body2" fontWeight={700} sx={{ color: rankColor }}>
+                                {entry.totalGg.toLocaleString()} GG
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -758,7 +775,9 @@ export const RankPage = () => {
                 {selectedCell && (
                   <Box>
                     <Typography variant="subtitle1" fontWeight={700} sx={{ color: RANK_COLORS[selectedCell.rank] ?? '#fff', mb: 1 }}>
-                      {selectedCell.threadUuid ? threadNameMap.get(selectedCell.threadUuid) ?? selectedCell.threadUuid.slice(0, 8) : 'Sitewide'}{' '}
+                      {selectedCell.threadUuid
+                        ? threadNameMap.get(selectedCell.threadUuid) ?? selectedCell.threadUuid.slice(0, 8)
+                        : 'Sitewide'}{' '}
                       · <span style={{ textTransform: 'capitalize' }}>{selectedCell.rank}</span>
                     </Typography>
                     {challengesLoading ? (
@@ -811,9 +830,7 @@ export const RankPage = () => {
               ) : myProfile ? (
                 (() => {
                   const sitewideRow = myProfile.ranks.find((r) => r.threadUuid == null) ?? null
-                  const threadRows = myProfile.ranks
-                    .filter((r) => r.threadUuid != null)
-                    .sort((a, b) => b.ggTotal - a.ggTotal)
+                  const threadRows = myProfile.ranks.filter((r) => r.threadUuid != null).sort((a, b) => b.ggTotal - a.ggTotal)
 
                   return (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -869,7 +886,10 @@ export const RankPage = () => {
                           No per-thread rank progress yet — start counting in a thread to get assigned challenges.
                         </Typography>
                       ) : (
-                        <TableContainer component={Card} sx={{ bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <TableContainer
+                          component={Card}
+                          sx={{ bgcolor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                        >
                           <Table size="small">
                             <TableHead>
                               <TableRow>

@@ -130,7 +130,13 @@ export const ThresholdLeaderboard = (props: Props) => {
     let stale = false
     setLoading(true)
     if (isSpeed) {
-      getThreadSpeedPercentileLeaderboard(threadName, kind === 'split_under_ms' ? 'splitSpeed' : 'speed', backendPercentile, startDateStr, endDateStr)
+      getThreadSpeedPercentileLeaderboard(
+        threadName,
+        kind === 'split_under_ms' ? 'splitSpeed' : 'speed',
+        backendPercentile,
+        startDateStr,
+        endDateStr,
+      )
         .then(({ data }) => {
           if (stale) return
           for (const counter of data.counters ?? []) {
@@ -187,9 +193,7 @@ export const ThresholdLeaderboard = (props: Props) => {
           }}
           onBlur={() => setPercentileInput(String(percentile))}
           slotProps={{ htmlInput: { min: 0, max: 100, step: 1 } }}
-          helperText={
-            percentile === 100 ? 'Best' : percentile === 0 ? 'Worst' : percentile === 50 ? 'Median' : undefined
-          }
+          helperText={percentile === 100 ? 'Best' : percentile === 0 ? 'Worst' : percentile === 50 ? 'Median' : undefined}
           sx={{ width: 140 }}
         />
       )}

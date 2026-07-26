@@ -15,7 +15,7 @@ export const bingoThemeTokens = {
   fallback: '#aa4646',
 } as const
 
-export const BINGO_FALLBACK_COLOR = '#aa4646';
+export const BINGO_FALLBACK_COLOR = '#aa4646'
 
 export const bingoTeamVisuals = {
   wave: {

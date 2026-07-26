@@ -57,9 +57,8 @@ export const RankLeaderboardMini = ({ entries: allEntries, myUsername }: Props) 
 
   const myIndex = myUsername ? entries.findIndex((e) => e.username === myUsername) : -1
   const isMeInTop3 = myIndex >= 0 && myIndex < 3
-  const collapsedIndices = isMeInTop3 || myIndex < 0
-    ? [0, 1, 2].filter((i) => i < entries.length)
-    : [0, 1, 2, myIndex].filter((i) => i < entries.length)
+  const collapsedIndices =
+    isMeInTop3 || myIndex < 0 ? [0, 1, 2].filter((i) => i < entries.length) : [0, 1, 2, myIndex].filter((i) => i < entries.length)
   const visibleIndices = expanded ? entries.map((_, i) => i) : collapsedIndices
   const canExpand = !expanded && entries.length > collapsedIndices.length
 
@@ -87,7 +86,12 @@ export const RankLeaderboardMini = ({ entries: allEntries, myUsername }: Props) 
                     <CardHeader
                       sx={{ p: 0 }}
                       avatar={
-                        <Avatar component="span" sx={{ width: 24, height: 24 }} alt={entry.name || entry.username} src={discordAvatarLink(entry)} />
+                        <Avatar
+                          component="span"
+                          sx={{ width: 24, height: 24 }}
+                          alt={entry.name || entry.username}
+                          src={discordAvatarLink(entry)}
+                        />
                       }
                       title={
                         <Link

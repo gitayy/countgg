@@ -163,7 +163,17 @@ function useChallengeSlots(progress: ChallengeLog[], completions: ChallengeLog[]
         next = updated
       } else {
         if (isFirstAppearance(log)) onEntering(log)
-        next = [...next, { key: `slot-${log.id}`, challengeId: log.challengeId, phase: 'completing', data: log, entering: false, firstAppearance: isFirstAppearance(log) }]
+        next = [
+          ...next,
+          {
+            key: `slot-${log.id}`,
+            challengeId: log.challengeId,
+            phase: 'completing',
+            data: log,
+            entering: false,
+            firstAppearance: isFirstAppearance(log),
+          },
+        ]
       }
     }
 
@@ -183,14 +193,17 @@ function useChallengeSlots(progress: ChallengeLog[], completions: ChallengeLog[]
         const firstAppearance = isFirstAppearance(inProgress)
         const entering = firstAppearance && inProgress.progress > 0
         if (firstAppearance) onEntering(inProgress)
-        next = [...next, {
-          key: inProgress.challengeId,
-          challengeId: inProgress.challengeId,
-          phase: 'progress',
-          data: inProgress,
-          entering,
-          firstAppearance,
-        }]
+        next = [
+          ...next,
+          {
+            key: inProgress.challengeId,
+            challengeId: inProgress.challengeId,
+            phase: 'progress',
+            data: inProgress,
+            entering,
+            firstAppearance,
+          },
+        ]
       }
     }
 
@@ -229,14 +242,17 @@ function useChallengeSlots(progress: ChallengeLog[], completions: ChallengeLog[]
       const firstAppearance = isFirstAppearance(data)
       const entering = firstAppearance && data.progress > 0
       if (firstAppearance) onEntering(data)
-      return [...withoutFinished, {
-        key: nextChallengeId,
-        challengeId: nextChallengeId,
-        phase: 'progress',
-        data,
-        entering,
-        firstAppearance,
-      }]
+      return [
+        ...withoutFinished,
+        {
+          key: nextChallengeId,
+          challengeId: nextChallengeId,
+          phase: 'progress',
+          data,
+          entering,
+          firstAppearance,
+        },
+      ]
     })
   }
 
@@ -544,9 +560,7 @@ function renderChallengeCard(
         summary={summary}
         firstAppearance={firstAppearance}
       >
-        {() => (
-          <AccuracyMeter window={ch.accuracyWindow} windowSize={windowSize} minAccuracyPercent={minAccuracyPct} />
-        )}
+        {() => <AccuracyMeter window={ch.accuracyWindow} windowSize={windowSize} minAccuracyPercent={minAccuracyPct} />}
       </ChallengeCompletionWrapper>
     )
   }
@@ -672,19 +686,21 @@ export const RankTabPanel = ({
   // queue AND the live fetch at the same time; without this filter the live reconciliation
   // effect would flip a slot to 'completing' for something the replay lane already owns.
   const threadReplayingIds = useMemo(
-    () => new Set(
-      Object.values(threadReplay.current)
-        .filter((step): step is Extract<ReplayStep, { kind: 'bar' | 'completion' }> => step.kind !== 'rankup')
-        .map((step) => step.log.challengeId),
-    ),
+    () =>
+      new Set(
+        Object.values(threadReplay.current)
+          .filter((step): step is Extract<ReplayStep, { kind: 'bar' | 'completion' }> => step.kind !== 'rankup')
+          .map((step) => step.log.challengeId),
+      ),
     [threadReplay.current],
   )
   const sitewideReplayingIds = useMemo(
-    () => new Set(
-      Object.values(sitewideReplay.current)
-        .filter((step): step is Extract<ReplayStep, { kind: 'bar' | 'completion' }> => step.kind !== 'rankup')
-        .map((step) => step.log.challengeId),
-    ),
+    () =>
+      new Set(
+        Object.values(sitewideReplay.current)
+          .filter((step): step is Extract<ReplayStep, { kind: 'bar' | 'completion' }> => step.kind !== 'rankup')
+          .map((step) => step.log.challengeId),
+      ),
     [sitewideReplay.current],
   )
   const threadCompletionsForSlots = useMemo(
@@ -972,10 +988,15 @@ export const RankTabPanel = ({
     if (initialSitewideLeaderboardPromiseRef.current) {
       initialSitewideLeaderboardPromiseRef.current.then((data) => {
         if (data) applyEntries(data)
-        else getRankSitewideLeaderboard().then(({ data }) => applyEntries(data)).catch(console.error)
+        else
+          getRankSitewideLeaderboard()
+            .then(({ data }) => applyEntries(data))
+            .catch(console.error)
       })
     } else {
-      getRankSitewideLeaderboard().then(({ data }) => applyEntries(data)).catch(console.error)
+      getRankSitewideLeaderboard()
+        .then(({ data }) => applyEntries(data))
+        .catch(console.error)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rankScopeTab])
@@ -1013,10 +1034,15 @@ export const RankTabPanel = ({
     if (initialThreadLeaderboardPromiseRef.current) {
       initialThreadLeaderboardPromiseRef.current.then((data) => {
         if (data) applyEntries(data)
-        else getRankThreadLeaderboard(thread_name).then(({ data }) => applyEntries(data)).catch(console.error)
+        else
+          getRankThreadLeaderboard(thread_name)
+            .then(({ data }) => applyEntries(data))
+            .catch(console.error)
       })
     } else {
-      getRankThreadLeaderboard(thread_name).then(({ data }) => applyEntries(data)).catch(console.error)
+      getRankThreadLeaderboard(thread_name)
+        .then(({ data }) => applyEntries(data))
+        .catch(console.error)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rankThreadRow != null, thread_name])
@@ -1090,7 +1116,8 @@ export const RankTabPanel = ({
     if (!counter) {
       return <Typography color="text.secondary">Log in to see your rank progress.</Typography>
     }
-    const testableSlot = threadSlots.slots.find((s) => s.phase !== 'completing') ?? sitewideSlots.slots.find((s) => s.phase !== 'completing')
+    const testableSlot =
+      threadSlots.slots.find((s) => s.phase !== 'completing') ?? sitewideSlots.slots.find((s) => s.phase !== 'completing')
     const handleAdminSetRank = () => {
       if (!thread?.uuid || !counter.username) return
       const parsedGg = Number(setRankGgInput)
@@ -1166,14 +1193,7 @@ export const RankTabPanel = ({
           // Mount at fromProgress (0%), then immediately animate to 100% via replayDurationMs —
           // two renders: first paints the starting point, the pct flip on the next tick is what
           // the bezier transition actually animates.
-          return (
-            <ReplayBarStep
-              key={`replay-bar-${log.id}`}
-              startPct={pct}
-              log={log}
-              onDone={() => replay.onBarDone(laneKey)}
-            />
-          )
+          return <ReplayBarStep key={`replay-bar-${log.id}`} startPct={pct} log={log} onDone={() => replay.onBarDone(laneKey)} />
         }
         // 'completion'
         return renderChallengeCard(
@@ -1192,7 +1212,7 @@ export const RankTabPanel = ({
 
     const activeReplay = rankScopeTab === 'thread' ? threadReplay : sitewideReplay
     const activeSlots = rankScopeTab === 'thread' ? threadSlots : sitewideSlots
-    const activeScopeLabel = rankScopeTab === 'thread' ? (thread?.title ?? thread_name) : 'sitewide'
+    const activeScopeLabel = rankScopeTab === 'thread' ? thread?.title ?? thread_name : 'sitewide'
 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -1214,67 +1234,67 @@ export const RankTabPanel = ({
         {/* ── Rank progress card: above Challenges, same scope as the picker above. ── */}
         {hasAnyRank && (
           <Box>
-            {rankScopeTab === 'thread' ? (
-              hasThreadRank && (() => {
-                const { rank, division, gg: realGg } = rankThreadRow ?? { rank: 'bronze' as RankName, division: 1 as const, gg: 0 }
-                const gg = realGg + testGgDelta
-                const floor = divFloor(rank, division)
-                const ceil = divCeil(rank, division)
-                // The replay queue's RANKUP_LANE step is the ONE source of truth for "is there a
-                // rank-up to celebrate right now" — whether it arrived via the mount-time
-                // getRankReplayData backlog or a live rank_updated socket delta (see
-                // enqueueRankUps), both end up here. testRankUpPreview is a pure client-side admin
-                // QA affordance (no backend event, no markRankUpSeen) — only ever shown as a
-                // fallback when there's no real one playing, so it can never mask/collide with
-                // an actual rank-up.
-                const threadRankUpStep = threadReplay.current[RANKUP_LANE]
-                const pendingRankUp =
-                  threadRankUpStep?.kind === 'rankup'
-                    ? { rank: threadRankUpStep.event.toRank, division: threadRankUpStep.event.toDivision }
-                    : testRankUpPreview
+            {rankScopeTab === 'thread'
+              ? hasThreadRank &&
+                (() => {
+                  const { rank, division, gg: realGg } = rankThreadRow ?? { rank: 'bronze' as RankName, division: 1 as const, gg: 0 }
+                  const gg = realGg + testGgDelta
+                  const floor = divFloor(rank, division)
+                  const ceil = divCeil(rank, division)
+                  // The replay queue's RANKUP_LANE step is the ONE source of truth for "is there a
+                  // rank-up to celebrate right now" — whether it arrived via the mount-time
+                  // getRankReplayData backlog or a live rank_updated socket delta (see
+                  // enqueueRankUps), both end up here. testRankUpPreview is a pure client-side admin
+                  // QA affordance (no backend event, no markRankUpSeen) — only ever shown as a
+                  // fallback when there's no real one playing, so it can never mask/collide with
+                  // an actual rank-up.
+                  const threadRankUpStep = threadReplay.current[RANKUP_LANE]
+                  const pendingRankUp =
+                    threadRankUpStep?.kind === 'rankup'
+                      ? { rank: threadRankUpStep.event.toRank, division: threadRankUpStep.event.toDivision }
+                      : testRankUpPreview
 
-                return (
-                  <RankProgressCard
-                    rank={rank}
-                    division={division}
-                    gg={gg}
-                    divFloor={floor}
-                    divCeil={ceil}
-                    threadName={thread?.title ?? thread_name}
-                    pendingRankUp={pendingRankUp}
-                    onRankUpAnimationDone={() => {
-                      if (threadRankUpStep?.kind === 'rankup') {
-                        threadReplay.onRankUpDone(threadRankUpStep.event)
-                      } else {
-                        setTestRankUpPreview(null)
-                      }
-                    }}
-                  />
-                )
-              })()
-            ) : (
-              sitewideRankRow && (() => {
-                const sitewideRankUpStep = sitewideReplay.current[RANKUP_LANE]
-                const pendingRankUp =
-                  sitewideRankUpStep?.kind === 'rankup'
-                    ? { rank: sitewideRankUpStep.event.toRank, division: sitewideRankUpStep.event.toDivision }
-                    : null
-                return (
-                  <RankProgressCard
-                    rank={sitewideRankRow.rank}
-                    division={sitewideRankRow.division}
-                    gg={sitewideRankRow.gg}
-                    divFloor={divFloor(sitewideRankRow.rank, sitewideRankRow.division)}
-                    divCeil={divCeil(sitewideRankRow.rank, sitewideRankRow.division)}
-                    threadName="Sitewide"
-                    pendingRankUp={pendingRankUp}
-                    onRankUpAnimationDone={() => {
-                      if (sitewideRankUpStep?.kind === 'rankup') sitewideReplay.onRankUpDone(sitewideRankUpStep.event)
-                    }}
-                  />
-                )
-              })()
-            )}
+                  return (
+                    <RankProgressCard
+                      rank={rank}
+                      division={division}
+                      gg={gg}
+                      divFloor={floor}
+                      divCeil={ceil}
+                      threadName={thread?.title ?? thread_name}
+                      pendingRankUp={pendingRankUp}
+                      onRankUpAnimationDone={() => {
+                        if (threadRankUpStep?.kind === 'rankup') {
+                          threadReplay.onRankUpDone(threadRankUpStep.event)
+                        } else {
+                          setTestRankUpPreview(null)
+                        }
+                      }}
+                    />
+                  )
+                })()
+              : sitewideRankRow &&
+                (() => {
+                  const sitewideRankUpStep = sitewideReplay.current[RANKUP_LANE]
+                  const pendingRankUp =
+                    sitewideRankUpStep?.kind === 'rankup'
+                      ? { rank: sitewideRankUpStep.event.toRank, division: sitewideRankUpStep.event.toDivision }
+                      : null
+                  return (
+                    <RankProgressCard
+                      rank={sitewideRankRow.rank}
+                      division={sitewideRankRow.division}
+                      gg={sitewideRankRow.gg}
+                      divFloor={divFloor(sitewideRankRow.rank, sitewideRankRow.division)}
+                      divCeil={divCeil(sitewideRankRow.rank, sitewideRankRow.division)}
+                      threadName="Sitewide"
+                      pendingRankUp={pendingRankUp}
+                      onRankUpAnimationDone={() => {
+                        if (sitewideRankUpStep?.kind === 'rankup') sitewideReplay.onRankUpDone(sitewideRankUpStep.event)
+                      }}
+                    />
+                  )
+                })()}
           </Box>
         )}
 
@@ -1285,9 +1305,7 @@ export const RankTabPanel = ({
              everything else (other in-progress challenges, or a brand-new one that arrives
              mid-replay) stays visible and updates live the whole time. ── */}
         {activeReplay.status === 'playing' && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {renderReplay(activeReplay)}
-          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>{renderReplay(activeReplay)}</Box>
         )}
 
         {activeSlots.slots.length > 0 && (
@@ -1309,11 +1327,9 @@ export const RankTabPanel = ({
         {hasAnyRank && (
           <Box>
             <Divider sx={{ mb: 1 }} />
-            {rankScopeTab === 'thread' ? (
-              hasThreadRank && <RankLeaderboardMini entries={threadLeaderboard} myUsername={counter?.username} />
-            ) : (
-              sitewideRankRow && <RankLeaderboardMini entries={sitewideLeaderboard} myUsername={counter?.username} />
-            )}
+            {rankScopeTab === 'thread'
+              ? hasThreadRank && <RankLeaderboardMini entries={threadLeaderboard} myUsername={counter?.username} />
+              : sitewideRankRow && <RankLeaderboardMini entries={sitewideLeaderboard} myUsername={counter?.username} />}
           </Box>
         )}
 
@@ -1392,7 +1408,8 @@ export const RankTabPanel = ({
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <Typography variant="caption" color="text.secondary" sx={{ width: '100%' }}>
-                  Test accuracy meter (frontend-only, nothing sent to backend — real incoming counts on this thread will keep updating it once generated)
+                  Test accuracy meter (frontend-only, nothing sent to backend — real incoming counts on this thread will keep updating
+                  it once generated)
                 </Typography>
                 <TextField
                   label="Rate %"
@@ -1468,9 +1485,15 @@ export const RankTabPanel = ({
                   <MenuItem value={3}>N/A</MenuItem>
                 ) : (
                   [
-                    <MenuItem key={1} value={1}>Div I</MenuItem>,
-                    <MenuItem key={2} value={2}>Div II</MenuItem>,
-                    <MenuItem key={3} value={3}>Div III</MenuItem>,
+                    <MenuItem key={1} value={1}>
+                      Div I
+                    </MenuItem>,
+                    <MenuItem key={2} value={2}>
+                      Div II
+                    </MenuItem>,
+                    <MenuItem key={3} value={3}>
+                      Div III
+                    </MenuItem>,
                   ]
                 )}
               </Select>

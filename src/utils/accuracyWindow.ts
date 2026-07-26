@@ -103,12 +103,7 @@ export function getAccuracyBuckets(window: string | null, windowSize: number, ma
 // Same bucketing logic as getAccuracyBuckets, but scoped to an arbitrary [rangeStart, rangeEnd)
 // slice of bit indices rather than always the window's own most-recent-effective range — this is
 // what powers drilling into a single bucket to reveal its own sub-batches.
-function getAccuracyBucketsInRange(
-  buf: Uint8Array,
-  rangeStart: number,
-  rangeEnd: number,
-  maxBuckets: number,
-): AccuracyBucket[] {
+function getAccuracyBucketsInRange(buf: Uint8Array, rangeStart: number, rangeEnd: number, maxBuckets: number): AccuracyBucket[] {
   const span = rangeEnd - rangeStart
   if (span <= 0) return []
 
@@ -130,7 +125,12 @@ function getAccuracyBucketsInRange(
 // Drills into one bucket's own [rangeStart, rangeEnd) sub-range, re-bucketing it into up to
 // maxBuckets smaller batches. Returns [] once the range can no longer be usefully split (i.e.
 // it already represents a single attempt), which is the signal the UI uses to stop nesting.
-export function drillAccuracyBucket(window: string | null, rangeStart: number, rangeEnd: number, maxBuckets: number): AccuracyBucket[] {
+export function drillAccuracyBucket(
+  window: string | null,
+  rangeStart: number,
+  rangeEnd: number,
+  maxBuckets: number,
+): AccuracyBucket[] {
   const decoded = decode(window)
   if (!decoded) return []
   if (rangeEnd - rangeStart <= 1) return []

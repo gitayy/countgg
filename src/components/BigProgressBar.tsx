@@ -81,7 +81,9 @@ export const BigProgressBar = ({ pct, label, color, hidden, replayDurationMs, on
       />
       {!hidden && (
         <Box sx={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Typography sx={{ fontSize: '1.6rem', fontWeight: 800, lineHeight: 1, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}>
+          <Typography
+            sx={{ fontSize: '1.6rem', fontWeight: 800, lineHeight: 1, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
+          >
             {label}
           </Typography>
         </Box>

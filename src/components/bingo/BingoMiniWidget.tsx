@@ -27,7 +27,7 @@ type Props = {
 const STORAGE_KEY = 'bingo_active_game_id'
 
 export const BingoMiniWidget = ({ title = 'Bingo' }: Props) => {
-  const theme = useTheme();
+  const theme = useTheme()
   const socket = useContext(SocketContext)
   const { counter } = useContext(UserContext)
   const navigate = useNavigate()
@@ -180,7 +180,13 @@ export const BingoMiniWidget = ({ title = 'Bingo' }: Props) => {
   return (
     <Paper
       variant="outlined"
-      sx={{ p: 1.5, mb: 2, borderColor: theme.palette.background.paper, bgcolor: 'rgba(14, 22, 42, 0.72)', color: theme.palette.primary.main }}
+      sx={{
+        p: 1.5,
+        mb: 2,
+        borderColor: theme.palette.background.paper,
+        bgcolor: 'rgba(14, 22, 42, 0.72)',
+        color: theme.palette.primary.main,
+      }}
     >
       {activeGameId && gameState && stateBanner && (
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.8 }}>

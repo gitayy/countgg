@@ -3,15 +3,7 @@ import { RankProgressCard } from './RankProgressCard'
 
 describe('RankProgressCard', () => {
   it('does not show the division ladder until clicked, then shows every division on click', () => {
-    render(
-      <RankProgressCard
-        rank="bronze"
-        division={2}
-        gg={120}
-        divFloor={100}
-        divCeil={200}
-      />,
-    )
+    render(<RankProgressCard rank="bronze" division={2} gg={120} divFloor={100} divCeil={200} />)
 
     // Collapsed by default — no new visual elements beyond the existing card content.
     expect(screen.queryByText('Bronze I')).not.toBeInTheDocument()
@@ -33,15 +25,7 @@ describe('RankProgressCard', () => {
   // floor is 200 (Bronze I + Bronze II) — rows read "50 / 100 GG" and "50 / 200 GG"
   // respectively, i.e. "how much you need to REACH this division", not clear it.
   it('shows GG needed to reach a not-yet-reached division (its floor), not its ceiling', () => {
-    render(
-      <RankProgressCard
-        rank="bronze"
-        division={1}
-        gg={50}
-        divFloor={0}
-        divCeil={100}
-      />,
-    )
+    render(<RankProgressCard rank="bronze" division={1} gg={50} divFloor={0} divCeil={100} />)
 
     fireEvent.click(screen.getAllByText(/GG$/)[0])
 
@@ -56,15 +40,7 @@ describe('RankProgressCard', () => {
   // Division 1 of every rank has a floor of 0 — you're there the instant you enter the rank, so
   // there's nothing to show progress toward. Rendered as "-" instead of a degenerate "50 / 0".
   it('shows "-" for a division 1 row, since its floor is always 0', () => {
-    render(
-      <RankProgressCard
-        rank="bronze"
-        division={1}
-        gg={50}
-        divFloor={0}
-        divCeil={100}
-      />,
-    )
+    render(<RankProgressCard rank="bronze" division={1} gg={50} divFloor={0} divCeil={100} />)
 
     fireEvent.click(screen.getAllByText(/GG$/)[0])
 
@@ -75,15 +51,7 @@ describe('RankProgressCard', () => {
   // finite cumulative floor (every earlier rank's full requirement) — so it renders the same
   // floor-based "GG needed to get here" figure as any other division, not a blank label.
   it('shows GG needed to reach Peak (its cumulative floor), not a blank label', () => {
-    render(
-      <RankProgressCard
-        rank="grandcounter"
-        division={3}
-        gg={230}
-        divFloor={0}
-        divCeil={16000}
-      />,
-    )
+    render(<RankProgressCard rank="grandcounter" division={3} gg={230} divFloor={0} divCeil={16000} />)
 
     fireEvent.click(screen.getAllByText(/GG$/)[0])
 
@@ -92,15 +60,7 @@ describe('RankProgressCard', () => {
   })
 
   it('collapses again on a second click', async () => {
-    render(
-      <RankProgressCard
-        rank="bronze"
-        division={1}
-        gg={0}
-        divFloor={0}
-        divCeil={100}
-      />,
-    )
+    render(<RankProgressCard rank="bronze" division={1} gg={0} divFloor={0} divCeil={100} />)
 
     const clickTarget = screen.getByText(/GG$/)
     fireEvent.click(clickTarget)

@@ -29,6 +29,24 @@ export const CHALLENGE_TYPES = [
 // are optionally thread-scoped (threadUuid set = that thread, null = sitewide), same as
 // accuracy_rate.
 export const SITEWIDE_ONLY_TYPES = new Set<string>()
-export const THREAD_REQUIRED_TYPES = new Set(['split_under_ms', 'get_under_ms', 'bars_within_ms', 'count_attempts', 'roll', 'lrwoed_score', 'number_shuffle_win'])
+export const THREAD_REQUIRED_TYPES = new Set([
+  'split_under_ms',
+  'get_under_ms',
+  'bars_within_ms',
+  'count_attempts',
+  'roll',
+  'lrwoed_score',
+  'number_shuffle_win',
+])
 
-export const RANK_OPTIONS: RankName[] = ['bronze', 'silver', 'gold', 'platinum', 'emerald', 'diamond', 'countmeister', 'grandcounter', 'peak']
+export const RANK_OPTIONS: RankName[] = [
+  'bronze',
+  'silver',
+  'gold',
+  'platinum',
+  'emerald',
+  'diamond',
+  'countmeister',
+  'grandcounter',
+  'peak',
+]

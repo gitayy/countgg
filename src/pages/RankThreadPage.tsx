@@ -161,10 +161,7 @@ export const RankThreadPage = () => {
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar
-                        src={discordAvatarLink(entry)}
-                        sx={{ width: 28, height: 28, fontSize: '0.75rem' }}
-                      >
+                      <Avatar src={discordAvatarLink(entry)} sx={{ width: 28, height: 28, fontSize: '0.75rem' }}>
                         {entry.name?.[0] ?? '?'}
                       </Avatar>
                       <Typography variant="body2" fontWeight={500} sx={{ color: entry.color || 'text.primary' }}>
@@ -286,7 +283,7 @@ export const RankThreadPage = () => {
                       </Typography>
                     </Box>
                   </Box>
-{percentileFasterThan != null && (
+                  {percentileFasterThan != null && (
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                       Threshold faster than ~{percentileFasterThan}% of recorded {c.type === 'split_under_ms' ? 'splits' : 'gets'}
                       {speedDist && ` (n=${speedDist.sampleSize.toLocaleString()})`}
@@ -298,9 +295,7 @@ export const RankThreadPage = () => {
                       {c.params.validationType ? ` (${c.params.validationType})` : ''}
                     </Typography>
                   )}
-                  {c.type === 'thread_counts' && volumeHistogram.length > 0 && (
-                    <VolumeHistogramBar data={volumeHistogram} />
-                  )}
+                  {c.type === 'thread_counts' && volumeHistogram.length > 0 && <VolumeHistogramBar data={volumeHistogram} />}
                 </CardContent>
               </Card>
             )

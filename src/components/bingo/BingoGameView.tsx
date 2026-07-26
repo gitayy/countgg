@@ -1,5 +1,27 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { alpha, Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Grid, IconButton, InputAdornment, Paper, Stack, TextField, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useTheme } from '@mui/material'
+import {
+  alpha,
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Grid,
+  IconButton,
+  InputAdornment,
+  Paper,
+  Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  Typography,
+  useTheme,
+} from '@mui/material'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import LockIcon from '@mui/icons-material/Lock'
 import LockOpenIcon from '@mui/icons-material/LockOpen'
@@ -104,7 +126,7 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
   const [codeCopied, setCodeCopied] = useState(false)
   const [joinDialogOpen, setJoinDialogOpen] = useState(false)
   const [joinCodeInput, setJoinCodeInput] = useState('')
-  const theme = useTheme();
+  const theme = useTheme()
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000)
@@ -231,7 +253,12 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
     setActionError(null)
     socket.emit('bingo_start', { gameId: gameState.game.id })
   }
-  const handleUpdateSettings = (settings: { rank?: RankName; mode?: 'bingo' | 'lockout'; timeLimitSeconds?: number; joinMode?: 'closed' | 'free' | 'code' }) => {
+  const handleUpdateSettings = (settings: {
+    rank?: RankName
+    mode?: 'bingo' | 'lockout'
+    timeLimitSeconds?: number
+    joinMode?: 'closed' | 'free' | 'code'
+  }) => {
     if (!gameState) return
     setActionError(null)
     socket.emit('bingo_update_settings', { gameId: gameState.game.id, ...settings })
@@ -260,9 +287,13 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
   if (error) {
     return (
       <Box sx={{ p: embedded ? 1 : 2 }}>
-        <Typography variant="h6" sx={{ mb: 1 }}>{error}</Typography>
+        <Typography variant="h6" sx={{ mb: 1 }}>
+          {error}
+        </Typography>
         {!embedded && (
-          <Button variant="outlined" onClick={() => navigate('/bingo')}>Back to Bingo</Button>
+          <Button variant="outlined" onClick={() => navigate('/bingo')}>
+            Back to Bingo
+          </Button>
         )}
       </Box>
     )
@@ -279,45 +310,84 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
   const actionButtons = (size: 'small' | 'medium' = 'medium') => (
     <>
       {gameState.game.allowJoin && !userIsMember && (
-        <Button size={size} variant="contained"
-          onClick={() => gameState.game.joinMode === 'code' ? setJoinDialogOpen(true) : handleJoin()}
-          sx={{ fontWeight: 700, background: theme.palette.background.paper, '&:hover': { background: '#2689de' }, flex: embedded ? 1 : undefined, ...bingoFocusRingSx }}
-          aria-label={`Join game ${gameState.game.id}`}>
+        <Button
+          size={size}
+          variant="contained"
+          onClick={() => (gameState.game.joinMode === 'code' ? setJoinDialogOpen(true) : handleJoin())}
+          sx={{
+            fontWeight: 700,
+            background: theme.palette.background.paper,
+            '&:hover': { background: '#2689de' },
+            flex: embedded ? 1 : undefined,
+            ...bingoFocusRingSx,
+          }}
+          aria-label={`Join game ${gameState.game.id}`}
+        >
           Join
         </Button>
       )}
       {userIsHost && gameState.game.status === 'lobby' && (
-        <Button size={size} variant="contained" onClick={handleStart}
-          sx={{ fontWeight: 700, background: theme.palette.success.main, '&:hover': { background: '#2f9f5e' }, flex: embedded ? 1 : undefined, ...bingoFocusRingSx }}
-          aria-label={`Start game ${gameState.game.id}`}>
+        <Button
+          size={size}
+          variant="contained"
+          onClick={handleStart}
+          sx={{
+            fontWeight: 700,
+            background: theme.palette.success.main,
+            '&:hover': { background: '#2f9f5e' },
+            flex: embedded ? 1 : undefined,
+            ...bingoFocusRingSx,
+          }}
+          aria-label={`Start game ${gameState.game.id}`}
+        >
           Start
         </Button>
       )}
       {userIsHost && gameState.game.status === 'lobby' && (
-        <Button size={size} color="error" variant="outlined" onClick={handleDelete}
+        <Button
+          size={size}
+          color="error"
+          variant="outlined"
+          onClick={handleDelete}
           sx={{ flex: embedded ? 1 : undefined, ...bingoFocusRingSx }}
-          aria-label={`Cancel game ${gameState.game.id}`}>
+          aria-label={`Cancel game ${gameState.game.id}`}
+        >
           Cancel Game
         </Button>
       )}
       {!userIsHost && userIsMember && gameState.game.status === 'lobby' && (
-        <Button size={size} color="error" variant="outlined" onClick={handleLeave}
+        <Button
+          size={size}
+          color="error"
+          variant="outlined"
+          onClick={handleLeave}
           sx={{ flex: embedded ? 1 : undefined, ...bingoFocusRingSx }}
-          aria-label={`Leave game ${gameState.game.id}`}>
+          aria-label={`Leave game ${gameState.game.id}`}
+        >
           Leave
         </Button>
       )}
       {userIsMember && gameState.game.status === 'running' && (
-        <Button size={size} color="warning" variant="outlined" onClick={handleForfeit}
+        <Button
+          size={size}
+          color="warning"
+          variant="outlined"
+          onClick={handleForfeit}
           sx={{ flex: embedded ? 1 : undefined, ...bingoFocusRingSx }}
-          aria-label={`Vote to forfeit game ${gameState.game.id}`}>
+          aria-label={`Vote to forfeit game ${gameState.game.id}`}
+        >
           Forfeit
         </Button>
       )}
       {userIsMember && gameState.game.status === 'running' && (
-        <Button size={size} color="error" variant="outlined" onClick={handleLeaveGame}
+        <Button
+          size={size}
+          color="error"
+          variant="outlined"
+          onClick={handleLeaveGame}
           sx={{ flex: embedded ? 1 : undefined, ...bingoFocusRingSx }}
-          aria-label={`Leave game ${gameState.game.id}`}>
+          aria-label={`Leave game ${gameState.game.id}`}
+        >
           Leave
         </Button>
       )}
@@ -332,7 +402,9 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
         flex: '1 1 auto',
         minHeight: embedded ? undefined : '100%',
         position: 'relative',
-        background: embedded ? undefined : `linear-gradient(180deg, ${theme.palette.background.paper} 0%, ${theme.palette.background.paper0} 100%)`,
+        background: embedded
+          ? undefined
+          : `linear-gradient(180deg, ${theme.palette.background.paper} 0%, ${theme.palette.background.paper0} 100%)`,
       }}
     >
       {/* Win overlay — only show in non-embedded mode to avoid z-index conflicts */}
@@ -342,16 +414,24 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
           aria-live="assertive"
           onClick={() => setWinOverlayEvent(null)}
           sx={{
-            position: 'fixed', inset: 0, zIndex: 1400,
-            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-            pt: { xs: 8, md: 12 }, pointerEvents: 'none',
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1400,
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            pt: { xs: 8, md: 12 },
+            pointerEvents: 'none',
             background: alpha('#050914', 0.001),
           }}
         >
           <Paper
             sx={{
-              pointerEvents: 'auto', cursor: 'pointer',
-              px: { xs: 3, md: 5 }, py: { xs: 2, md: 2.5 }, textAlign: 'center',
+              pointerEvents: 'auto',
+              cursor: 'pointer',
+              px: { xs: 3, md: 5 },
+              py: { xs: 2, md: 2.5 },
+              textAlign: 'center',
               border: `2px solid ${winOverlayInfo.color}`,
               bgcolor: 'rgba(10, 16, 32, 0.94)',
               boxShadow: `0 0 40px 6px ${alpha(winOverlayInfo.color, 0.55)}`,
@@ -362,7 +442,16 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
               },
             }}
           >
-            <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: 1, color: winOverlayInfo.color, textShadow: `0 0 18px ${alpha(winOverlayInfo.color, 0.75)}`, lineHeight: 1 }}>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 900,
+                letterSpacing: 1,
+                color: winOverlayInfo.color,
+                textShadow: `0 0 18px ${alpha(winOverlayInfo.color, 0.75)}`,
+                lineHeight: 1,
+              }}
+            >
               {winOverlayInfo.isTiebreak ? "TIME'S UP!" : 'BINGO!'}
             </Typography>
             <Typography variant="h6" sx={{ mt: 1, color: theme.palette.primary.main, fontWeight: 700 }}>
@@ -384,32 +473,64 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
           color: theme.palette.primary.main,
         }}
       >
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }} justifyContent="space-between">
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          justifyContent="space-between"
+        >
           <Box sx={{ minWidth: 0 }}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
               <Typography variant={embedded ? 'h6' : 'h5'} sx={{ fontWeight: 800, lineHeight: 1.1 }}>
                 Game #{gameState.game.id}
               </Typography>
-              <Chip size="small" label={gameState.game.status} sx={{ textTransform: 'capitalize', bgcolor: `${theme.palette.warning.main}20`, color: theme.palette.warning.main, border: `1px solid ${theme.palette.warning.main}66` }} />
-              <Chip size="small" label={getBingoRankLabel(gameState.game.rank)} sx={{ bgcolor: getBingoRankColor(gameState.game.rank), color: '#fff', fontWeight: 700 }} />
+              <Chip
+                size="small"
+                label={gameState.game.status}
+                sx={{
+                  textTransform: 'capitalize',
+                  bgcolor: `${theme.palette.warning.main}20`,
+                  color: theme.palette.warning.main,
+                  border: `1px solid ${theme.palette.warning.main}66`,
+                }}
+              />
+              <Chip
+                size="small"
+                label={getBingoRankLabel(gameState.game.rank)}
+                sx={{ bgcolor: getBingoRankColor(gameState.game.rank), color: '#fff', fontWeight: 700 }}
+              />
               {timeRemaining && (
-                <Chip size="small" label={timeRemaining} sx={{ borderColor: theme.palette.background.paper }} variant="outlined" aria-live="polite" />
+                <Chip
+                  size="small"
+                  label={timeRemaining}
+                  sx={{ borderColor: theme.palette.background.paper }}
+                  variant="outlined"
+                  aria-live="polite"
+                />
               )}
             </Stack>
           </Box>
           <Stack direction="row" spacing={0.8} flexWrap="wrap" useFlexGap alignItems="center">
             {actionButtons('small')}
             {!embedded && (
-              <Button size="small" variant="outlined" onClick={() => navigate('/bingo')}
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => navigate('/bingo')}
                 sx={{ borderColor: theme.palette.background.paper, color: theme.palette.primary.main, ...bingoFocusRingSx }}
-                aria-label="Return to bingo lobby">
+                aria-label="Return to bingo lobby"
+              >
                 Back to Bingo
               </Button>
             )}
             {embedded && (
-              <Button size="small" variant="outlined" onClick={() => navigate(`/bingo/${gameState.game.id}`)}
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => navigate(`/bingo/${gameState.game.id}`)}
                 sx={{ borderColor: theme.palette.background.paper, color: theme.palette.primary.main, ...bingoFocusRingSx }}
-                aria-label="Open full game page">
+                aria-label="Open full game page"
+              >
                 Full Page
               </Button>
             )}
@@ -418,37 +539,80 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
       </Paper>
 
       {actionError && (
-        <Alert severity="error" onClose={() => setActionError(null)} sx={{ mb: 1.5 }}>{actionError}</Alert>
+        <Alert severity="error" onClose={() => setActionError(null)} sx={{ mb: 1.5 }}>
+          {actionError}
+        </Alert>
       )}
 
       {/* Lobby settings */}
       {gameState.game.status === 'lobby' && (
-        <Paper sx={{ p: { xs: 1.5, md: embedded ? 1.5 : 2 }, mb: 1.5, border: `1px solid ${theme.palette.background.paper}`, bgcolor: 'rgba(14, 22, 42, 0.74)', color: theme.palette.primary.main }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>Game Settings</Typography>
+        <Paper
+          sx={{
+            p: { xs: 1.5, md: embedded ? 1.5 : 2 },
+            mb: 1.5,
+            border: `1px solid ${theme.palette.background.paper}`,
+            bgcolor: 'rgba(14, 22, 42, 0.74)',
+            color: theme.palette.primary.main,
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>
+            Game Settings
+          </Typography>
           {userIsHost ? (
             <Stack spacing={1.5}>
               <Box>
-                <ToggleButtonGroup size="small" value={gameState.game.mode === 'lockout' ? 'lockout' : 'bingo'} exclusive
-                  onChange={(_, value) => { if (value) handleUpdateSettings({ mode: value }) }}
-                  sx={{ bgcolor: 'rgba(7, 12, 24, 0.64)', borderRadius: 1.5, p: 0.3, '& .MuiToggleButton-root': { px: 1.15, py: 0.45, fontWeight: 700 } }}>
-                  <ToggleButton value="bingo" sx={getBingoColorToggleSx(theme.palette.secondary.main)}>Reclaim</ToggleButton>
-                  <ToggleButton value="lockout" sx={getBingoColorToggleSx(theme.palette.error.main)}>Lockout</ToggleButton>
+                <ToggleButtonGroup
+                  size="small"
+                  value={gameState.game.mode === 'lockout' ? 'lockout' : 'bingo'}
+                  exclusive
+                  onChange={(_, value) => {
+                    if (value) handleUpdateSettings({ mode: value })
+                  }}
+                  sx={{
+                    bgcolor: 'rgba(7, 12, 24, 0.64)',
+                    borderRadius: 1.5,
+                    p: 0.3,
+                    '& .MuiToggleButton-root': { px: 1.15, py: 0.45, fontWeight: 700 },
+                  }}
+                >
+                  <ToggleButton value="bingo" sx={getBingoColorToggleSx(theme.palette.secondary.main)}>
+                    Reclaim
+                  </ToggleButton>
+                  <ToggleButton value="lockout" sx={getBingoColorToggleSx(theme.palette.error.main)}>
+                    Lockout
+                  </ToggleButton>
                 </ToggleButtonGroup>
                 <Typography variant="caption" sx={{ display: 'block', mt: 0.5, color: theme.palette.primary.contrastText }}>
                   {gameState.game.mode === 'lockout' ? 'Lockout: first claim is permanent.' : 'Reclaim: squares can be stolen.'}
                 </Typography>
               </Box>
               <Box>
-                <ToggleButtonGroup size="small" value={(gameState.game.rank || 'bronze') as RankName} exclusive
-                  onChange={(_, value) => { if (value) handleUpdateSettings({ rank: value }) }}
-                  sx={{ bgcolor: 'rgba(7, 12, 24, 0.64)', borderRadius: 1.5, p: 0.3, flexWrap: 'wrap', '& .MuiToggleButton-root': { px: 1.15, py: 0.45, fontWeight: 700 } }}>
+                <ToggleButtonGroup
+                  size="small"
+                  value={(gameState.game.rank || 'bronze') as RankName}
+                  exclusive
+                  onChange={(_, value) => {
+                    if (value) handleUpdateSettings({ rank: value })
+                  }}
+                  sx={{
+                    bgcolor: 'rgba(7, 12, 24, 0.64)',
+                    borderRadius: 1.5,
+                    p: 0.3,
+                    flexWrap: 'wrap',
+                    '& .MuiToggleButton-root': { px: 1.15, py: 0.45, fontWeight: 700 },
+                  }}
+                >
                   {RANK_ORDER.map((rank) => (
-                    <ToggleButton key={rank} value={rank} sx={getBingoRankToggleSx(rank)}>{RANK_LABELS[rank]}</ToggleButton>
+                    <ToggleButton key={rank} value={rank} sx={getBingoRankToggleSx(rank)}>
+                      {RANK_LABELS[rank]}
+                    </ToggleButton>
                   ))}
                 </ToggleButtonGroup>
               </Box>
               <Box>
-                <Typography variant="caption" sx={{ display: 'block', mb: 0.5, color: theme.palette.primary.contrastText }}>Time limit</Typography>
+                <Typography variant="caption" sx={{ display: 'block', mb: 0.5, color: theme.palette.primary.contrastText }}>
+                  Time limit
+                </Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <TextField
                     size="small"
@@ -461,8 +625,23 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
                       if (total >= 60) handleUpdateSettings({ timeLimitSeconds: Math.min(total, 86400) })
                     }}
                     inputProps={{ min: 0, max: 24 }}
-                    InputProps={{ endAdornment: <InputAdornment position="end"><Typography variant="caption" sx={{ color: theme.palette.primary.contrastText }}>h</Typography></InputAdornment> }}
-                    sx={{ width: 80, '& .MuiOutlinedInput-root': { bgcolor: 'rgba(7, 12, 24, 0.64)', color: theme.palette.primary.main, '& fieldset': { borderColor: theme.palette.background.paper } } }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Typography variant="caption" sx={{ color: theme.palette.primary.contrastText }}>
+                            h
+                          </Typography>
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      width: 80,
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: 'rgba(7, 12, 24, 0.64)',
+                        color: theme.palette.primary.main,
+                        '& fieldset': { borderColor: theme.palette.background.paper },
+                      },
+                    }}
                   />
                   <TextField
                     size="small"
@@ -475,29 +654,75 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
                       if (total >= 60) handleUpdateSettings({ timeLimitSeconds: Math.min(total, 86400) })
                     }}
                     inputProps={{ min: 0, max: 59 }}
-                    InputProps={{ endAdornment: <InputAdornment position="end"><Typography variant="caption" sx={{ color: theme.palette.primary.contrastText }}>m</Typography></InputAdornment> }}
-                    sx={{ width: 80, '& .MuiOutlinedInput-root': { bgcolor: 'rgba(7, 12, 24, 0.64)', color: theme.palette.primary.main, '& fieldset': { borderColor: theme.palette.background.paper } } }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Typography variant="caption" sx={{ color: theme.palette.primary.contrastText }}>
+                            m
+                          </Typography>
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      width: 80,
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: 'rgba(7, 12, 24, 0.64)',
+                        color: theme.palette.primary.main,
+                        '& fieldset': { borderColor: theme.palette.background.paper },
+                      },
+                    }}
                   />
                 </Stack>
               </Box>
               <Box>
-                <Typography variant="caption" sx={{ display: 'block', mb: 0.5, color: theme.palette.primary.contrastText }}>Join mode</Typography>
+                <Typography variant="caption" sx={{ display: 'block', mb: 0.5, color: theme.palette.primary.contrastText }}>
+                  Join mode
+                </Typography>
                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                   <ToggleButtonGroup
                     size="small"
                     value={gameState.game.joinMode || 'closed'}
                     exclusive
-                    onChange={(_, value) => { if (value) handleUpdateSettings({ joinMode: value }) }}
-                    sx={{ bgcolor: theme.palette.primary.light, borderRadius: 1.5, p: 0.3, '& .MuiToggleButton-root': { px: 1.15, py: 0.45, fontWeight: 700 } }}
+                    onChange={(_, value) => {
+                      if (value) handleUpdateSettings({ joinMode: value })
+                    }}
+                    sx={{
+                      bgcolor: theme.palette.primary.light,
+                      borderRadius: 1.5,
+                      p: 0.3,
+                      '& .MuiToggleButton-root': { px: 1.15, py: 0.45, fontWeight: 700 },
+                    }}
                   >
-                    <ToggleButton value="closed"><LockIcon sx={{ fontSize: 14, mr: 0.5 }} />Closed</ToggleButton>
-                    <ToggleButton value="free"><LockOpenIcon sx={{ fontSize: 14, mr: 0.5 }} />Free Join</ToggleButton>
-                    <ToggleButton value="code"><VpnKeyIcon sx={{ fontSize: 14, mr: 0.5 }} />With Code</ToggleButton>
+                    <ToggleButton value="closed">
+                      <LockIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                      Closed
+                    </ToggleButton>
+                    <ToggleButton value="free">
+                      <LockOpenIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                      Free Join
+                    </ToggleButton>
+                    <ToggleButton value="code">
+                      <VpnKeyIcon sx={{ fontSize: 14, mr: 0.5 }} />
+                      With Code
+                    </ToggleButton>
                   </ToggleButtonGroup>
                   {gameState.game.joinMode === 'code' && gameState.game.joinCode && (
-                    <Stack direction="row" alignItems="center" spacing={0.5}
-                      sx={{ bgcolor: 'rgba(7, 12, 24, 0.64)', border: `1px solid ${theme.palette.background.paper}`, borderRadius: 1, px: 1.2, py: 0.4 }}>
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: 2, color: theme.palette.primary.main }}>
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      spacing={0.5}
+                      sx={{
+                        bgcolor: 'rgba(7, 12, 24, 0.64)',
+                        border: `1px solid ${theme.palette.background.paper}`,
+                        borderRadius: 1,
+                        px: 1.2,
+                        py: 0.4,
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: 2, color: theme.palette.primary.main }}
+                      >
                         {'•'.repeat(gameState.game.joinCode.length)}
                       </Typography>
                       <Tooltip title={codeCopied ? 'Copied!' : 'Copy code'} placement="top">
@@ -519,7 +744,9 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
               </Box>
               {gameState.teams && gameState.teams.length > 0 && (
                 <Box>
-                  <Typography variant="caption" sx={{ display: 'block', mb: 0.75, color: theme.palette.primary.contrastText }}>Team Management</Typography>
+                  <Typography variant="caption" sx={{ display: 'block', mb: 0.75, color: theme.palette.primary.contrastText }}>
+                    Team Management
+                  </Typography>
                   <BingoTeamManager
                     gameId={gameState.game.id}
                     members={gameState.members}
@@ -533,19 +760,55 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
             </Stack>
           ) : (
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Chip size="small" label={gameState.game.mode === 'lockout' ? 'Lockout' : 'Reclaim'}
-                sx={{ bgcolor: gameState.game.mode === 'lockout' ? `${theme.palette.secondary.main}22` : `${theme.palette.secondary.main}22`, color: gameState.game.mode === 'lockout' ? theme.palette.error.main : theme.palette.secondary.main, border: `1px solid ${gameState.game.mode === 'lockout' ? theme.palette.error.main : theme.palette.secondary.main}66`, fontWeight: 700 }} />
-              <Chip size="small" label={`Rank: ${getBingoRankLabel(gameState.game.rank)}`} sx={{ bgcolor: getBingoRankColor(gameState.game.rank), color: '#fff', fontWeight: 700 }} />
+              <Chip
+                size="small"
+                label={gameState.game.mode === 'lockout' ? 'Lockout' : 'Reclaim'}
+                sx={{
+                  bgcolor:
+                    gameState.game.mode === 'lockout' ? `${theme.palette.secondary.main}22` : `${theme.palette.secondary.main}22`,
+                  color: gameState.game.mode === 'lockout' ? theme.palette.error.main : theme.palette.secondary.main,
+                  border: `1px solid ${gameState.game.mode === 'lockout' ? theme.palette.error.main : theme.palette.secondary.main}66`,
+                  fontWeight: 700,
+                }}
+              />
+              <Chip
+                size="small"
+                label={`Rank: ${getBingoRankLabel(gameState.game.rank)}`}
+                sx={{ bgcolor: getBingoRankColor(gameState.game.rank), color: '#fff', fontWeight: 700 }}
+              />
               {gameState.game.timeLimitSeconds && (
-                <Chip size="small" label={`Time: ${formatSeconds(gameState.game.timeLimitSeconds)}`} variant="outlined" sx={{ borderColor: theme.palette.background.paper, color: theme.palette.primary.contrastText }} />
+                <Chip
+                  size="small"
+                  label={`Time: ${formatSeconds(gameState.game.timeLimitSeconds)}`}
+                  variant="outlined"
+                  sx={{ borderColor: theme.palette.background.paper, color: theme.palette.primary.contrastText }}
+                />
               )}
               {gameState.game.joinMode === 'free' && (
-                <Chip size="small" label="Open to join" sx={{ bgcolor: `${theme.palette.success.main}22`, color: theme.palette.success.main, border: `1px solid ${theme.palette.success.main}66` }} />
+                <Chip
+                  size="small"
+                  label="Open to join"
+                  sx={{
+                    bgcolor: `${theme.palette.success.main}22`,
+                    color: theme.palette.success.main,
+                    border: `1px solid ${theme.palette.success.main}66`,
+                  }}
+                />
               )}
               {gameState.game.joinMode === 'code' && (
-                <Chip size="small" label="Join with code" sx={{ bgcolor: `${theme.palette.warning.main}22`, color: theme.palette.warning.main, border: `1px solid ${theme.palette.warning.main}66` }} />
+                <Chip
+                  size="small"
+                  label="Join with code"
+                  sx={{
+                    bgcolor: `${theme.palette.warning.main}22`,
+                    color: theme.palette.warning.main,
+                    border: `1px solid ${theme.palette.warning.main}66`,
+                  }}
+                />
               )}
-              <Typography variant="caption" sx={{ color: theme.palette.primary.contrastText, alignSelf: 'center' }}>Waiting on host to start.</Typography>
+              <Typography variant="caption" sx={{ color: theme.palette.primary.contrastText, alignSelf: 'center' }}>
+                Waiting on host to start.
+              </Typography>
             </Stack>
           )}
         </Paper>
@@ -553,8 +816,18 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
 
       {/* Game ended banner */}
       {gameEndedEvent && (
-        <Paper sx={{ p: 1.3, mb: 1.5, border: `1px solid ${theme.palette.success.main}`, bgcolor: 'rgba(26, 59, 45, 0.55)', color: theme.palette.primary.main }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>Game Over</Typography>
+        <Paper
+          sx={{
+            p: 1.3,
+            mb: 1.5,
+            border: `1px solid ${theme.palette.success.main}`,
+            bgcolor: 'rgba(26, 59, 45, 0.55)',
+            color: theme.palette.primary.main,
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+            Game Over
+          </Typography>
           <Typography variant="body2">Winning team size: {gameEndedEvent.winnerTeamSize || 0}</Typography>
         </Paper>
       )}
@@ -562,11 +835,27 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
       {/* Board + sidebar */}
       <Grid container spacing={embedded ? 1 : 2}>
         <Grid item xs={12} lg={embedded ? 12 : 9}>
-          <Paper sx={{ p: embedded ? 1 : 2, mb: embedded ? 1 : 2, border: `1.5px solid ${alpha(theme.palette.secondary.main, 0.4)}`, boxShadow: `0 0 0 1px ${alpha(theme.palette.secondary.main, 0.12)}`, bgcolor: 'rgba(14, 22, 42, 0.72)', color: theme.palette.primary.main }}>
+          <Paper
+            sx={{
+              p: embedded ? 1 : 2,
+              mb: embedded ? 1 : 2,
+              border: `1.5px solid ${alpha(theme.palette.secondary.main, 0.4)}`,
+              boxShadow: `0 0 0 1px ${alpha(theme.palette.secondary.main, 0.12)}`,
+              bgcolor: 'rgba(14, 22, 42, 0.72)',
+              color: theme.palette.primary.main,
+            }}
+          >
             {!embedded && (
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography variant="h5">Board</Typography>
-                <ToggleButtonGroup size="small" value={boardVariant} exclusive onChange={(_, v) => { if (v) setBoardVariant(v) }}>
+                <ToggleButtonGroup
+                  size="small"
+                  value={boardVariant}
+                  exclusive
+                  onChange={(_, v) => {
+                    if (v) setBoardVariant(v)
+                  }}
+                >
                   <ToggleButton value="small">Small</ToggleButton>
                   <ToggleButton value="large">Large</ToggleButton>
                 </ToggleButtonGroup>
@@ -582,8 +871,18 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
         </Grid>
 
         <Grid item xs={12} lg={embedded ? 12 : 3}>
-          <Paper sx={{ p: 1.5, mb: embedded ? 1 : 2, border: `1px solid ${alpha(theme.palette.background.paper, 0.7)}`, bgcolor: 'rgba(14, 22, 42, 0.5)', color: theme.palette.primary.contrastText }}>
-            <Typography variant="subtitle2" sx={{ mb: 0.75, fontWeight: 700 }}>Members</Typography>
+          <Paper
+            sx={{
+              p: 1.5,
+              mb: embedded ? 1 : 2,
+              border: `1px solid ${alpha(theme.palette.background.paper, 0.7)}`,
+              bgcolor: 'rgba(14, 22, 42, 0.5)',
+              color: theme.palette.primary.contrastText,
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ mb: 0.75, fontWeight: 700 }}>
+              Members
+            </Typography>
             <Divider sx={{ mb: 1.5, borderColor: alpha(theme.palette.background.paper, 0.7) }} />
             {gameState.teams && gameState.teams.length > 0 ? (
               <BingoTeamManager
@@ -599,46 +898,85 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
             )}
           </Paper>
 
-          {gameState.game.status !== 'lobby' && <Paper sx={{ p: 1.5, mb: embedded ? 1 : 2, border: `1px solid ${alpha(theme.palette.background.paper, 0.7)}`, bgcolor: 'rgba(14, 22, 42, 0.5)', color: theme.palette.primary.contrastText }}>
-            <Typography variant="subtitle2" sx={{ mb: 0.75, fontWeight: 700 }}>Recent Unlocks</Typography>
-            <Divider sx={{ mb: 1.5, borderColor: alpha(theme.palette.background.paper, 0.7) }} />
-            {recentUnlocks.length === 0 ? (
-              <Typography variant="body2">No unlocks yet.</Typography>
-            ) : (
-              <Stack spacing={1}>
-                {recentUnlocks.map((unlock) => (
-                  <Paper
-                    key={`${unlock.gameId}-${unlock.unlockSeq ?? `${unlock.squareId}-${unlock.unlockedAt}`}`}
-                    variant="outlined"
-                    sx={{
-                      p: 1, borderColor: theme.palette.background.paper, bgcolor: 'rgba(17, 29, 54, 0.78)',
-                      animation: 'bingoFeedIn 220ms ease-out',
-                      '@keyframes bingoFeedIn': { '0%': { opacity: 0, transform: 'translateY(-6px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
-                    }}
-                    aria-live="polite"
-                  >
-                    <Typography variant="body2">
-                      {unlock.unlockerUsername || unlock.unlockerUserUuid || 'Unknown'} unlocked {unlock.challengeType} (#{unlock.index + 1})
-                    </Typography>
-                  </Paper>
-                ))}
-              </Stack>
-            )}
-          </Paper>}
+          {gameState.game.status !== 'lobby' && (
+            <Paper
+              sx={{
+                p: 1.5,
+                mb: embedded ? 1 : 2,
+                border: `1px solid ${alpha(theme.palette.background.paper, 0.7)}`,
+                bgcolor: 'rgba(14, 22, 42, 0.5)',
+                color: theme.palette.primary.contrastText,
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ mb: 0.75, fontWeight: 700 }}>
+                Recent Unlocks
+              </Typography>
+              <Divider sx={{ mb: 1.5, borderColor: alpha(theme.palette.background.paper, 0.7) }} />
+              {recentUnlocks.length === 0 ? (
+                <Typography variant="body2">No unlocks yet.</Typography>
+              ) : (
+                <Stack spacing={1}>
+                  {recentUnlocks.map((unlock) => (
+                    <Paper
+                      key={`${unlock.gameId}-${unlock.unlockSeq ?? `${unlock.squareId}-${unlock.unlockedAt}`}`}
+                      variant="outlined"
+                      sx={{
+                        p: 1,
+                        borderColor: theme.palette.background.paper,
+                        bgcolor: 'rgba(17, 29, 54, 0.78)',
+                        animation: 'bingoFeedIn 220ms ease-out',
+                        '@keyframes bingoFeedIn': {
+                          '0%': { opacity: 0, transform: 'translateY(-6px)' },
+                          '100%': { opacity: 1, transform: 'translateY(0)' },
+                        },
+                      }}
+                      aria-live="polite"
+                    >
+                      <Typography variant="body2">
+                        {unlock.unlockerUsername || unlock.unlockerUserUuid || 'Unknown'} unlocked {unlock.challengeType} (#
+                        {unlock.index + 1})
+                      </Typography>
+                    </Paper>
+                  ))}
+                </Stack>
+              )}
+            </Paper>
+          )}
 
           {gameState.game.status === 'finished' && (
-            <Paper sx={{ p: 1.5, border: `1px solid ${alpha(theme.palette.background.paper, 0.7)}`, bgcolor: 'rgba(14, 22, 42, 0.5)', color: theme.palette.primary.contrastText }}>
-              <Typography variant="subtitle2" sx={{ mb: 0.75, fontWeight: 700 }}>Result</Typography>
+            <Paper
+              sx={{
+                p: 1.5,
+                border: `1px solid ${alpha(theme.palette.background.paper, 0.7)}`,
+                bgcolor: 'rgba(14, 22, 42, 0.5)',
+                color: theme.palette.primary.contrastText,
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ mb: 0.75, fontWeight: 700 }}>
+                Result
+              </Typography>
               <Divider sx={{ mb: 1.5, borderColor: alpha(theme.palette.background.paper, 0.7) }} />
-              <Typography variant="body2">Winner: {gameState.game.winnerUsername || gameState.game.winnerUserUuid || 'Unknown'}</Typography>
-              <Typography variant="caption" sx={{ display: 'block' }}>Team size: {gameState.game.winnerTeamSize || 0}</Typography>
+              <Typography variant="body2">
+                Winner: {gameState.game.winnerUsername || gameState.game.winnerUserUuid || 'Unknown'}
+              </Typography>
+              <Typography variant="caption" sx={{ display: 'block' }}>
+                Team size: {gameState.game.winnerTeamSize || 0}
+              </Typography>
             </Paper>
           )}
         </Grid>
       </Grid>
 
       {/* Join code dialog */}
-      <Dialog open={joinDialogOpen} onClose={() => { setJoinDialogOpen(false); setJoinCodeInput('') }} maxWidth="xs" fullWidth>
+      <Dialog
+        open={joinDialogOpen}
+        onClose={() => {
+          setJoinDialogOpen(false)
+          setJoinCodeInput('')
+        }}
+        maxWidth="xs"
+        fullWidth
+      >
         <DialogTitle>Enter Join Code</DialogTitle>
         <DialogContent>
           <TextField
@@ -648,14 +986,25 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
             label="Code"
             value={joinCodeInput}
             onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
-            onKeyDown={(e) => { if (e.key === 'Enter' && joinCodeInput.trim()) handleJoin(joinCodeInput.trim()) }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && joinCodeInput.trim()) handleJoin(joinCodeInput.trim())
+            }}
             inputProps={{ style: { fontFamily: 'monospace', letterSpacing: 3, fontWeight: 700 } }}
             sx={{ mt: 1 }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => { setJoinDialogOpen(false); setJoinCodeInput('') }}>Cancel</Button>
-          <Button variant="contained" disabled={!joinCodeInput.trim()} onClick={() => handleJoin(joinCodeInput.trim())}>Join</Button>
+          <Button
+            onClick={() => {
+              setJoinDialogOpen(false)
+              setJoinCodeInput('')
+            }}
+          >
+            Cancel
+          </Button>
+          <Button variant="contained" disabled={!joinCodeInput.trim()} onClick={() => handleJoin(joinCodeInput.trim())}>
+            Join
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -664,16 +1013,26 @@ export const BingoGameView = ({ gameId, embedded = false, onLeave }: Props) => {
         <Paper
           sx={{
             display: { xs: 'block', md: 'none' },
-            position: 'fixed', left: 10, right: 10, bottom: 10, p: 1, zIndex: 1200,
+            position: 'fixed',
+            left: 10,
+            right: 10,
+            bottom: 10,
+            p: 1,
+            zIndex: 1200,
             border: `1px solid ${theme.palette.background.paper}`,
-            bgcolor: 'rgba(10, 17, 33, 0.92)', backdropFilter: 'blur(6px)',
+            bgcolor: 'rgba(10, 17, 33, 0.92)',
+            backdropFilter: 'blur(6px)',
           }}
         >
           <Stack direction="row" spacing={0.8} sx={{ width: '100%' }}>
             {actionButtons('small')}
-            <Button size="small" variant="outlined" onClick={() => navigate('/bingo')}
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => navigate('/bingo')}
               sx={{ flex: 1, borderColor: theme.palette.background.paper, color: theme.palette.primary.main, ...bingoFocusRingSx }}
-              aria-label="Return to bingo lobby">
+              aria-label="Return to bingo lobby"
+            >
               Back
             </Button>
           </Stack>

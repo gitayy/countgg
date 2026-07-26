@@ -621,9 +621,7 @@ export const StatsPage = () => {
           </TabPanel>
 
           <TabPanel value={STATS_TABS.BEST_DAYS} sx={{ p: 0 }}>
-            <Typography variant="h6">
-              Daily Counts{selectedThread.uuid === 'all' ? ' — Sitewide' : ''}
-            </Typography>
+            <Typography variant="h6">Daily Counts{selectedThread.uuid === 'all' ? ' — Sitewide' : ''}</Typography>
             <Box sx={{ mt: 1 }}>
               <ThresholdLeaderboard kind="daily_counts" threadName={selectedThread.name} externalDateRange={statsDateRange} />
             </Box>

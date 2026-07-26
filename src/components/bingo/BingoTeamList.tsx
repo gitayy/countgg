@@ -42,7 +42,11 @@ export const BingoTeamList = ({ members, compact = false }: Props) => {
               key={`team-compact-${team.teamId}`}
               variant="outlined"
               sx={{
-                px: 0.7, py: 0.5, display: 'flex', alignItems: 'center', gap: 0.6,
+                px: 0.7,
+                py: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.6,
                 borderColor: `${teamColors[team.teamId] || bingoThemeTokens.fallback}77`,
                 bgcolor: 'rgba(16, 28, 52, 0.78)',
                 borderLeft: `3px solid ${teamColors[team.teamId] || bingoThemeTokens.fallback}`,
@@ -56,8 +60,12 @@ export const BingoTeamList = ({ members, compact = false }: Props) => {
               </Stack>
               <Stack direction="row" spacing={-0.35} alignItems="center">
                 {team.members.slice(0, 3).map((m) => (
-                  <Avatar key={m.counter.uuid} sx={{ width: 17, height: 17, border: '1px solid rgba(8, 15, 29, 0.85)' }}
-                    alt={m.counter.name || m.counter.username} src={avatarSrc(m)} />
+                  <Avatar
+                    key={m.counter.uuid}
+                    sx={{ width: 17, height: 17, border: '1px solid rgba(8, 15, 29, 0.85)' }}
+                    alt={m.counter.name || m.counter.username}
+                    src={avatarSrc(m)}
+                  />
                 ))}
               </Stack>
               <Typography variant="caption" sx={{ color: theme.palette.primary.contrastText }}>
@@ -77,19 +85,30 @@ export const BingoTeamList = ({ members, compact = false }: Props) => {
         const visual = getBingoTeamVisual(rep?.teamKey || rep?.teamName)
         const Icon = teamIconByKey[visual.key as keyof typeof teamIconByKey] || WavesIcon
         return (
-          <Box key={`team-${team.teamId}`} sx={{
-            flex: `1 1 ${Math.max(160, Math.floor(100 / Math.max(1, membersByTeam.length)))}px`,
-            maxWidth: `${Math.floor(100 / Math.max(1, membersByTeam.length))}%`,
-            minWidth: 180,
-          }}>
-            <Paper variant="outlined" sx={{
-              p: 1, borderTop: `4px solid ${teamColors[team.teamId] || bingoThemeTokens.fallback}`,
-              minHeight: 120, bgcolor: 'rgba(16, 28, 52, 0.78)',
-            }}>
+          <Box
+            key={`team-${team.teamId}`}
+            sx={{
+              flex: `1 1 ${Math.max(160, Math.floor(100 / Math.max(1, membersByTeam.length)))}px`,
+              maxWidth: `${Math.floor(100 / Math.max(1, membersByTeam.length))}%`,
+              minWidth: 180,
+            }}
+          >
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 1,
+                borderTop: `4px solid ${teamColors[team.teamId] || bingoThemeTokens.fallback}`,
+                minHeight: 120,
+                bgcolor: 'rgba(16, 28, 52, 0.78)',
+              }}
+            >
               <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.75 }}>
                 <Stack direction="row" spacing={0.5} alignItems="center">
                   <Icon sx={{ fontSize: 17, color: teamColors[team.teamId] || visual.color }} />
-                  <Typography variant="subtitle2" sx={{ color: teamColors[team.teamId] || theme.palette.primary.main, fontWeight: 700 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: teamColors[team.teamId] || theme.palette.primary.main, fontWeight: 700 }}
+                  >
                     {visual.name}
                   </Typography>
                 </Stack>

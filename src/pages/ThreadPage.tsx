@@ -1355,10 +1355,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   // Never show the badge while the user is already looking at the Rank tab — they can see
   // directly whether anything is playing/waiting; a badge on the very tab they're on reads as
   // "you haven't seen this" while they're actively watching it, which is just wrong.
-  const rankTabUnseenCount = thread?.uuid && unseenCounts && tabValue !== 'tab_rank'
-    ? (unseenCounts.byThread[thread.uuid] ?? 0) + unseenCounts.sitewide
-    : 0
-
+  const rankTabUnseenCount =
+    thread?.uuid && unseenCounts && tabValue !== 'tab_rank' ? (unseenCounts.byThread[thread.uuid] ?? 0) + unseenCounts.sitewide : 0
 
   useEffect(() => {
     if (isDesktop && tabValue === 'tab_0') {
@@ -3235,7 +3233,6 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       setMaybeU('u')
     }
   }, [])
-
 
   const sidebarMemo = useMemo(() => {
     if (clearCounts) {

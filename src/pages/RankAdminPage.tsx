@@ -358,7 +358,8 @@ function ChallengeForm({
   const extraParams = formParams ? Object.fromEntries(Object.entries(formParams).filter(([k]) => !schemaKeys.has(k))) : {}
   const overrideParamsText = Object.keys(extraParams).length > 0 ? JSON.stringify(extraParams, null, 2) : ''
 
-  const setParamField = (key: string, value: any) => setForm({ ...form, params: JSON.stringify({ ...formParams, [key]: value }, null, 2) })
+  const setParamField = (key: string, value: any) =>
+    setForm({ ...form, params: JSON.stringify({ ...formParams, [key]: value }, null, 2) })
   const setOverrideParams = (raw: string) => {
     let extra: Record<string, any>
     try {
@@ -390,9 +391,8 @@ function ChallengeForm({
               const newType = e.target.value
               const newThreadUuid = SITEWIDE_ONLY_TYPES.has(newType) ? '' : form.threadUuid
               const schema = PARAM_FIELD_SCHEMAS[newType] ?? []
-              const defaults = schema.length > 0
-                ? JSON.stringify(Object.fromEntries(schema.map((f) => [f.key, f.defaultValue])), null, 2)
-                : ''
+              const defaults =
+                schema.length > 0 ? JSON.stringify(Object.fromEntries(schema.map((f) => [f.key, f.defaultValue])), null, 2) : ''
               setForm({ ...form, type: newType, threadUuid: newThreadUuid, params: defaults })
             }}
           >
@@ -567,7 +567,7 @@ function ChallengeForm({
                           )
                         }
                         if (field.kind === 'stringList') {
-                          const value = Array.isArray(raw) ? raw.join(', ') : (raw ?? (field.defaultValue as string[]).join(', '))
+                          const value = Array.isArray(raw) ? raw.join(', ') : raw ?? (field.defaultValue as string[]).join(', ')
                           return (
                             <TextField
                               key={field.key}
@@ -577,7 +577,10 @@ function ChallengeForm({
                               onChange={(e) =>
                                 setRowParamField(
                                   field.key,
-                                  e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
+                                  e.target.value
+                                    .split(',')
+                                    .map((s) => s.trim())
+                                    .filter(Boolean),
                                 )
                               }
                               sx={{ flex: '0 0 200px' }}
@@ -592,7 +595,9 @@ function ChallengeForm({
                             type={field.kind === 'number' ? 'number' : 'text'}
                             size="small"
                             value={value}
-                            onChange={(e) => setRowParamField(field.key, field.kind === 'number' ? Number(e.target.value) : e.target.value)}
+                            onChange={(e) =>
+                              setRowParamField(field.key, field.kind === 'number' ? Number(e.target.value) : e.target.value)
+                            }
                             sx={{ flex: '0 0 140px' }}
                           />
                         )
@@ -664,8 +669,8 @@ function ChallengeForm({
           </Typography>
           {sequenceIssues.length > 0 && (
             <Alert severity="warning" sx={{ mb: 1 }}>
-              {sequenceIssues.join('; ')} — chain auto-advance (assignNextInChain) only looks
-              for sequence+1, so this will break progression for anyone in this chain.
+              {sequenceIssues.join('; ')} — chain auto-advance (assignNextInChain) only looks for sequence+1, so this will break
+              progression for anyone in this chain.
             </Alert>
           )}
           <TableContainer component={Card} variant="outlined">
@@ -716,86 +721,89 @@ function ChallengeForm({
           single-create — in bulk mode each row has its own params (rendered inline above),
           since different tiers in a chain almost always need different thresholds. */}
       {bulkRows == null && (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {fieldSchema.length > 0 && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography variant="caption" color="text.secondary">
-              Params:
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              {fieldSchema.map((field) => {
-                const raw = formParams?.[field.key]
-                if (field.kind === 'select') {
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {fieldSchema.length > 0 && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Params:
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                {fieldSchema.map((field) => {
+                  const raw = formParams?.[field.key]
+                  if (field.kind === 'select') {
+                    const value = raw ?? field.defaultValue
+                    return (
+                      <FormControl size="small" fullWidth key={field.key}>
+                        <InputLabel>{field.label}</InputLabel>
+                        <Select label={field.label} value={value} onChange={(e) => setParamField(field.key, e.target.value)}>
+                          {(field.options ?? []).map((opt) => (
+                            <MenuItem key={opt} value={opt}>
+                              {opt}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )
+                  }
+                  if (field.kind === 'stringList') {
+                    const value = Array.isArray(raw) ? raw.join(', ') : raw ?? (field.defaultValue as string[]).join(', ')
+                    return (
+                      <TextField
+                        key={field.key}
+                        label={field.label}
+                        size="small"
+                        fullWidth
+                        value={value}
+                        onChange={(e) =>
+                          setParamField(
+                            field.key,
+                            e.target.value
+                              .split(',')
+                              .map((s) => s.trim())
+                              .filter(Boolean),
+                          )
+                        }
+                      />
+                    )
+                  }
                   const value = raw ?? field.defaultValue
-                  return (
-                    <FormControl size="small" fullWidth key={field.key}>
-                      <InputLabel>{field.label}</InputLabel>
-                      <Select label={field.label} value={value} onChange={(e) => setParamField(field.key, e.target.value)}>
-                        {(field.options ?? []).map((opt) => (
-                          <MenuItem key={opt} value={opt}>
-                            {opt}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  )
-                }
-                if (field.kind === 'stringList') {
-                  const value = Array.isArray(raw) ? raw.join(', ') : (raw ?? (field.defaultValue as string[]).join(', '))
                   return (
                     <TextField
                       key={field.key}
                       label={field.label}
+                      type={field.kind === 'number' ? 'number' : 'text'}
                       size="small"
                       fullWidth
                       value={value}
-                      onChange={(e) =>
-                        setParamField(
-                          field.key,
-                          e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
-                        )
-                      }
+                      onChange={(e) => setParamField(field.key, field.kind === 'number' ? Number(e.target.value) : e.target.value)}
                     />
                   )
-                }
-                const value = raw ?? field.defaultValue
-                return (
-                  <TextField
-                    key={field.key}
-                    label={field.label}
-                    type={field.kind === 'number' ? 'number' : 'text'}
-                    size="small"
-                    fullWidth
-                    value={value}
-                    onChange={(e) => setParamField(field.key, field.kind === 'number' ? Number(e.target.value) : e.target.value)}
-                  />
-                )
-              })}
+                })}
+              </Box>
+              {speedRateLabel && (
+                <Typography variant="caption" color="text.secondary">
+                  {speedRateLabel}
+                </Typography>
+              )}
             </Box>
-            {speedRateLabel && (
-              <Typography variant="caption" color="text.secondary">
-                {speedRateLabel}
-              </Typography>
-            )}
-          </Box>
-        )}
-        <TextField
-          label={fieldSchema.length > 0 ? 'Extra params override (JSON, merged on top)' : 'Params (JSON)'}
-          size="small"
-          multiline
-          rows={fieldSchema.length > 0 ? 2 : 3}
-          defaultValue={overrideParamsText}
-          key={form.type}
-          onBlur={(e) => setOverrideParams(e.target.value)}
-          placeholder="{}"
-          inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.8rem' } }}
-        />
-        {fieldSchema.length === 0 && speedRateLabel && (
-          <Typography variant="caption" color="text.secondary">
-            {speedRateLabel}
-          </Typography>
-        )}
-      </Box>
+          )}
+          <TextField
+            label={fieldSchema.length > 0 ? 'Extra params override (JSON, merged on top)' : 'Params (JSON)'}
+            size="small"
+            multiline
+            rows={fieldSchema.length > 0 ? 2 : 3}
+            defaultValue={overrideParamsText}
+            key={form.type}
+            onBlur={(e) => setOverrideParams(e.target.value)}
+            placeholder="{}"
+            inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.8rem' } }}
+          />
+          {fieldSchema.length === 0 && speedRateLabel && (
+            <Typography variant="caption" color="text.secondary">
+              {speedRateLabel}
+            </Typography>
+          )}
+        </Box>
       )}
 
       <Box sx={{ display: 'flex', gap: 1 }}>
@@ -1040,8 +1048,7 @@ export const RankAdminPage = () => {
   }
 
   const MAXMS_TYPES = new Set(['split_under_ms', 'get_under_ms', 'bars_within_ms'])
-  const requiresMaxMs = (form: ChallengeFormState, params: object | undefined) =>
-    MAXMS_TYPES.has(form.type) && !((params as any)?.maxMs)
+  const requiresMaxMs = (form: ChallengeFormState, params: object | undefined) => MAXMS_TYPES.has(form.type) && !(params as any)?.maxMs
 
   const buildCreateDto = (form: ChallengeFormState): object | null => {
     const params = parseParams(form.params)
@@ -1386,82 +1393,84 @@ export const RankAdminPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {challenges.filter((c) => {
-                    if (!showCreateForm) return true
-                    if (createForm.type && c.type !== createForm.type) return false
-                    if (createForm.rank && c.rank !== createForm.rank) return false
-                    if (createForm.threadUuid && c.threadUuid !== createForm.threadUuid) return false
-                    return true
-                  }).map((c) => (
-                    <Fragment key={c.id}>
-                      <TableRow>
-                        <TableCell>{getChallengeTitle(c)}</TableCell>
-                        <TableCell>
-                          <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
-                            {getPrettyTypeName(c.type)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>{c.rank}</TableCell>
-                        <TableCell>{c.sequence}</TableCell>
-                        <TableCell>{c.target}</TableCell>
-                        <TableCell>{c.ggReward}</TableCell>
-                        <TableCell>
-                          <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
-                            {c.threadUuid ? `${c.threadUuid.slice(0, 8)}…` : '—'}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>
-                          {isViewingActiveSeason ? (
-                            <Box sx={{ display: 'flex', gap: 0.5 }}>
-                              <Button
-                                size="small"
-                                variant="outlined"
-                                onClick={() => {
-                                  setEditingId(c.id)
-                                  setEditForm(challengeToForm(c))
-                                  setEditFormError(null)
-                                }}
-                              >
-                                Edit
-                              </Button>
-                              <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(c.id)}>
-                                Delete
-                              </Button>
-                            </Box>
-                          ) : (
-                            <Typography variant="caption" color="text.secondary">
-                              read-only
-                            </Typography>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                      {editingId === c.id && (
+                  {challenges
+                    .filter((c) => {
+                      if (!showCreateForm) return true
+                      if (createForm.type && c.type !== createForm.type) return false
+                      if (createForm.rank && c.rank !== createForm.rank) return false
+                      if (createForm.threadUuid && c.threadUuid !== createForm.threadUuid) return false
+                      return true
+                    })
+                    .map((c) => (
+                      <Fragment key={c.id}>
                         <TableRow>
-                          <TableCell colSpan={9}>
-                            <Card variant="outlined" sx={{ p: 2 }}>
-                              <Typography variant="subtitle1" fontWeight={600}>
-                                Edit Challenge
+                          <TableCell>{getChallengeTitle(c)}</TableCell>
+                          <TableCell>
+                            <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                              {getPrettyTypeName(c.type)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>{c.rank}</TableCell>
+                          <TableCell>{c.sequence}</TableCell>
+                          <TableCell>{c.target}</TableCell>
+                          <TableCell>{c.ggReward}</TableCell>
+                          <TableCell>
+                            <Typography variant="caption" sx={{ fontFamily: 'monospace' }}>
+                              {c.threadUuid ? `${c.threadUuid.slice(0, 8)}…` : '—'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            {isViewingActiveSeason ? (
+                              <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={() => {
+                                    setEditingId(c.id)
+                                    setEditForm(challengeToForm(c))
+                                    setEditFormError(null)
+                                  }}
+                                >
+                                  Edit
+                                </Button>
+                                <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(c.id)}>
+                                  Delete
+                                </Button>
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" color="text.secondary">
+                                read-only
                               </Typography>
-                              <ChallengeForm
-                                form={editForm}
-                                setForm={setEditForm}
-                                error={editFormError}
-                                onSubmit={handleEditSave}
-                                onCancel={() => {
-                                  setEditingId(null)
-                                  setEditFormError(null)
-                                }}
-                                submitLabel="Save"
-                                threads={allThreads}
-                                editingId={editingId}
-                                isEdit={true}
-                              />
-                            </Card>
+                            )}
                           </TableCell>
                         </TableRow>
-                      )}
-                    </Fragment>
-                  ))}
+                        {editingId === c.id && (
+                          <TableRow>
+                            <TableCell colSpan={9}>
+                              <Card variant="outlined" sx={{ p: 2 }}>
+                                <Typography variant="subtitle1" fontWeight={600}>
+                                  Edit Challenge
+                                </Typography>
+                                <ChallengeForm
+                                  form={editForm}
+                                  setForm={setEditForm}
+                                  error={editFormError}
+                                  onSubmit={handleEditSave}
+                                  onCancel={() => {
+                                    setEditingId(null)
+                                    setEditFormError(null)
+                                  }}
+                                  submitLabel="Save"
+                                  threads={allThreads}
+                                  editingId={editingId}
+                                  isEdit={true}
+                                />
+                              </Card>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    ))}
                   {challenges.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={9}>

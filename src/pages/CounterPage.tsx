@@ -3,20 +3,7 @@ import { useContext, useEffect, useState } from 'react'
 import { SocketContext } from '../utils/contexts/SocketContext'
 import { useFetchLoadCounter } from '../utils/hooks/useFetchLoadCounter'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
-import {
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Grid,
-  LinearProgress,
-  MenuItem,
-  Select,
-  Tab,
-  Typography,
-} from '@mui/material'
+import { Avatar, Box, Button, Card, CardContent, Chip, Grid, LinearProgress, MenuItem, Select, Tab, Typography } from '@mui/material'
 import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
@@ -405,9 +392,7 @@ export const CounterPage = () => {
                       </Card>
                     )}
 
-                    {ranks.length === 0 && (
-                      <Typography color="text.secondary">No rank data yet for this counter.</Typography>
-                    )}
+                    {ranks.length === 0 && <Typography color="text.secondary">No rank data yet for this counter.</Typography>}
                   </Box>
                 )
               })()

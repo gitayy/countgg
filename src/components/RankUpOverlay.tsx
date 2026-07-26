@@ -81,7 +81,12 @@ export const RankUpOverlay = ({ rank, division, threadName, onDismiss }: Props) 
     const end = start + wedgeDeg
     const colorHere = i % 2 === 0 ? rayColorA : rayColorB
     const colorNext = i % 2 === 0 ? rayColorB : rayColorA
-    return [`${colorHere} ${start}deg`, `${colorHere} ${mid - featherDeg}deg`, `${colorNext} ${mid + featherDeg}deg`, `${colorNext} ${end}deg`]
+    return [
+      `${colorHere} ${start}deg`,
+      `${colorHere} ${mid - featherDeg}deg`,
+      `${colorNext} ${mid + featherDeg}deg`,
+      `${colorNext} ${end}deg`,
+    ]
   }).flat()
   const rayGradient = featheredStops.join(', ')
 

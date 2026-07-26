@@ -141,7 +141,11 @@ const getSecondaryLabel = (square: BingoSquare) => {
 }
 
 const getGoalValueText = (square: BingoSquare, compact: boolean) => {
-  if (square.challengeType === 'split_under_ms' || square.challengeType === 'get_under_ms' || square.challengeType === 'bars_within_ms') {
+  if (
+    square.challengeType === 'split_under_ms' ||
+    square.challengeType === 'get_under_ms' ||
+    square.challengeType === 'bars_within_ms'
+  ) {
     const seconds = Number(square.params?.maxMs) / 1000
     const clock = formatSecondsAsClock(seconds)
     if (clock) {
@@ -180,7 +184,8 @@ const formatScoreToBeat = (square: BingoSquare, compact: boolean) => {
     return null
   }
 
-  const timed = square.challengeType === 'split_under_ms' || square.challengeType === 'get_under_ms' || square.challengeType === 'bars_within_ms'
+  const timed =
+    square.challengeType === 'split_under_ms' || square.challengeType === 'get_under_ms' || square.challengeType === 'bars_within_ms'
   const timedValue = (square.scoreToBeat / 1000).toFixed(3)
 
   if (square.challengeType === 'roll') {
@@ -278,15 +283,12 @@ const getLineEndpoints = (line: number[]) => {
 }
 
 export const BingoBoard = ({ squares, members, variant, winningLines = null }: Props) => {
-  const theme = useTheme();
+  const theme = useTheme()
   const teamColors = useMemo(() => getTeamColorMap(members), [members])
   const isXSmall = variant === 'xsmall'
   const isSmall = variant === 'small'
   const normalizedWinningLines = useMemo(() => (Array.isArray(winningLines) ? winningLines : []), [winningLines])
-  const winningLineSet = useMemo(
-    () => new Set(normalizedWinningLines.flatMap((entry) => entry.line)),
-    [normalizedWinningLines],
-  )
+  const winningLineSet = useMemo(() => new Set(normalizedWinningLines.flatMap((entry) => entry.line)), [normalizedWinningLines])
 
   return (
     <Box sx={{ position: 'relative' }}>
@@ -298,48 +300,79 @@ export const BingoBoard = ({ squares, members, variant, winningLines = null }: P
         }}
       >
         {squares.map((square) => {
-        const borderColor = getBingoRankColor(square.rank)
-        const ownerTeamColor = square.mostRecentUnlockerTeamId ? teamColors[square.mostRecentUnlockerTeamId] : undefined
-        const isTeamOwned = square.isUnlocked && Boolean(ownerTeamColor)
-        const unlockedAccent = ownerTeamColor || theme.palette.success.main
-        const isWinningSquare = winningLineSet.has(square.index)
+          const borderColor = getBingoRankColor(square.rank)
+          const ownerTeamColor = square.mostRecentUnlockerTeamId ? teamColors[square.mostRecentUnlockerTeamId] : undefined
+          const isTeamOwned = square.isUnlocked && Boolean(ownerTeamColor)
+          const unlockedAccent = ownerTeamColor || theme.palette.success.main
+          const isWinningSquare = winningLineSet.has(square.index)
 
-        const squareState = isTeamOwned
-          ? 'unlocked_team_owned'
-          : square.isUnlocked
-            ? 'unlocked_neutral'
-            : square.progressValue > 0
-              ? 'in_progress'
-              : 'locked'
+          const squareState = isTeamOwned
+            ? 'unlocked_team_owned'
+            : square.isUnlocked
+              ? 'unlocked_neutral'
+              : square.progressValue > 0
+                ? 'in_progress'
+                : 'locked'
 
-        const cellBackground =
-          squareState === 'unlocked_team_owned'
-            ? alpha(unlockedAccent, 0.24)
-            : squareState === 'unlocked_neutral'
-              ? alpha(theme.palette.success.main, 0.2)
-              : alpha('#0c162b', 0.88)
+          const cellBackground =
+            squareState === 'unlocked_team_owned'
+              ? alpha(unlockedAccent, 0.24)
+              : squareState === 'unlocked_neutral'
+                ? alpha(theme.palette.success.main, 0.2)
+                : alpha('#0c162b', 0.88)
 
-        const title = formatChallengeTitle(square.challengeType)
-        const shortLabel = getChallengeShortLabel(square.challengeType)
-        const secondaryLabel = getSecondaryLabel(square)
-        const detailLines = getChallengeDetails(square)
-        const progressPercent = square.target > 0 ? Math.min(100, (square.progressValue / square.target) * 100) : 0
-        const showProgressBar = !square.mostRecentUnlockerTeamId && square.target > 1
-        const scoreToBeatText = formatScoreToBeat(square, isSmall)
-        const goalValueText =
-          !scoreToBeatText && !square.mostRecentUnlockerTeamId && square.target === 1 ? getGoalValueText(square, isSmall) : null
-        const progressText = goalValueText || scoreToBeatText || `${square.progressValue}/${square.target}`
-        const showSplitProgressValue = !goalValueText && !scoreToBeatText && !square.mostRecentUnlockerTeamId && square.target > 0
-        const tooltipGoalText = getGoalValueText(square, false)
-        const leaderGapText = getLeaderGapText(square)
+          const title = formatChallengeTitle(square.challengeType)
+          const shortLabel = getChallengeShortLabel(square.challengeType)
+          const secondaryLabel = getSecondaryLabel(square)
+          const detailLines = getChallengeDetails(square)
+          const progressPercent = square.target > 0 ? Math.min(100, (square.progressValue / square.target) * 100) : 0
+          const showProgressBar = !square.mostRecentUnlockerTeamId && square.target > 1
+          const scoreToBeatText = formatScoreToBeat(square, isSmall)
+          const goalValueText =
+            !scoreToBeatText && !square.mostRecentUnlockerTeamId && square.target === 1 ? getGoalValueText(square, isSmall) : null
+          const progressText = goalValueText || scoreToBeatText || `${square.progressValue}/${square.target}`
+          const showSplitProgressValue = !goalValueText && !scoreToBeatText && !square.mostRecentUnlockerTeamId && square.target > 0
+          const tooltipGoalText = getGoalValueText(square, false)
+          const leaderGapText = getLeaderGapText(square)
 
-        if (isXSmall) {
-          return (
+          if (isXSmall) {
+            return (
+              <Paper
+                key={square.id}
+                variant="outlined"
+                sx={{
+                  p: 0,
+                  aspectRatio: '1 / 1',
+                  minHeight: 0,
+                  borderColor,
+                  borderWidth: 1.5,
+                  background: cellBackground,
+                  boxShadow: square.isUnlocked
+                    ? `0 0 0 1px ${alpha(unlockedAccent, 0.55)}`
+                    : `0 0 0 1px ${alpha(theme.palette.background.paper, 0.45)}`,
+                  outline: isWinningSquare ? `2px solid ${alpha('#ffffff', 0.92)}` : 'none',
+                  outlineOffset: isWinningSquare ? -2 : 0,
+                  transition: 'none',
+                  animation: isWinningSquare ? 'bingoWinPulse 1400ms ease-in-out 300ms 2' : 'none',
+                  '@keyframes bingoWinPulse': {
+                    '0%, 100%': { boxShadow: `0 0 0 1px ${alpha(unlockedAccent, 0.55)}` },
+                    '50%': { boxShadow: `0 0 14px 3px ${alpha(unlockedAccent, 0.85)}` },
+                  },
+                  '@media (prefers-reduced-motion: reduce)': {
+                    animation: 'none',
+                  },
+                }}
+                aria-label={`Bingo square ${square.index + 1}`}
+              />
+            )
+          }
+
+          const card = (
             <Paper
               key={square.id}
               variant="outlined"
               sx={{
-                p: 0,
+                p: isSmall ? 0.28 : 1,
                 aspectRatio: '1 / 1',
                 minHeight: 0,
                 borderColor,
@@ -350,278 +383,250 @@ export const BingoBoard = ({ squares, members, variant, winningLines = null }: P
                   : `0 0 0 1px ${alpha(theme.palette.background.paper, 0.45)}`,
                 outline: isWinningSquare ? `2px solid ${alpha('#ffffff', 0.92)}` : 'none',
                 outlineOffset: isWinningSquare ? -2 : 0,
-                transition: 'none',
+                transition: 'border-color 140ms ease, background-color 140ms ease',
                 animation: isWinningSquare ? 'bingoWinPulse 1400ms ease-in-out 300ms 2' : 'none',
                 '@keyframes bingoWinPulse': {
                   '0%, 100%': { boxShadow: `0 0 0 1px ${alpha(unlockedAccent, 0.55)}` },
                   '50%': { boxShadow: `0 0 14px 3px ${alpha(unlockedAccent, 0.85)}` },
                 },
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-start',
+                overflow: 'hidden',
+                position: 'relative',
                 '@media (prefers-reduced-motion: reduce)': {
+                  transition: 'none',
                   animation: 'none',
                 },
               }}
-              aria-label={`Bingo square ${square.index + 1}`}
-            />
-          )
-        }
-
-        const card = (
-          <Paper
-            key={square.id}
-            variant="outlined"
-            sx={{
-              p: isSmall ? 0.28 : 1,
-              aspectRatio: '1 / 1',
-              minHeight: 0,
-              borderColor,
-              borderWidth: 1.5,
-              background: cellBackground,
-              boxShadow: square.isUnlocked
-                ? `0 0 0 1px ${alpha(unlockedAccent, 0.55)}`
-                : `0 0 0 1px ${alpha(theme.palette.background.paper, 0.45)}`,
-              outline: isWinningSquare ? `2px solid ${alpha('#ffffff', 0.92)}` : 'none',
-              outlineOffset: isWinningSquare ? -2 : 0,
-              transition: 'border-color 140ms ease, background-color 140ms ease',
-              animation: isWinningSquare ? 'bingoWinPulse 1400ms ease-in-out 300ms 2' : 'none',
-              '@keyframes bingoWinPulse': {
-                '0%, 100%': { boxShadow: `0 0 0 1px ${alpha(unlockedAccent, 0.55)}` },
-                '50%': { boxShadow: `0 0 14px 3px ${alpha(unlockedAccent, 0.85)}` },
-              },
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-start',
-              overflow: 'hidden',
-              position: 'relative',
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-                animation: 'none',
-              },
-            }}
-          >
-            {leaderGapText && (
-              <Typography
-                variant="caption"
-                aria-label={`Leader ahead by ${leaderGapText.slice(1)}`}
-                sx={{
-                  position: 'absolute',
-                  top: isSmall ? 1 : 3,
-                  right: isSmall ? 1 : 3,
-                  px: isSmall ? 0.24 : 0.5,
-                  py: 0,
-                  borderRadius: '4px',
-                  bgcolor: alpha(unlockedAccent, 0.85),
-                  color: '#fff',
-                  fontWeight: 800,
-                  lineHeight: 1.4,
-                  fontSize: isSmall ? '0.46rem' : '0.6rem',
-                  letterSpacing: 0.2,
-                  whiteSpace: 'nowrap',
-                  zIndex: 1,
-                }}
-              >
-                {leaderGapText}
-              </Typography>
-            )}
-            <Box>
-              <Typography
-                variant="caption"
-                sx={{
-                  display: 'inline-block',
-                  px: isSmall ? 0.22 : 0.6,
-                  py: isSmall ? 0.04 : 0.2,
-                  borderRadius: isSmall ? '4px' : '6px',
-                  bgcolor: alpha(borderColor, 0.18),
-                  textTransform: 'uppercase',
-                  lineHeight: 1.1,
-                  fontWeight: 700,
-                  letterSpacing: isSmall ? 0.2 : 0.5,
-                  fontSize: isSmall ? '0.52rem' : undefined,
-                }}
-              >
-                {shortLabel}
-              </Typography>
-              {secondaryLabel && !isSmall && (
-                <Typography
-                  variant="caption"
-                  sx={{
-                    display: 'block',
-                    mt: 0.25,
-                    ml: 0,
-                    textTransform: 'uppercase',
-                    opacity: 0.85,
-                    letterSpacing: 0.2,
-                    fontSize: '0.8rem',
-                    lineHeight: 1.05,
-                    maxWidth: '100%',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {secondaryLabel}
-                </Typography>
-              )}
-              {!isSmall && (
-                <Typography
-                  variant="caption"
-                  sx={{
-                    display: 'block',
-                    mt: 0.6,
-                    textTransform: 'capitalize',
-                    fontWeight: 700,
-                    letterSpacing: 0.2,
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {title}
-                </Typography>
-              )}
-            </Box>
-            {!isSmall && (
-              <>
-                <Typography variant="caption" sx={{ color: theme.palette.primary.contrastText, textTransform: 'uppercase', letterSpacing: 0.28 }}>
-                  Rank: {getBingoRankLabel(square.rank)}
-                </Typography>
-              </>
-            )}
-            <Box
-              sx={{
-                flex: 1,
-                minHeight: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                px: isSmall ? 0.2 : 0.6,
-              }}
             >
-              {showSplitProgressValue ? (
-                <Box
+              {leaderGapText && (
+                <Typography
+                  variant="caption"
+                  aria-label={`Leader ahead by ${leaderGapText.slice(1)}`}
                   sx={{
-                    position: 'relative',
-                    width: '100%',
-                    height: '100%',
+                    position: 'absolute',
+                    top: isSmall ? 1 : 3,
+                    right: isSmall ? 1 : 3,
+                    px: isSmall ? 0.24 : 0.5,
+                    py: 0,
+                    borderRadius: '4px',
+                    bgcolor: alpha(unlockedAccent, 0.85),
+                    color: '#fff',
+                    fontWeight: 800,
+                    lineHeight: 1.4,
+                    fontSize: isSmall ? '0.46rem' : '0.6rem',
+                    letterSpacing: 0.2,
+                    whiteSpace: 'nowrap',
+                    zIndex: 1,
                   }}
                 >
-                  <Typography
-                    variant={isSmall ? 'caption' : 'body2'}
-                    sx={{
-                      position: 'absolute',
-                      left: '50%',
-                      top: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      fontSize: isSmall ? 'clamp(0.68rem, 26cqw, 2.6rem)' : '1.1rem',
-                      fontWeight: isSmall ? 800 : 700,
-                      lineHeight: 1,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {square.progressValue}
-                  </Typography>
+                  {leaderGapText}
+                </Typography>
+              )}
+              <Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: 'inline-block',
+                    px: isSmall ? 0.22 : 0.6,
+                    py: isSmall ? 0.04 : 0.2,
+                    borderRadius: isSmall ? '4px' : '6px',
+                    bgcolor: alpha(borderColor, 0.18),
+                    textTransform: 'uppercase',
+                    lineHeight: 1.1,
+                    fontWeight: 700,
+                    letterSpacing: isSmall ? 0.2 : 0.5,
+                    fontSize: isSmall ? '0.52rem' : undefined,
+                  }}
+                >
+                  {shortLabel}
+                </Typography>
+                {secondaryLabel && !isSmall && (
                   <Typography
                     variant="caption"
                     sx={{
-                      position: 'absolute',
-                      left: '50%',
-                      top: '50%',
-                      transform: isSmall ? 'translate(-50%, 0.85rem)' : 'translate(-50%, 0.72rem)',
-                      fontSize: isSmall ? '0.52rem' : '0.72rem',
-                      fontWeight: 700,
+                      display: 'block',
+                      mt: 0.25,
+                      ml: 0,
+                      textTransform: 'uppercase',
+                      opacity: 0.85,
                       letterSpacing: 0.2,
-                      opacity: 0.9,
-                      lineHeight: 1,
+                      fontSize: '0.8rem',
+                      lineHeight: 1.05,
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    /{square.target}
-                  </Typography>
-                </Box>
-              ) : (
-                <Typography
-                  variant={isSmall ? 'caption' : 'body2'}
-                  sx={{
-                    fontSize: isSmall ? '0.72rem' : '1.05rem',
-                    fontWeight: isSmall ? 800 : 700,
-                    lineHeight: 1.05,
-                    textAlign: 'center',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    maxWidth: '100%',
-                  }}
-                >
-                  {progressText}
-                </Typography>
-              )}
-            </Box>
-            <Box sx={{ mt: isSmall ? 0 : 0.25 }}>
-              {showProgressBar && (
-                <LinearProgress
-                  variant="determinate"
-                  value={progressPercent}
-                  sx={{
-                    height: isSmall ? 8 : 16,
-                    minHeight: isSmall ? 8 : undefined,
-                    borderRadius: 999,
-                    bgcolor: alpha(borderColor, 0.14),
-                    boxShadow: `inset 0 0 0 1px ${alpha(borderColor, 0.42)}`,
-                    '& .MuiLinearProgress-bar': {
-                      bgcolor: borderColor,
-                    },
-                  }}
-                />
-              )}
-            </Box>
-          </Paper>
-        )
-
-        if (!isSmall) {
-          return card
-        }
-
-        return (
-          <Tooltip
-            key={square.id}
-            arrow
-            title={
-              <Box sx={{ minWidth: 190 }}>
-                <Typography variant="subtitle2">{title}</Typography>
-                <Typography variant="caption" sx={{ display: 'block', opacity: 0.9 }}>
-                  {shortLabel} | {getBingoRankLabel(square.rank)}
-                </Typography>
-                <Typography variant="caption" sx={{ display: 'block' }}>
-                  {tooltipGoalText ? `Target: ${tooltipGoalText}` : `Target value: ${square.target}`}
-                </Typography>
-                {secondaryLabel && (
-                  <Typography variant="caption" sx={{ display: 'block' }}>
-                    Validation type: {secondaryLabel}
+                    {secondaryLabel}
                   </Typography>
                 )}
-
-                <Typography variant="caption" sx={{ display: 'block' }}>
-                  {formatScoreToBeat(square, false) || `Progress: ${square.progressValue}/${square.target}`}
-                </Typography>
-                {getRankedGapLines(square).map((line) => (
-                  <Typography key={`${square.id}_gap_${line}`} variant="caption" sx={{ display: 'block', opacity: 0.85 }}>
-                    {line}
-                  </Typography>
-                ))}
-                {detailLines.map((line) => (
-                  <Typography key={`${square.id}_tip_${line}`} variant="caption" sx={{ display: 'block' }}>
-                    {line}
-                  </Typography>
-                ))}
-                {square.threadUuid && (
-                  <Typography variant="caption" sx={{ display: 'block' }}>
-                    Thread-specific challenge
+                {!isSmall && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: 'block',
+                      mt: 0.6,
+                      textTransform: 'capitalize',
+                      fontWeight: 700,
+                      letterSpacing: 0.2,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {title}
                   </Typography>
                 )}
               </Box>
-            }
-          >
-            <Box>{card}</Box>
-          </Tooltip>
-        )
-      })}
+              {!isSmall && (
+                <>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: theme.palette.primary.contrastText, textTransform: 'uppercase', letterSpacing: 0.28 }}
+                  >
+                    Rank: {getBingoRankLabel(square.rank)}
+                  </Typography>
+                </>
+              )}
+              <Box
+                sx={{
+                  flex: 1,
+                  minHeight: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  px: isSmall ? 0.2 : 0.6,
+                }}
+              >
+                {showSplitProgressValue ? (
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '100%',
+                    }}
+                  >
+                    <Typography
+                      variant={isSmall ? 'caption' : 'body2'}
+                      sx={{
+                        position: 'absolute',
+                        left: '50%',
+                        top: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        fontSize: isSmall ? 'clamp(0.68rem, 26cqw, 2.6rem)' : '1.1rem',
+                        fontWeight: isSmall ? 800 : 700,
+                        lineHeight: 1,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {square.progressValue}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        position: 'absolute',
+                        left: '50%',
+                        top: '50%',
+                        transform: isSmall ? 'translate(-50%, 0.85rem)' : 'translate(-50%, 0.72rem)',
+                        fontSize: isSmall ? '0.52rem' : '0.72rem',
+                        fontWeight: 700,
+                        letterSpacing: 0.2,
+                        opacity: 0.9,
+                        lineHeight: 1,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      /{square.target}
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Typography
+                    variant={isSmall ? 'caption' : 'body2'}
+                    sx={{
+                      fontSize: isSmall ? '0.72rem' : '1.05rem',
+                      fontWeight: isSmall ? 800 : 700,
+                      lineHeight: 1.05,
+                      textAlign: 'center',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '100%',
+                    }}
+                  >
+                    {progressText}
+                  </Typography>
+                )}
+              </Box>
+              <Box sx={{ mt: isSmall ? 0 : 0.25 }}>
+                {showProgressBar && (
+                  <LinearProgress
+                    variant="determinate"
+                    value={progressPercent}
+                    sx={{
+                      height: isSmall ? 8 : 16,
+                      minHeight: isSmall ? 8 : undefined,
+                      borderRadius: 999,
+                      bgcolor: alpha(borderColor, 0.14),
+                      boxShadow: `inset 0 0 0 1px ${alpha(borderColor, 0.42)}`,
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: borderColor,
+                      },
+                    }}
+                  />
+                )}
+              </Box>
+            </Paper>
+          )
+
+          if (!isSmall) {
+            return card
+          }
+
+          return (
+            <Tooltip
+              key={square.id}
+              arrow
+              title={
+                <Box sx={{ minWidth: 190 }}>
+                  <Typography variant="subtitle2">{title}</Typography>
+                  <Typography variant="caption" sx={{ display: 'block', opacity: 0.9 }}>
+                    {shortLabel} | {getBingoRankLabel(square.rank)}
+                  </Typography>
+                  <Typography variant="caption" sx={{ display: 'block' }}>
+                    {tooltipGoalText ? `Target: ${tooltipGoalText}` : `Target value: ${square.target}`}
+                  </Typography>
+                  {secondaryLabel && (
+                    <Typography variant="caption" sx={{ display: 'block' }}>
+                      Validation type: {secondaryLabel}
+                    </Typography>
+                  )}
+
+                  <Typography variant="caption" sx={{ display: 'block' }}>
+                    {formatScoreToBeat(square, false) || `Progress: ${square.progressValue}/${square.target}`}
+                  </Typography>
+                  {getRankedGapLines(square).map((line) => (
+                    <Typography key={`${square.id}_gap_${line}`} variant="caption" sx={{ display: 'block', opacity: 0.85 }}>
+                      {line}
+                    </Typography>
+                  ))}
+                  {detailLines.map((line) => (
+                    <Typography key={`${square.id}_tip_${line}`} variant="caption" sx={{ display: 'block' }}>
+                      {line}
+                    </Typography>
+                  ))}
+                  {square.threadUuid && (
+                    <Typography variant="caption" sx={{ display: 'block' }}>
+                      Thread-specific challenge
+                    </Typography>
+                  )}
+                </Box>
+              }
+            >
+              <Box>{card}</Box>
+            </Tooltip>
+          )
+        })}
       </Box>
       {normalizedWinningLines.length > 0 && (
         <Box

@@ -617,12 +617,7 @@ export const getRankSitewideLeaderboard = (seasonId?: number, limit?: number, of
 export const getRankThreadLeaderboard = (threadName: string, seasonId?: number) =>
   axios.get<ThreadLeaderboardResponse>(`${RANK_URL}/thread/${threadName}${seasonId != null ? `?seasonId=${seasonId}` : ''}`, CONFIG)
 
-export const getRankCounterProfile = (
-  username: string,
-  seasonId?: number,
-  completionsLimit?: number,
-  completionsOffset?: number,
-) => {
+export const getRankCounterProfile = (username: string, seasonId?: number, completionsLimit?: number, completionsOffset?: number) => {
   const params = new URLSearchParams()
   if (seasonId != null) params.set('seasonId', String(seasonId))
   if (completionsLimit != null) params.set('completionsLimit', String(completionsLimit))
@@ -635,7 +630,10 @@ export const getRankReplayData = (username: string, seasonId?: number) =>
   axios.get<ReplayData>(`${RANK_URL}/replay/${username}${seasonId != null ? `?seasonId=${seasonId}` : ''}`, CONFIG)
 
 export const getRankUnseenCompletionCounts = (username: string, seasonId?: number) =>
-  axios.get<UnseenCompletionCounts>(`${RANK_URL}/replay/${username}/unseen-count${seasonId != null ? `?seasonId=${seasonId}` : ''}`, CONFIG)
+  axios.get<UnseenCompletionCounts>(
+    `${RANK_URL}/replay/${username}/unseen-count${seasonId != null ? `?seasonId=${seasonId}` : ''}`,
+    CONFIG,
+  )
 
 export const markRankCompletionSeen = (username: string, logId: number) =>
   axios.post(`${RANK_URL}/replay/${username}/seen-completion/${logId}`, {}, CONFIG)
@@ -710,4 +708,3 @@ export const getBingoCompletedGames = (offset = 0, limit = 25) =>
     `${BINGO_URL}/completed?offset=${offset}&limit=${limit}`,
     CONFIG,
   )
-

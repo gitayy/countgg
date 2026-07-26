@@ -43,7 +43,9 @@ const COMPLETION_SUMMARY_FORMULAS: Partial<Record<string, (ch: ChallengeLog) => 
 
   // Not explicitly requested, but given a formula so these don't silently fall back to the
   // generic "Target: N" — extend/adjust wording here as these types get real completion UX.
-  roll: (ch) => ({ main: ch.params?.direction === 'over' ? `Roll ≥ ${ch.params?.threshold ?? 0}` : `Roll ≤ ${ch.params?.threshold ?? 0}` }),
+  roll: (ch) => ({
+    main: ch.params?.direction === 'over' ? `Roll ≥ ${ch.params?.threshold ?? 0}` : `Roll ≤ ${ch.params?.threshold ?? 0}`,
+  }),
   lrwoed_score: (ch) => ({ main: `Score ≤ ${ch.params?.maxScore ?? 0}` }),
   number_shuffle_win: () => ({ main: 'Number Shuffle Win' }),
   bingo_win: () => ({ main: 'Bingo!' }),

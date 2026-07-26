@@ -42,28 +42,29 @@ const mockedGetRankThreadLeaderboard = getRankThreadLeaderboard as jest.Mock
 const COUNTER = { uuid: 'counter-1', username: 'tester', roles: [] } as unknown as Counter
 const THREAD = { uuid: 'thread-1', title: 'Double Counting' } as unknown as ThreadType
 
-const makeLog = (overrides: Partial<ChallengeLog> = {}): ChallengeLog => ({
-  id: 1,
-  counterUuid: 'counter-1',
-  challengeId: 'challenge-1',
-  seasonId: 1,
-  context: 'rank',
-  progress: 0,
-  target: 5,
-  accuracyWindow: null,
-  completedAt: null,
-  ggAwarded: 0,
-  createdAt: Date.now(),
-  updatedAt: Date.now(),
-  type: 'thread_counts',
-  params: null,
-  threadUuid: 'thread-1',
-  ggReward: 10,
-  rank: 'bronze',
-  sequencePosition: 1,
-  sequenceTotal: 1,
-  ...overrides,
-} as ChallengeLog)
+const makeLog = (overrides: Partial<ChallengeLog> = {}): ChallengeLog =>
+  ({
+    id: 1,
+    counterUuid: 'counter-1',
+    challengeId: 'challenge-1',
+    seasonId: 1,
+    context: 'rank',
+    progress: 0,
+    target: 5,
+    accuracyWindow: null,
+    completedAt: null,
+    ggAwarded: 0,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    type: 'thread_counts',
+    params: null,
+    threadUuid: 'thread-1',
+    ggReward: 10,
+    rank: 'bronze',
+    sequencePosition: 1,
+    sequenceTotal: 1,
+    ...overrides,
+  }) as ChallengeLog
 
 const makeRankRow = (overrides: Partial<ThreadRankRow> = {}): ThreadRankRow => ({
   id: 1,
@@ -94,13 +95,15 @@ const makeRankUpEvent = (overrides: Partial<RankUpEvent> = {}): RankUpEvent => (
 // rank_updated now carries the changed data directly instead of just { threadUuid } — the
 // frontend applies this straight to state and never re-fetches getRankCounterProfile on a live
 // update (only at mount/reconnect). Build the payload shape RankTabPanel's handler expects.
-const makeDelta = (overrides: {
-  threadUuid?: string
-  progress?: ChallengeLog[]
-  completions?: ChallengeLog[]
-  threadRank?: ThreadRankRow | null
-  sitewideRank?: ThreadRankRow | null
-} = {}) => ({
+const makeDelta = (
+  overrides: {
+    threadUuid?: string
+    progress?: ChallengeLog[]
+    completions?: ChallengeLog[]
+    threadRank?: ThreadRankRow | null
+    sitewideRank?: ThreadRankRow | null
+  } = {},
+) => ({
   threadUuid: overrides.threadUuid ?? 'thread-1',
   progress: overrides.progress ?? [],
   completions: overrides.completions ?? [],
@@ -162,7 +165,9 @@ describe('RankTabPanel', () => {
     mockedMarkRankUpSeen.mockResolvedValue({ data: { ok: true } })
     mockedMarkRankEntranceSeen.mockResolvedValue({ data: { ok: true } })
     mockedGetRankSitewideLeaderboard.mockResolvedValue({ data: { season: null, entries: [] } })
-    mockedGetRankThreadLeaderboard.mockResolvedValue({ data: { season: null, thread: { uuid: 'thread-1', name: 'double_counting', title: 'Double Counting' }, entries: [] } })
+    mockedGetRankThreadLeaderboard.mockResolvedValue({
+      data: { season: null, thread: { uuid: 'thread-1', name: 'double_counting', title: 'Double Counting' }, entries: [] },
+    })
   })
 
   it('fetches and renders an in-progress challenge on first activation', async () => {
@@ -202,12 +207,12 @@ describe('RankTabPanel', () => {
     mockedGetRankCounterProfile.mockResolvedValue({ data: { ranks: [], challengeProgress: [], recentCompletions: [] } })
     const { unmount } = renderPanel()
 
-    expect((socket.on as jest.Mock)).toHaveBeenCalledWith('rank_updated', expect.any(Function))
+    expect(socket.on as jest.Mock).toHaveBeenCalledWith('rank_updated', expect.any(Function))
     const onCallsForRankUpdated = (socket.on as jest.Mock).mock.calls.filter((c) => c[0] === 'rank_updated')
     expect(onCallsForRankUpdated).toHaveLength(1)
 
     unmount()
-    expect((socket.off as jest.Mock)).toHaveBeenCalledWith('rank_updated', expect.any(Function))
+    expect(socket.off as jest.Mock).toHaveBeenCalledWith('rank_updated', expect.any(Function))
   })
 
   it('renders a SpeedChallengeCard for split_under_ms type challenges', async () => {
@@ -301,9 +306,7 @@ describe('RankTabPanel', () => {
       await Promise.resolve()
     })
 
-    await waitFor(() => expect(onThreadRankUpdated).toHaveBeenCalledWith(
-      expect.objectContaining({ 'thread-9': expect.any(Object) }),
-    ))
+    await waitFor(() => expect(onThreadRankUpdated).toHaveBeenCalledWith(expect.objectContaining({ 'thread-9': expect.any(Object) })))
   })
 
   // Regression coverage for the real bug: rank_updated used to trigger a full-profile HTTP
@@ -323,12 +326,14 @@ describe('RankTabPanel', () => {
     const progressLog = makeLog({ id: 90, challengeId: 'c1', progress: 3, target: 5, completedAt: null })
     const completedLog = makeLog({ id: 91, challengeId: 'c2', progress: 5, target: 5, completedAt: Date.now() })
     await act(async () => {
-      handler(makeDelta({
-        progress: [progressLog],
-        completions: [completedLog],
-        threadRank: makeRankRow({ threadUuid: 'thread-9' }),
-        sitewideRank: makeRankRow({ threadUuid: null as any }),
-      }))
+      handler(
+        makeDelta({
+          progress: [progressLog],
+          completions: [completedLog],
+          threadRank: makeRankRow({ threadUuid: 'thread-9' }),
+          sitewideRank: makeRankRow({ threadUuid: null as any }),
+        }),
+      )
       await Promise.resolve()
     })
 
@@ -416,11 +421,51 @@ describe('RankTabPanel', () => {
         season: null,
         thread: { uuid: 'thread-1', name: 'double_counting', title: 'Double Counting' },
         entries: [
-          makeRankRow({ counterUuid: 'c1', username: 'first', name: 'First', threadUuid: 'thread-1', gg: 500, rank: 'gold', division: 1 }),
-          makeRankRow({ counterUuid: 'c2', username: 'second', name: 'Second', threadUuid: 'thread-1', gg: 400, rank: 'silver', division: 3 }),
-          makeRankRow({ counterUuid: 'c3', username: 'third', name: 'Third', threadUuid: 'thread-1', gg: 300, rank: 'silver', division: 2 }),
-          makeRankRow({ counterUuid: 'c4', username: 'fourth', name: 'Fourth', threadUuid: 'thread-1', gg: 200, rank: 'silver', division: 1 }),
-          makeRankRow({ counterUuid: 'c5', username: 'tester', name: 'Tester', threadUuid: 'thread-1', gg: 100, rank: 'bronze', division: 3 }),
+          makeRankRow({
+            counterUuid: 'c1',
+            username: 'first',
+            name: 'First',
+            threadUuid: 'thread-1',
+            gg: 500,
+            rank: 'gold',
+            division: 1,
+          }),
+          makeRankRow({
+            counterUuid: 'c2',
+            username: 'second',
+            name: 'Second',
+            threadUuid: 'thread-1',
+            gg: 400,
+            rank: 'silver',
+            division: 3,
+          }),
+          makeRankRow({
+            counterUuid: 'c3',
+            username: 'third',
+            name: 'Third',
+            threadUuid: 'thread-1',
+            gg: 300,
+            rank: 'silver',
+            division: 2,
+          }),
+          makeRankRow({
+            counterUuid: 'c4',
+            username: 'fourth',
+            name: 'Fourth',
+            threadUuid: 'thread-1',
+            gg: 200,
+            rank: 'silver',
+            division: 1,
+          }),
+          makeRankRow({
+            counterUuid: 'c5',
+            username: 'tester',
+            name: 'Tester',
+            threadUuid: 'thread-1',
+            gg: 100,
+            rank: 'bronze',
+            division: 3,
+          }),
         ],
       },
     })
@@ -511,7 +556,19 @@ describe('RankTabPanel', () => {
       initialSitewideLeaderboardPromiseRef: {
         current: Promise.resolve({
           season: null,
-          entries: [{ counterUuid: 'c1', username: 'first', name: 'First', avatar: '', discordId: '', color: '', totalGg: 500, rank: 'gold', division: 1 }],
+          entries: [
+            {
+              counterUuid: 'c1',
+              username: 'first',
+              name: 'First',
+              avatar: '',
+              discordId: '',
+              color: '',
+              totalGg: 500,
+              rank: 'gold',
+              division: 1,
+            },
+          ],
         }),
       } as any,
     })
@@ -737,7 +794,13 @@ describe('RankTabPanel', () => {
     // renderReplay(...) OR the live slot list, never both. An unrelated in-progress challenge
     // (not part of the replay at all) was invisible the whole time a replay was playing.
     it('shows an unrelated live in-progress challenge alongside a playing replay, updating as it ticks', async () => {
-      const replayedLog = makeLog({ id: 80, challengeId: 'c-replay', target: 5, threadUuid: 'thread-1', completedAt: Date.now() - 1000 })
+      const replayedLog = makeLog({
+        id: 80,
+        challengeId: 'c-replay',
+        target: 5,
+        threadUuid: 'thread-1',
+        completedAt: Date.now() - 1000,
+      })
       const liveLog = makeLog({ id: 81, challengeId: 'c-live', progress: 2, target: 10, threadUuid: 'thread-1', completedAt: null })
       mockedGetRankReplayData.mockResolvedValue({
         data: { unseenCompletions: [{ ...replayedLog, chainKey: 'thread_counts:thread-1' }], unseenRankUps: [] },
@@ -775,7 +838,13 @@ describe('RankTabPanel', () => {
     // only covered a session with NO replay backlog at all, which isn't what happens in
     // practice (any unseen completion queues a replay).
     it('shows a newly chain-assigned challenge that arrives while an unrelated replay is still playing', async () => {
-      const replayedLog = makeLog({ id: 82, challengeId: 'c-replay', target: 5, threadUuid: 'thread-1', completedAt: Date.now() - 1000 })
+      const replayedLog = makeLog({
+        id: 82,
+        challengeId: 'c-replay',
+        target: 5,
+        threadUuid: 'thread-1',
+        completedAt: Date.now() - 1000,
+      })
       mockedGetRankReplayData.mockResolvedValue({
         data: { unseenCompletions: [{ ...replayedLog, chainKey: 'thread_counts:thread-1' }], unseenRankUps: [] },
       })
@@ -788,7 +857,14 @@ describe('RankTabPanel', () => {
 
       // A completely unrelated challenge completes live and its chain immediately assigns the
       // next one — arriving via rank_updated while c-replay's replay is still mid-flight.
-      const newlyAssigned = makeLog({ id: 83, challengeId: 'c-next', progress: 0, target: 3, threadUuid: 'thread-1', completedAt: null })
+      const newlyAssigned = makeLog({
+        id: 83,
+        challengeId: 'c-next',
+        progress: 0,
+        target: 3,
+        threadUuid: 'thread-1',
+        completedAt: null,
+      })
       const handler = (socket.on as jest.Mock).mock.calls.find((c) => c[0] === 'rank_updated')![1]
       await act(async () => {
         handler(makeDelta({ progress: [newlyAssigned] }))
@@ -838,7 +914,14 @@ describe('RankTabPanel', () => {
     }, 25000)
 
     it('replays two unseen completions of DIFFERENT chains concurrently, not one at a time', async () => {
-      const countsLog = makeLog({ id: 23, challengeId: 'c1', type: 'thread_counts', target: 5, threadUuid: 'thread-1', completedAt: 100 })
+      const countsLog = makeLog({
+        id: 23,
+        challengeId: 'c1',
+        type: 'thread_counts',
+        target: 5,
+        threadUuid: 'thread-1',
+        completedAt: 100,
+      })
       const speedLog = makeLog({
         id: 24,
         challengeId: 'c2',
@@ -978,9 +1061,9 @@ describe('RankTabPanel', () => {
       })
 
       // Badge callback fires immediately, independent of replay still playing.
-      await waitFor(() => expect(onThreadRankUpdated).toHaveBeenCalledWith(
-        expect.objectContaining({ 'thread-9': expect.any(Object) }),
-      ))
+      await waitFor(() =>
+        expect(onThreadRankUpdated).toHaveBeenCalledWith(expect.objectContaining({ 'thread-9': expect.any(Object) })),
+      )
     })
 
     it('animates a chain step 0 -> 100% even when a prior chain step in the same replay had a different (larger) target', async () => {
@@ -1014,7 +1097,7 @@ describe('RankTabPanel', () => {
       await waitFor(() => expect(screen.getByText('0 / 5 Counts')).toBeInTheDocument())
     })
 
-    it('animates an in-progress challenge\'s bar filling 0 -> its current progress the first time it is shown after replay catches up', async () => {
+    it("animates an in-progress challenge's bar filling 0 -> its current progress the first time it is shown after replay catches up", async () => {
       mockedGetRankReplayData.mockResolvedValue({
         data: { unseenCompletions: [], unseenRankUps: [] },
       })
