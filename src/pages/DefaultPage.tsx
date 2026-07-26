@@ -30,6 +30,8 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'
 import FeedIcon from '@mui/icons-material/Feed'
 import StarsIcon from '@mui/icons-material/Stars'
 import AbcIcon from '@mui/icons-material/Abc'
+import GridOnIcon from '@mui/icons-material/GridOn'
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
 import SportsBaseballIcon from '@mui/icons-material/SportsBaseball'
 import ChatIcon from '@mui/icons-material/Chat'
 import ReorderIcon from '@mui/icons-material/Reorder'
@@ -529,6 +531,8 @@ export const DefaultPage = () => {
               </Paper>
             </Link>
           </Grid> */}
+                {miniMainItem(<EmojiEventsIcon style={{ fontSize: 'inherit', marginRight: '5%' }} />, 'Rank', '/rank')}
+                {/* {miniMainItem(<GridOnIcon style={{ fontSize: 'inherit', marginRight: '5%' }} />, 'Bingo', '/bingo')} */}
                 {miniMainItem(<AbcIcon style={{ fontSize: 'inherit', marginRight: '5%' }} />, 'LRWOED', '/lrwoed')}
                 {miniMainItem(<ReorderIcon style={{ fontSize: 'inherit', marginRight: '5%' }} />, 'Number Shuffle', '/shuffle')}
                 {miniMainItem(

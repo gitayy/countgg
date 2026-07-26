@@ -142,7 +142,7 @@ export function isParsable(input: string): boolean {
   return parseInt(input).toString() === input
 }
 
-export const discordAvatarLink = (counter: Counter): string => {
+export const discordAvatarLink = (counter: { discordId?: string; avatar?: string }): string => {
   return counter && counter.avatar && counter.avatar.length > 5
     ? `https://cdn.discordapp.com/avatars/${counter.discordId}/${counter.avatar}`
     : `https://cdn.discordapp.com/embed/avatars/0.png`
@@ -393,6 +393,21 @@ export function findPossibleIndicesForNextMove(moves: number[], newNumber: numbe
   }
 
   return possibleIndices
+}
+
+export const formatClockTime = (timeMs: number, maxFractionDigits = 6) => {
+  if (!Number.isFinite(timeMs)) return 'N/A'
+  const absMs = Math.abs(timeMs)
+  const totalSeconds = absMs / 1000
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const secondsWhole = Math.floor(totalSeconds % 60)
+  const fractionalRaw = ((totalSeconds % 1) + Number.EPSILON).toFixed(maxFractionDigits).slice(2)
+  const fractional = fractionalRaw.replace(/0+$/, '')
+  const fractionDisplay = (fractional.length > 0 ? fractional : '000').padEnd(3, '0')
+  const mmOrHhmm = hours > 0 ? `${hours}:${minutes.toString().padStart(2, '0')}` : `${minutes}`
+  const core = `${mmOrHhmm}:${secondsWhole.toString().padStart(2, '0')}.${fractionDisplay}`
+  return timeMs < 0 ? `-${core}` : core
 }
 
 export const formatTimeDiff = (time1, time2, mini = false) => {

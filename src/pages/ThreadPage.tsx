@@ -1,13 +1,16 @@
 import { Link as RouterLink, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { UserContext } from '../utils/contexts/UserContext'
-import React, { Fragment, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { Fragment, memo, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
   AlertColor,
   alpha,
   Autocomplete,
+  Badge,
   Box,
   Button,
+  Card,
+  CardContent,
   Chip,
   Collapse,
   Dialog,
@@ -42,6 +45,8 @@ import {
   useTheme,
 } from '@mui/material'
 import { Loading } from '../components/Loading'
+import { RankTabPanel } from '../components/RankTabPanel'
+import { RankIconBadge } from '../components/RankIconBadge'
 import { addCounterToCache, cachedCounters, defaultCounter } from '../utils/helpers'
 import { useFetchRecentCounts } from '../utils/hooks/useFetchRecentCounts'
 import { useFetchThread } from '../utils/hooks/useFetchThread'
@@ -57,6 +62,12 @@ import {
   ThreadPrefs,
   ThreadType,
   User,
+  ThreadRankRow,
+  UnseenCompletionCounts,
+  ChallengeLog,
+  CounterRankProfileResponse,
+  ThreadLeaderboardResponse,
+  SitewideLeaderboardResponse,
 } from '../utils/types'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
 import CountList from '../components/CountList'
@@ -84,6 +95,10 @@ import {
   setThreadMacroPresetPreference,
   updateCommunityNotes,
   updateThreadPrefs,
+  getRankCounterProfile,
+  getRankUnseenCompletionCounts,
+  getRankThreadLeaderboard,
+  getRankSitewideLeaderboard,
 } from '../utils/api'
 import { DailyHOCTable } from '../components/DailyHOCTable'
 import { SplitsTable } from '../components/SplitsTable'
@@ -112,6 +127,7 @@ import CommunityNotes from '../components/thread/CommunityNotes'
 import { ThreadStatsPanel } from '../components/thread/ThreadStatsPanel'
 import RollVisualizerHost, { RollVisualizerHostHandle } from '../components/thread/RollVisualizerHost'
 import { buildMacroSubmitMetadata, normalizeMacroTriggerKey } from '../utils/macroRuntime'
+import { BingoMiniWidget } from '../components/bingo/BingoMiniWidget'
 
 let imsorryfortheglobalpull = 'DISABLED'
 type LoadSpikeSimMode = 'baseline' | 'dup_listener' | 'post_load_overlap' | 'cache_overlap' | 'mixed_direction'
@@ -1223,6 +1239,127 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const [tabValue, setTabValue] = useState('tab_0')
   const tabValueRef = useRef('tab_1')
 
+  // Rank tab state that's shared beyond the rank tab itself — the "Rank" tab's own label/icon
+  // badge reads rankThreadRow, and the thread-picker sidebar's mini badges read
+  // allThreadRanks, both independent of whether the rank tab is even open. Everything else
+  // rank-related lives inside <RankTabPanel>.
+  const [rankThreadRow, setRankThreadRow] = useState<ThreadRankRow | null>(null)
+  const [allThreadRanks, setAllThreadRanks] = useState<Record<string, ThreadRankRow>>({})
+  // allThreadRanks is fetched eagerly on mount (below), well before the Rank tab is ever
+  // opened, so the tab's own icon badge can show up immediately by reading this thread's
+  // row out of it. Once the Rank tab is opened, RankTabPanel's onRankThreadRowChange takes
+  // over as the source of truth (it reflects live in-tab updates like a just-completed
+  // challenge), so prefer rankThreadRow whenever it's populated.
+  const displayedRankThreadRow = rankThreadRow ?? (thread?.uuid ? allThreadRanks[thread.uuid] ?? null : null)
+  // Shared scroll container for every sidebar tab (Posts/About/Chats/.../Rank).
+  const sidebarScrollRef = useRef<HTMLDivElement>(null)
+  const sidebarScrollTopRef = useRef(0)
+  // Exposed as the raw in-flight promise (not just the eventually-resolved sidebar-badge state
+  // this same fetch also populates below) so RankTabPanel can await and reuse this exact
+  // response for its own first activation instead of issuing an identical second
+  // getRankCounterProfile request the instant the Rank tab is opened. Opening the tab before
+  // this fetch has resolved is completely ordinary (click into a thread, then immediately click
+  // Rank), so RankTabPanel awaits this promise rather than racing ahead of it — see its
+  // initialRankProfilePromiseRef prop.
+  const initialRankProfilePromiseRef = useRef<Promise<CounterRankProfileResponse | null> | null>(null)
+
+  useEffect(() => {
+    if (!counter?.username) return
+    const promise = getRankCounterProfile(counter.username)
+      .then(({ data }) => {
+        if (!isMounted.current) return null
+        const byThreadUuid: Record<string, ThreadRankRow> = {}
+        for (const row of data.ranks) {
+          if (row.threadUuid) byThreadUuid[row.threadUuid] = row
+        }
+        setAllThreadRanks(byThreadUuid)
+        return data
+      })
+      .catch((err) => {
+        console.error(err)
+        return null
+      })
+    initialRankProfilePromiseRef.current = promise
+  }, [counter?.username])
+
+  // Same "expose the in-flight promise, not just the resolved state" pattern as
+  // initialRankProfilePromiseRef above, for the two Rank tab leaderboard fetches — RankTabPanel
+  // used to issue these itself the moment the tab was opened, but since RankTabPanel fully
+  // remounts on every tab switch, that meant re-fetching from scratch every single time even
+  // though the leaderboard rarely changes between quick switches. Fetched eagerly here instead
+  // (same tradeoff as the profile fetch: a small amount of always-on network cost in exchange
+  // for the Rank tab never re-fetching data that's already on its way). The sitewide leaderboard
+  // is fetched once per page load (global, not thread-scoped); the thread leaderboard re-fetches
+  // whenever thread_name changes, since it's specific to the thread being viewed.
+  const initialSitewideLeaderboardPromiseRef = useRef<Promise<SitewideLeaderboardResponse | null> | null>(null)
+  const initialThreadLeaderboardPromiseRef = useRef<Promise<ThreadLeaderboardResponse | null> | null>(null)
+
+  useEffect(() => {
+    if (initialSitewideLeaderboardPromiseRef.current) return
+    initialSitewideLeaderboardPromiseRef.current = getRankSitewideLeaderboard()
+      .then(({ data }) => data)
+      .catch((err) => {
+        console.error(err)
+        return null
+      })
+  }, [])
+
+  useEffect(() => {
+    if (!thread_name) return
+    initialThreadLeaderboardPromiseRef.current = getRankThreadLeaderboard(thread_name)
+      .then(({ data }) => data)
+      .catch((err) => {
+        console.error(err)
+        return null
+      })
+  }, [thread_name])
+
+  // Unread-completion badge on the Rank tab — deliberately no toast/snackbar for challenge
+  // completions (so the Rank tab's own bar-fill/splash animations are never spoiled by seeing
+  // the result early); this quiet count is the only outward sign something new is waiting to be
+  // watched. Combines this thread's own unseen completions with sitewide ones so a single
+  // sitewide completion doesn't require guessing which thread's tab to open to see it counted.
+  // Fetched once at mount (independent of whether the Rank tab is open, mirrors allThreadRanks
+  // above); kept accurate afterward via a client-side increment from RankTabPanel's
+  // onCompletionsAdded callback rather than its own rank_updated listener + re-fetch — see the
+  // comment on that callback below and RankTabPanel's rank_updated handler for the full context.
+  const [unseenCounts, setUnseenCounts] = useState<UnseenCompletionCounts | null>(null)
+  useEffect(() => {
+    if (!counter?.username) return
+    getRankUnseenCompletionCounts(counter.username)
+      .then(({ data }) => {
+        if (isMounted.current) setUnseenCounts(data)
+      })
+      .catch(console.error)
+  }, [counter?.username])
+
+  // Bumps the unseen-completion badge the moment RankTabPanel applies a rank_updated delta that
+  // contains new completions — avoids ThreadPage needing its own rank_updated listener/re-fetch.
+  const handleCompletionsAdded = useCallback((completions: ChallengeLog[]) => {
+    if (completions.length === 0) return
+    setUnseenCounts((prev) => {
+      const base: UnseenCompletionCounts = prev ?? { total: 0, byThread: {}, sitewide: 0 }
+      const byThread = { ...base.byThread }
+      let sitewide = base.sitewide
+      for (const log of completions) {
+        if (log.threadUuid) {
+          byThread[log.threadUuid] = (byThread[log.threadUuid] ?? 0) + 1
+        } else {
+          sitewide += 1
+        }
+      }
+      return { total: base.total + completions.length, byThread, sitewide }
+    })
+  }, [])
+
+  // Never show the badge while the user is already looking at the Rank tab — they can see
+  // directly whether anything is playing/waiting; a badge on the very tab they're on reads as
+  // "you haven't seen this" while they're actively watching it, which is just wrong.
+  const rankTabUnseenCount = thread?.uuid && unseenCounts && tabValue !== 'tab_rank'
+    ? (unseenCounts.byThread[thread.uuid] ?? 0) + unseenCounts.sitewide
+    : 0
+
+
   useEffect(() => {
     if (isDesktop && tabValue === 'tab_0') {
       setTabValue('tab_1')
@@ -1454,6 +1591,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         addCounterToCache(data.counter)
         cache_counts(data.post)
         registerRollSampleFromPost(data.post)
+
         if (loadedNewestRef.current) {
           if (user && preferences && preferences.pref_load_from_bottom) {
             recentCountsRef.current = (() => {
@@ -1685,6 +1823,9 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         setThread(data.threadInfo)
         setFullThread && setFullThread(data.threadInfo)
       })
+
+      // rank_updated is handled entirely inside <RankTabPanel> now (its own socket listener),
+      // which also reports allThreadRanks updates back up via onThreadRankUpdated.
 
       socket.on('split', function (data) {
         const { number, split } = data
@@ -2154,7 +2295,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       otherCategory.threads = [...otherCategory.threads, ...threadsToMove]
 
       // Update the state
-      const newCategorizedThreads = updatedCategories.map((cat) => (cat.name === 'Other' ? otherCategory : cat))
+      const newCategorizedThreads = updatedCategories.map((cat) => (cat.name === 'Other' ? otherCategory! : cat))
       return newCategorizedThreads
     })
     setLastCategoryChange(Date.now())
@@ -2274,7 +2415,17 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
                                           <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
                                             <Button
                                               key={thread.uuid}
-                                              startIcon={<TagIcon />}
+                                              startIcon={
+                                                allThreadRanks[thread.uuid] ? (
+                                                  <RankIconBadge
+                                                    rank={allThreadRanks[thread.uuid].rank}
+                                                    division={allThreadRanks[thread.uuid].division}
+                                                    size="mini"
+                                                  />
+                                                ) : (
+                                                  <TagIcon />
+                                                )
+                                              }
                                               sx={{
                                                 width: '100%',
                                                 py: isDesktop ? 0 : 0.5,
@@ -2378,6 +2529,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     categorizedThreads,
     preferences,
     navigateToThread,
+    allThreadRanks,
   ])
 
   const robConfirmMemo = useMemo(() => {
@@ -3084,6 +3236,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     }
   }, [])
 
+
   const sidebarMemo = useMemo(() => {
     if (clearCounts) {
       recentCountsRef.current = []
@@ -3105,12 +3258,35 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
             <Tab label="About" value="tab_1" />
             <Tab label="Chats" value="tab_2" />
             <Tab label="Splits" value="tab_3" />
+            <Tab
+              label={
+                <Badge color="error" badgeContent={rankTabUnseenCount} max={99}>
+                  Rank
+                </Badge>
+              }
+              value="tab_rank"
+              icon={
+                displayedRankThreadRow ? (
+                  <Box sx={{ mr: 1 }}>
+                    <RankIconBadge rank={displayedRankThreadRow.rank} division={displayedRankThreadRow.division} size="mini" />
+                  </Box>
+                ) : undefined
+              }
+              iconPosition="start"
+              sx={{ minHeight: 0 }}
+            />
             <Tab label="Stats" value="tab_4" />
             <Tab label="Replay" value="tab_5" />
             <Tab label="Prefs" value="tab_6" />
           </TabList>
         </Box>
         <Box
+          ref={sidebarScrollRef}
+          onScroll={(e) => {
+            sidebarScrollTopRef.current = e.currentTarget.scrollTop
+            // eslint-disable-next-line no-console
+            console.log('[scroll-debug] onScroll fired', e.currentTarget.scrollTop)
+          }}
           sx={{
             flexGrow: 1,
             display: 'flex',
@@ -3126,7 +3302,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
               {countListMemo}
             </TabPanel>
           )}
-          <TabPanel value="tab_1" keepMounted sx={{ flexGrow: 1, p: 4 }}>
+          <TabPanel value="tab_1" sx={{ flexGrow: 1, p: 4 }}>
+            <BingoMiniWidget key={`bingo-${thread_name}`} title="Bingo" />
             {thread && counter && thread.countBans && thread.countBans.includes(counter.uuid) && (
               <Box display="flex" alignItems="center" sx={{ p: 2, border: '1px solid', borderColor: 'warning.main' }}>
                 <Box component={InfoIcon} sx={{ fontSize: 24, color: 'info.main', mr: 1 }} />
@@ -3805,6 +3982,25 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
               setEnabled={setPrefEnabled}
             />
           </TabPanel>
+
+          <TabPanel value="tab_rank" sx={{ flexGrow: 1, p: 2 }}>
+            <RankTabPanel
+              counter={counter}
+              thread={thread}
+              thread_name={thread_name}
+              isMounted={isMounted}
+              active={tabValue === 'tab_rank'}
+              rankThreadRow={displayedRankThreadRow}
+              onRankThreadRowChange={setRankThreadRow}
+              onThreadRankUpdated={setAllThreadRanks}
+              onCompletionsAdded={handleCompletionsAdded}
+              initialRankProfilePromiseRef={initialRankProfilePromiseRef}
+              initialSitewideLeaderboardPromiseRef={initialSitewideLeaderboardPromiseRef}
+              initialThreadLeaderboardPromiseRef={initialThreadLeaderboardPromiseRef}
+              sidebarScrollRef={sidebarScrollRef}
+              sidebarScrollTopRef={sidebarScrollTopRef}
+            />
+          </TabPanel>
         </Box>
       </TabContext>
     )
@@ -3842,8 +4038,6 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     rawCount1,
     rawCount2,
     timerStr,
-    activeTimer,
-    clearCounts,
     prefEnabled,
     prefOnline,
     prefDiscordPings,
@@ -3878,6 +4072,8 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     selectedThreadMacroPresetValue,
     macroPresetSearchInput,
     macroPresetSearchLoading,
+    counter,
+    displayedRankThreadRow,
   ])
 
   const loadingStatuses = [

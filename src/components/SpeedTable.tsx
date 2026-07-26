@@ -19,7 +19,7 @@ import {
 } from '@mui/material'
 import { memo, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { cachedCounters, convertToTimestamp, isParsable } from '../utils/helpers'
+import { cachedCounters, convertToTimestamp, formatClockTime, isParsable } from '../utils/helpers'
 import { Counter, SpeedRecord, ThreadType } from '../utils/types'
 import CounterAutocomplete from './CounterAutocomplete'
 
@@ -44,29 +44,16 @@ interface Props {
     p99?: number
     max: number
     plotMax: number
+    custom?: number
   }>
   hallOfSpeedRows?: Array<{ counter: string; obj: any; rank: number }>
+  percentile?: number
 }
 
 const normalizedTime = (value: number) => Number(value.toFixed(3))
 const isSameRankTime = (a: number, b: number) => normalizedTime(a) === normalizedTime(b)
 const defaultChartColor = '#4f6d7a'
 const distributionChartCutoffMs = 6 * 60 * 1000
-
-const formatClockTime = (timeMs: number, maxFractionDigits = 6) => {
-  if (!Number.isFinite(timeMs)) return 'N/A'
-  const absMs = Math.abs(timeMs)
-  const totalSeconds = absMs / 1000
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const secondsWhole = Math.floor(totalSeconds % 60)
-  const fractionalRaw = ((totalSeconds % 1) + Number.EPSILON).toFixed(maxFractionDigits).slice(2)
-  const fractional = fractionalRaw.replace(/0+$/, '')
-  const fractionDisplay = (fractional.length > 0 ? fractional : '000').padEnd(3, '0')
-  const mmOrHhmm = hours > 0 ? `${hours}:${minutes.toString().padStart(2, '0')}` : `${minutes}`
-  const core = `${mmOrHhmm}:${secondsWhole.toString().padStart(2, '0')}.${fractionDisplay}`
-  return timeMs < 0 ? `-${core}` : core
-}
 
 export const SpeedTable = memo(
   ({
@@ -82,6 +69,7 @@ export const SpeedTable = memo(
     onSelectedUsersChange,
     distributionStats,
     hallOfSpeedRows,
+    percentile,
   }: Props) => {
     const rowsPerPage = 50
     const [page, setPage] = useState(0)
@@ -614,6 +602,12 @@ export const SpeedTable = memo(
                               </Typography>
                               <Typography variant="caption" sx={{ color: 'text.secondary', lineHeight: 1.1 }}>
                                 med {formatClockTime(dist.median, 3)} (n={dist.attempts})
+                                {typeof dist.custom === 'number' && typeof percentile === 'number' && (
+                                  <>
+                                    {' '}
+                                    · p{percentile} {formatClockTime(dist.custom, 3)}
+                                  </>
+                                )}
                               </Typography>
                             </Box>
                           )
@@ -737,6 +731,21 @@ export const SpeedTable = memo(
                                   }}
                                 />
                               </MuiTooltip>
+                              {typeof dist.custom === 'number' && typeof percentile === 'number' && (
+                                <MuiTooltip title={`P${percentile}: ${formatClockTime(dist.custom)}`}>
+                                  <Box
+                                    sx={{
+                                      position: 'absolute',
+                                      left: `${pct(dist.custom)}%`,
+                                      top: y - 10,
+                                      width: 3,
+                                      height: 22,
+                                      bgcolor: 'warning.main',
+                                      cursor: 'pointer',
+                                    }}
+                                  />
+                                </MuiTooltip>
+                              )}
                               <Avatar
                                 src={avatarSrc}
                                 alt={counter?.name ?? dist.uuid}

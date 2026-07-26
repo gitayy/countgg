@@ -22,6 +22,16 @@ import {
   ActiveMacroRuntime,
   MacroPresetThreadUsageResponse,
   MacroPresetSummaryResponse,
+  RankChallenge,
+  ThreadLeaderboardResponse,
+  CounterRankProfileResponse,
+  SitewideLeaderboardResponse,
+  RankSeason,
+  SpeedDistribution,
+  GgProjection,
+  VolumeHistogramEntry,
+  ReplayData,
+  UnseenCompletionCounts,
 } from './types'
 
 const CONFIG: AxiosRequestConfig = { withCredentials: true }
@@ -181,6 +191,7 @@ export const getThreadStatsDetails = (
   dateStr?: string,
   startDateStr?: string,
   endDateStr?: string,
+  customPercentile?: number,
 ) =>
   withStatsRateLimit('threadStatsDetails', () =>
     axios.post<{
@@ -190,39 +201,9 @@ export const getThreadStatsDetails = (
       limit: number
       total: number
       hasMore: boolean
-      distributionStats?: Array<{
-        uuid: string
-        attempts: number
-        min: number
-        q1: number
-        median: number
-        q3: number
-        p99?: number
-        max: number
-        plotMax: number
-      }>
-      distributionStatsRealOnly?: Array<{
-        uuid: string
-        attempts: number
-        min: number
-        q1: number
-        median: number
-        q3: number
-        p99?: number
-        max: number
-        plotMax: number
-      }>
-      distributionStatsFakeOnly?: Array<{
-        uuid: string
-        attempts: number
-        min: number
-        q1: number
-        median: number
-        q3: number
-        p99?: number
-        max: number
-        plotMax: number
-      }>
+      distributionStats?: SpeedPercentileEntry[]
+      distributionStatsRealOnly?: SpeedPercentileEntry[]
+      distributionStatsFakeOnly?: SpeedPercentileEntry[]
       hallOfSpeed?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
       hallOfSpeedRealOnly?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
       hallOfSpeedFakeOnly?: Array<{ counter: string; obj: SpeedRecord; rank: number }>
@@ -237,7 +218,61 @@ export const getThreadStatsDetails = (
         dateStr,
         startDateStr,
         endDateStr,
+        customPercentile,
       },
+      CONFIG,
+    ),
+  )
+
+export type SpeedPercentileEntry = {
+  uuid: string
+  attempts: number
+  min: number
+  q1: number
+  median: number
+  q3: number
+  p99?: number
+  max: number
+  plotMax: number
+  custom?: number
+}
+
+export const getThreadSpeedPercentileLeaderboard = (
+  threadName: string,
+  type: 'speed' | 'splitSpeed',
+  customPercentile: number,
+  startDateStr?: string,
+  endDateStr?: string,
+) =>
+  withStatsRateLimit('threadStatsDetails', () =>
+    axios.post<{ distributionStats?: SpeedPercentileEntry[]; counters: Counter[] }>(
+      `${API_URL}/thread/stats/threadStatsDetails`,
+      {
+        thread: threadName,
+        type,
+        offset: 0,
+        limit: 1,
+        customPercentile,
+        startDateStr,
+        endDateStr,
+      },
+      CONFIG,
+    ),
+  )
+
+export const getThreadDailyCountLeaderboard = (
+  threadName: string,
+  startDateStr?: string,
+  endDateStr?: string,
+  customPercentile?: number,
+) =>
+  withStatsRateLimit('threadDailyCountLeaderboard', () =>
+    axios.post<{
+      entries: Array<{ uuid: string; bestDay: string; count: number; daysCount: number }>
+      counters: Counter[]
+    }>(
+      `${API_URL}/thread/stats/threadDailyCountLeaderboard`,
+      { thread: threadName, startDateStr, endDateStr, customPercentile },
       CONFIG,
     ),
   )
@@ -565,3 +600,114 @@ export const modToggleMute = (uuid: string) => axios.post(`${API_URL}/counter/mo
 
 export const adminSendSystemMessage = (message: string) =>
   axios.post(`${API_URL}/counter/adminSendSystemMessage`, { message: message }, CONFIG)
+
+// ── Rank API ──────────────────────────────────────────────────────────────────
+
+const RANK_URL = `${resolveBackendUrl(process.env.REACT_APP_API_HOST)}/api/rank`
+
+export const getRankSitewideLeaderboard = (seasonId?: number, limit?: number, offset?: number) => {
+  const params = new URLSearchParams()
+  if (seasonId != null) params.set('seasonId', String(seasonId))
+  if (limit != null) params.set('limit', String(limit))
+  if (offset != null) params.set('offset', String(offset))
+  const qs = params.toString()
+  return axios.get<SitewideLeaderboardResponse>(`${RANK_URL}/sitewide${qs ? `?${qs}` : ''}`, CONFIG)
+}
+
+export const getRankThreadLeaderboard = (threadName: string, seasonId?: number) =>
+  axios.get<ThreadLeaderboardResponse>(`${RANK_URL}/thread/${threadName}${seasonId != null ? `?seasonId=${seasonId}` : ''}`, CONFIG)
+
+export const getRankCounterProfile = (
+  username: string,
+  seasonId?: number,
+  completionsLimit?: number,
+  completionsOffset?: number,
+) => {
+  const params = new URLSearchParams()
+  if (seasonId != null) params.set('seasonId', String(seasonId))
+  if (completionsLimit != null) params.set('completionsLimit', String(completionsLimit))
+  if (completionsOffset != null) params.set('completionsOffset', String(completionsOffset))
+  const qs = params.toString()
+  return axios.get<CounterRankProfileResponse>(`${RANK_URL}/counter/${username}${qs ? `?${qs}` : ''}`, CONFIG)
+}
+
+export const getRankReplayData = (username: string, seasonId?: number) =>
+  axios.get<ReplayData>(`${RANK_URL}/replay/${username}${seasonId != null ? `?seasonId=${seasonId}` : ''}`, CONFIG)
+
+export const getRankUnseenCompletionCounts = (username: string, seasonId?: number) =>
+  axios.get<UnseenCompletionCounts>(`${RANK_URL}/replay/${username}/unseen-count${seasonId != null ? `?seasonId=${seasonId}` : ''}`, CONFIG)
+
+export const markRankCompletionSeen = (username: string, logId: number) =>
+  axios.post(`${RANK_URL}/replay/${username}/seen-completion/${logId}`, {}, CONFIG)
+
+export const markRankEntranceSeen = (username: string, logId: number) =>
+  axios.post(`${RANK_URL}/replay/${username}/seen-entrance/${logId}`, {}, CONFIG)
+
+export const markRankUpSeen = (username: string, eventId: number) =>
+  axios.post(`${RANK_URL}/replay/${username}/seen-rankup/${eventId}`, {}, CONFIG)
+
+export const getRankChallenges = (params?: {
+  rank?: string
+  type?: string
+  threadUuid?: string
+  sitewideOnly?: boolean
+  seasonId?: number
+  context?: boolean
+  limit?: number
+  offset?: number
+}) => {
+  const q = new URLSearchParams()
+  if (params?.rank) q.set('rank', params.rank)
+  if (params?.type) q.set('type', params.type)
+  if (params?.threadUuid) q.set('threadUuid', params.threadUuid)
+  if (params?.sitewideOnly) q.set('sitewideOnly', 'true')
+  if (params?.seasonId != null) q.set('seasonId', String(params.seasonId))
+  if (params?.context) q.set('context', 'true')
+  if (params?.limit != null) q.set('limit', String(params.limit))
+  if (params?.offset != null) q.set('offset', String(params.offset))
+  const qs = q.toString()
+  return axios.get<{ total: number; items: RankChallenge[] }>(`${RANK_URL}/challenges${qs ? `?${qs}` : ''}`, CONFIG)
+}
+
+export const getRankSeasons = () => axios.get<RankSeason[]>(`${RANK_URL}/seasons`, CONFIG)
+
+export const getRankActiveSeason = () => axios.get<RankSeason | null>(`${RANK_URL}/season`, CONFIG)
+
+// admin
+export const adminCreateChallenge = (dto: object) => axios.post(`${RANK_URL}/admin/challenges`, dto, CONFIG)
+export const adminCreateChallengeBatch = (dtos: object[]) => axios.post(`${RANK_URL}/admin/challenges/batch`, dtos, CONFIG)
+export const adminUpdateChallenge = (id: string, dto: object) => axios.patch(`${RANK_URL}/admin/challenges/${id}`, dto, CONFIG)
+export const adminDeleteChallenge = (id: string) => axios.delete(`${RANK_URL}/admin/challenges/${id}`, CONFIG)
+export const adminStartSeason = (name: string) => axios.post(`${RANK_URL}/admin/season/start`, { name }, CONFIG)
+export const adminEndSeason = () => axios.post(`${RANK_URL}/admin/season/end`, {}, CONFIG)
+export const adminSetThreadRank = (
+  username: string,
+  dto: { threadUuid: string | null; rank: string; division: 1 | 2 | 3; gg: number },
+) => axios.post(`${RANK_URL}/admin/counter/${username}/thread-rank`, dto, CONFIG)
+
+export const getRankSpeedDistribution = (threadUuid: string, type: 'split' | 'get', countsPerSplit: number, splitsPerGet: number) => {
+  const q = new URLSearchParams({ threadUuid, type, countsPerSplit: String(countsPerSplit), splitsPerGet: String(splitsPerGet) })
+  return axios.get<SpeedDistribution>(`${RANK_URL}/stats/speed?${q}`, CONFIG)
+}
+
+export const getRankGgProjection = (username: string, seasonId?: number) => {
+  const q = new URLSearchParams({ username })
+  if (seasonId != null) q.set('seasonId', String(seasonId))
+  return axios.get<GgProjection | null>(`${RANK_URL}/stats/projection?${q}`, CONFIG)
+}
+
+export const getRankVolumeHistogram = (threadUuid?: string, bucketDays = 7, seasonId?: number) => {
+  const q = new URLSearchParams({ bucketDays: String(bucketDays) })
+  if (threadUuid) q.set('threadUuid', threadUuid)
+  if (seasonId != null) q.set('seasonId', String(seasonId))
+  return axios.get<VolumeHistogramEntry[]>(`${RANK_URL}/stats/volume?${q}`, CONFIG)
+}
+
+const BINGO_URL = `${resolveBackendUrl(process.env.REACT_APP_API_HOST)}/api/bingo`
+
+export const getBingoCompletedGames = (offset = 0, limit = 25) =>
+  axios.get<{ games: any[]; total: number; offset: number; limit: number }>(
+    `${BINGO_URL}/completed?offset=${offset}&limit=${limit}`,
+    CONFIG,
+  )
+

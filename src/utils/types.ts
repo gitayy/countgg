@@ -503,3 +503,187 @@ export type ActiveMacroRuntime = {
   macroPresetVersionNumber: number | null
   entries: MacroEntry[]
 }
+
+// ── Rank system ───────────────────────────────────────────────────────────────
+
+export type RankName = 'bronze' | 'silver' | 'gold' | 'platinum' | 'emerald' | 'diamond' | 'countmeister' | 'grandcounter' | 'peak'
+
+export type RankSeason = {
+  id: number
+  name: string
+  startedAt: number
+  endedAt: number | null
+}
+
+export type RankChallenge = {
+  id: string
+  type: string
+  rank: RankName
+  sequence: number
+  ggReward: number
+  rewardType: 'gg' | 'auto_jump'
+  target: number
+  params: Record<string, any> | null
+  threadUuid: string | null
+  bingoCategory: string | null
+  seasonId: number
+  clonedFromId: string | null
+  createdAt: number
+  // with context=true
+  completionCount?: number
+  topCompleters?: Array<{
+    counterUuid: string
+    username: string
+    name: string
+    completedAt: number
+    ggAwarded: number
+  }>
+}
+
+export type ThreadRankRow = {
+  id: number
+  counterUuid: string
+  threadUuid: string | null
+  seasonId: number | null
+  rank: RankName
+  division: 1 | 2 | 3
+  gg: number
+  ggTotal: number
+  // enriched
+  username?: string
+  name?: string
+  avatar?: string
+  discordId?: string
+  color?: string
+  // Only populated by getRankCounterProfile — title (falls back to name) for threadUuid rows,
+  // null for the sitewide row.
+  threadName?: string | null
+}
+
+export type ChallengeLog = {
+  id: number
+  counterUuid: string
+  challengeId: string
+  seasonId: number | null
+  context: 'rank' | 'bingo' | 'meta'
+  progress: number
+  target: number
+  accuracyWindow: string | null
+  completedAt: number | null
+  ggAwarded: number
+  createdAt: number
+  updatedAt: number
+  // null = completed but not yet replayed (see the Rank tab's replay system) — only ever
+  // transitions null -> a timestamp, once its completion animation has actually played.
+  seenAt?: number | null
+  // null = this still-in-progress instance's one-time entrance bar-fill animation (0 -> current
+  // progress) hasn't played yet — only ever transitions null -> a timestamp. Durable server-side
+  // flag so the animation doesn't replay every time the Rank tab is reopened (RankTabPanel
+  // unmounts on tab switch, wiping any purely client-side "already animated" tracking).
+  entranceSeenAt?: number | null
+  // Joined in from the log's own RankChallenge template server-side — ThreadPage renders
+  // purely from these logs and never fetches the template catalog itself.
+  type: string
+  params: Record<string, any> | null
+  threadUuid: string | null
+  ggReward: number
+  rank: RankName
+  // This template's 1-based position within its (type, rank, chainKey) combo, and the total
+  // number of sequence steps currently in that combo — e.g. sequencePosition: 1, sequenceTotal: 4
+  // renders as "1/4" on the card.
+  sequencePosition: number
+  sequenceTotal: number
+}
+
+export type RankUpEvent = {
+  id: number
+  counterUuid: string
+  threadUuid: string | null
+  seasonId: number | null
+  fromRank: RankName
+  fromDivision: 1 | 2 | 3
+  toRank: RankName
+  toDivision: 1 | 2 | 3
+  createdAt: number
+  seenAt: number | null
+}
+
+// unseenCompletions carry a server-computed chainKey so the frontend can group/sequence
+// multi-step chain replays without reimplementing the backend's chain-grouping logic.
+export type ChallengeLogWithChainKey = ChallengeLog & { chainKey: string }
+
+export type ReplayData = {
+  unseenCompletions: ChallengeLogWithChainKey[]
+  unseenRankUps: RankUpEvent[]
+}
+
+// Lightweight badge-count shape — see getUnseenCompletionCounts in the backend RankService.
+export type UnseenCompletionCounts = {
+  total: number
+  byThread: Record<string, number>
+  sitewide: number
+}
+
+export type ThreadLeaderboardResponse = {
+  season: RankSeason | null
+  thread: { uuid: string; name: string; title: string }
+  entries: ThreadRankRow[]
+}
+
+export type CounterRankProfileResponse = {
+  counter: { uuid: string; username: string; name: string; avatar: string; discordId: string; color: string }
+  ranks: ThreadRankRow[]
+  challengeProgress: ChallengeLog[]
+  recentCompletions: ChallengeLog[]
+  recentCompletionsTotal: number
+}
+
+// Payload of the 'rank_updated' socket event — carries exactly what changed during ONE post
+// attempt's evaluation, joined with display fields already. Only emitted when something
+// genuinely changed (see challenge.processor.ts); the frontend applies this directly to state
+// and never re-fetches getRankCounterProfile on a live update, only at mount/reconnect.
+export type RankUpdatedDelta = {
+  threadUuid: string
+  progress: ChallengeLog[]
+  completions: ChallengeLog[]
+  threadRank: ThreadRankRow | null
+  sitewideRank: ThreadRankRow | null
+  rankUpEvents: RankUpEvent[]
+}
+
+export type SitewideLeaderboardResponse = {
+  season: RankSeason | null
+  entries: Array<{
+    counterUuid: string
+    username: string
+    name: string
+    avatar: string
+    discordId: string
+    color: string
+    totalGg: number
+    rank: RankName
+    division: 1 | 2 | 3
+  }>
+  total: number
+}
+
+export type SpeedDistribution = {
+  p10: number
+  p25: number
+  p50: number
+  p75: number
+  p90: number
+  sampleSize: number
+}
+
+export type GgProjection = {
+  dailyGgAvg: number
+  currentGgTotal: number
+  targetRank: RankName | null
+  targetRankGgNeeded: number
+  daysToTarget: number | null
+  currentRank: RankName
+  currentDivision: 1 | 2 | 3
+}
+
+export type VolumeHistogramEntry = { bucket: string; count: number }

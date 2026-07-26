@@ -17,6 +17,8 @@ import {
   Chip,
   Collapse,
   Divider,
+  Dialog,
+  DialogContent,
   Drawer,
   Link,
   List,
@@ -71,6 +73,8 @@ import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight'
 import MailIcon from '@mui/icons-material/Mail'
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 import KeyboardIcon from '@mui/icons-material/Keyboard'
+import ViewModuleIcon from '@mui/icons-material/ViewModule'
+import { BingoMiniWidget } from './bingo/BingoMiniWidget'
 
 export const Sidebar = () => {
   const navigate = useNavigate()
@@ -98,6 +102,7 @@ export const Sidebar = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [threadPickerOpen, setThreadPickerOpen] = useState(false)
+  const [bingoQuickOpen, setBingoQuickOpen] = useState(false)
 
   const [modalOpen, setModalOpen] = useState<boolean>((counter && !counter.color && true) || false)
   const [registrationToggle, setRegistrationToggle] = useState(true)
@@ -998,22 +1003,35 @@ export const Sidebar = () => {
           {counter && user && (
             <div>
               {isDesktop && (
-                <Chip
-                  icon={<MonetizationOnIcon style={{ color: theme.palette.mode == 'dark' ? 'gold' : 'black' }} />}
-                  label={Number(user.money).toLocaleString()}
-                  size="small"
-                  onClick={() => {
-                    navigate(`/shop`)
-                  }}
-                  sx={{
-                    backgroundColor: theme.palette.mode == 'dark' ? 'rgba(255, 215, 0, 0.5)' : 'gold',
-                    cursor: 'pointer',
-                    '& .MuiChip-label': {
-                      height: '100%',
-                      lineHeight: '200%',
-                    },
-                  }}
-                />
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                  <Chip
+                    icon={<MonetizationOnIcon style={{ color: theme.palette.mode == 'dark' ? 'gold' : 'black' }} />}
+                    label={Number(user.money).toLocaleString()}
+                    size="small"
+                    onClick={() => {
+                      navigate(`/shop`)
+                    }}
+                    sx={{
+                      backgroundColor: theme.palette.mode == 'dark' ? 'rgba(255, 215, 0, 0.5)' : 'gold',
+                      cursor: 'pointer',
+                      '& .MuiChip-label': {
+                        height: '100%',
+                        lineHeight: '200%',
+                      },
+                    }}
+                  />
+                  <Tooltip title="Open small bingo board">
+                    <IconButton
+                      size="small"
+                      color="inherit"
+                      onClick={() => {
+                        setBingoQuickOpen(true)
+                      }}
+                    >
+                      <ViewModuleIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               )}
               <IconButton
                 size="large"
@@ -1111,6 +1129,11 @@ export const Sidebar = () => {
               </Menu>
             </div>
           )}
+          <Dialog open={bingoQuickOpen} onClose={() => setBingoQuickOpen(false)} maxWidth="sm" fullWidth>
+            <DialogContent>
+              <BingoMiniWidget title="Bingo" />
+            </DialogContent>
+          </Dialog>
         </Toolbar>
       </AppBar>
       {threadPickerMemo}

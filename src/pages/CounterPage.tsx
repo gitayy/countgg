@@ -3,7 +3,20 @@ import { useContext, useEffect, useState } from 'react'
 import { SocketContext } from '../utils/contexts/SocketContext'
 import { useFetchLoadCounter } from '../utils/hooks/useFetchLoadCounter'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
-import { Avatar, Box, Button, Card, CardContent, Chip, Grid, LinearProgress, MenuItem, Select, Tab, Typography } from '@mui/material'
+import {
+  Avatar,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Grid,
+  LinearProgress,
+  MenuItem,
+  Select,
+  Tab,
+  Typography,
+} from '@mui/material'
 import TabContext from '@mui/lab/TabContext'
 import TabList from '@mui/lab/TabList'
 import TabPanel from '@mui/lab/TabPanel'
@@ -12,14 +25,45 @@ import { Achievements } from '../components/Achievements'
 import { Loading } from '../components/Loading'
 import { CounterCard } from '../components/CounterCard'
 import { calculateLevel, convertToTimestamp, formatDateExact, formatTimeDiff } from '../utils/helpers'
-import { modToggleBan, modToggleMute } from '../utils/api'
-import { AchievementType } from '../utils/types'
+import { modToggleBan, modToggleMute, getRankCounterProfile } from '../utils/api'
+import { AchievementType, CounterRankProfileResponse } from '../utils/types'
 import { UserContext } from '../utils/contexts/UserContext'
 import LeaderboardGraph from '../components/LeaderboardGraph'
 import { XPDisplay } from '../components/XPDisplay'
 import Spoiler from '../components/Spoiler'
 import CggLogo2 from '../assets/emotes/gg.png'
 import ThreadStatsCard from '../components/ThreadStatsCard'
+import { RankProgressCard } from '../components/RankProgressCard'
+import { RankIconBadge } from '../components/RankIconBadge'
+import { divFloor as rankDivFloor, divCeil as rankDivCeil, RANK_COLORS, RANK_ORDER } from '../utils/rankColors'
+import { ThreadRankRow } from '../utils/types'
+
+// Compact single-line thread-rank row for this page specifically — the full RankProgressCard
+// (icon + big 56px bar + expandable division ladder) is the right amount of weight for a single
+// headline sitewide stat, but far too heavy repeated per-thread across a counter who's posted in
+// dozens of threads. Just badge + thread name + a thin bar + GG total, one line each.
+const CompactThreadRankRow = ({ row }: { row: ThreadRankRow }) => {
+  const floor = rankDivFloor(row.rank, row.division)
+  const ceil = rankDivCeil(row.rank, row.division)
+  const hasNextDiv = isFinite(ceil) && ceil > floor
+  const pct = hasNextDiv ? Math.min(100, Math.round(((row.gg - floor) / (ceil - floor)) * 100)) : 100
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, py: 0.5 }}>
+      <RankIconBadge rank={row.rank} division={row.division} size="mini" />
+      <Typography variant="body2" sx={{ flex: '0 1 auto', minWidth: 0 }} noWrap title={row.threadName ?? undefined}>
+        {row.threadName ?? 'Unknown thread'}
+      </Typography>
+      <LinearProgress
+        variant="determinate"
+        value={pct}
+        sx={{ flex: 1, height: 5, borderRadius: 1, '& .MuiLinearProgress-bar': { bgcolor: RANK_COLORS[row.rank] } }}
+      />
+      <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0, minWidth: 70, textAlign: 'right' }}>
+        {row.ggTotal.toLocaleString()} GG
+      </Typography>
+    </Box>
+  )
+}
 
 export const CounterPage = () => {
   const params = useParams()
@@ -94,8 +138,19 @@ export const CounterPage = () => {
 
   const [tabValue, setTabValue] = useState('1')
 
+  const [rankProfile, setRankProfile] = useState<CounterRankProfileResponse | null>(null)
+  const [rankTabLoaded, setRankTabLoaded] = useState(false)
+
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
     setTabValue(newValue)
+    if (newValue === '4' && !rankTabLoaded && loadedCounter) {
+      setRankTabLoaded(true)
+      getRankCounterProfile(loadedCounter.username)
+        .then(({ data }) => {
+          if (isMounted.current) setRankProfile(data)
+        })
+        .catch(console.error)
+    }
   }
 
   const toggleBan = async () => {
@@ -162,6 +217,7 @@ export const CounterPage = () => {
                 disabled={!loadedCounterStats || Object.keys(loadedCounterStats).length === 0 ? true : false}
               />
               <Tab label="Achievements" value="3" />
+              <Tab label="Rank" value="4" />
             </TabList>
           </Box>
           <TabPanel value="1">
@@ -303,6 +359,59 @@ export const CounterPage = () => {
               counter={loadedCounter}
               counterAchievements={achievements}
             ></Achievements>
+          </TabPanel>
+          <TabPanel value="4">
+            {!rankTabLoaded ? (
+              <Typography color="text.secondary">Click this tab to load rank data.</Typography>
+            ) : !rankProfile ? (
+              <Loading />
+            ) : (
+              (() => {
+                const { ranks } = rankProfile
+                const sitewideRank = ranks.find((r) => r.threadUuid == null)
+                // Highest rank tier first, then highest division within that tier — not GG total,
+                // so e.g. a Silver III thread always outranks a Bronze I thread regardless of
+                // which has more accumulated GG.
+                const threadRanks = [...ranks.filter((r) => r.threadUuid != null)].sort((a, b) => {
+                  const rankDiff = RANK_ORDER.indexOf(b.rank) - RANK_ORDER.indexOf(a.rank)
+                  if (rankDiff !== 0) return rankDiff
+                  return b.division - a.division
+                })
+                return (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {sitewideRank && (
+                      <RankProgressCard
+                        rank={sitewideRank.rank}
+                        division={sitewideRank.division}
+                        gg={sitewideRank.gg}
+                        divFloor={rankDivFloor(sitewideRank.rank, sitewideRank.division)}
+                        divCeil={rankDivCeil(sitewideRank.rank, sitewideRank.division)}
+                        threadName="Sitewide"
+                      />
+                    )}
+
+                    {threadRanks.length > 0 && (
+                      <Card variant="outlined">
+                        <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+                          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 0.5 }}>
+                            Thread Ranks
+                          </Typography>
+                          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                            {threadRanks.map((r) => (
+                              <CompactThreadRankRow key={r.id} row={r} />
+                            ))}
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {ranks.length === 0 && (
+                      <Typography color="text.secondary">No rank data yet for this counter.</Typography>
+                    )}
+                  </Box>
+                )
+              })()
+            )}
           </TabPanel>
         </TabContext>
       </Box>

@@ -39,6 +39,8 @@ import { AchievementPage } from './pages/AchievementPage'
 import { ContestPage } from './pages/ContestPage'
 import { TheRockPage } from './pages/TheRockPage'
 import LrwoedPage from './lrwoed/LrwoedPage'
+import { BingoPage } from './pages/BingoPage'
+import { BingoGamePage } from './pages/BingoGamePage'
 import { AdminSystemMessagePage } from './pages/AdminSystemMessagePage'
 import { SeasonPage } from './pages/SeasonPage'
 import { useFetchAllThreads } from './utils/hooks/useFetchAllThreads'
@@ -58,6 +60,9 @@ import { NumberShufflePage } from './pages/NumberShufflePage'
 import ServersPage from './pages/ServersPage'
 import MacroPresetsPage from './pages/MacroPresetsPage'
 import MacroPresetViewPage from './pages/MacroPresetViewPage'
+import { RankPage } from './pages/RankPage'
+import { RankThreadPage } from './pages/RankThreadPage'
+import { RankAdminPage } from './pages/RankAdminPage'
 import './utils/styles/wavy.scss'
 
 function App() {
@@ -303,6 +308,8 @@ function App() {
                         <Route path="/rps" element={<RPSPage />} />
                         <Route path="/shuffle" element={<NumberShufflePage />} />
                         <Route path="/r/livecounting" element={<LCPage />} />
+                        <Route path="/bingo" element={<BingoPage />} />
+                        <Route path="/bingo/:gameId" element={<BingoGamePage />} />
                         <Route path="/lrwoed" element={<LrwoedPage />} />
                         <Route path="/rewards" element={<SeasonPage />} />
                         <Route path="/blogs" element={<BlogsPage />} />
@@ -315,6 +322,9 @@ function App() {
                         <Route path="/macros/:presetRef/:versionNumber" element={<MacroPresetViewPage />} />
                         {user && counter && <Route path="/mentions" element={<MentionsPage />} />}
                         {user && counter && <Route path="/shop" element={<ShopPage />} />}
+                        <Route path="/rank" element={<RankPage />} />
+                        <Route path="/rank/thread/:threadName" element={<RankThreadPage />} />
+                        <Route path="/rank/admin" element={<RankAdminPage />} />
                       </Routes>
                       <SiteChat />
                     </ThreadProvider>

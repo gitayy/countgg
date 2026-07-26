@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Alert, Box, Fab, FormControl, InputLabel, MenuItem, Select, Skeleton, Tab, Typography } from '@mui/material'
+import { Alert, Box, Fab, FormControl, InputLabel, MenuItem, Select, Skeleton, Tab, TextField, Typography } from '@mui/material'
 import { Theme, useMediaQuery } from '@mui/material'
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp'
 import { useLocation, useSearchParams } from 'react-router-dom'
@@ -18,6 +18,7 @@ import moment from 'moment-timezone'
 import LeaderboardGraph from '../components/LeaderboardGraph'
 import { useStatsRange } from '../utils/hooks/useStatsRange'
 import { StatsFiltersBar } from '../components/stats/StatsFiltersBar'
+import { ThresholdLeaderboard } from '../components/ThresholdLeaderboard'
 
 const STATS_TABS = {
   LEADERBOARD: 'leaderboard',
@@ -25,6 +26,7 @@ const STATS_TABS = {
   ACCOLADES: 'accolades',
   SPEED: 'speed',
   SPLITS: 'splits',
+  BEST_DAYS: 'best_days',
 } as const
 
 const normalizeStatsTabParam = (tabParam: string | null) => {
@@ -92,6 +94,23 @@ export const StatsPage = () => {
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [speedViewMode, setSpeedViewMode] = useState<'real_only' | 'all' | 'fake_only'>('all')
   const [splitViewMode, setSplitViewMode] = useState<'real_only' | 'all' | 'fake_only'>('real_only')
+  // User-facing percentile for the speed/split distribution charts: 100 = best (fastest), 0 = worst
+  // (slowest), 50 = median. The backend's customPercentile is a raw quantile fraction over times
+  // sorted ascending (low = fast), so it's the inverse of this value.
+  const [speedPercentile, setSpeedPercentile] = useState(100)
+  const [splitPercentile, setSplitPercentile] = useState(100)
+  // Debounced so typing a percentile doesn't re-fetch (and re-parse the thread's multi-MB
+  // stats JSON) on every keystroke.
+  const [debouncedSpeedPercentile, setDebouncedSpeedPercentile] = useState(speedPercentile)
+  const [debouncedSplitPercentile, setDebouncedSplitPercentile] = useState(splitPercentile)
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSpeedPercentile(speedPercentile), 400)
+    return () => clearTimeout(timeout)
+  }, [speedPercentile])
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSplitPercentile(splitPercentile), 400)
+    return () => clearTimeout(timeout)
+  }, [splitPercentile])
   const [hasResolvedInitialThreadParam, setHasResolvedInitialThreadParam] = useState(!initialThreadParam)
 
   const { allThreads, allThreadsLoading } = useFetchAllThreads()
@@ -99,7 +118,9 @@ export const StatsPage = () => {
     name: 'all',
     uuid: 'all',
   })
-  const [selectedGraph, setSelectedGraph] = useState<'cumulative-total' | 'cumulative-compare' | 'daily-total' | 'daily-compare'>('cumulative-total')
+  const [selectedGraph, setSelectedGraph] = useState<'cumulative-total' | 'cumulative-compare' | 'daily-total' | 'daily-compare'>(
+    'cumulative-total',
+  )
   const statsRequestSeq = useRef(0)
   const statsDateRange = useMemo(() => {
     const toKey = (value: any) => {
@@ -182,6 +203,7 @@ export const StatsPage = () => {
     if (hasStats && hasAccolades) tabs.push(STATS_TABS.ACCOLADES)
     if (hasStats && hasSpeedStats) tabs.push(STATS_TABS.SPEED)
     if (hasStats && hasSplitStats) tabs.push(STATS_TABS.SPLITS)
+    tabs.push(STATS_TABS.BEST_DAYS)
     return tabs
   }, [hasStats, hasAccolades, hasSpeedStats, hasSplitStats])
   const effectiveTabValue = useMemo(() => {
@@ -243,6 +265,7 @@ export const StatsPage = () => {
     }
 
     try {
+      const backendPercentile = 100 - (isSpeed ? debouncedSpeedPercentile : debouncedSplitPercentile)
       const { data } = await getThreadStatsDetails(
         selectedThread.name,
         type,
@@ -252,6 +275,7 @@ export const StatsPage = () => {
         undefined,
         statsDateRange.startDateStr,
         statsDateRange.endDateStr,
+        backendPercentile,
       )
       if (!isMounted.current) return
       for (const counter of data.counters) {
@@ -322,6 +346,7 @@ export const StatsPage = () => {
     try {
       const hasSelectedUsers = selectedUserUUIDs.length > 0
       const limit = hasSelectedUsers ? (isSpeed ? selectedUserPageSize : selectedSplitPageSize) : rowsPerPage
+      const backendPercentile = 100 - (isSpeed ? debouncedSpeedPercentile : debouncedSplitPercentile)
       const res = await getThreadStatsDetails(
         selectedThread.name,
         type,
@@ -331,6 +356,7 @@ export const StatsPage = () => {
         undefined,
         statsDateRange.startDateStr,
         statsDateRange.endDateStr,
+        backendPercentile,
       )
       const data = res.data
 
@@ -397,6 +423,20 @@ export const StatsPage = () => {
     speedSelectedUserUUIDs,
     splitSelectedUserUUIDs,
   ])
+
+  useEffect(() => {
+    if (speedQueryLoaded) {
+      loadStatsDetailPage('speed', false, speedSelectedUserUUIDs)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSpeedPercentile])
+
+  useEffect(() => {
+    if (splitQueryLoaded) {
+      loadStatsDetailPage('splitSpeed', false, splitSelectedUserUUIDs)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSplitPercentile])
 
   const handleSpeedSelectedUsersChange = (selectedUserUUIDs: string[]) => {
     const next = [...selectedUserUUIDs].sort()
@@ -563,6 +603,7 @@ export const StatsPage = () => {
             {hasStats && availableAccolades.length > 0 && <Tab label="Accolades" value={STATS_TABS.ACCOLADES} />}
             {hasStats && hasSpeedStats && <Tab label="Speed" value={STATS_TABS.SPEED} />}
             {hasStats && hasSplitStats && <Tab label="Splits" value={STATS_TABS.SPLITS} />}
+            <Tab label="Daily Counts" value={STATS_TABS.BEST_DAYS} />
           </TabList>
         </Box>
 
@@ -577,6 +618,15 @@ export const StatsPage = () => {
               ) : (
                 renderEmptyState('Leaderboard')
               ))}
+          </TabPanel>
+
+          <TabPanel value={STATS_TABS.BEST_DAYS} sx={{ p: 0 }}>
+            <Typography variant="h6">
+              Daily Counts{selectedThread.uuid === 'all' ? ' — Sitewide' : ''}
+            </Typography>
+            <Box sx={{ mt: 1 }}>
+              <ThresholdLeaderboard kind="daily_counts" threadName={selectedThread.name} externalDateRange={statsDateRange} />
+            </Box>
           </TabPanel>
 
           <TabPanel value={STATS_TABS.GRAPHS} sx={{ p: 0 }}>
@@ -645,19 +695,44 @@ export const StatsPage = () => {
                 tabSkeleton
               ) : (
                 <>
-                  <FormControl size="small" sx={{ mb: 1, minWidth: 220 }}>
-                    <InputLabel id="speed-view-mode-label">Speed View</InputLabel>
-                    <Select
-                      labelId="speed-view-mode-label"
-                      label="Speed View"
-                      value={speedViewMode}
-                      onChange={(e) => setSpeedViewMode(e.target.value as 'real_only' | 'all' | 'fake_only')}
-                    >
-                      <MenuItem value="real_only">Real only</MenuItem>
-                      <MenuItem value="all">All</MenuItem>
-                      <MenuItem value="fake_only">Fake only</MenuItem>
-                    </Select>
-                  </FormControl>
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexWrap: 'wrap', mb: 1 }}>
+                    <FormControl size="small" sx={{ minWidth: 220 }}>
+                      <InputLabel id="speed-view-mode-label">Speed View</InputLabel>
+                      <Select
+                        labelId="speed-view-mode-label"
+                        label="Speed View"
+                        value={speedViewMode}
+                        onChange={(e) => setSpeedViewMode(e.target.value as 'real_only' | 'all' | 'fake_only')}
+                      >
+                        <MenuItem value="real_only">Real only</MenuItem>
+                        <MenuItem value="all">All</MenuItem>
+                        <MenuItem value="fake_only">Fake only</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      label="Percentile"
+                      type="number"
+                      size="small"
+                      value={speedPercentile}
+                      onChange={(e) => {
+                        const parsed = Number(e.target.value)
+                        if (e.target.value !== '' && Number.isFinite(parsed)) {
+                          setSpeedPercentile(Math.min(100, Math.max(0, Math.round(parsed))))
+                        }
+                      }}
+                      slotProps={{ htmlInput: { min: 0, max: 100, step: 1 } }}
+                      helperText={
+                        speedPercentile === 100
+                          ? 'Best'
+                          : speedPercentile === 0
+                            ? 'Worst'
+                            : speedPercentile === 50
+                              ? 'Median'
+                              : undefined
+                      }
+                      sx={{ width: 140 }}
+                    />
+                  </Box>
                   <SpeedTable
                     speed={displayedSpeed}
                     thread={selectedThread}
@@ -666,6 +741,7 @@ export const StatsPage = () => {
                     onEnsurePageLoaded={(page, selectedUserUUIDs) => ensureDetailPageLoaded('speed', page, selectedUserUUIDs)}
                     onSelectedUsersChange={handleSpeedSelectedUsersChange}
                     totalCount={speedTotal}
+                    percentile={speedPercentile}
                     distributionStats={
                       speedViewMode === 'all'
                         ? speedDistributionStats
@@ -692,19 +768,44 @@ export const StatsPage = () => {
                 tabSkeleton
               ) : (
                 <>
-                  <FormControl size="small" sx={{ mb: 1, minWidth: 220 }}>
-                    <InputLabel id="split-view-mode-label">Split View</InputLabel>
-                    <Select
-                      labelId="split-view-mode-label"
-                      label="Split View"
-                      value={splitViewMode}
-                      onChange={(e) => setSplitViewMode(e.target.value as 'real_only' | 'all' | 'fake_only')}
-                    >
-                      <MenuItem value="real_only">Real only</MenuItem>
-                      <MenuItem value="all">All</MenuItem>
-                      <MenuItem value="fake_only">Fake only</MenuItem>
-                    </Select>
-                  </FormControl>
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexWrap: 'wrap', mb: 1 }}>
+                    <FormControl size="small" sx={{ minWidth: 220 }}>
+                      <InputLabel id="split-view-mode-label">Split View</InputLabel>
+                      <Select
+                        labelId="split-view-mode-label"
+                        label="Split View"
+                        value={splitViewMode}
+                        onChange={(e) => setSplitViewMode(e.target.value as 'real_only' | 'all' | 'fake_only')}
+                      >
+                        <MenuItem value="real_only">Real only</MenuItem>
+                        <MenuItem value="all">All</MenuItem>
+                        <MenuItem value="fake_only">Fake only</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      label="Percentile"
+                      type="number"
+                      size="small"
+                      value={splitPercentile}
+                      onChange={(e) => {
+                        const parsed = Number(e.target.value)
+                        if (e.target.value !== '' && Number.isFinite(parsed)) {
+                          setSplitPercentile(Math.min(100, Math.max(0, Math.round(parsed))))
+                        }
+                      }}
+                      slotProps={{ htmlInput: { min: 0, max: 100, step: 1 } }}
+                      helperText={
+                        splitPercentile === 100
+                          ? 'Best'
+                          : splitPercentile === 0
+                            ? 'Worst'
+                            : splitPercentile === 50
+                              ? 'Median'
+                              : undefined
+                      }
+                      sx={{ width: 140 }}
+                    />
+                  </Box>
                   <SpeedTable
                     speed={displayedSplitSpeed}
                     thread={selectedThread}
@@ -716,6 +817,7 @@ export const StatsPage = () => {
                     onEnsurePageLoaded={(page, selectedUserUUIDs) => ensureDetailPageLoaded('splitSpeed', page, selectedUserUUIDs)}
                     onSelectedUsersChange={handleSplitSelectedUsersChange}
                     totalCount={splitTotal}
+                    percentile={splitPercentile}
                     distributionStats={
                       splitViewMode === 'all'
                         ? splitDistributionStats
