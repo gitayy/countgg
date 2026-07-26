@@ -620,14 +620,7 @@ export const RankTabPanel = ({
   const [threadLeaderboard, setThreadLeaderboard] = useState<LeaderboardEntry[]>([])
   const [rankTabLoaded, setRankTabLoaded] = useState(false)
   const rankTabLoadedRef = useRef(false)
-  // initialRankProfile is only ever good for ONE first-activation reuse across the whole page's
-  // lifetime — it's fetched once at ThreadPage mount and reflects whatever thread was active
-  // (or none) at that moment, not necessarily the thread the user opens the Rank tab on later.
-  // Consuming it more than once (e.g. on a subsequent thread switch's first activation) would
-  // apply stale/wrong-thread data instead of doing a real fetch for that thread — this ref just
-  // tracks whether it's already been used so every later first-activation always fetches fresh.
-  const hasConsumedInitialRankProfileRef = useRef(false)
-  // Set alongside hasConsumedInitialRankProfileRef, right when initialRankProfile is used
+  // Set when initialRankProfilePromiseRef is consumed (nulled and awaited) instead of a real
   // instead of a real fetch — the two "replay just finished, jump to live state" effects below
   // otherwise always call fetchRankData themselves the moment each scope's (typically instant,
   // nothing-to-replay) backlog finishes, which would immediately re-fetch the exact data
@@ -826,7 +819,7 @@ export const RankTabPanel = ({
       rankTabLoadedRef.current = true
       // Reuse ThreadPage's own mount-time getRankCounterProfile fetch instead of issuing an
       // identical second request the instant the tab opens — but only once, ever, across the
-      // page's lifetime (see hasConsumedInitialRankProfileRef) since a later thread switch's
+      // page's lifetime — a later thread switch's
       // first activation needs this specific thread's CURRENT data, not whatever the page
       // happened to have loaded when it first mounted.
       //
@@ -838,9 +831,15 @@ export const RankTabPanel = ({
       // failed) or a later thread switch correctly wants fresh data instead.
       const thisThreadUuid = thread.uuid
       const thisUsername = counter.username
-      if (!hasConsumedInitialRankProfileRef.current && initialRankProfilePromiseRef.current) {
-        hasConsumedInitialRankProfileRef.current = true
-        initialRankProfilePromiseRef.current.then((data) => {
+      // Null out the ref after consuming it so that if RankTabPanel unmounts and remounts
+      // (tab switch away then back), a subsequent activation can't re-use the same
+      // page-load-time promise, which would apply stale pre-completion data on top of
+      // already-applied socket deltas (the original bug: old challenge reappears at 0
+      // progress alongside the new chain challenge, GG resets to pre-completion value).
+      const initialPromise = initialRankProfilePromiseRef.current
+      if (initialPromise) {
+        initialRankProfilePromiseRef.current = null
+        initialPromise.then((data) => {
           if (!isMounted.current) return
           if (data) {
             skipNextThreadReplayFetchRef.current = true
@@ -961,14 +960,10 @@ export const RankTabPanel = ({
   // ThreadPage fetches this same endpoint eagerly on page mount and exposes it as an in-flight
   // promise — reused here (awaited, not raced) instead of a duplicate fetch, since RankTabPanel
   // fully remounts on every Rank-tab switch and would otherwise re-fetch the leaderboard from
-  // scratch every time. Consumed once (hasConsumedInitialSitewideLeaderboardRef): once the tab
-  // has been selected at least once, a later re-selection should still be free of a real fetch
-  // per-render, but the value never needs re-deriving from the promise again either way since
-  // sitewideLeaderboard state persists for the component's lifetime.
-  const hasConsumedInitialSitewideLeaderboardRef = useRef(false)
+  // scratch every time. The ref is nulled out after first consumption so a later remount
+  // (tab switch away then back) fetches fresh data instead of re-applying the stale promise.
   useEffect(() => {
-    if (rankScopeTab !== 'sitewide' || hasConsumedInitialSitewideLeaderboardRef.current) return
-    hasConsumedInitialSitewideLeaderboardRef.current = true
+    if (rankScopeTab !== 'sitewide') return
     const applyEntries = (data: SitewideLeaderboardResponse) => {
       if (!isMounted.current) return
       setSitewideLeaderboard(
@@ -982,11 +977,14 @@ export const RankTabPanel = ({
           rank: e.rank,
           division: e.division,
           gg: e.totalGg,
+          ggTotal: e.totalGg,
         })),
       )
     }
-    if (initialSitewideLeaderboardPromiseRef.current) {
-      initialSitewideLeaderboardPromiseRef.current.then((data) => {
+    const initialPromise = initialSitewideLeaderboardPromiseRef.current
+    if (initialPromise) {
+      initialSitewideLeaderboardPromiseRef.current = null
+      initialPromise.then((data) => {
         if (data) applyEntries(data)
         else
           getRankSitewideLeaderboard()
@@ -1010,11 +1008,8 @@ export const RankTabPanel = ({
   // Same reuse-ThreadPage's-in-flight-promise pattern as the sitewide fetch above, but keyed to
   // thread_name (re-consumed on every thread switch, unlike the once-ever sitewide reuse) since
   // ThreadPage's own thread-leaderboard fetch is itself re-issued per thread_name change.
-  const consumedInitialThreadLeaderboardForRef = useRef<string | null>(null)
   useEffect(() => {
     if (!rankThreadRow || !thread_name) return
-    if (consumedInitialThreadLeaderboardForRef.current === thread_name) return
-    consumedInitialThreadLeaderboardForRef.current = thread_name
     const applyEntries = (data: ThreadLeaderboardResponse) => {
       if (!isMounted.current) return
       setThreadLeaderboard(
@@ -1028,11 +1023,14 @@ export const RankTabPanel = ({
           rank: e.rank,
           division: e.division,
           gg: e.gg,
+          ggTotal: e.ggTotal,
         })),
       )
     }
-    if (initialThreadLeaderboardPromiseRef.current) {
-      initialThreadLeaderboardPromiseRef.current.then((data) => {
+    const initialPromise = initialThreadLeaderboardPromiseRef.current
+    if (initialPromise) {
+      initialThreadLeaderboardPromiseRef.current = null
+      initialPromise.then((data) => {
         if (data) applyEntries(data)
         else
           getRankThreadLeaderboard(thread_name)
@@ -1328,8 +1326,8 @@ export const RankTabPanel = ({
           <Box>
             <Divider sx={{ mb: 1 }} />
             {rankScopeTab === 'thread'
-              ? hasThreadRank && <RankLeaderboardMini entries={threadLeaderboard} myUsername={counter?.username} />
-              : sitewideRankRow && <RankLeaderboardMini entries={sitewideLeaderboard} myUsername={counter?.username} />}
+              ? hasThreadRank && <RankLeaderboardMini entries={threadLeaderboard} />
+              : sitewideRankRow && <RankLeaderboardMini entries={sitewideLeaderboard} />}
           </Box>
         )}
 

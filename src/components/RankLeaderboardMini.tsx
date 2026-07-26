@@ -29,38 +29,28 @@ export type LeaderboardEntry = {
   rank: RankName
   division: 1 | 2 | 3
   gg: number
+  ggTotal: number
 }
 
 type Props = {
   entries: LeaderboardEntry[]
-  myUsername?: string
 }
 
-// Compact ranked-member table for the Rank tab — collapsed by default to positions 1/2/3 plus
-// "you" (or just 1/2/3 if you're already in the top 3, since you'd otherwise be listed twice).
-// Expandable to the full list on click. Everyone in `entries` already has a non-zero/real rank
-// in this scope (thread or sitewide) — a counter with no real standing yet simply has no
-// ThreadRank row and never appears in the leaderboard query that produces these entries.
-//
-// Table chrome (TableContainer/TableHead, CardHeader avatar+name, Link for the name) matches
-// LeaderboardTable/SpeedTable — the standard leaderboard styling used on the Stats page — rather
-// than a bespoke look. Rank/GG columns and the collapse-to-top-3 behavior are kept since they're
-// specific to this feature and have no standard-leaderboard equivalent.
-export const RankLeaderboardMini = ({ entries: allEntries, myUsername }: Props) => {
+// Compact ranked-member table for the Rank tab — shows top 5 by default, expandable to full
+// list. Sorted by ggTotal (all-time) so rank-ups don't make someone disappear (gg resets to 0
+// on promotion). Shows all tiers together so higher-rank counters are visible to everyone.
+export const RankLeaderboardMini = ({ entries: allEntries }: Props) => {
   const navigate = useNavigate()
   const [expanded, setExpanded] = useState(false)
 
-  // 0 GG means no real standing yet (e.g. just assigned to the thread/season) — not worth
-  // cluttering the leaderboard with rows that have nothing to show.
-  const entries = allEntries.filter((e) => e.gg > 0)
+  // Filter out entries with no total GG yet — gg (current-rank progress) can be 0 after a
+  // rank-up, but ggTotal reflects all-time earnings and is the right signal for "has real standing".
+  const entries = allEntries.filter((e) => e.ggTotal > 0)
   if (entries.length === 0) return null
 
-  const myIndex = myUsername ? entries.findIndex((e) => e.username === myUsername) : -1
-  const isMeInTop3 = myIndex >= 0 && myIndex < 3
-  const collapsedIndices =
-    isMeInTop3 || myIndex < 0 ? [0, 1, 2].filter((i) => i < entries.length) : [0, 1, 2, myIndex].filter((i) => i < entries.length)
-  const visibleIndices = expanded ? entries.map((_, i) => i) : collapsedIndices
-  const canExpand = !expanded && entries.length > collapsedIndices.length
+  const collapsedCount = 5
+  const visibleEntries = expanded ? entries : entries.slice(0, collapsedCount)
+  const canExpand = !expanded && entries.length > collapsedCount
 
   return (
     <Box>
@@ -75,9 +65,7 @@ export const RankLeaderboardMini = ({ entries: allEntries, myUsername }: Props) 
             </TableRow>
           </TableHead>
           <TableBody>
-            {visibleIndices.map((i) => {
-              const entry = entries[i]
-              const isMe = entry.username === myUsername
+            {visibleEntries.map((entry, i) => {
               const rankColor = RANK_COLORS[entry.rank] ?? 'rgba(255,255,255,0.15)'
               return (
                 <TableRow key={entry.counterUuid}>
@@ -104,7 +92,6 @@ export const RankLeaderboardMini = ({ entries: allEntries, myUsername }: Props) 
                           }}
                         >
                           {entry.name || entry.username}
-                          {isMe && ' (you)'}
                         </Link>
                       }
                     />
@@ -114,7 +101,7 @@ export const RankLeaderboardMini = ({ entries: allEntries, myUsername }: Props) 
                   </TableCell>
                   <TableCell align="right">
                     <Typography variant="caption" sx={{ color: rankColor }}>
-                      {entry.gg.toLocaleString()} GG
+                      {entry.ggTotal.toLocaleString()} GG
                     </Typography>
                   </TableCell>
                 </TableRow>

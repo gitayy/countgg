@@ -1368,6 +1368,9 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
   const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
     setTabValue(newValue)
     tabValueRef.current = newValue
+    if (newValue === 'tab_rank') {
+      setUnseenCounts(null)
+    }
     if (newValue === 'tab_2') {
       setNewChatsLoadedState(Date.now().toString())
     }
