@@ -667,6 +667,27 @@ export type SitewideLeaderboardResponse = {
   total: number
 }
 
+// Payload of both 'rank_leaderboard_initial' and 'rank_leaderboard_updated' socket events.
+// threadUuid null = sitewide entry; non-null = thread-scoped entry.
+export type RankLeaderboardSocketEntry = {
+  counterUuid: string
+  username: string
+  name: string
+  avatar: string
+  discordId: string
+  color: string
+  rank: RankName
+  division: 1 | 2 | 3
+  gg: number
+  ggTotal: number
+  threadUuid: string | null
+}
+
+export type RankLeaderboardInitialPayload = {
+  threadUuid: string | null
+  entries: RankLeaderboardSocketEntry[]
+}
+
 export type SpeedDistribution = {
   p10: number
   p25: number

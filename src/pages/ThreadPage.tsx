@@ -66,8 +66,7 @@ import {
   UnseenCompletionCounts,
   ChallengeLog,
   CounterRankProfileResponse,
-  ThreadLeaderboardResponse,
-  SitewideLeaderboardResponse,
+  RankUpdatedDelta,
 } from '../utils/types'
 import { useIsMounted } from '../utils/hooks/useIsMounted'
 import CountList from '../components/CountList'
@@ -97,8 +96,6 @@ import {
   updateThreadPrefs,
   getRankCounterProfile,
   getRankUnseenCompletionCounts,
-  getRankThreadLeaderboard,
-  getRankSitewideLeaderboard,
 } from '../utils/api'
 import { DailyHOCTable } from '../components/DailyHOCTable'
 import { SplitsTable } from '../components/SplitsTable'
@@ -1282,38 +1279,6 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     initialRankProfilePromiseRef.current = promise
   }, [counter?.username])
 
-  // Same "expose the in-flight promise, not just the resolved state" pattern as
-  // initialRankProfilePromiseRef above, for the two Rank tab leaderboard fetches — RankTabPanel
-  // used to issue these itself the moment the tab was opened, but since RankTabPanel fully
-  // remounts on every tab switch, that meant re-fetching from scratch every single time even
-  // though the leaderboard rarely changes between quick switches. Fetched eagerly here instead
-  // (same tradeoff as the profile fetch: a small amount of always-on network cost in exchange
-  // for the Rank tab never re-fetching data that's already on its way). The sitewide leaderboard
-  // is fetched once per page load (global, not thread-scoped); the thread leaderboard re-fetches
-  // whenever thread_name changes, since it's specific to the thread being viewed.
-  const initialSitewideLeaderboardPromiseRef = useRef<Promise<SitewideLeaderboardResponse | null> | null>(null)
-  const initialThreadLeaderboardPromiseRef = useRef<Promise<ThreadLeaderboardResponse | null> | null>(null)
-
-  useEffect(() => {
-    if (initialSitewideLeaderboardPromiseRef.current) return
-    initialSitewideLeaderboardPromiseRef.current = getRankSitewideLeaderboard()
-      .then(({ data }) => data)
-      .catch((err) => {
-        console.error(err)
-        return null
-      })
-  }, [])
-
-  useEffect(() => {
-    if (!thread_name) return
-    initialThreadLeaderboardPromiseRef.current = getRankThreadLeaderboard(thread_name)
-      .then(({ data }) => data)
-      .catch((err) => {
-        console.error(err)
-        return null
-      })
-  }, [thread_name])
-
   // Unread-completion badge on the Rank tab — deliberately no toast/snackbar for challenge
   // completions (so the Rank tab's own bar-fill/splash animations are never spoiled by seeing
   // the result early); this quiet count is the only outward sign something new is waiting to be
@@ -1333,24 +1298,34 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       .catch(console.error)
   }, [counter?.username])
 
-  // Bumps the unseen-completion badge the moment RankTabPanel applies a rank_updated delta that
-  // contains new completions — avoids ThreadPage needing its own rank_updated listener/re-fetch.
-  const handleCompletionsAdded = useCallback((completions: ChallengeLog[]) => {
-    if (completions.length === 0) return
-    setUnseenCounts((prev) => {
-      const base: UnseenCompletionCounts = prev ?? { total: 0, byThread: {}, sitewide: 0 }
-      const byThread = { ...base.byThread }
-      let sitewide = base.sitewide
-      for (const log of completions) {
-        if (log.threadUuid) {
-          byThread[log.threadUuid] = (byThread[log.threadUuid] ?? 0) + 1
-        } else {
-          sitewide += 1
+  // Listens for rank_updated on the always-mounted ThreadPage socket so completions increment
+  // the badge even when the rank tab is closed (RankTabPanel unmounts on tab switch, taking its
+  // own rank_updated listener with it). Skips the increment when the rank tab is already open —
+  // the user is watching the animation live and markRankCompletionSeen will be called on dismiss.
+  useEffect(() => {
+    if (!counter?.username) return
+    const handler = (delta: RankUpdatedDelta) => {
+      if (delta.completions.length === 0) return
+      if (tabValueRef.current === 'tab_rank') return
+      setUnseenCounts((prev) => {
+        const base: UnseenCompletionCounts = prev ?? { total: 0, byThread: {}, sitewide: 0 }
+        const byThread = { ...base.byThread }
+        let sitewide = base.sitewide
+        for (const log of delta.completions) {
+          if (log.threadUuid) {
+            byThread[log.threadUuid] = (byThread[log.threadUuid] ?? 0) + 1
+          } else {
+            sitewide += 1
+          }
         }
-      }
-      return { total: base.total + completions.length, byThread, sitewide }
-    })
-  }, [])
+        return { total: base.total + delta.completions.length, byThread, sitewide }
+      })
+    }
+    socket.on('rank_updated', handler)
+    return () => {
+      socket.off('rank_updated', handler)
+    }
+  }, [counter?.username])
 
   // Never show the badge while the user is already looking at the Rank tab — they can see
   // directly whether anything is playing/waiting; a badge on the very tab they're on reads as
@@ -3993,10 +3968,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
               rankThreadRow={displayedRankThreadRow}
               onRankThreadRowChange={setRankThreadRow}
               onThreadRankUpdated={setAllThreadRanks}
-              onCompletionsAdded={handleCompletionsAdded}
               initialRankProfilePromiseRef={initialRankProfilePromiseRef}
-              initialSitewideLeaderboardPromiseRef={initialSitewideLeaderboardPromiseRef}
-              initialThreadLeaderboardPromiseRef={initialThreadLeaderboardPromiseRef}
               sidebarScrollRef={sidebarScrollRef}
               sidebarScrollTopRef={sidebarScrollTopRef}
             />

@@ -47,7 +47,7 @@ const TITLE_FORMULAS: Partial<Record<string, (ch: TitleSource) => string>> = {
   get_under_ms: (ch) => `${formatClockTime(ch.params?.maxMs ?? 0)} Get`,
 
   split_under_ms: (ch) => `${formatClockTime(ch.params?.maxMs ?? 0)} Split`,
-  bars_within_ms: (ch) => `${formatClockTime(ch.params?.maxMs ?? 0)} Split`,
+  bars_within_ms: (ch) => `Sub-${formatClockTime(ch.params?.maxMs ?? 0)} Bar`,
 
   accuracy_rate: (ch) => `${ch.params?.minAccuracyPercent ?? 0}% Accuracy`,
 
@@ -81,6 +81,9 @@ const ATTEMPTS_STYLE_TYPES = new Set(['count_attempts'])
 const SPEED_STYLE_TYPES = new Set(['split_under_ms', 'get_under_ms', 'bars_within_ms'])
 
 export function getProgressLabel(ch: TitleSource, currentValue: number): string {
+  if (ch.type === 'counts_in_day') {
+    return `${Math.round(currentValue).toLocaleString()} / ${ch.target.toLocaleString()} Counts Today`
+  }
   if (COUNT_STYLE_TYPES.has(ch.type)) {
     return `${Math.round(currentValue).toLocaleString()} / ${ch.target.toLocaleString()} Counts`
   }

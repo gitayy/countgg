@@ -4,11 +4,14 @@ import { BigProgressBar } from './BigProgressBar'
 import { useAnimatedNumber } from '../utils/hooks/useAnimatedNumber'
 import { useTheme } from '@mui/material/styles'
 import { RankName } from '../utils/types'
+import { getProgressLabel } from '../utils/challengeTitle'
 
 const ENTRANCE_BAR_DURATION_MS = 3000
 
 type Props = {
   challengeId: string
+  type: string
+  params: Record<string, any> | null
   ggReward: number
   progress: number
   target: number
@@ -36,6 +39,8 @@ type Props = {
 
 export const ThreadCountsChallengeCard = ({
   challengeId,
+  type,
+  params,
   ggReward,
   progress,
   target,
@@ -80,7 +85,7 @@ export const ThreadCountsChallengeCard = ({
   // counts up 0 -> progress alongside the fill, instead of sitting at the final value while
   // only the bar visually animates.
   const animatedProgress = useAnimatedNumber(animateTarget, ENTRANCE_BAR_DURATION_MS)
-  const progressLabel = `${(entranceAnimate ? animatedProgress : progress).toLocaleString()} / ${target.toLocaleString()} Counts`
+  const progressLabel = getProgressLabel({ type, target, params }, entranceAnimate ? animatedProgress : progress)
 
   return (
     <ChallengeCompletionWrapper

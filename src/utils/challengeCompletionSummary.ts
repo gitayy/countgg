@@ -25,7 +25,7 @@ const COMPLETION_SUMMARY_FORMULAS: Partial<Record<string, (ch: ChallengeLog) => 
 
   // 3. <formatted time> Split
   split_under_ms: (ch) => ({ main: `${formatClockTime(ch.params?.maxMs ?? 0)} Split` }),
-  bars_within_ms: (ch) => ({ main: `${formatClockTime(ch.params?.maxMs ?? 0)} Split` }),
+  bars_within_ms: (ch) => ({ main: `Sub-${formatClockTime(ch.params?.maxMs ?? 0)} Bar` }),
 
   // 4. X% Accuracy (sublabel: y counts)
   accuracy_rate: (ch) => {
@@ -38,8 +38,7 @@ const COMPLETION_SUMMARY_FORMULAS: Partial<Record<string, (ch: ChallengeLog) => 
     }
   },
 
-  // 5. Xms bar (bar under ms) — bars_within_ms is covered above alongside split_under_ms,
-  // both format as "<time> Split" since a bar-validation-type split is still a split.
+  // 5. bars_within_ms formats as "Sub-<time> Bar" — distinct from split_under_ms.
 
   // Not explicitly requested, but given a formula so these don't silently fall back to the
   // generic "Target: N" — extend/adjust wording here as these types get real completion UX.

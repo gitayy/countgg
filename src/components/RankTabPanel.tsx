@@ -8,8 +8,6 @@ import {
   markRankCompletionSeen,
   markRankUpSeen,
   markRankEntranceSeen,
-  getRankSitewideLeaderboard,
-  getRankThreadLeaderboard,
 } from '../utils/api'
 import {
   Counter,
@@ -21,8 +19,8 @@ import {
   RankUpEvent,
   RankUpdatedDelta,
   CounterRankProfileResponse,
-  ThreadLeaderboardResponse,
-  SitewideLeaderboardResponse,
+  RankLeaderboardSocketEntry,
+  RankLeaderboardInitialPayload,
 } from '../utils/types'
 import { RANK_ORDER, divFloor, divCeil, RANK_COLORS } from '../utils/rankColors'
 import { RankProgressCard } from './RankProgressCard'
@@ -53,10 +51,6 @@ export type RankTabPanelProps = {
   rankThreadRow: ThreadRankRow | null
   onRankThreadRowChange: (row: ThreadRankRow | null) => void
   onThreadRankUpdated: (byThreadUuid: Record<string, ThreadRankRow>) => void
-  // Reports newly-completed logs up to ThreadPage the moment a rank_updated delta contains any,
-  // so the unseen-completion badge count can be incremented client-side instead of needing its
-  // own always-on rank_updated listener + re-fetch (see ThreadPage.tsx's unseenCounts state).
-  onCompletionsAdded: (completions: ChallengeLog[]) => void
   // ThreadPage already fetches getRankCounterProfile eagerly on page mount (to populate the
   // sidebar's per-thread badge data) — exposed here as the raw in-flight promise (not just its
   // eventually-resolved state) so the Rank tab's OWN first-activation fetch (below) can await
@@ -66,13 +60,6 @@ export type RankTabPanelProps = {
   // racing ahead of it and falling back to a duplicate fetch nearly every time. Consumed exactly
   // once — see the comment on the activation effect below.
   initialRankProfilePromiseRef: React.MutableRefObject<Promise<CounterRankProfileResponse | null> | null>
-  // Same pattern as initialRankProfilePromiseRef, for the two leaderboard fetches: ThreadPage
-  // fetches both eagerly (sitewide once per page load; thread-scoped once per thread switch) so
-  // this panel's own first activation can await and reuse them instead of re-fetching from
-  // scratch on every Rank-tab remount (i.e. every tab switch), which is what happened before
-  // this existed since RankTabPanel is fully unmounted/remounted by MUI's TabPanel.
-  initialSitewideLeaderboardPromiseRef: React.MutableRefObject<Promise<SitewideLeaderboardResponse | null> | null>
-  initialThreadLeaderboardPromiseRef: React.MutableRefObject<Promise<ThreadLeaderboardResponse | null> | null>
   sidebarScrollRef: React.RefObject<HTMLDivElement>
   sidebarScrollTopRef: React.MutableRefObject<number>
 }
@@ -184,7 +171,10 @@ function useChallengeSlots(progress: ChallengeLog[], completions: ChallengeLog[]
     // and it wasn't started from scratch), mark it "entering" so its card animates the bar
     // filling 0 -> current progress once instead of snapping straight there.
     for (const inProgress of progress) {
-      const hasSlot = next.some((s) => s.challengeId === inProgress.challengeId)
+      // Only count progress-phase slots as "occupying" this challengeId — a completing slot
+      // is about to be removed, so the repeat-assigned log with the same challengeId still
+      // needs to be queued or appended (not silently skipped because the old slot exists).
+      const hasSlot = next.some((s) => s.challengeId === inProgress.challengeId && s.phase === 'progress')
       const alreadyQueued = pendingNewChallengeIdsRef.current.includes(inProgress.challengeId)
       if (hasSlot || alreadyQueued) continue
       if (anyAnimating || next.some((s) => s.phase === 'completing')) {
@@ -569,6 +559,8 @@ function renderChallengeCard(
     <ThreadCountsChallengeCard
       key={key}
       challengeId={key}
+      type={ch.type}
+      params={ch.params}
       ggReward={displayGgReward}
       progress={ch.progress}
       target={ch.target}
@@ -600,10 +592,7 @@ export const RankTabPanel = ({
   rankThreadRow,
   onRankThreadRowChange,
   onThreadRankUpdated,
-  onCompletionsAdded,
   initialRankProfilePromiseRef,
-  initialSitewideLeaderboardPromiseRef,
-  initialThreadLeaderboardPromiseRef,
   sidebarScrollRef,
   sidebarScrollTopRef,
 }: RankTabPanelProps) => {
@@ -961,89 +950,66 @@ export const RankTabPanel = ({
   // promise — reused here (awaited, not raced) instead of a duplicate fetch, since RankTabPanel
   // fully remounts on every Rank-tab switch and would otherwise re-fetch the leaderboard from
   // scratch every time. The ref is nulled out after first consumption so a later remount
-  // (tab switch away then back) fetches fresh data instead of re-applying the stale promise.
+  // Socket-driven leaderboard: listen for rank_leaderboard_initial (bulk snapshot on join /
+  // sitewide tab open) and rank_leaderboard_updated (single-entry upsert on each rank_updated
+  // that changed a rank row). Both use the same entry shape; initial sets the full list,
+  // updated upserts one entry by counterUuid. threadUuid null = sitewide, non-null = thread.
+  const toLeaderboardEntry = (e: RankLeaderboardSocketEntry): LeaderboardEntry => ({
+    counterUuid: e.counterUuid,
+    username: e.username,
+    name: e.name,
+    avatar: e.avatar,
+    discordId: e.discordId,
+    color: e.color,
+    rank: e.rank,
+    division: e.division,
+    gg: e.gg,
+    ggTotal: e.ggTotal,
+  })
+
+  useEffect(() => {
+    const handleInitial = (payload: RankLeaderboardInitialPayload) => {
+      if (!isMounted.current) return
+      const entries = payload.entries.map(toLeaderboardEntry)
+      if (payload.threadUuid === null) {
+        setSitewideLeaderboard(entries)
+      } else if (payload.threadUuid === thread?.uuid) {
+        setThreadLeaderboard(entries)
+      }
+    }
+    const handleUpdated = (entry: RankLeaderboardSocketEntry) => {
+      if (!isMounted.current) return
+      const mapped = toLeaderboardEntry(entry)
+      if (entry.threadUuid === null) {
+        setSitewideLeaderboard((prev) => {
+          const without = prev.filter((e) => e.counterUuid !== entry.counterUuid)
+          return [...without, mapped].sort((a, b) => b.ggTotal - a.ggTotal)
+        })
+      } else if (entry.threadUuid === thread?.uuid) {
+        setThreadLeaderboard((prev) => {
+          const without = prev.filter((e) => e.counterUuid !== entry.counterUuid)
+          return [...without, mapped].sort((a, b) => b.ggTotal - a.ggTotal)
+        })
+      }
+    }
+    socketSingleton.on('rank_leaderboard_initial', handleInitial)
+    socketSingleton.on('rank_leaderboard_updated', handleUpdated)
+    return () => {
+      socketSingleton.off('rank_leaderboard_initial', handleInitial)
+      socketSingleton.off('rank_leaderboard_updated', handleUpdated)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [thread?.uuid])
+
+  // Emit watch_rank_sitewide the first time the sitewide tab is opened — the server joins the
+  // thread_all room and sends back rank_leaderboard_initial with the full sitewide list.
+  const hasWatchedSitewideRef = useRef(false)
   useEffect(() => {
     if (rankScopeTab !== 'sitewide') return
-    const applyEntries = (data: SitewideLeaderboardResponse) => {
-      if (!isMounted.current) return
-      setSitewideLeaderboard(
-        data.entries.map((e) => ({
-          counterUuid: e.counterUuid,
-          username: e.username,
-          name: e.name,
-          avatar: e.avatar,
-          discordId: e.discordId,
-          color: e.color,
-          rank: e.rank,
-          division: e.division,
-          gg: e.totalGg,
-          ggTotal: e.totalGg,
-        })),
-      )
-    }
-    const initialPromise = initialSitewideLeaderboardPromiseRef.current
-    if (initialPromise) {
-      initialSitewideLeaderboardPromiseRef.current = null
-      initialPromise.then((data) => {
-        if (data) applyEntries(data)
-        else
-          getRankSitewideLeaderboard()
-            .then(({ data }) => applyEntries(data))
-            .catch(console.error)
-      })
-    } else {
-      getRankSitewideLeaderboard()
-        .then(({ data }) => applyEntries(data))
-        .catch(console.error)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (hasWatchedSitewideRef.current) return
+    hasWatchedSitewideRef.current = true
+    socketSingleton.emit('watch_rank_sitewide')
   }, [rankScopeTab])
-
-  // Fetches this thread's leaderboard once the thread rank card first has a real row to show —
-  // same "don't fetch before there's something to show" reasoning as the sitewide fetch above.
-  // ThreadRankRow already uses `gg` (not `totalGg` like the sitewide entry shape), so only the
-  // enriched display fields (optional on ThreadRankRow, required on LeaderboardEntry) need a
-  // fallback — the leaderboard endpoint always populates them in practice.
-  //
-  // Same reuse-ThreadPage's-in-flight-promise pattern as the sitewide fetch above, but keyed to
-  // thread_name (re-consumed on every thread switch, unlike the once-ever sitewide reuse) since
-  // ThreadPage's own thread-leaderboard fetch is itself re-issued per thread_name change.
-  useEffect(() => {
-    if (!rankThreadRow || !thread_name) return
-    const applyEntries = (data: ThreadLeaderboardResponse) => {
-      if (!isMounted.current) return
-      setThreadLeaderboard(
-        data.entries.map((e) => ({
-          counterUuid: e.counterUuid,
-          username: e.username ?? '',
-          name: e.name ?? '',
-          avatar: e.avatar ?? '',
-          discordId: e.discordId ?? '',
-          color: e.color ?? '',
-          rank: e.rank,
-          division: e.division,
-          gg: e.gg,
-          ggTotal: e.ggTotal,
-        })),
-      )
-    }
-    const initialPromise = initialThreadLeaderboardPromiseRef.current
-    if (initialPromise) {
-      initialThreadLeaderboardPromiseRef.current = null
-      initialPromise.then((data) => {
-        if (data) applyEntries(data)
-        else
-          getRankThreadLeaderboard(thread_name)
-            .then(({ data }) => applyEntries(data))
-            .catch(console.error)
-      })
-    } else {
-      getRankThreadLeaderboard(thread_name)
-        .then(({ data }) => applyEntries(data))
-        .catch(console.error)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rankThreadRow != null, thread_name])
 
   // Own rank_updated listener (rather than sharing ThreadPage's giant socket-setup effect) —
   // updates this panel's own state, and reports rank changes up via
@@ -1064,7 +1030,6 @@ export const RankTabPanel = ({
       if (!counter?.username) return
 
       if (delta.threadRank) onThreadRankUpdated({ [delta.threadRank.threadUuid as string]: delta.threadRank })
-      if (delta.completions.length > 0) onCompletionsAdded(delta.completions)
 
       if (!active || !rankTabLoadedRef.current) return
       if (delta.threadUuid !== thread?.uuid) return
@@ -1332,7 +1297,7 @@ export const RankTabPanel = ({
         )}
 
         {/* ── Admin tools (bottom of tab) ── */}
-        {counter?.roles?.includes('admin') && (
+        {false && counter?.roles?.includes('admin') && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
             <Typography variant="caption" color="text.secondary">
               Admin tools

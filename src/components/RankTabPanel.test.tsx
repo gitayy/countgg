@@ -8,8 +8,6 @@ import {
   markRankCompletionSeen,
   markRankUpSeen,
   markRankEntranceSeen,
-  getRankSitewideLeaderboard,
-  getRankThreadLeaderboard,
 } from '../utils/api'
 import { socket } from '../utils/contexts/SocketContext'
 import { ChallengeLog, Counter, ThreadType, ThreadRankRow, RankUpEvent } from '../utils/types'
@@ -22,12 +20,10 @@ jest.mock('../utils/api', () => ({
   markRankCompletionSeen: jest.fn(),
   markRankUpSeen: jest.fn(),
   markRankEntranceSeen: jest.fn(),
-  getRankSitewideLeaderboard: jest.fn(),
-  getRankThreadLeaderboard: jest.fn(),
 }))
 
 jest.mock('../utils/contexts/SocketContext', () => ({
-  socket: { on: jest.fn(), off: jest.fn() },
+  socket: { on: jest.fn(), off: jest.fn(), emit: jest.fn() },
 }))
 
 const mockedGetRankCounterProfile = getRankCounterProfile as jest.Mock
@@ -36,8 +32,6 @@ const mockedGetRankReplayData = getRankReplayData as jest.Mock
 const mockedMarkRankCompletionSeen = markRankCompletionSeen as jest.Mock
 const mockedMarkRankUpSeen = markRankUpSeen as jest.Mock
 const mockedMarkRankEntranceSeen = markRankEntranceSeen as jest.Mock
-const mockedGetRankSitewideLeaderboard = getRankSitewideLeaderboard as jest.Mock
-const mockedGetRankThreadLeaderboard = getRankThreadLeaderboard as jest.Mock
 
 const COUNTER = { uuid: 'counter-1', username: 'tester', roles: [] } as unknown as Counter
 const THREAD = { uuid: 'thread-1', title: 'Double Counting' } as unknown as ThreadType
@@ -125,11 +119,7 @@ const renderPanel = (props: Partial<React.ComponentProps<typeof RankTabPanel>> =
   const onRankThreadRowChange = jest.fn()
   const onThreadRankUpdated = jest.fn()
   const onCompletionsAdded = jest.fn()
-  // Default: no mount-time fetch to reuse for any of the three, so existing tests exercise the
-  // real-fetch path exactly as before this feature existed.
   const initialRankProfilePromiseRef = { current: Promise.resolve(null) }
-  const initialSitewideLeaderboardPromiseRef = { current: Promise.resolve(null) }
-  const initialThreadLeaderboardPromiseRef = { current: Promise.resolve(null) }
   const utils = render(
     <MemoryRouter>
       <RankTabPanel
@@ -143,8 +133,6 @@ const renderPanel = (props: Partial<React.ComponentProps<typeof RankTabPanel>> =
         onThreadRankUpdated={onThreadRankUpdated}
         onCompletionsAdded={onCompletionsAdded}
         initialRankProfilePromiseRef={initialRankProfilePromiseRef as any}
-        initialSitewideLeaderboardPromiseRef={initialSitewideLeaderboardPromiseRef as any}
-        initialThreadLeaderboardPromiseRef={initialThreadLeaderboardPromiseRef as any}
         sidebarScrollRef={sidebarScrollRef as any}
         sidebarScrollTopRef={sidebarScrollTopRef as any}
         {...props}
@@ -164,10 +152,6 @@ describe('RankTabPanel', () => {
     mockedMarkRankCompletionSeen.mockResolvedValue({ data: { ok: true } })
     mockedMarkRankUpSeen.mockResolvedValue({ data: { ok: true } })
     mockedMarkRankEntranceSeen.mockResolvedValue({ data: { ok: true } })
-    mockedGetRankSitewideLeaderboard.mockResolvedValue({ data: { season: null, entries: [] } })
-    mockedGetRankThreadLeaderboard.mockResolvedValue({
-      data: { season: null, thread: { uuid: 'thread-1', name: 'double_counting', title: 'Double Counting' }, entries: [] },
-    })
   })
 
   it('fetches and renders an in-progress challenge on first activation', async () => {
@@ -412,171 +396,301 @@ describe('RankTabPanel', () => {
     expect(await screen.findByText('0 / 5 Counts')).toBeInTheDocument()
   })
 
-  it('shows a collapsed top-3 + me leaderboard under the thread rank card', async () => {
+  it('shows a collapsed top-5 leaderboard under the thread rank card, expandable', async () => {
     mockedGetRankCounterProfile.mockResolvedValue({
       data: { ranks: [makeRankRow({ threadUuid: 'thread-1' })], challengeProgress: [], recentCompletions: [] },
     })
-    mockedGetRankThreadLeaderboard.mockResolvedValue({
-      data: {
-        season: null,
-        thread: { uuid: 'thread-1', name: 'double_counting', title: 'Double Counting' },
-        entries: [
-          makeRankRow({
-            counterUuid: 'c1',
-            username: 'first',
-            name: 'First',
-            threadUuid: 'thread-1',
-            gg: 500,
-            rank: 'gold',
-            division: 1,
-          }),
-          makeRankRow({
-            counterUuid: 'c2',
-            username: 'second',
-            name: 'Second',
-            threadUuid: 'thread-1',
-            gg: 400,
-            rank: 'silver',
-            division: 3,
-          }),
-          makeRankRow({
-            counterUuid: 'c3',
-            username: 'third',
-            name: 'Third',
-            threadUuid: 'thread-1',
-            gg: 300,
-            rank: 'silver',
-            division: 2,
-          }),
-          makeRankRow({
-            counterUuid: 'c4',
-            username: 'fourth',
-            name: 'Fourth',
-            threadUuid: 'thread-1',
-            gg: 200,
-            rank: 'silver',
-            division: 1,
-          }),
-          makeRankRow({
-            counterUuid: 'c5',
-            username: 'tester',
-            name: 'Tester',
-            threadUuid: 'thread-1',
-            gg: 100,
-            rank: 'bronze',
-            division: 3,
-          }),
-        ],
-      },
-    })
-
     renderPanel({ rankThreadRow: makeRankRow({ threadUuid: 'thread-1' }) })
     await flushReplayHandoff()
 
-    await waitFor(() => expect(mockedGetRankThreadLeaderboard).toHaveBeenCalledWith('double_counting'))
+    const initialHandler = (socket.on as jest.Mock).mock.calls.find((c) => c[0] === 'rank_leaderboard_initial')![1]
+    act(() => {
+      initialHandler({
+        threadUuid: 'thread-1',
+        entries: [
+          {
+            counterUuid: 'c1',
+            username: 'first',
+            name: 'First',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'gold',
+            division: 1,
+            gg: 500,
+            ggTotal: 500,
+            threadUuid: 'thread-1',
+          },
+          {
+            counterUuid: 'c2',
+            username: 'second',
+            name: 'Second',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'silver',
+            division: 3,
+            gg: 400,
+            ggTotal: 400,
+            threadUuid: 'thread-1',
+          },
+          {
+            counterUuid: 'c3',
+            username: 'third',
+            name: 'Third',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'silver',
+            division: 2,
+            gg: 300,
+            ggTotal: 300,
+            threadUuid: 'thread-1',
+          },
+          {
+            counterUuid: 'c4',
+            username: 'fourth',
+            name: 'Fourth',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'silver',
+            division: 1,
+            gg: 200,
+            ggTotal: 200,
+            threadUuid: 'thread-1',
+          },
+          {
+            counterUuid: 'c5',
+            username: 'fifth',
+            name: 'Fifth',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'bronze',
+            division: 3,
+            gg: 100,
+            ggTotal: 100,
+            threadUuid: 'thread-1',
+          },
+          {
+            counterUuid: 'c6',
+            username: 'sixth',
+            name: 'Sixth',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'bronze',
+            division: 2,
+            gg: 50,
+            ggTotal: 50,
+            threadUuid: 'thread-1',
+          },
+        ],
+      })
+    })
 
-    // Top 3 always shown...
+    // Top 5 always shown...
     expect(await screen.findByText('First')).toBeInTheDocument()
-    expect(screen.getByText('Second')).toBeInTheDocument()
-    expect(screen.getByText('Third')).toBeInTheDocument()
-    // ...plus "me" (5th place, not in the top 3), since COUNTER's username is 'tester'.
-    expect(screen.getByText('Tester (you)')).toBeInTheDocument()
-    // 4th place is excluded from the collapsed view (neither top-3 nor me).
-    expect(screen.queryByText('Fourth')).not.toBeInTheDocument()
+    expect(screen.getByText('Fifth')).toBeInTheDocument()
+    // 6th is hidden until expanded
+    expect(screen.queryByText('Sixth')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('Show all 5'))
-    expect(await screen.findByText('Fourth')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Show all 6'))
+    expect(await screen.findByText('Sixth')).toBeInTheDocument()
   })
 
-  // Regression coverage: same "why is it re-fetching every time I open the tab" report as the
-  // profile-reuse tests above, but for the two leaderboard endpoints — ThreadPage fetches both
-  // eagerly and exposes them as in-flight promises; RankTabPanel must await and reuse them
-  // instead of re-issuing getRankThreadLeaderboard/getRankSitewideLeaderboard itself.
-  it('reuses initialThreadLeaderboardPromiseRef instead of re-fetching getRankThreadLeaderboard', async () => {
+  // Leaderboard is now socket-driven — rank_leaderboard_initial sets the full list, and
+  // rank_leaderboard_updated upserts a single entry in real time.
+  it('populates thread leaderboard from rank_leaderboard_initial socket event', async () => {
     mockedGetRankCounterProfile.mockResolvedValue({
       data: { ranks: [], challengeProgress: [], recentCompletions: [] },
     })
-    renderPanel({
-      rankThreadRow: makeRankRow({ threadUuid: 'thread-1' }),
-      initialThreadLeaderboardPromiseRef: {
-        current: Promise.resolve({
-          season: null,
-          thread: { uuid: 'thread-1', name: 'double_counting', title: 'Double Counting' },
-          entries: [makeRankRow({ counterUuid: 'c1', username: 'first', name: 'First', threadUuid: 'thread-1', gg: 500 })],
-        }),
-      } as any,
-    })
+    renderPanel({ rankThreadRow: makeRankRow({ threadUuid: 'thread-1' }) })
     await flushReplayHandoff()
 
+    const initialHandler = (socket.on as jest.Mock).mock.calls.find((c) => c[0] === 'rank_leaderboard_initial')![1]
+    act(() => {
+      initialHandler({
+        threadUuid: 'thread-1',
+        entries: [
+          {
+            counterUuid: 'c1',
+            username: 'first',
+            name: 'First',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'gold',
+            division: 1,
+            gg: 500,
+            ggTotal: 500,
+            threadUuid: 'thread-1',
+          },
+        ],
+      })
+    })
+
     expect(await screen.findByText('First')).toBeInTheDocument()
-    expect(mockedGetRankThreadLeaderboard).not.toHaveBeenCalled()
   })
 
-  it('shows a collapsed top-3 + me leaderboard under the sitewide section once expanded', async () => {
+  it('shows a collapsed top-5 leaderboard under the sitewide section, expandable', async () => {
     mockedGetRankCounterProfile.mockResolvedValue({
       data: { ranks: [makeRankRow({ threadUuid: null })], challengeProgress: [], recentCompletions: [] },
     })
-    mockedGetRankSitewideLeaderboard.mockResolvedValue({
-      data: {
-        season: null,
-        entries: [
-          { counterUuid: 'c1', username: 'first', name: 'First', avatar: '', color: '', totalGg: 500, rank: 'gold', division: 1 },
-          { counterUuid: 'c2', username: 'second', name: 'Second', avatar: '', color: '', totalGg: 400, rank: 'silver', division: 3 },
-          { counterUuid: 'c3', username: 'third', name: 'Third', avatar: '', color: '', totalGg: 300, rank: 'silver', division: 2 },
-          { counterUuid: 'c4', username: 'fourth', name: 'Fourth', avatar: '', color: '', totalGg: 200, rank: 'silver', division: 1 },
-          { counterUuid: 'c5', username: 'tester', name: 'Tester', avatar: '', color: '', totalGg: 100, rank: 'bronze', division: 3 },
-        ],
-      },
-    })
-
     renderPanel()
     await flushReplayHandoff()
 
     fireEvent.click(await screen.findByRole('tab', { name: 'Sitewide' }))
-    await waitFor(() => expect(mockedGetRankSitewideLeaderboard).toHaveBeenCalled())
 
-    // Top 3 always shown...
+    const initialHandler = (socket.on as jest.Mock).mock.calls.find((c) => c[0] === 'rank_leaderboard_initial')![1]
+    act(() => {
+      initialHandler({
+        threadUuid: null,
+        entries: [
+          {
+            counterUuid: 'c1',
+            username: 'first',
+            name: 'First',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'gold',
+            division: 1,
+            gg: 500,
+            ggTotal: 500,
+            threadUuid: null,
+          },
+          {
+            counterUuid: 'c2',
+            username: 'second',
+            name: 'Second',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'silver',
+            division: 3,
+            gg: 400,
+            ggTotal: 400,
+            threadUuid: null,
+          },
+          {
+            counterUuid: 'c3',
+            username: 'third',
+            name: 'Third',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'silver',
+            division: 2,
+            gg: 300,
+            ggTotal: 300,
+            threadUuid: null,
+          },
+          {
+            counterUuid: 'c4',
+            username: 'fourth',
+            name: 'Fourth',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'silver',
+            division: 1,
+            gg: 200,
+            ggTotal: 200,
+            threadUuid: null,
+          },
+          {
+            counterUuid: 'c5',
+            username: 'fifth',
+            name: 'Fifth',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'bronze',
+            division: 3,
+            gg: 100,
+            ggTotal: 100,
+            threadUuid: null,
+          },
+          {
+            counterUuid: 'c6',
+            username: 'sixth',
+            name: 'Sixth',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'bronze',
+            division: 2,
+            gg: 50,
+            ggTotal: 50,
+            threadUuid: null,
+          },
+        ],
+      })
+    })
+
+    // Top 5 always shown in collapsed view
     expect(await screen.findByText('First')).toBeInTheDocument()
-    expect(screen.getByText('Second')).toBeInTheDocument()
-    expect(screen.getByText('Third')).toBeInTheDocument()
-    // ...plus "me" (5th place, not in the top 3), since COUNTER's username is 'tester'.
-    expect(screen.getByText('Tester (you)')).toBeInTheDocument()
-    // 4th place is excluded from the collapsed view (neither top-3 nor me).
-    expect(screen.queryByText('Fourth')).not.toBeInTheDocument()
+    expect(screen.getByText('Fifth')).toBeInTheDocument()
+    // 6th is hidden until expanded
+    expect(screen.queryByText('Sixth')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByText('Show all 5'))
-    expect(await screen.findByText('Fourth')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Show all 6'))
+    expect(await screen.findByText('Sixth')).toBeInTheDocument()
   })
 
-  it('reuses initialSitewideLeaderboardPromiseRef instead of re-fetching getRankSitewideLeaderboard', async () => {
+  it('upserts a leaderboard entry on rank_leaderboard_updated', async () => {
     mockedGetRankCounterProfile.mockResolvedValue({
       data: { ranks: [makeRankRow({ threadUuid: null })], challengeProgress: [], recentCompletions: [] },
     })
-    renderPanel({
-      initialSitewideLeaderboardPromiseRef: {
-        current: Promise.resolve({
-          season: null,
-          entries: [
-            {
-              counterUuid: 'c1',
-              username: 'first',
-              name: 'First',
-              avatar: '',
-              discordId: '',
-              color: '',
-              totalGg: 500,
-              rank: 'gold',
-              division: 1,
-            },
-          ],
-        }),
-      } as any,
-    })
+    renderPanel()
     await flushReplayHandoff()
 
     fireEvent.click(await screen.findByRole('tab', { name: 'Sitewide' }))
+
+    const initialHandler = (socket.on as jest.Mock).mock.calls.find((c) => c[0] === 'rank_leaderboard_initial')![1]
+    act(() => {
+      initialHandler({
+        threadUuid: null,
+        entries: [
+          {
+            counterUuid: 'c1',
+            username: 'first',
+            name: 'First',
+            avatar: '',
+            discordId: '',
+            color: '',
+            rank: 'silver',
+            division: 1,
+            gg: 100,
+            ggTotal: 100,
+            threadUuid: null,
+          },
+        ],
+      })
+    })
     expect(await screen.findByText('First')).toBeInTheDocument()
-    expect(mockedGetRankSitewideLeaderboard).not.toHaveBeenCalled()
+
+    const updatedHandler = (socket.on as jest.Mock).mock.calls.find((c) => c[0] === 'rank_leaderboard_updated')![1]
+    act(() => {
+      updatedHandler({
+        counterUuid: 'c1',
+        username: 'first',
+        name: 'First',
+        avatar: '',
+        discordId: '',
+        color: '',
+        rank: 'gold',
+        division: 1,
+        gg: 200,
+        ggTotal: 200,
+        threadUuid: null,
+      })
+    })
+
+    // Still visible after upsert
+    expect(screen.getByText('First')).toBeInTheDocument()
   })
 
   it('shows the sitewide rank card under the Sitewide rank tab, even with no sitewide challenges', async () => {
