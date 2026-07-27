@@ -85,6 +85,20 @@ function RollVisualizerHostComponent({ threadName, showSimControls = false }: Pr
     rollSamplesRef.current = samples
   }, [])
 
+  const saveToCache = useCallback(() => {
+    rollVisualizerCacheByThread.set(threadName, {
+      rolls: rollSamplesRef.current,
+      recentHighRollHistory: rollHighSamplesRef.current,
+      recentLowRollHistory: rollLowSamplesRef.current,
+      highestRoll: highestRollSampleRef.current,
+      lowestRoll: lowestRollSampleRef.current,
+      luckStats: rollLuckStatsRef.current,
+      maxRenderedRolls: maxRenderedRollsRef.current,
+      simIntervalMs: simIntervalMsRef.current,
+      simOddsDenominator: simOddsDenominatorRef.current,
+    })
+  }, [threadName])
+
   const publishUiSnapshot = useCallback(() => {
     if (!hasUiChangesRef.current) return
     hasUiChangesRef.current = false
@@ -97,13 +111,8 @@ function RollVisualizerHostComponent({ threadName, showSimControls = false }: Pr
       luckStats: rollLuckStatsRef.current,
     }
     setUiState(nextUiState)
-    rollVisualizerCacheByThread.set(threadName, {
-      ...nextUiState,
-      maxRenderedRolls: maxRenderedRollsRef.current,
-      simIntervalMs: simIntervalMsRef.current,
-      simOddsDenominator: simOddsDenominatorRef.current,
-    })
-  }, [threadName])
+    saveToCache()
+  }, [saveToCache])
 
   const flushPendingRollSamples = useCallback(() => {
     const pending = pendingRollSamplesRef.current
@@ -168,7 +177,8 @@ function RollVisualizerHostComponent({ threadName, showSimControls = false }: Pr
       lastCompletedCount,
     }
     hasUiChangesRef.current = true
-  }, [persistSamples])
+    saveToCache()
+  }, [persistSamples, saveToCache])
 
   const enqueueRollSample = useCallback(
     (sample: RollSample) => {
