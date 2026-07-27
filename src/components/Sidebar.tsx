@@ -75,6 +75,7 @@ import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment'
 import KeyboardIcon from '@mui/icons-material/Keyboard'
 import ViewModuleIcon from '@mui/icons-material/ViewModule'
 import { BingoMiniWidget } from './bingo/BingoMiniWidget'
+import { useCategorizedThreads } from '../utils/hooks/useCategorizedThreads'
 
 export const Sidebar = () => {
   const navigate = useNavigate()
@@ -178,48 +179,12 @@ export const Sidebar = () => {
     setDesktopPickerOpen(!desktopPickerOpen)
   }
 
-  function groupThreadsByCategory(threads) {
-    const groupedThreads = {}
+  const { categorizedThreads, setCategorizedThreads } = useCategorizedThreads()
 
-    threads.forEach((thread) => {
-      const category = thread.category || 'Uncategorized' // If category is undefined or blank, consider it as "Uncategorized"
-
-      if (!groupedThreads[category]) {
-        groupedThreads[category] = []
-      }
-
-      groupedThreads[category].push(thread)
-    })
-
-    return groupedThreads
-  }
-
-  const specificOrder = ['Traditional', 'Double Counting', 'No Mistakes', 'Miscellaneous']
-  const customSort = (a, b) => {
-    if (specificOrder.includes(a) && specificOrder.includes(b)) {
-      return specificOrder.indexOf(a) - specificOrder.indexOf(b)
-    } else if (specificOrder.includes(a)) {
-      return -1
-    } else if (specificOrder.includes(b)) {
-      return 1
-    }
-
-    return a.localeCompare(b) // Keep the rest in alphabetical order
-  }
-
-  const initialExpandedCategories = Object.keys(groupThreadsByCategory(allThreads)).sort(customSort)
-  const [expandedCategories, setExpandedCategories] = useState(initialExpandedCategories)
-
-  useEffect(() => {
-    setExpandedCategories(Object.keys(groupThreadsByCategory(allThreads)).sort(customSort))
-  }, [allThreads])
-
-  const handleCategoryClick = (category) => {
-    if (expandedCategories.includes(category)) {
-      setExpandedCategories(expandedCategories.filter((cat) => cat !== category))
-    } else {
-      setExpandedCategories([...expandedCategories, category])
-    }
+  const handleCategoryClick = (categoryName: string) => {
+    setCategorizedThreads((prev) =>
+      prev.map((c) => (c.name === categoryName ? { ...c, expanded: !c.expanded } : c)),
+    )
   }
 
   const { threadName, fullThread } = useThread()
@@ -293,17 +258,12 @@ export const Sidebar = () => {
   // }, [threadName, allThreadsLoading]) // Empty dependency array to run this effect only once
 
   const threadPickerMemo = useMemo(() => {
-    const groupedThreads = groupThreadsByCategory(allThreads)
-
     if (allThreads && allThreads.length > 0) {
       const picker = (
         <Box
           sx={{
             minHeight: 500,
-            height: {
-              xs: '100vh',
-              // lg: 'calc(100vh - 65px)'
-            },
+            height: { xs: '100vh' },
             width: 'min-content',
             bgcolor: 'background.paper',
             color: 'text.primary',
@@ -311,52 +271,45 @@ export const Sidebar = () => {
             overflowY: 'scroll',
           }}
         >
-          {Object.keys(groupedThreads)
-            .sort(customSort)
-            .map((category) => (
-              <div key={category}>
-                <ListItemButton
-                  onClick={() => handleCategoryClick(category)}
-                  sx={{
-                    py: 0,
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 24, paddingRight: 1 }}>
-                    {expandedCategories.includes(category) ? <KeyboardArrowDownIcon /> : <KeyboardArrowRightIcon />}
-                  </ListItemIcon>
-                  <ListItemText primary={category} />
-                </ListItemButton>
-                <Collapse in={expandedCategories.includes(category)}>
-                  <List>
-                    {groupedThreads[category].map((thread, index) => (
-                      <Button
-                        key={thread.id}
-                        startIcon={<TagIcon />}
-                        sx={{
-                          width: '100%',
-                          py: isDesktop ? 0 : 0.5,
-                          opacity: threadName === thread.name ? 1 : 0.75,
-                          textAlign: 'left',
-                          border: '1px solid transparent',
-                          '&:hover': {
-                            opacity: 1,
-                            border: '1px solid',
-                            borderColor: theme.palette.primary.main,
-                          },
-                          bgcolor: threadName === thread.name ? alpha(theme.palette.primary.main, 0.5) : 'background.paper',
-                          color: threadName === thread.name ? 'text.primary' : 'text.secondary',
-                          justifyContent: 'flex-start',
-                        }}
-                        onClick={() => navigate(`/thread/${thread.name}`)}
-                      >
-                        {thread.threadOfTheDay && <LocalFireDepartmentIcon sx={{ color: 'orangered', verticalAlign: 'bottom' }} />}
-                        {thread.title}
-                      </Button>
-                    ))}
-                  </List>
-                </Collapse>
-              </div>
-            ))}
+          {categorizedThreads.map((category) => (
+            <div key={category.name}>
+              <ListItemButton onClick={() => handleCategoryClick(category.name)} sx={{ py: 0 }}>
+                <ListItemIcon sx={{ minWidth: 24, paddingRight: 1 }}>
+                  {category.expanded ? <KeyboardArrowDownIcon /> : <KeyboardArrowRightIcon />}
+                </ListItemIcon>
+                <ListItemText primary={category.name} />
+              </ListItemButton>
+              <Collapse in={category.expanded}>
+                <List>
+                  {category.threads.map((thread) => (
+                    <Button
+                      key={thread.uuid}
+                      startIcon={<TagIcon />}
+                      sx={{
+                        width: '100%',
+                        py: isDesktop ? 0 : 0.5,
+                        opacity: threadName === thread.name ? 1 : 0.75,
+                        textAlign: 'left',
+                        border: '1px solid transparent',
+                        '&:hover': {
+                          opacity: 1,
+                          border: '1px solid',
+                          borderColor: theme.palette.primary.main,
+                        },
+                        bgcolor: threadName === thread.name ? alpha(theme.palette.primary.main, 0.5) : 'background.paper',
+                        color: threadName === thread.name ? 'text.primary' : 'text.secondary',
+                        justifyContent: 'flex-start',
+                      }}
+                      onClick={() => navigate(`/thread/${thread.name}`)}
+                    >
+                      {thread.threadOfTheDay && <LocalFireDepartmentIcon sx={{ color: 'orangered', verticalAlign: 'bottom' }} />}
+                      {thread.title}
+                    </Button>
+                  ))}
+                </List>
+              </Collapse>
+            </div>
+          ))}
         </Box>
       )
       return !isDesktop ? (
@@ -406,7 +359,7 @@ export const Sidebar = () => {
       // console.log("No threads");
       return <Box sx={{ display: 'none' }}></Box>
     }
-  }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, threadName, expandedCategories, isDesktop])
+  }, [allThreadsLoading, mobilePickerOpen, desktopPickerOpen, threadName, categorizedThreads, isDesktop])
 
   const drawer = (
     <div>
