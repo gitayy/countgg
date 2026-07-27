@@ -2,6 +2,9 @@ import { Link as RouterLink, useLocation, useNavigate, useParams, useSearchParam
 import { UserContext } from '../utils/contexts/UserContext'
 import React, { Fragment, memo, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   AlertColor,
   alpha,
@@ -101,6 +104,7 @@ import { DailyHOCTable } from '../components/DailyHOCTable'
 import { SplitsTable } from '../components/SplitsTable'
 import { useFavicon } from '../utils/hooks/useFavicon'
 import InfoIcon from '@mui/icons-material/Info'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import moment from 'moment-timezone'
 import { DailyRobTable } from '../components/DailyRobTable'
 import { ThreadsContext } from '../utils/contexts/ThreadsContext'
@@ -123,6 +127,7 @@ import MiscInfo from '../components/thread/MiscInfo'
 import CommunityNotes from '../components/thread/CommunityNotes'
 import { ThreadStatsPanel } from '../components/thread/ThreadStatsPanel'
 import RollVisualizerHost, { RollVisualizerHostHandle } from '../components/thread/RollVisualizerHost'
+import { LatencyChartHost, LatencyChartHandle } from '../components/thread/LatencyChartHost'
 import { buildMacroSubmitMetadata, normalizeMacroTriggerKey } from '../utils/macroRuntime'
 import { BingoMiniWidget } from '../components/bingo/BingoMiniWidget'
 
@@ -530,6 +535,16 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
     },
     [thread_name, rollVisualizerThreads],
   )
+
+  const latencyChartRef = useRef<LatencyChartHandle | null>(null)
+  const setLatencyChartRef = useCallback((host: LatencyChartHandle | null) => {
+    latencyChartRef.current = host
+    if (host) host.syncNow()
+  }, [])
+  const registerLatencySampleFromPost = useCallback((post?: PostType) => {
+    if (!post) return
+    latencyChartRef.current?.registerSampleFromPost(post)
+  }, [])
 
   const [mobilePickerOpen, setMobilePickerOpen] = useState(false)
   const [desktopPickerOpen, setDesktopPickerOpen] = useState(true)
@@ -1354,6 +1369,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
       if (host && rollVisualizerThreads.has(thread_name)) {
         host.syncNow()
       }
+      latencyChartRef.current?.syncNow()
     }
   }
 
@@ -1567,6 +1583,7 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
         addCounterToCache(data.counter)
         cache_counts(data.post)
         registerRollSampleFromPost(data.post)
+        registerLatencySampleFromPost(data.post)
 
         if (loadedNewestRef.current) {
           if (user && preferences && preferences.pref_load_from_bottom) {
@@ -3570,6 +3587,14 @@ export const ThreadPage = memo(({ chats = false }: { chats?: boolean }) => {
             ) : (
               <>Loading...</>
             )} */}
+            <Accordion defaultExpanded disableGutters sx={{ mb: 1, '&:before': { display: 'none' } }}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0, minHeight: 0, '& .MuiAccordionSummary-content': { my: 0.5 } }}>
+                <Typography variant="h6">Post Processing Latency</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ px: 0, pt: 0 }}>
+                <LatencyChartHost ref={setLatencyChartRef} threadName={thread_name} />
+              </AccordionDetails>
+            </Accordion>
             <MiscInfo thread={thread} />
             {/* <AudioRecorder />/ */}
           </TabPanel>

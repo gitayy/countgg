@@ -143,6 +143,10 @@ export type PostType = {
   validCountNumber: number
   latency?: number
   processingLatency?: number
+  schedulingMs?: number
+  dbReadMs?: number
+  dbWriteMs?: number
+  otherMs?: number
   post_hash?: string
   roll?: number
   chance?: number
