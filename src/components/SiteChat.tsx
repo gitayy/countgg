@@ -418,6 +418,8 @@ export const SiteChat = () => {
               const showMarker =
                 unreadMarkerUUID !== null && msg.uuid > unreadMarkerUUID && messages.find((m) => m.uuid > unreadMarkerUUID) === msg
               const showDelete = !isDeleted && canDelete(counter, msg.authorUUID)
+              const msgDate = new Date(parseInt(msg.timestamp))
+              const timestampLabel = msgDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + msgDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })
               return (
                 <Box key={msg.uuid}>
                   {showMarker && (
@@ -429,6 +431,7 @@ export const SiteChat = () => {
                       <Box sx={{ flex: 1, height: '1px', bgcolor: 'error.main' }} />
                     </Box>
                   )}
+                  <Tooltip title={timestampLabel} placement="left" enterDelay={400} disableInteractive>
                   <Box
                     sx={{
                       display: 'flex',
@@ -470,6 +473,7 @@ export const SiteChat = () => {
                       </Tooltip>
                     )}
                   </Box>
+                  </Tooltip>
                 </Box>
               )
             })}
